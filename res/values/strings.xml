@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">NILS</string>
+    <string name="avbrytsynk">Avbryt Synkning</string>
+    <string name="iunderstand">Jag förstår!</string>   
+    <string name="menu_settings">Inställningar</string>
+    <string name="title_activity_nils">Nils</string>
+    <string name="title_take_picture">Ta bild</string>
+    <string name="title_find_area">Hitta Provyta</string>
+    <string name="title_select_ruta">Välj Ruta</string>
+	<string name="title_select_yta">Välj Yta</string>
+    <string name="title_select_color">Välj dosans färg</string>
+		
+	<string name="drawer_open">Öppna</string>
+	<string name="drawer_close">Stäng</string>
+	<string name="local_service_started">Blåtandtjänst startad</string>
+	
+	<string name="u1">u1</string>
+	<string name="u2">u2</string>			
+</resources>

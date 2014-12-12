@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+xmlns:android="http://schemas.android.com/apk/res/android" >
+<PreferenceCategory android:title="Allmänt">
+    android:title="Allmänt" 
+ <ListPreference 
+     android:key="device_type"
+     android:entryValues="@array/deviceTypes" 
+     android:title="Dosans Typ" 
+     android:defaultValue="Mästare"
+     android:entries="@array/deviceTypes" />
+
+<EditTextPreference
+            android:key="lag_id"
+            android:title="Ange Lag" 
+            android:summary="Lagets benämning"
+            android:dialogTitle="Lag"
+            android:dialogMessage="Lagets benämning"    
+    />
+<EditTextPreference 
+    android:dialogTitle="Ange namn" 
+    android:title="Användarens namn" 
+    android:dialogMessage="Skriv in ditt namn här!" 
+    android:negativeButtonText="Cancel" 
+    android:positiveButtonText="Ok" 
+    android:key="user_id" 
+    /> 
+ </PreferenceCategory>
+
+<PreferenceCategory android:title="Developer Options" >    
+
+<EditTextPreference
+            android:key="server_location"
+            android:title="Server URL" 
+            android:summary="URL till Server"
+            android:dialogTitle="URL"
+            android:dialogMessage="Ange Url till server som har konfigurationsfilerna"    
+            android:defaultValue="http://www.teraim.com/" />
+    
+<EditTextPreference
+            android:key="bundle_name"
+            android:title="Stuprör" 
+            android:summary="URL till definition av stuprör"
+            android:dialogTitle="Stuprör"
+            android:dialogMessage="Ange Url till stuprör (workflow)"    
+            android:defaultValue="nilsbundle2.xml" />
+
+<EditTextPreference
+            android:key="config_name"
+            android:title="Artlista" 
+            android:summary="URL till definition av artlista"
+            android:dialogTitle="Artlista"
+            android:dialogMessage="Ange Url till artlistan!"    
+            android:defaultValue="artlista.csv" />
+<CheckBoxPreference
+    		android:key="dev_switch"
+    		android:title="Utvecklar funktioner"
+    		android:summary="Slår på avancerad loggning etc"
+    		android:dialogTitle="Utvecklarfunktion"
+    		android:dialogMessage="Slå på eller av utvecklarfunktionen"
+    		android:defaultValue="false" />
+<CheckBoxPreference
+    		android:key="no_version_control"
+    		android:title="Ladda alltid konfigurationsfiler"
+    		android:summary="Ingen versionskontroll"
+    		android:dialogTitle=""
+    		android:dialogMessage=""
+    		android:defaultValue="false" />
+
+</PreferenceCategory>
+
+	public static final String ARTLISTA_LOCATION = "config_name";
+	public static final String BUNDLE_LOCATION = "bundle_name";
+	public static final CharSequence SERVER_URL = "server_location";
+
+</PreferenceScreen>
