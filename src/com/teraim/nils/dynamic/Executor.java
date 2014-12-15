@@ -24,6 +24,7 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.Gravity;
 import android.widget.Toast;
 
 import com.teraim.nils.GlobalState;
@@ -46,6 +47,7 @@ import com.teraim.nils.dynamic.blocks.CreateEntryFieldBlock;
 import com.teraim.nils.dynamic.blocks.CreateSortWidgetBlock;
 import com.teraim.nils.dynamic.blocks.DisplayValueBlock;
 import com.teraim.nils.dynamic.blocks.JumpBlock;
+import com.teraim.nils.dynamic.blocks.MenuHeaderBlock;
 import com.teraim.nils.dynamic.blocks.SetValueBlock;
 import com.teraim.nils.dynamic.blocks.SetValueBlock.ExecutionBehavior;
 import com.teraim.nils.dynamic.blocks.StartBlock;
@@ -115,7 +117,13 @@ public abstract class Executor extends Fragment {
 		al = gs.getArtLista();
 		o = gs.getLogger();
 		wf = getFlow();
+		
 		gs.setCurrentContext(myContext);
+		
+		
+		
+		
+		
 		ifi = new IntentFilter();
 		ifi.addAction(BluetoothConnectionService.SYNK_DATA_RECEIVED);
 		ifi.addAction(BluetoothConnectionService.LINJE_STARTED);
@@ -555,7 +563,11 @@ public abstract class Executor extends Fragment {
 					((AddRuleBlock) b).create(myContext);
 
 				}
+				else if (b instanceof MenuHeaderBlock) {
 
+					((MenuHeaderBlock) b).create(myContext);
+
+				}
 				String cId = b.getBlockId();
 				String jNext = jump.get(cId);
 				if (jNext!=null) {	
@@ -580,8 +592,23 @@ public abstract class Executor extends Fragment {
 				//Trgger redraw event on lists.
 				//myContext.registerEvent(new WF_Event_OnSave("fackabuudle"));
 				Container root = myContext.getContainer("root");
-				if (root!=null)
+				if (root!=null) {
 					myContext.drawRecursively(root);
+	/*
+					Object mDrawerLayout;
+					if (hasDrawerMenu) {
+						mDrawerLayout = myContext.getDrawerMenu();
+						if (mDrawerLayout.isDrawerOpen(mDrawerList))
+							mDrawerLayout.closeDrawers();
+						mDrawerLayout.openDrawer(Gravity.LEFT);
+						} else {
+							mDrawerLayout.setEnabled(false);
+							Log.d("vortex","NO drawer menu!");
+						}
+						
+					}
+			*/
+				}
 				else {
 					o.addRow("");
 					o.addRedText("TEMPLATE ERROR: Cannot find the root container. \nEach template must have a root! Execution aborted.");				

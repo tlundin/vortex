@@ -33,6 +33,7 @@ import com.teraim.nils.log.DummyLogger;
 import com.teraim.nils.log.FastLogger;
 import com.teraim.nils.log.LoggerI;
 import com.teraim.nils.non_generics.Constants;
+import com.teraim.nils.ui.DrawerMenu;
 import com.teraim.nils.non_generics.StatusHandler;
 import com.teraim.nils.ui.MenuActivity;
 import com.teraim.nils.utils.DbHelper;
@@ -67,7 +68,8 @@ public class GlobalState  {
 	private SpinnerDefinition mySpinnerDef;
 	private MessageHandler myHandler;
 
-
+	private DrawerMenu myDrawerMenu;
+	
 	//Global state for sync.
 	private int syncStatus=BluetoothConnectionService.SYNK_STOPPED;	
 
@@ -131,7 +133,10 @@ public class GlobalState  {
 		//Get ParameterSafe.
 		mySafe = getSafe();
 		
+		//Handles status for 
 		myStatusHandler = new StatusHandler(this);
+		
+		
 	}
 
 
@@ -278,10 +283,12 @@ public class GlobalState  {
 		if (myWfs==null)
 			return null;
 		String[] array = new String[myWfs.keySet().size()];
-		int i=0;
-		for (Workflow wf:myWfs.values()) 
-			array[i++] = wf.getLabel();
-
+		int i=0;String label;
+		for (Workflow wf:myWfs.values()) {
+			label = wf.getLabel();
+			if (label!=null)
+				array[i++] = label;
+		}
 		return array;
 
 	}
@@ -624,6 +631,11 @@ public class GlobalState  {
 		sendEvent(BluetoothConnectionService.SYNK_UNBLOCK_UI);
 		setSyncStatus(BluetoothConnectionService.SYNC_READY_TO_ROCK);
 
+	}
+
+	public DrawerMenu getDrawerMenu() {
+		// TODO Auto-generated method stub
+		return myDrawerMenu;
 	}
 
 

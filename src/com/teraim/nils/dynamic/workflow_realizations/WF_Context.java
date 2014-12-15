@@ -6,11 +6,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import android.app.Activity;
 import android.content.Context;
+import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 
+import com.teraim.nils.R;
 import com.teraim.nils.dynamic.EventBroker;
 import com.teraim.nils.dynamic.Executor;
 import com.teraim.nils.dynamic.types.Rule;
@@ -34,6 +35,8 @@ public class WF_Context {
 	//ID for the container containing the template itself
 	private final int rootContainerId;
 	private String statusVariable=null;
+	
+	
 
 	public WF_Context(Context ctx,Executor e,int rootContainerId) {
 		this.ctx=ctx;
@@ -158,6 +161,7 @@ public class WF_Context {
 			drawRecursively(child);
 
 	}
+	
 	private List<Container> getChildren(Container key) {
 		List<Container>ret = new ArrayList<Container>();
 		if (key!=null) {

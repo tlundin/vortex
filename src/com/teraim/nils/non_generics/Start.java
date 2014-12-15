@@ -47,6 +47,7 @@ import com.teraim.nils.dynamic.types.Workflow;
 import com.teraim.nils.log.Logger;
 import com.teraim.nils.log.LoggerI;
 import com.teraim.nils.ui.BackgroundFragment;
+import com.teraim.nils.ui.DrawerMenu;
 import com.teraim.nils.ui.DrawerMenuAdapter;
 import com.teraim.nils.ui.DrawerMenuAdapter.RowType;
 import com.teraim.nils.ui.DrawerMenuHeader;
@@ -65,13 +66,8 @@ public class Start extends MenuActivity {
 
 	private final String VORTEX_VERSION = "Vortex_0_8";
 
-	private DrawerLayout mDrawerLayout;
-	private ListView mDrawerList;
-	private ActionBarDrawerToggle mDrawerToggle;
 	private GlobalState gs;
-	private List<DrawerMenuItem> items;
 	private PersistenceHelper ph;
-	private DrawerMenuAdapter adapter;
 	//	private Map<String,List<String>> menuStructure;
 	private SparseArray<String>mapItemsToName;
 	//	private ArrayList<String> rutItems;
@@ -83,13 +79,15 @@ public class Start extends MenuActivity {
 	private String[] wfs;
 	private AsyncTask<GlobalState, Integer, LoadResult> histT=null;
 	public static Start singleton;
+	private DrawerMenu mDrawerMenu;
 
+	private ActionBarDrawerToggle mDrawerToggle;
 
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		Log.d("nils","in onCreate");
+		Log.d("nils","in Menu Activity onCreate");
 		singleton = this;
 		//This is the frame for all pages, defining the Action bar and Navigation menu.
 		setContentView(R.layout.naviframe);
@@ -113,13 +111,14 @@ public class Start extends MenuActivity {
 		//gs.createLogger();
 		ph = gs.getPersistence();
 
+		//drawermenu
+		mDrawerMenu = gs.getDrawerMenu();
+		mDrawerToggle = mDrawerMenu.getDrawerToggle();
 
 		//write down version..quickly! :)
 		ph.put(PersistenceHelper.CURRENT_VERSION_OF_PROGRAM, VORTEX_VERSION);
 
 
-		//drawer items
-		items = new ArrayList<DrawerMenuItem>();
 
 		//Maps itemheaders to items.
 		//		menuStructure = new HashMap<String,List<String>>();
@@ -132,47 +131,9 @@ public class Start extends MenuActivity {
 		//		menuStructure.put("Delyta",wfItems);
 
 
-		adapter = new DrawerMenuAdapter(this, items);
 
-
-
-		mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-		mDrawerList = (ListView) findViewById(R.id.left_drawer);
-
-
-		// Set the adapter for the list view
-		mDrawerList.setAdapter(adapter);
-		// Set the list's click listener
-		mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
-
-		mDrawerToggle = new ActionBarDrawerToggle(
-				this,                  /* host Activity */
-				mDrawerLayout,         /* DrawerLayout object */
-				R.drawable.ic_drawer,  /* nav drawer icon to replace 'Up' caret */
-				R.string.drawer_open,  /* "open drawer" description */
-				R.string.drawer_close  /* "close drawer" description */
-				) {
-
-			/** Called when a drawer has settled in a completely closed state. */
-			public void onDrawerClosed(View view) {
-				super.onDrawerClosed(view);
-
-			}
-
-			/** Called when a drawer has settled in a completely open state. */
-			public void onDrawerOpened(View drawerView) {
-				createDrawerMenu(wfs);
-				adapter.notifyDataSetChanged();				
-				super.onDrawerOpened(drawerView);
-
-			}
-
-		};
-
-
-
-		// Set the drawer toggle as the DrawerListener
-		mDrawerLayout.setDrawerListener(mDrawerToggle);
+		
+		
 		getActionBar().setDisplayHomeAsUpEnabled(true);
 		getActionBar().setHomeButtonEnabled(true);
 
@@ -320,18 +281,12 @@ public class Start extends MenuActivity {
 					loginConsole.addRow("Loaded App "+first.getApplication());
 					loginConsole.addRow("App Bundle Version "+first.getApplicationVersion());
 					loginConsole.addRow("Contains "+wfs.length+" workflows.");
-					loginConsole.addRow("Start program in Drawer menu to the left.");
 					gs.getLogger().addRow("Initialization done");
 					gs.getLogger().addRow("************************************************");
 
 					//We know the workflows. We can create the menu.
 					myState = State.POST_INIT;
-					createDrawerMenu(wfs);
-					adapter.notifyDataSetChanged();				
-
-					if (mDrawerLayout.isDrawerOpen(mDrawerList))
-						mDrawerLayout.closeDrawers();
-					mDrawerLayout.openDrawer(Gravity.LEFT);
+					//if a main workflow exist, fill the drawermenu.
 
 					loginConsole.draw();
 
@@ -486,39 +441,6 @@ public class Start extends MenuActivity {
 
 
 
-	private void createDrawerMenu(String[] wfs) {
-		mapItemsToName.clear();
-		if (myState == State.POST_INIT) {
-			VariableConfiguration al = gs.getArtLista();		
-			//final String[] mainItems = {"Ruta","Provyta"};
-			items.clear();
-			//Add "static" headers to menu.
-			items.add(new DrawerMenuHeader("Huvudmoment"));
-			int c = 1;
-			addItem(c++,"Ruta");
-			String cr = al.getVariableValue(null,"Current_Ruta");
-			if (cr!=null)
-				addItem(c++,"Provyta/Linje");		
-			items.add(new DrawerMenuHeader("Detalj"));
-			c++;
-			String cp = al.getVariableValue(null, "Current_Provyta");
-			String dy = al.getVariableValue(null, "Current_Delyta");
-			if (cp!=null && cr!=null && dy != null) {
-				for (int i=0;i<wfs.length;i++) 
-					addItem(c++,wfs[i]);
-			}
-
-		} else {
-			items.add(new DrawerMenuHeader("Standby.."));
-		}
-
-	}
-
-
-	private void addItem(int i, String s) {
-		items.add(new DrawerMenuSelectable(s));
-		mapItemsToName.put(i,s);
-	}
 
 
 
@@ -539,81 +461,22 @@ public class Start extends MenuActivity {
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		// Pass the event to ActionBarDrawerToggle, if it returns
+		// Pass event to ActionBarDrawerToggle, if it returns
 		// true, then it has handled the app icon touch event
-		if (mDrawerToggle.onOptionsItemSelected(item)) {
+		if (mDrawerToggle.onOptionsItemSelected(item)) 
 			return true;
-		}
-		// Handle your other action bar items...
+		
+		// Handle other action bar items
 
 		return super.onOptionsItemSelected(item);
 	}
 
-	private class DrawerItemClickListener implements ListView.OnItemClickListener {
-		private boolean firstTimeClick=true;
 
-		@Override
-		public void onItemClick(AdapterView parent, View view, int position, long id) {
-			if (firstTimeClick) {
-				// Create new fragment and transaction
-				Fragment newFragment = new BackgroundFragment();
-				FragmentTransaction transaction = getFragmentManager().beginTransaction();
-				// Replace whatever is in the fragment_container view with this fragment,
-				// and add the transaction to the back stack
-				transaction.replace(R.id.content_frame, newFragment);			
-				// Commit the transaction
-				transaction.commit();
-				firstTimeClick=false;
-
-			}
-
-			if (items.get(position).getViewType()!=RowType.HEADER_ITEM.ordinal()) {				
-				selectItem(position);
-			} else {
-				Log.d("nils","header selected. no action");
-			}
-		}
-	}
 
 	//
 
 
-	/** Swaps fragments in the main content view */
-	private void selectItem(int position) {
 
-		// Highlight the selected item, update the title, and close the drawer
-		mDrawerList.setItemChecked(position, true);
-		String wfId = mapItemsToName.get(position);
-
-		Workflow wf = gs.getWorkflowFromLabel(wfId);
-
-		// Create a new fragment and specify the  to show based on position
-		Fragment fragment=null;
-		int p=1;
-		if (wf!=null) 
-			fragment = wf.createFragment();
-		else if (position == p++)
-			fragment = new SimpleRutaTemplate();
-		else if (position == p++)
-			fragment = new ProvytaTemplate();
-		/*
-		else if (position == p++)
-			fragment = new LinjePortalTemplate();
-		else if (position == p++) 
-			fragment = new TagTemplate();
-		else if (position == p++) 
-			fragment = new FotoTemplate();
-		 */
-		else
-			fragment = new Fragment();
-
-		Bundle args = new Bundle();
-		args.putString("workflow_name", wf==null?wfId:wf.getName());
-		fragment.setArguments(args);
-
-		// Insert the fragment by replacing any existing fragment
-		changePage(fragment, wfId);
-	}
 
 	@Override
 	public void setTitle(CharSequence title) {
@@ -629,7 +492,9 @@ public class Start extends MenuActivity {
 		.addToBackStack(null)
 		.commit();
 		setTitle(title);
-		mDrawerLayout.closeDrawer(mDrawerList);
+		//close menu if exists..
+		mDrawerMenu.closeDrawer();
+		//mDrawerLayout.closeDrawer(mDrawerList);
 	}
 
 
