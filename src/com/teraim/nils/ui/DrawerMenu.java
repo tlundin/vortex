@@ -1,15 +1,9 @@
 package com.teraim.nils.ui;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-
-import com.teraim.nils.R;
-import com.teraim.nils.dynamic.VariableConfiguration;
-import com.teraim.nils.dynamic.templates.ProvytaTemplate;
-import com.teraim.nils.dynamic.templates.SimpleRutaTemplate;
-import com.teraim.nils.dynamic.types.Workflow;
-import com.teraim.nils.non_generics.Start;
-import com.teraim.nils.ui.DrawerMenuAdapter.RowType;
+import java.util.Map;
 
 import android.app.Activity;
 import android.app.Fragment;
@@ -23,6 +17,11 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
+import com.teraim.nils.R;
+import com.teraim.nils.dynamic.types.Workflow;
+import com.teraim.nils.non_generics.Start;
+import com.teraim.nils.ui.DrawerMenuAdapter.RowType;
+
 public class DrawerMenu {
 
 	private Activity frameActivity;
@@ -31,12 +30,15 @@ public class DrawerMenu {
 	private DrawerLayout mDrawerLayout;
 	private ListView mDrawerList;
 	private ActionBarDrawerToggle mDrawerToggle;
-
-	public DrawerMenu(Activity a) {
+	private int currentIndex=0;
+	private Map<Integer,Integer> index; 
+	private List<Workflow> workflowsL;
 	
+	public DrawerMenu(Activity a) {	
 		frameActivity=a;
+		createMenu();
 	}
-	
+
 	private class DrawerItemClickListener implements ListView.OnItemClickListener {
 		private boolean firstTimeClick=true;
 
@@ -61,86 +63,104 @@ public class DrawerMenu {
 				Log.d("nils","header selected. no action");
 			}
 		}
-		
+
 		/** Swaps fragments in the main content view */
 		private void selectItem(int position) {
 
 			// Highlight the selected item, update the title, and close the drawer
 			mDrawerList.setItemChecked(position, true);
 			//String wfId = mapItemsToName.get(position);
-
-			//Workflow wf = gs.getWorkflowFromLabel(wfId);
-
-			// Create a new fragment and specify the  to show based on position
-			Fragment fragment=null;
-			int p=1;
-			if (wf!=null) 
-				fragment = wf.createFragment();
-			else
-				fragment = new Fragment();
-
-			Bundle args = new Bundle();
-			args.putString("workflow_name", wf==null?wfId:wf.getName());
-			fragment.setArguments(args);
-
-			// Insert the fragment by replacing any existing fragment
-			Start.singleton.changePage(fragment, wfId);
+			Integer pos = index.get(position);
+			if (pos!=null) {
+				Workflow wf = workflowsL.get(pos);
+				//Workflow wf = gs.getWorkflowFromLabel(wfId);
+				if (wf == null)
+					Log.e("vortex","ups!!! Got null when looking for workflow ");
+				else {
+					// Create a new fragment and specify the  to show based on position
+					Fragment fragment=wf.createFragment();
+					Bundle args = new Bundle();
+					args.putString("workflow_name", wf.getName());
+					fragment.setArguments(args);
+					DrawerMenu.this.closeDrawer();
+					// Insert the fragment by replacing any existing fragment
+					Start.singleton.changePage(fragment, wf.getName());
+				}
+			} else
+				Log.e("vortex","Could not find any entry for menu position "+position);
 		}
 	}
-	
-	public void createMenu(ArrayList<DrawerMenuItem> items) {
-		//drawer items
+		public void createMenu() {
+			//drawer items
+			//different if already created?
+			items = new ArrayList<DrawerMenuItem>(); 
+			mAdapter = new DrawerMenuAdapter(frameActivity, items);
 
-		mAdapter = new DrawerMenuAdapter(frameActivity, items);
+			mDrawerLayout = (DrawerLayout) frameActivity.findViewById(R.id.drawer_layout);
+			mDrawerList = (ListView) frameActivity.findViewById(R.id.left_drawer);
 
-		mDrawerLayout = (DrawerLayout) frameActivity.findViewById(R.id.drawer_layout);
-		mDrawerList = (ListView) frameActivity.findViewById(R.id.left_drawer);
+			// Set the adapter for the list view
+			mDrawerList.setAdapter(mAdapter);
+			// Set the list's click listener
+			mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
 
-		// Set the adapter for the list view
-		mDrawerList.setAdapter(mAdapter);
-		// Set the list's click listener
-		mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
+			mDrawerToggle = new ActionBarDrawerToggle(
+					frameActivity,                  /* host Activity */
+					mDrawerLayout,         /* DrawerLayout object */
+					R.drawable.ic_drawer,  /* nav drawer icon to replace 'Up' caret */
+					R.string.drawer_open,  /* "open drawer" description */
+					R.string.drawer_close  /* "close drawer" description */
+					) {
 
-		mDrawerToggle = new ActionBarDrawerToggle(
-				frameActivity,                  /* host Activity */
-				mDrawerLayout,         /* DrawerLayout object */
-				R.drawable.ic_drawer,  /* nav drawer icon to replace 'Up' caret */
-				R.string.drawer_open,  /* "open drawer" description */
-				R.string.drawer_close  /* "close drawer" description */
-				) {
+				/** Called when a drawer has settled in a completely closed state. */
+				public void onDrawerClosed(View view) {
+					super.onDrawerClosed(view);
 
-			/** Called when a drawer has settled in a completely closed state. */
-			public void onDrawerClosed(View view) {
-				super.onDrawerClosed(view);
+				}
 
-			}
+				/** Called when a drawer has settled in a completely open state. */
+				public void onDrawerOpened(View drawerView) {
+					//createDrawerMenu(wfs);
+					//mAdapter.notifyDataSetChanged();				
+					super.onDrawerOpened(drawerView);
 
-			/** Called when a drawer has settled in a completely open state. */
-			public void onDrawerOpened(View drawerView) {
-				//createDrawerMenu(wfs);
-				//mAdapter.notifyDataSetChanged();				
-				super.onDrawerOpened(drawerView);
+				}
 
-			}
+			};
 
-		};
+			// Set the drawer toggle as the DrawerListener
+			mDrawerLayout.setDrawerListener(mDrawerToggle);
 
-		// Set the drawer toggle as the DrawerListener
-		mDrawerLayout.setDrawerListener(mDrawerToggle);
-		
-		mAdapter.notifyDataSetChanged();				
-		
+			mAdapter.notifyDataSetChanged();				
 
-	}
-	
-	public void closeDrawer() {
-		mDrawerLayout.closeDrawers();
-	}
-	
-	public void openDrawer() {			
-		mDrawerLayout.openDrawer(Gravity.LEFT);	
-	}
-	/*
+			workflowsL = new ArrayList<Workflow>();
+			index = new HashMap<Integer,Integer>();
+			currentIndex=0;
+			
+		}
+
+		public void addHeader(String label) {
+			items.add(new DrawerMenuHeader(label));
+		}
+
+		public void addItem(String label, Workflow wf) {
+			//add the workflow reference to a list
+			workflowsL.add(wf);
+			//keep track of the location.
+			index.put(items.size(),currentIndex++);
+			items.add(new DrawerMenuSelectable(label));
+
+		}
+
+		public void closeDrawer() {
+			mDrawerLayout.closeDrawers();
+		}
+
+		public void openDrawer() {	
+			mAdapter.notifyDataSetChanged();				
+			mDrawerLayout.openDrawer(Gravity.LEFT);	
+		}
+		/*
 	private void createDrawerMenu(Workflow main) {
 		mapItemsToName.clear();
 		if (myState == State.POST_INIT) {
@@ -169,11 +189,15 @@ public class DrawerMenu {
 		}
 
 	}
-	*/
-
-	public ActionBarDrawerToggle getDrawerToggle() {
-		return mDrawerToggle;
-	}
-}
+		 */
 
 	
+
+	public ActionBarDrawerToggle getDrawerToggle() {
+		// TODO Auto-generated method stub
+		return mDrawerToggle;
+	}
+
+	
+
+}

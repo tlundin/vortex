@@ -64,8 +64,12 @@ public class DefaultTemplate extends Executor {
 		my_root = (LinearLayout)v.findViewById(R.id.myRoot);
 		myContext.addContainers(getContainers());
 
-		if (wf!=null)
+		if (wf!=null) {
+			Log.d("vortex","Executing workflow!!");
 			run();
+		} else
+			Log.d("vortex","No workflow found in oncreate default!!!!");
+			
 		
 		return v;
 	}

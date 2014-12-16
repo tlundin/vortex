@@ -327,7 +327,7 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 		
 	}	private Block readBlockDefineMenuEntry(XmlPullParser parser) throws IOException, XmlPullParserException {
 //		o.addRow("Parsing block: block_set_value...");
-		String id=null,type=null,label=null,target=null;
+		String id=null,type=null,target=null;
 		parser.require(XmlPullParser.START_TAG, null,"block_defineMenuEntry");
 		while (parser.next() != XmlPullParser.END_TAG) {
 			if (parser.getEventType() != XmlPullParser.START_TAG) {
@@ -340,14 +340,12 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 				target = readText("target",parser);
 			} else if (name.equals("type")) {
 				type = readText("type",parser);
-			} else if (name.equals("label")) {
-				label = readText("label",parser);
 			} else
 				skip(name,parser);
 			
 		}
-		checkForNull("block_ID",id,"target",target,"type",type,"label",label);
-		return new MenuEntryBlock(id,target,type,label);
+		checkForNull("block_ID",id,"target",target,"type",type);
+		return new MenuEntryBlock(id,target,type);
 		
 	}
 	private Block readBlockSetValue(XmlPullParser parser) throws IOException, XmlPullParserException {

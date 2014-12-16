@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.TreeMap;
 
 import android.content.Context;
 import android.content.Intent;
@@ -233,7 +234,7 @@ public class GlobalState  {
 	 */
 
 	public Map<String,Workflow> thawWorkflows() {
-		Map<String,Workflow> ret = new HashMap<String,Workflow>();
+		Map<String,Workflow> ret = new TreeMap<String,Workflow>(String.CASE_INSENSITIVE_ORDER);
 		List<Workflow> l = ((ArrayList<Workflow>)Tools.readObjectFromFile(myC,Constants.CONFIG_FILES_DIR+Constants.WF_FROZEN_FILE_ID));		
 		if (l==null) 
 			Log.e("NILS","Parse Error: Workflowlist is null in SetWorkFlows");
@@ -636,6 +637,10 @@ public class GlobalState  {
 	public DrawerMenu getDrawerMenu() {
 		// TODO Auto-generated method stub
 		return myDrawerMenu;
+	}
+
+	public void setDrawerMenu(DrawerMenu mDrawerMenu) {
+		myDrawerMenu = mDrawerMenu;
 	}
 
 

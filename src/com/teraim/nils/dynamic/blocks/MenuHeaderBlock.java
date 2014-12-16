@@ -3,6 +3,9 @@
  */
 package com.teraim.nils.dynamic.blocks;
 
+import android.util.Log;
+
+import com.teraim.nils.GlobalState;
 import com.teraim.nils.dynamic.workflow_realizations.WF_Context;
 
 /**
@@ -24,6 +27,12 @@ public class MenuHeaderBlock extends Block {
 	}
 
 	public void create(WF_Context myContext) {
+		Log.d("vortex","In create menuheader");
+		
+		GlobalState gs = GlobalState.getInstance(myContext.getContext());
+		
+		gs.getDrawerMenu().addHeader(label);
+		
 		
 	}
 

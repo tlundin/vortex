@@ -11,17 +11,6 @@
         android:layout_centerInParent="true"
         android:scaleType="centerCrop"
             android:src="@drawable/frontpic" />
-    
-    <TextView 
-        android:id="@+id/versionTxt"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:layout_marginLeft="40dp"
-        android:textColor="@color/white"
-        android:layout_marginTop="250dp"/>
 
      <TextView
          android:id="@+id/logger"
@@ -37,6 +26,34 @@
          android:paddingLeft="16dip"
          android:scrollbars="vertical"
          android:textSize="18sp" />
+
+    <ImageView
+        android:id="@+id/vortexlogo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/logger"
+        android:layout_alignLeft="@+id/teraimlogo"
+        android:src="@drawable/vortex_small" />
+
+    <TextView
+        android:id="@+id/versionTxt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/logger"
+        android:layout_alignParentLeft="true"
+        android:layout_marginBottom="55dp"
+        android:textColor="@color/white"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <ImageView
+        android:id="@+id/teraimlogo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/vortexlogo"
+        android:layout_alignParentRight="true"
+        android:layout_marginBottom="16dp"
+        android:src="@drawable/teraim_small" />
 	
 </RelativeLayout>
 

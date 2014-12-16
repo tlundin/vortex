@@ -69,7 +69,7 @@ public class Start extends MenuActivity {
 	private GlobalState gs;
 	private PersistenceHelper ph;
 	//	private Map<String,List<String>> menuStructure;
-	private SparseArray<String>mapItemsToName;
+	
 	//	private ArrayList<String> rutItems;
 	//	private ArrayList<String> wfItems;
 	private enum State {INITIAL, HISTORICAL_LOADED,WF_LOADED, CONF_LOADED, VALIDATE,POST_INIT};
@@ -108,11 +108,13 @@ public class Start extends MenuActivity {
 		//GlobalState
 		if (gs==null)
 			gs = GlobalState.getInstance(getApplicationContext());
-		//gs.createLogger();
 		ph = gs.getPersistence();
 
 		//drawermenu
-		mDrawerMenu = gs.getDrawerMenu();
+		if (mDrawerMenu!=null)
+			mDrawerMenu.closeDrawer();
+		mDrawerMenu = new DrawerMenu(this);
+		gs.setDrawerMenu(mDrawerMenu);
 		mDrawerToggle = mDrawerMenu.getDrawerToggle();
 
 		//write down version..quickly! :)
@@ -125,8 +127,6 @@ public class Start extends MenuActivity {
 		//		rutItems = new ArrayList<String>();
 		//		wfItems = new ArrayList<String>();
 		//Maps item numbers to Fragments.
-		mapItemsToName = new SparseArray<String>();
-
 		//		menuStructure.put("Ruta och Provyta",rutItems);
 		//		menuStructure.put("Delyta",wfItems);
 
@@ -164,12 +164,12 @@ public class Start extends MenuActivity {
 			//loginConsole.addRedText("");
 			if (ph.get(PersistenceHelper.LAG_ID_KEY).equals(PersistenceHelper.UNDEFINED)||
 					ph.get(PersistenceHelper.USER_ID_KEY).equals(PersistenceHelper.UNDEFINED)) {
-				loginConsole.addRedText("LagID eller Namn fattas. Lägg in det!");				
+				loginConsole.addYellowText("LagID och/eller Namn fattas.");				
 			}
 			loginConsole.addRow("");
 			loginConsole.addText("Ändringar:\n"					
-					+ "* Vortex engine. \n"
-					+ "* Dynamic menus.\n"
+					+ "* Dynamiska menyer. \n"
+					+ "* Ändrad konfiguration.\n"
 					);
 
 			if (this.isNetworkAvailable()) {
@@ -286,8 +286,6 @@ public class Start extends MenuActivity {
 
 					//We know the workflows. We can create the menu.
 					myState = State.POST_INIT;
-					//if a main workflow exist, fill the drawermenu.
-
 					loginConsole.draw();
 
 					//init current year.
@@ -304,23 +302,23 @@ public class Start extends MenuActivity {
 					v = gs.getArtLista().getVariableInstance("Current_Ruta");
 					if (v.getValue()==null)
 						v.setValue("1");
-					/*
-				v = gs.getArtLista().getVariableInstance("Current_Provyta");
-				if (v.getValue()==null)
-					v.setValue("2");
-				v = gs.getArtLista().getVariableInstance("Current_Delyta");
-				if (v.getValue()==null)
-					v.setValue("100");
-				v = gs.getArtLista().getVariableInstance("Current_Linje");
-				if (v.getValue()==null)
-					v.setValue("1");
-				v = gs.getArtLista().getVariableInstance("Current_Meter");
-				if (v.getValue()==null)
-					v.setValue("1");
-
-					 */
-					//xx
-					//createDrawerMenu(wfs);		
+					v = gs.getArtLista().getVariableInstance("Current_Provyta");
+					if (v.getValue()==null)
+						v.setValue("1");
+					v = gs.getArtLista().getVariableInstance("Current_Delyta");
+					if (v.getValue()==null)
+						v.setValue("1");
+					
+					//execute main workflow if it exists.
+					Workflow wf = gs.getWorkflow("Main");
+					if (wf!=null) {
+						Fragment mainFragment = wf.createFragment();
+						Bundle args = new Bundle();
+						args.putString("workflow_name", "Main");
+						mainFragment.setArguments(args);
+						this.changePage(mainFragment, "Main");
+						Log.d("vortex","executeing workflow main!");
+					}
 				} else
 					loginConsole.addRedText("Found no workflows");
 				gs.sendEvent(MenuActivity.INITDONE);
@@ -391,7 +389,8 @@ public class Start extends MenuActivity {
 					backgroundB.setOnClickListener(new OnClickListener() {				
 						@Override
 						public void onClick(View v) {						
-							dialog.dismiss();						
+							dialog.dismiss();
+							loader(State.HISTORICAL_LOADED,ErrorCode.whatever);
 						}
 					});
 					dialog.show();
@@ -492,8 +491,7 @@ public class Start extends MenuActivity {
 		.addToBackStack(null)
 		.commit();
 		setTitle(title);
-		//close menu if exists..
-		mDrawerMenu.closeDrawer();
+		
 		//mDrawerLayout.closeDrawer(mDrawerList);
 	}
 
@@ -555,7 +553,7 @@ public class Start extends MenuActivity {
 		if (ph.get(PersistenceHelper.SERVER_URL).equals(PersistenceHelper.UNDEFINED))
 			ph.put(PersistenceHelper.SERVER_URL, "www.teraim.com");
 		if (ph.get(PersistenceHelper.BUNDLE_LOCATION).equals(PersistenceHelper.UNDEFINED))
-			ph.put(PersistenceHelper.BUNDLE_LOCATION, "nilsbundle5.xml");
+			ph.put(PersistenceHelper.BUNDLE_LOCATION, "VortexBundle.xml");
 		if (ph.get(PersistenceHelper.CONFIG_LOCATION).equals(PersistenceHelper.UNDEFINED))
 			ph.put(PersistenceHelper.CONFIG_LOCATION, "configv2.csv");
 		if (ph.get(PersistenceHelper.DEVELOPER_SWITCH).equals(PersistenceHelper.UNDEFINED))

@@ -47,6 +47,7 @@ import com.teraim.nils.dynamic.blocks.CreateEntryFieldBlock;
 import com.teraim.nils.dynamic.blocks.CreateSortWidgetBlock;
 import com.teraim.nils.dynamic.blocks.DisplayValueBlock;
 import com.teraim.nils.dynamic.blocks.JumpBlock;
+import com.teraim.nils.dynamic.blocks.MenuEntryBlock;
 import com.teraim.nils.dynamic.blocks.MenuHeaderBlock;
 import com.teraim.nils.dynamic.blocks.SetValueBlock;
 import com.teraim.nils.dynamic.blocks.SetValueBlock.ExecutionBehavior;
@@ -106,6 +107,8 @@ public abstract class Executor extends Fragment {
 	private Set<Variable> visiVars;
 
 	protected VariableConfiguration al;
+
+	
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -206,6 +209,7 @@ public abstract class Executor extends Fragment {
 			int blockP = 0;
 			Set<Variable>blockVars;
 			boolean contextError = false;
+			boolean hasDrawer=false;
 			Variable missingVariable = null;
 			String cContext = null;
 			while(notDone) {
@@ -564,10 +568,15 @@ public abstract class Executor extends Fragment {
 
 				}
 				else if (b instanceof MenuHeaderBlock) {
-
 					((MenuHeaderBlock) b).create(myContext);
-
+					hasDrawer=true;
 				}
+				
+				else if (b instanceof MenuEntryBlock) {
+					((MenuEntryBlock) b).create(myContext);
+					hasDrawer=true;
+				}
+				
 				String cId = b.getBlockId();
 				String jNext = jump.get(cId);
 				if (jNext!=null) {	
@@ -594,6 +603,11 @@ public abstract class Executor extends Fragment {
 				Container root = myContext.getContainer("root");
 				if (root!=null) {
 					myContext.drawRecursively(root);
+				//open menu if any
+				if (hasDrawer) {
+					Log.d("vortex","Opening drawer menu!");
+					gs.getDrawerMenu().openDrawer();
+				}
 	/*
 					Object mDrawerLayout;
 					if (hasDrawerMenu) {

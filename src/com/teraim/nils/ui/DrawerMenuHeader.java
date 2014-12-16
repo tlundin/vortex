@@ -12,8 +12,8 @@ public class DrawerMenuHeader implements DrawerMenuItem {
 
 	private final String name;
 
-	public DrawerMenuHeader(String name) {
-		this.name = name;
+	public DrawerMenuHeader(String label) {
+		this.name = label;
 	}
 
 	@Override

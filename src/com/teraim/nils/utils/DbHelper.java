@@ -1115,7 +1115,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
 
 	public void eraseDelytor(GlobalState gs, String currentRuta, String currentProvyta,boolean synk) {
-		String yCol = keyColM.get("Ã¥r");
+		String yCol = keyColM.get("år");
 		String rCol = keyColM.get("ruta");
 		String pyCol = keyColM.get("provyta");
 		String dyCol = keyColM.get("delyta");
@@ -1151,7 +1151,7 @@ public class DbHelper extends SQLiteOpenHelper {
 	}
 
 	public void eraseProvyta(String currentRuta, String currentProvyta,boolean synk) {
-		String yCol = keyColM.get("Ã¥r");
+		String yCol = keyColM.get("år");
 		String rCol = keyColM.get("ruta");
 		String pyCol = keyColM.get("provyta");
 		Log.d("nils","In eraseProvyta with rutaCol = "+rCol+" and pyCol = "+pyCol);
@@ -1166,7 +1166,7 @@ public class DbHelper extends SQLiteOpenHelper {
 	}
 
 	public void eraseSmaProvyDelytaAssoc(String currentRuta, String currentProvyta) {
-		String yCol = keyColM.get("Ã¥r");
+		String yCol = keyColM.get("år");
 		String rCol = keyColM.get("ruta");
 		String pyCol = keyColM.get("provyta");
 		int affRows = db.delete(DbHelper.TABLE_VARIABLES, 
@@ -1205,12 +1205,12 @@ public class DbHelper extends SQLiteOpenHelper {
 		pc= getColumnName("provyta");
 		dc= getColumnName("delyta");
 		sc= getColumnName("smaprovyta");
-		ac= getColumnName("Ã¥r");
+		ac= getColumnName("år");
 	}
 	
 	public void deleteHistory() {
 		Log.d("nils","deleting all historical values");
-		int rows = db.delete(TABLE_VARIABLES, getColumnName("Ã¥r")+"= ?", new String[]{VariableConfiguration.HISTORICAL_MARKER});
+		int rows = db.delete(TABLE_VARIABLES, getColumnName("år")+"= ?", new String[]{VariableConfiguration.HISTORICAL_MARKER});
 		Log.d("nils","Deleted "+rows+" rows of history");
 	}
 	
