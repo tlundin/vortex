@@ -15,7 +15,7 @@ public class PersistenceHelper {
 	public static final String MITTPUNKT_KEY = "mittpunkt";
 	public static final String DEVICE_COLOR_KEY = "device_type";
 	public static final String CONFIG_LOCATION = "config_name";
-	public static final String BUNDLE_LOCATION = "bundle_name";
+	public static final String BUNDLE_NAME = "bundle_name";
 	public static final String SERVER_URL = "server_location";
 	public static final String CURRENT_VERSION_OF_WF_BUNDLE = "current_version_wf";
 	public static final String CURRENT_VERSION_OF_CONFIG_FILE = "current_version_config";
@@ -32,7 +32,6 @@ public class PersistenceHelper {
 	public static final String NO_OF_RUTOR = "antalrutor";
 	public static final String CHANGE_BUNDLE = "change_bundle";
 	public static final String HIST_LOAD_COUNTER = "hist_counter";
-	public static final String SWITCH_TO_BUNDLE_5 = "switch_bundle_5";
 
 	SharedPreferences sp;
 	

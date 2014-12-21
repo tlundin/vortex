@@ -941,7 +941,7 @@ public class DbHelper extends SQLiteOpenHelper {
 			Log.e("nils","either syncarray is short or null. no data to sync.");
 			return;
 		}
-			Log.d("nils","In Synchronize with "+ses.length+" arguments. I am "+(isMaster?"master":"slave"));
+			Log.d("nils","In Synchronize with "+ses.length+" arguments. I am "+(isMaster?"Master":"Client"));
 		for (SyncEntry s:ses) {
 			
 			if (synC++%10==0)

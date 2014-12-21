@@ -485,11 +485,11 @@ public class GlobalState  {
 	public boolean isMaster() {
 		String m;
 		if ((m = ph.get(PersistenceHelper.DEVICE_COLOR_KEY)).equals(PersistenceHelper.UNDEFINED)) {
-			ph.put(PersistenceHelper.DEVICE_COLOR_KEY, "Mästare");
+			ph.put(PersistenceHelper.DEVICE_COLOR_KEY, "Master");
 			return true;
 		}
 		else
-			return m.equals("Mästare");
+			return m.equals("Master");
 
 	}
 

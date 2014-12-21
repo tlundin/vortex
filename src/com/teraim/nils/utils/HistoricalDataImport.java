@@ -83,7 +83,13 @@ public class HistoricalDataImport extends AsyncTask<GlobalState ,Integer,LoadRes
 			serverUrl = "http://"+serverUrl;
 			o.addRow("server url name missing http header...adding");		
 		}
-		LoadResult ec=load(serverUrl+Constants.PY_HISTORICAL_FILE_NAME);
+		String bundle = ph.get(PersistenceHelper.BUNDLE_NAME);
+		if (bundle == null) {
+			Log.d("vortex","missing bundle name...returning");
+			return null;
+		}
+		bundle = bundle.toLowerCase();
+		LoadResult ec=load(serverUrl+"/"+bundle+"/"+Constants.PY_HISTORICAL_FILE_NAME);
 
 		if (ec.errCode==ErrorCode.HistoricalLoaded) {
 			int histCounter = ph.getI(PersistenceHelper.HIST_LOAD_COUNTER+vNo);

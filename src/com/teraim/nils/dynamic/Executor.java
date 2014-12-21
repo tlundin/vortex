@@ -123,10 +123,6 @@ public abstract class Executor extends Fragment {
 		
 		gs.setCurrentContext(myContext);
 		
-		
-		
-		
-		
 		ifi = new IntentFilter();
 		ifi.addAction(BluetoothConnectionService.SYNK_DATA_RECEIVED);
 		ifi.addAction(BluetoothConnectionService.LINJE_STARTED);
@@ -630,7 +626,7 @@ public abstract class Executor extends Fragment {
 			} else {
 				String dialogText = "Du kan inte köra flödet just nu pga fel i kontext: ["+cContext+"]";
 				if (missingVariable!=null) 
-					dialogText = "Du kan inte köra flödet just nu eftersom kontextvariabeln "+missingVariable.getId()+" saknar ett värde. Det kan hända om du kör flödet från genvägsmenyn.";
+					dialogText = "Du kan inte köra flödet just nu eftersom kontextvariabeln "+missingVariable.getId()+" saknar ett värde. ";
 				new AlertDialog.Builder(getActivity())
 				.setTitle("Kontext problem")
 				.setMessage(dialogText) 

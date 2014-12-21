@@ -29,7 +29,6 @@ public class Constants {
 	public static final String PIC_ROOT_DIR = NILS_ROOT_DIR + "pics/";
 	public static final String OLD_PIC_ROOT_DIR = NILS_ROOT_DIR + "old_pics/";
 	
-	public static final String PY_HISTORICAL_FILE_NAME = "gammdata_2014_2.json";
 	//public static String NILS_BASE_DIR = "/nils";
 	public static String UNDEFINED = "undefined";
 
@@ -63,8 +62,6 @@ public class Constants {
 
 	public static final String WF_FROZEN_SPINNER_ID = "spinnerdefinitions";
 
-	public static final String SPINNER_DEF_URL = "http://www.teraim.com/spinnerdef.csv";
-
 	public static final String SLU_URL = "https://arbetsplats.slu.se/sites/srh/Landskapsanalys/Faltportal/default.aspx";
 
 	public static final int MAX_NILS = 16;
@@ -94,6 +91,13 @@ public class Constants {
 
 	public static final String NO_DEFAULT_VALUE = "*NULL*";
 
+	public static final String TypesFileName = "Types.csv";
+
+	public static final String VariablesFileName = "Variables.csv";
+	
+	public static final String SpinnersFileName = "Spinners.csv";
+
+	public static final String PY_HISTORICAL_FILE_NAME = "Importdata.json";
 
 
 	

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 <string-array name="deviceTypes">
-    <item>Mästare</item>
-    <item>Slav</item>
+    <item>Master</item>
+    <item>Client</item>
 </string-array> 
 <string-array name="menu">
-    <item>Beskrivning</item>
-    <item>På webben</item>
+    <item>Description</item>
+    <item>On the Web</item>
     <item>Delete</item>
 </string-array>    
 </resources>

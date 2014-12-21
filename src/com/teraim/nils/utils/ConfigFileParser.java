@@ -82,7 +82,7 @@ public class ConfigFileParser extends AsyncTask<Context,Void,ErrorCode>{
 			serverUrl = "http://"+serverUrl;
 			o.addRow("server url name missing http header...adding");		
 		}
-		ErrorCode code = parse(serverUrl,ph.get(PersistenceHelper.CONFIG_LOCATION));
+		ErrorCode code = parse(serverUrl);
 
 		if (code == ErrorCode.newVarPatternVersionLoaded||
 				code == ErrorCode.newConfigVersionLoaded|| 
@@ -113,14 +113,14 @@ public class ConfigFileParser extends AsyncTask<Context,Void,ErrorCode>{
 
 
 
-	public ErrorCode parse(String serverUrl, String fileName) {
-		final String FileUrl = serverUrl+fileName;
-		final String VarUrl = serverUrl+"varpattern.csv";
+	public ErrorCode parse(String serverUrl) {
+		final String FileUrl = serverUrl+ph.get(PersistenceHelper.BUNDLE_NAME).toLowerCase()+"/"+Constants.TypesFileName;
+		final String VarUrl = serverUrl+ph.get(PersistenceHelper.BUNDLE_NAME).toLowerCase()+"/"+Constants.VariablesFileName;
 		boolean parseConfig=true,parseVarPattern=true;
 
 		o.addRow("");
 		o.addYellowText("Now parsing variable configuration files. ");
-		o.addRow("Artlista URL: "+FileUrl);
+		o.addRow("Vallista URL: "+FileUrl);
 		o.addRow("Variable URL: "+VarUrl);
 		try {	
 			URL url = new URL(FileUrl);

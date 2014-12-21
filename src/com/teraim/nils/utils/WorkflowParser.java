@@ -95,7 +95,14 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 			serverUrl = "http://"+serverUrl;
 			o.addRow("server url name missing http header...adding");		
 		}
-		return parse(serverUrl+ph.get(PersistenceHelper.BUNDLE_LOCATION));
+		String bundle = ph.get(PersistenceHelper.BUNDLE_NAME);
+		if (bundle == null) {
+			Log.d("vortex","missing bundle name...returning");
+			return null;
+		}
+		bundle = bundle.toLowerCase();
+
+		return parse(serverUrl+bundle+"/"+ph.get(PersistenceHelper.BUNDLE_NAME)+".xml");
 	}
 
 	@Override

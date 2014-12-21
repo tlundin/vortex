@@ -64,7 +64,7 @@ import com.teraim.nils.utils.WorkflowParser;
 
 public class Start extends MenuActivity {
 
-	private final String VORTEX_VERSION = "Vortex_0_8";
+	private final String VORTEX_VERSION = "Vortex 0_8_1";
 
 	private GlobalState gs;
 	private PersistenceHelper ph;
@@ -170,6 +170,7 @@ public class Start extends MenuActivity {
 			loginConsole.addText("Ändringar:\n"					
 					+ "* Dynamiska menyer. \n"
 					+ "* Ändrad konfiguration.\n"
+					+ "* Autostart av flöde.\n"
 					);
 
 			if (this.isNetworkAvailable()) {
@@ -194,8 +195,9 @@ public class Start extends MenuActivity {
 		switch (state) {
 
 		case INITIAL:
-
-			loginConsole.addRow("Reading configuration files:\n"+ph.get(PersistenceHelper.BUNDLE_LOCATION)+": ");
+			//quick check that the bundle name is not null, empty or ends with xml.
+			if (checkBundleName()) {
+			loginConsole.addRow("Reading configuration files:\n"+ph.get(PersistenceHelper.BUNDLE_NAME)+".xml: ");
 			new WorkflowParser(ph, new FileLoadedCb() {
 
 				@Override
@@ -206,6 +208,8 @@ public class Start extends MenuActivity {
 				}
 
 			}).execute(this);
+			} else
+				loginConsole.addRedText("Missing application name! Select application to load under 'wrench' menu and restart the App!");
 			break;
 
 		case HISTORICAL_LOADED:
@@ -215,9 +219,9 @@ public class Start extends MenuActivity {
 			switch(errCode) {
 			case ioError:
 				loginConsole.addRedText("[IO-ERROR]");
-				loginConsole.addRow("Couldn't load "+(state==State.WF_LOADED?"workflow":"artlista and/or varpattern") +" config.\nWrong server url? :"+ph.get(PersistenceHelper.SERVER_URL)+
-						"\nWrong filename? : "+(state==State.WF_LOADED?ph.get(PersistenceHelper.BUNDLE_LOCATION):("Artlista: "+ph.get(PersistenceHelper.CONFIG_LOCATION)
-								+" Varpattern: "+ph.get("varpattern.csv"))));
+				loginConsole.addRow("Couldn't load configuration\nWrong server url? :"+ph.get(PersistenceHelper.SERVER_URL)+
+						"\nOr did you forget to create a folder named "+ph.get(PersistenceHelper.BUNDLE_NAME)+" ?");
+								
 				break;
 			case sameold:
 				loginConsole.addText("(No change)");
@@ -257,7 +261,7 @@ public class Start extends MenuActivity {
 
 			}	
 			if (state==State.WF_LOADED) {
-				loginConsole.addRow(ph.get(PersistenceHelper.CONFIG_LOCATION)+": ");			
+				loginConsole.addRow(Constants.TypesFileName+": ");			
 				new ConfigFileParser(ph, new FileLoadedCb() {
 					@Override
 					public void onFileLoaded(ErrorCode errCode,String ver) {
@@ -343,7 +347,7 @@ public class Start extends MenuActivity {
 				loginConsole.addRedText("[Could not find any workflows]");
 				break;
 			case missing_required_column:
-				loginConsole.addRedText("[A required column is missing from "+ph.get(PersistenceHelper.CONFIG_LOCATION)+"]");
+				loginConsole.addRedText("[A required column is missing from "+Constants.TypesFileName+"]");
 				break;
 			case ok:
 				loginConsole.addGreenText("[OK]");	
@@ -422,6 +426,20 @@ public class Start extends MenuActivity {
 
 
 	}
+
+
+
+	private boolean checkBundleName() {
+		String appName = ph.get(PersistenceHelper.BUNDLE_NAME);
+		if (appName == null || appName.length()==0)
+			return false;
+		if (appName.endsWith(".xml")) {
+			appName = appName.substring(0, appName.length()-4);
+			ph.put(PersistenceHelper.BUNDLE_NAME, appName);
+		}
+		return true;
+	}
+
 
 
 
@@ -552,10 +570,8 @@ public class Start extends MenuActivity {
 		//Set defaults if none.
 		if (ph.get(PersistenceHelper.SERVER_URL).equals(PersistenceHelper.UNDEFINED))
 			ph.put(PersistenceHelper.SERVER_URL, "www.teraim.com");
-		if (ph.get(PersistenceHelper.BUNDLE_LOCATION).equals(PersistenceHelper.UNDEFINED))
-			ph.put(PersistenceHelper.BUNDLE_LOCATION, "VortexBundle.xml");
-		if (ph.get(PersistenceHelper.CONFIG_LOCATION).equals(PersistenceHelper.UNDEFINED))
-			ph.put(PersistenceHelper.CONFIG_LOCATION, "configv2.csv");
+		if (ph.get(PersistenceHelper.BUNDLE_NAME).equals(PersistenceHelper.UNDEFINED))
+			ph.put(PersistenceHelper.BUNDLE_NAME, "Vortex");
 		if (ph.get(PersistenceHelper.DEVELOPER_SWITCH).equals(PersistenceHelper.UNDEFINED))
 			ph.put(PersistenceHelper.DEVELOPER_SWITCH, false);
 		if (ph.get(PersistenceHelper.VERSION_CONTROL_SWITCH_OFF).equals(PersistenceHelper.UNDEFINED))

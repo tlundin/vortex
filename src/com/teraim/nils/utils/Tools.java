@@ -311,19 +311,33 @@ public class Tools {
 
 	public static SpinnerDefinition scanSpinerDef(Context myC, LoggerI o) {
 
-		int noOfC=-1;
 		int noOfRequiredColumns=5;
 		SpinnerDefinition sd=null;
 		// Create dummylogger if o set to null.
 		if (o==null)
 			o = new DummyLogger();
-		String fileUrl = Constants.SPINNER_DEF_URL;
+		PersistenceHelper ph = GlobalState.getInstance(myC).getPersistence();
+		String bundle = ph.get(PersistenceHelper.BUNDLE_NAME);
+		String serverUrl = ph.get(PersistenceHelper.SERVER_URL);
+		if (bundle == null || serverUrl == null) {
+			Log.d("vortex","missing "+(bundle==null?"bundle":"server")+" name...returning.");
+			return null;
+		}
+		bundle = bundle.toLowerCase();
+		
+		if (!serverUrl.endsWith("/")) {
+			serverUrl+="/";
+		}
+		if (!serverUrl.startsWith("http://")) 
+			serverUrl = "http://"+serverUrl;
+		final String spinnerUrl = serverUrl+bundle+"/"+Constants.SpinnersFileName;
+
 		if (isNetworkAvailable(myC)) {
 
 			URL url;
 			try {
-				url = new URL(fileUrl);
-				o.addRow("Fetching spinner configuration from: "+fileUrl);
+				url = new URL(spinnerUrl);
+				o.addRow("Fetching spinner configuration from: "+spinnerUrl);
 
 				/* Open a connection to that URL. */
 				URLConnection ucon = url.openConnection();
@@ -337,9 +351,7 @@ public class Tools {
 					o.addRedText("Spinner header corrupt. Spinnerfile likely missing");
 					Log.e("nils","Spinner header corrupt");
 					return null;
-				} else
-					noOfC = header.split(",").length;
-
+				} 
 				String row,spinnerID,value,opt,varMap,descr;
 				sd = new SpinnerDefinition();
 				List<SpinnerElement>sl = null;

@@ -58,12 +58,9 @@ public class ConfigMenu extends PreferenceActivity {
 			epref.setSummary(epref.getText());
 			
 			
-			epref = (EditTextPreference) findPreference(PersistenceHelper.BUNDLE_LOCATION);
+			epref = (EditTextPreference) findPreference(PersistenceHelper.BUNDLE_NAME);
 			epref.setSummary(epref.getText());
 			
-			epref = (EditTextPreference) findPreference(PersistenceHelper.CONFIG_LOCATION);
-			epref.setSummary(epref.getText());
-
 			//CheckBoxPreference cpref = (CheckBoxPreference) findPreference(PersistenceHelper.DEVELOPER_SWITCH);
 			
 		}
@@ -106,7 +103,7 @@ public class ConfigMenu extends PreferenceActivity {
 			if (pref instanceof EditTextPreference) {
 				EditTextPreference etp = (EditTextPreference) pref;
 				pref.setSummary(etp.getText());
-				if (key.equals(PersistenceHelper.BUNDLE_LOCATION)) {
+				if (key.equals(PersistenceHelper.BUNDLE_NAME)) {
 					Log.d("nils","Bundle file changed. Removing version check");
 					GlobalState.getInstance(this.getActivity()).getPersistence().put(PersistenceHelper.CURRENT_VERSION_OF_WF_BUNDLE, PersistenceHelper.UNDEFINED);
 					
@@ -122,11 +119,11 @@ public class ConfigMenu extends PreferenceActivity {
 				ListPreference letp = (ListPreference) pref;
 				pref.setSummary(letp.getValue());
 				if (letp.getKey().equals(PersistenceHelper.DEVICE_COLOR_KEY)) {
-					if (letp.getValue().equals("Mästare")) 
+					if (letp.getValue().equals("Master")) 
 						Log.d("nils","Changed to MASTER");
 						
 					else 
-						Log.d("nils","Change to CLIENT");
+						Log.d("nils","Changed to CLIENT");
 					Intent intent = new Intent(this.getActivity().getBaseContext(),BluetoothConnectionService.class);
 					this.getActivity().stopService(intent);
 					GlobalState.getInstance(this.getActivity()).resetHandler();
@@ -139,10 +136,10 @@ public class ConfigMenu extends PreferenceActivity {
 				if (key.equals(PersistenceHelper.DEVELOPER_SWITCH))
 					if (cpref.isChecked()) {
 						GlobalState.getInstance(getActivity()).createLogger();
-						Log.d("NILS","CREATED ZIZ LOGGER");
+						Log.d("NILS","CREATED LOGGER");
 					}
 					else {
-						Log.d("NILS","UNCREATED ZIZ LOGGER");
+						Log.d("NILS","UNCREATED LOGGER");
 						GlobalState.getInstance(getActivity()).removeLogger();
 					}
 				}
