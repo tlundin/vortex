@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.teraim.nils"
+    package="com.teraim.vortex"
     android:versionCode="1"
     android:versionName="1.0" >
 
@@ -38,7 +38,7 @@
             android:value="@integer/google_play_services_version" />
 
         <activity
-            android:name="com.teraim.nils.non_generics.Start"
+            android:name="com.teraim.vortex.non_generics.Start"
             android:label="@string/title_activity_nils"
             android:screenOrientation="portrait" >
             <intent-filter>
@@ -48,21 +48,21 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.teraim.nils.ui.ConfigMenu"
+            android:name="com.teraim.vortex.ui.ConfigMenu"
             android:exported="false"
             android:label="@string/title_select_yta" >
             <intent-filter>
-                <action android:name="com.teraim.nils.ConfigMenu" />
+                <action android:name="com.teraim.vortex.ConfigMenu" />
 
                 <category android:name="android.intent.category.PREFERENCE" />
             </intent-filter>
         </activity>
 
         <service
-            android:name="com.teraim.nils.bluetooth.BluetoothConnectionService"
+            android:name="com.teraim.vortex.bluetooth.BluetoothConnectionService"
             android:label="BluetoothRemoteDevice" >
             <intent-filter>
-                <action android:name="com.teraim.nils.StartService" />
+                <action android:name="com.teraim.vortex.StartService" />
             </intent-filter>
         </service>
 

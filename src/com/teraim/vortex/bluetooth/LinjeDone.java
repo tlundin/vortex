@@ -1,0 +1,11 @@
+package com.teraim.vortex.bluetooth;
+
+public class LinjeDone extends SyncMessage {
+
+
+	private static final long serialVersionUID = 7034268349759371653L;
+	public String linjeId;	
+	public LinjeDone(String id) {
+		this.linjeId = id;
+	}
+}
