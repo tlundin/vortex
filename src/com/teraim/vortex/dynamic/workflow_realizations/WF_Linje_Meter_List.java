@@ -100,7 +100,7 @@ public class WF_Linje_Meter_List extends WF_List implements EventListener {
 
 						//keys
 						gs.setKeyHash(v.getKeyChain());
-						List<List<String>>rows =gs.getArtLista().getTable().getRowsStartingWith(VariableConfiguration.Col_Functional_Group, name);
+						List<List<String>>rows =gs.getVariableConfiguration().getTable().getRowsStartingWith(VariableConfiguration.Col_Functional_Group, name);
 						if (rows!=null) {
 							Log.d("nils","Got "+rows.size()+" results");
 							Map<String,String> deletedVariables = 

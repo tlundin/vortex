@@ -40,6 +40,7 @@ import android.widget.Toast;
 
 import com.teraim.vortex.ParameterSafe;
 import com.teraim.vortex.R;
+import com.teraim.vortex.Start;
 import com.teraim.vortex.dynamic.Executor;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.workflow_abstracts.Event;
@@ -50,7 +51,6 @@ import com.teraim.vortex.dynamic.workflow_realizations.WF_DisplayValueField;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.non_generics.DelyteManager;
 import com.teraim.vortex.non_generics.NamedVariables;
-import com.teraim.vortex.non_generics.Start;
 import com.teraim.vortex.non_generics.StatusHandler;
 import com.teraim.vortex.non_generics.StatusHandler.Kvot;
 import com.teraim.vortex.ui.MenuActivity;
@@ -111,7 +111,7 @@ public class ProvytaTemplate extends Executor implements EventListener,OnGesture
 			Map<String, String> keyChain;
 			switch (item.getItemId()) {			        
 			case R.id.menu_delete:
-				keyChain = Tools.createKeyMap("ruta",gs.getArtLista().getCurrentRuta(),"provyta",provytaThatWasSelected);
+				keyChain = Tools.createKeyMap("ruta",gs.getVariableConfiguration().getCurrentRuta(),"provyta",provytaThatWasSelected);
 				gs.getVariableCache().invalidateOnKey(keyChain);
 				gs.getDb().eraseProvyta(al.getCurrentRuta(), provytaThatWasSelected, true);
 				gs.triggerTransfer();
@@ -151,8 +151,8 @@ public class ProvytaTemplate extends Executor implements EventListener,OnGesture
 			Bundle savedInstanceState) {
 
 		ps = gs.getSafe();
-		liv = gs.getArtLista().getVariableInstance(NamedVariables.CURRENT_LINJE);
-		pyv = gs.getArtLista().getVariableInstance(NamedVariables.CURRENT_PROVYTA);
+		liv = gs.getVariableConfiguration().getVariableInstance(NamedVariables.CURRENT_LINJE);
+		pyv = gs.getVariableConfiguration().getVariableInstance(NamedVariables.CURRENT_PROVYTA);
 		myContext.resetState();
 		myLayouts = new ArrayList<WF_Container>();
 		Log.d("nils","in onCreateView of provyta_template");
@@ -234,8 +234,11 @@ public class ProvytaTemplate extends Executor implements EventListener,OnGesture
 			//TODO: CHANGE TO CORRECT GPS
 			@Override
 			public void onClick(View v) {
-				if (Start.singleton!=null && liv.getValue()!=null && pyv.getValue()!=null && !liv.equals(NONE_SELECTED))
+				if (Start.singleton!=null && liv.getValue()!=null && pyv.getValue()!=null && !liv.equals(NONE_SELECTED)) {
+					gs.setKeyHash(al.createLinjeKeyMap());
+					gs.sendEvent(MenuActivity.REDRAW);
 					Start.singleton.changePage(new LinjePortalTemplate(), "LinjePortal");
+				}
 				else {
 					AlertDialog.Builder alert = new AlertDialog.Builder(v.getContext());
 					alert.setTitle("Information saknas!");
@@ -262,6 +265,9 @@ public class ProvytaTemplate extends Executor implements EventListener,OnGesture
 						Log.d("nils","Creating delyteManager");
 						DelyteManager dym = DelyteManager.create(gs,Integer.parseInt(al.getCurrentProvyta()));
 						dym.init();
+						//refresh keyhash and status
+						gs.setKeyHash(al.createProvytaKeyMap());
+						gs.sendEvent(MenuActivity.REDRAW);
 						Start.singleton.changePage(new ProvytaNivaTemplate(), "ProvytaNivå");
 						clicked = false;
 					}
@@ -281,6 +287,8 @@ public class ProvytaTemplate extends Executor implements EventListener,OnGesture
 						Log.d("nils","Creating delyteManager");
 						DelyteManager dym = DelyteManager.create(gs,Integer.parseInt(al.getCurrentProvyta()));
 						dym.init();
+						gs.setKeyHash(al.createProvytaKeyMap());
+						gs.sendEvent(MenuActivity.REDRAW);
 						Start.singleton.changePage(new ProvytaNivaTemplate(), "ProvytaNivå");
 						clicked = false;
 					}

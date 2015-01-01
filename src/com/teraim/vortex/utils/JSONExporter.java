@@ -41,7 +41,7 @@ public class JSONExporter {
 	}
 	private JSONExporter(Context ctx) {
 		this.gs=GlobalState.getInstance(ctx);
-		al = gs.getArtLista();
+		al = gs.getVariableConfiguration();
 		ph = gs.getPersistence();
 		
 	}

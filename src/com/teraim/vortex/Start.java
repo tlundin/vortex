@@ -1,4 +1,4 @@
-package com.teraim.vortex.non_generics;
+package com.teraim.vortex;
 
 import java.io.File;
 
@@ -6,6 +6,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnDismissListener;
@@ -25,15 +26,14 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.teraim.vortex.FileLoadedCb;
 import com.teraim.vortex.FileLoadedCb.ErrorCode;
-import com.teraim.vortex.GlobalState;
-import com.teraim.vortex.R;
 import com.teraim.vortex.dynamic.templates.LinjePortalTemplate;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.types.Workflow;
 import com.teraim.vortex.log.Logger;
 import com.teraim.vortex.log.LoggerI;
+import com.teraim.vortex.non_generics.Constants;
+import com.teraim.vortex.non_generics.NamedVariables;
 import com.teraim.vortex.ui.DrawerMenu;
 import com.teraim.vortex.ui.LoginConsoleFragment;
 import com.teraim.vortex.ui.MenuActivity;
@@ -46,7 +46,7 @@ import com.teraim.vortex.utils.WorkflowParser;
 
 public class Start extends MenuActivity {
 
-	private final String VORTEX_VERSION = "Vortex 0_8_2";
+	private final String VORTEX_VERSION = "Vortex 0_8_6";
 
 	private GlobalState gs;
 	private PersistenceHelper ph;
@@ -120,11 +120,11 @@ public class Start extends MenuActivity {
 		getActionBar().setDisplayHomeAsUpEnabled(true);
 		getActionBar().setHomeButtonEnabled(true);
 		if (loginFragment == null) {
-		loginFragment = new LoginConsoleFragment();
-		FragmentManager fragmentManager = getFragmentManager();
-		fragmentManager.beginTransaction()
-		.replace(R.id.content_frame, loginFragment)
-		.commit();
+			loginFragment = new LoginConsoleFragment();
+			FragmentManager fragmentManager = getFragmentManager();
+			fragmentManager.beginTransaction()
+			.replace(R.id.content_frame, loginFragment)
+			.commit();
 		}
 		myState=null;
 		//Executon continues in onStart() since we have to wait for fragment to load.
@@ -151,12 +151,17 @@ public class Start extends MenuActivity {
 				loginConsole.addYellowText("LagID och/eller Namn fattas.");				
 			}
 			loginConsole.addRow("");
-			loginConsole.addText("Ändringar:\n"					
-					+ "* Dynamiska menyer. \n"
-					+ "* Ändrad konfiguration.\n"
-					+ "* Autostart av flöde.\n"
-					+ "* Färger i menyer.\n"
-					+ "* Förbättrade felmedelanden.\n"
+			loginConsole.addText("Changes:\n"					
+					+ "* Main flow generating menus.\n"
+					+ "* Colored log.\n"
+					+ "* Colored menus.\n"
+					+ "* Improved startup cycle.\n"
+					+ "* Sync feature can be hidden from menu\n"
+					+ "* Wfs with no PagedefineBlock has no UI\n"
+					+ "* new generic Envelope for bluetooth messaging\n"
+					+ "* Stricter handling of context for workflows\n"
+					+ "* Automatic restart of App when bundle is changed"
+					+ "* First GIS prototype"
 					);
 
 			if (this.isNetworkAvailable()) {
@@ -280,25 +285,25 @@ public class Start extends MenuActivity {
 
 					//init current year.
 					//TODO: REMOVE
-					Variable v = gs.getArtLista().getVariableInstance(NamedVariables.CURRENT_YEAR);
+					Variable v = gs.getVariableConfiguration().getVariableInstance(NamedVariables.CURRENT_YEAR);
 					if (v.getValue()==null)
 						v.setValue(Constants.CurrentYear);
 
 					//Global counter for auto_increment variables.
-					v = gs.getArtLista().getVariableInstance(NamedVariables.CURRENT_SAMPLE_INDEX);
-					if (v.getValue()==null)
+					v = gs.getVariableConfiguration().getVariableInstance(NamedVariables.CURRENT_SAMPLE_INDEX);
+					if (v!=null&&v.getValue()==null)
 						v.setValue("0");
-
+					/*
 					v = gs.getArtLista().getVariableInstance("Current_Ruta");
-					if (v.getValue()==null)
+					if (v!=null&&v.getValue()==null)
 						v.setValue("1");
 					v = gs.getArtLista().getVariableInstance("Current_Provyta");
-					if (v.getValue()==null)
+					if (v!=null&&v.getValue()==null)
 						v.setValue("1");
 					v = gs.getArtLista().getVariableInstance("Current_Delyta");
-					if (v.getValue()==null)
+					if (v!=null&&v.getValue()==null)
 						v.setValue("1");
-
+					 */
 					//execute main workflow if it exists.
 					Workflow wf = gs.getWorkflow("Main");
 					if (wf == null) {
@@ -308,14 +313,9 @@ public class Start extends MenuActivity {
 							Log.d("vortex",n);
 					}
 					if (wf!=null) {
-						
-						Fragment mainFragment = wf.createFragment();
-						Bundle args = new Bundle();
-						args.putString("workflow_name", "Main");
-						mainFragment.setArguments(args);
-						this.changePage(mainFragment, "Main");
+						this.changePage(wf,null);
 						Log.d("vortex","executing workflow main!");
-						
+
 					} else {
 						loginConsole.addRow("");
 						loginConsole.addRedText("Found no workflow 'Main'. Exiting..");
@@ -353,7 +353,7 @@ public class Start extends MenuActivity {
 				loginConsole.addGreenText("[OK]");	
 				loginConsole.addRow("Historical loaded: ");
 				loginConsole.draw();
-			
+
 
 				//skapa nytt safe objekt.
 				if (this.isNetworkAvailable()) {
@@ -378,7 +378,7 @@ public class Start extends MenuActivity {
 								loader(State.HISTORICAL_LOADED,errCode);
 							}
 							if (errCode == ErrorCode.notFound) {
-								loginConsole.addText("[ No data file ]");
+								loginConsole.addYellowText("[Importdata.json not found]");
 								loader(State.HISTORICAL_LOADED,ErrorCode.HistoricalLoaded);
 							}
 							else {
@@ -418,7 +418,7 @@ public class Start extends MenuActivity {
 					loginConsole.addGreenText("[OK]");
 				 */
 				break;
-				
+
 			default:
 				loginConsole.addRedText("[Error in config: "+ec+"]");
 				break;
@@ -513,16 +513,50 @@ public class Start extends MenuActivity {
 		getActionBar().setTitle(title);
 	}
 
+	//execute workflow.
+	public void changePage(Workflow wf, String statusVar) {
+		String label = wf.getLabel();
+		String template = wf.getTemplate();
+		//Set context.
+		String err = gs.evaluateContextFromWorkflow(wf);
+		//if Ok err is null.
+		if (err==null) {
+			//No template. This flow does not have a ui. Hand over to Executor.
+			Fragment fragmentToExecute;
+			Bundle args = new Bundle();
+			args.putString("workflow_name", wf.getName());
+			args.putString("status_variable", statusVar);
+			if (template==null) {
+				fragmentToExecute = wf.createFragment("EmptyTemplate");
+				fragmentToExecute.setArguments(args);
+				FragmentTransaction ft = getFragmentManager()
+						.beginTransaction();
+				//Log.i("vortex", "Adding fragment");
+				//ft.add(R.id.lowerContainer, fragment, "AddedFragment");
 
-	public void changePage(Fragment newPage, String title) {
+				ft.add(fragmentToExecute,"EmptyTemplate");
+				Log.i("vortex", "Committing Empty transaction");
+				ft.commit();
+				Log.i("vortex", "Committed transaction");
+			} else {
+				fragmentToExecute = wf.createFragment(template);
+				fragmentToExecute.setArguments(args);
+				changePage(fragmentToExecute,label);
+			}
+			//show error message.
+		} else 
+			showErrorMsg(err, wf);
+	}
+	public void changePage(Fragment newPage, String label) {
 		FragmentManager fragmentManager = getFragmentManager();
 		fragmentManager.beginTransaction()
 		.replace(R.id.content_frame, newPage)
 		.addToBackStack(null)
 		.commit();
-		setTitle(title);
+		setTitle(label);
 
 		//mDrawerLayout.closeDrawer(mDrawerList);
+
 	}
 
 
@@ -652,5 +686,23 @@ public class Start extends MenuActivity {
 		return super.onKeyDown(keyCode, event);
 	}
 
+	private void showErrorMsg(String error, Workflow wf) {
+		if (wf!=null) {
+			String dialogText = "Faulty or incomplete context prevents execution of "+wf.getName()+".\n Context: "+wf.getContext()+"\nError: "+error;
+			new AlertDialog.Builder(this)
+			.setTitle("Context problem")
+			.setMessage(dialogText) 
+			.setIcon(android.R.drawable.ic_dialog_alert)
+			.setCancelable(false)
+			.setNeutralButton("Ok",new Dialog.OnClickListener() {				
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					// TODO Auto-generated method stub
+
+				}
+			} )
+			.show();
+		}
+	}
 
 }

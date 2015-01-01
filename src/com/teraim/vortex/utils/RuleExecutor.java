@@ -36,7 +36,7 @@ public class RuleExecutor {
 	private VariableConfiguration al;
 	private RuleExecutor(Context ctx) {
 		gs = GlobalState.getInstance(ctx);
-		al = gs.getArtLista();
+		al = gs.getVariableConfiguration();
 	}
 
 	public static RuleExecutor getInstance(Context ctx) {
@@ -193,21 +193,21 @@ public class RuleExecutor {
 			else {
 				myVariables = new HashSet<Entry<String,DataType>>();
 				for (String var:potVars) {
-					List<String> row = gs.getArtLista().getCompleteVariableDefinition(var);
+					List<String> row = gs.getVariableConfiguration().getCompleteVariableDefinition(var);
 					if (row == null) {
 						//this could be a filter. Try..
 						o.addRow("");
 						o.addRedText("Couldn't find variable "+var+" referenced in formula "+formula);
 						fail = true;
 					} else {
-						DataType type = gs.getArtLista().getnumType(row);					
+						DataType type = gs.getVariableConfiguration().getnumType(row);					
 						myVariables.add(new AbstractMap.SimpleEntry<String, DataType>(var.trim(),type));
 					}
 				}
 				for (String f:filters.keySet())
 					myVariables.add(new AbstractMap.SimpleEntry<String, DataType>(f.trim(),filters.get(f)));
 			}
-			
+
 			if (!fail)
 				return myVariables;
 
@@ -231,6 +231,7 @@ public class RuleExecutor {
 
 	Map<String,Set<String>> relations = new HashMap<String,Set<String>>();
 
+	
 	private void xAffectVars(String curVar, String mainVar) {
 		//If a key word, the following variable would be a new keyvar.
 		//TODO FIX THIS
@@ -258,28 +259,29 @@ public class RuleExecutor {
 		for (Entry<String, DataType> entry:myVariables) {
 			if (!isFilter(entry.getValue())) {
 				Log.d("nils","Substituting Variable: "+entry.getKey()+" with type "+entry.getValue());
-				st = gs.getArtLista().getVariableInstance(entry.getKey());		
-				if (st==null||st.getValue()==null) {
+				st = gs.getVariableConfiguration().getVariableInstance(entry.getKey());		
+				if (st==null) {
 					o.addRow("");
-					o.addRow("Variable "+entry.getKey()+" in formula ["+formula+"] is null.");
-					//substErr=true;					
-					//break;
-					Log.d("nils","Before substitution of: "+st.getId()+": "+subst);
+					o.addRedText("Variable "+entry.getKey()+" in formula ["+formula+"] is null.");
+				} else
+					if (st.getValue()==null) {
+						o.addRow("");
+						o.addRow("Variable value for "+entry.getKey()+" in formula ["+formula+"] is null.");
+						Log.d("nils","Before substitution of: "+st.getId()+": "+subst);
+						subst = subst.replace(st.getId().toLowerCase(), "null");	
+						Log.d("nils","After substitutionx: "+subst);
 
-					subst = subst.replace(st.getId().toLowerCase(), "null");	
-					Log.d("nils","After substitutionx: "+subst);
+					} else {
+						if (stringT) {
+							strRes+=st.getValue();
+						}
+						else {
+							Log.d("nils","Substituting Variable: ["+st.getId()+"] with value "+st.getValue());
+							subst = subst.replace(st.getId().toLowerCase(), st.getValue());
+							Log.d("nils","After substitutiony: "+subst);
 
-				} else {
-					if (stringT) {
-						strRes+=st.getValue();
+						}
 					}
-					else {
-						Log.d("nils","Substituting Variable: ["+st.getId()+"] with value "+st.getValue());
-						subst = subst.replace(st.getId().toLowerCase(), st.getValue());
-						Log.d("nils","After substitutiony: "+subst);
-
-					}
-				}
 			} else {
 				String filterRes = applyFilter(entry.getKey(),entry.getValue());
 				Log.d("nils","Before substitution: "+subst);
@@ -309,7 +311,7 @@ public class RuleExecutor {
 	}
 
 	private String filterName(DataType value) {
-		
+
 		switch (value) {
 		case filterAll:
 			return "hasAll";
@@ -322,8 +324,8 @@ public class RuleExecutor {
 		default:
 			return null;
 		}
-		
- 	}
+
+	}
 
 	private static boolean isFilter(DataType value) {
 		return (value==DataType.filterAll||value==DataType.filterMost||value==DataType.filterSome||value==DataType.historical);
@@ -352,7 +354,7 @@ public class RuleExecutor {
 		float rowC=rows.size();
 
 		for (List<String>row:rows) {
-			value = gs.getArtLista().getVariableValue(gs.getCurrentKeyHash(), al.getVarName(row));
+			value = gs.getVariableConfiguration().getVariableValue(gs.getCurrentKeyHash(), al.getVarName(row));
 			if (value==null) {
 				if (filterType==DataType.filterAll) {
 					gs.getLogger().addRow("");

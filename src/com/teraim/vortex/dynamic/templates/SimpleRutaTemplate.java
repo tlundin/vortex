@@ -34,6 +34,7 @@ import android.widget.Toast;
 
 import com.teraim.vortex.ParameterSafe;
 import com.teraim.vortex.R;
+import com.teraim.vortex.Start;
 import com.teraim.vortex.dynamic.Executor;
 import com.teraim.vortex.dynamic.blocks.CreateEntryFieldBlock;
 import com.teraim.vortex.dynamic.types.Variable;
@@ -73,7 +74,7 @@ public class SimpleRutaTemplate extends Executor implements OnGesturePerformedLi
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 		ps = gs.getSafe();
-		al = gs.getArtLista();
+		al = gs.getVariableConfiguration();
 		myContext.resetState();
 		myLayouts = new ArrayList<WF_Container>();
 		Log.d("nils","in onCreateView of ruta_template");
@@ -108,7 +109,7 @@ public class SimpleRutaTemplate extends Executor implements OnGesturePerformedLi
 
 			@Override
 			public void onClick(View v) {
-				final String currentRuta = gs.getArtLista().getVariableInstance(NamedVariables.CURRENT_RUTA).getValue();
+				final String currentRuta = gs.getVariableConfiguration().getVariableInstance(NamedVariables.CURRENT_RUTA).getValue();
 				final String lagID = gs.getPersistence().get(PersistenceHelper.LAG_ID_KEY);
 				if (currentRuta == null) {
 					new AlertDialog.Builder(getActivity())
@@ -216,7 +217,7 @@ public class SimpleRutaTemplate extends Executor implements OnGesturePerformedLi
 					long arg3) {
 
 				
-				final Variable currentRuta = gs.getArtLista().getVariableInstance(NamedVariables.CURRENT_RUTA);
+				final Variable currentRuta = gs.getVariableConfiguration().getVariableInstance(NamedVariables.CURRENT_RUTA);
 				final Integer rl = rutor.get(position);
 				final String pi = rl.toString();
 				final Map<String,String>rKeyChain = Tools.createKeyMap("år",Constants.CurrentYear,"ruta",pi);
@@ -241,15 +242,15 @@ public class SimpleRutaTemplate extends Executor implements OnGesturePerformedLi
 							rutaKlar.setValue("0");
 						currentRuta.setValue(pi);	
 						//Nullify currentprovyta and currentlinje
-						gs.getArtLista().getVariableUsingKey(null, NamedVariables.CURRENT_PROVYTA).deleteValue();
-						gs.getArtLista().getVariableUsingKey(null, NamedVariables.CURRENT_LINJE).deleteValue();
-						gs.getArtLista().getVariableUsingKey(null, NamedVariables.CURRENT_DELYTA).deleteValue();
-						gs.getArtLista().getVariableUsingKey(null, NamedVariables.CURRENT_SMAPROVYTA).deleteValue();
+						gs.getVariableConfiguration().getVariableUsingKey(null, NamedVariables.CURRENT_PROVYTA).deleteValue();
+						gs.getVariableConfiguration().getVariableUsingKey(null, NamedVariables.CURRENT_LINJE).deleteValue();
+						gs.getVariableConfiguration().getVariableUsingKey(null, NamedVariables.CURRENT_DELYTA).deleteValue();
+						gs.getVariableConfiguration().getVariableUsingKey(null, NamedVariables.CURRENT_SMAPROVYTA).deleteValue();
 					
 						//kill the current variable cache.
 						gs.getVariableCache().invalidateAll();
-						Variable stratum = gs.getArtLista().getVariableUsingKey(rKeyChain,NamedVariables.STRATUM);
-						Variable hStratum = gs.getArtLista().getVariableUsingKey(rKeyChain,NamedVariables.STRATUM_HISTORICAL);
+						Variable stratum = gs.getVariableConfiguration().getVariableUsingKey(rKeyChain,NamedVariables.STRATUM);
+						Variable hStratum = gs.getVariableConfiguration().getVariableUsingKey(rKeyChain,NamedVariables.STRATUM_HISTORICAL);
 						String strH = stratum.getHistoricalValue();
 						if (strH==null) {
 							o.addRow("");
@@ -261,12 +262,11 @@ public class SimpleRutaTemplate extends Executor implements OnGesturePerformedLi
 						//copy
 						prevRutor.add(0,rl);
 						selectedListA.notifyDataSetChanged();
+						gs.setKeyHash(al.createRutaKeyMap());
+						Log.d("vortex","in simpleruta, after refreshkey, before menu redraw. PI: "+pi+" CurrentR_: "+currentRuta.getValue()+"\nkeyhash: "+gs.getCurrentKeyHash().toString());
 						gs.sendEvent(MenuActivity.REDRAW);
-						FragmentManager fragmentManager = getFragmentManager();
-						fragmentManager.beginTransaction()
-						.replace(R.id.content_frame, new ProvytaTemplate())
-						.addToBackStack(null)
-						.commit();
+						Log.d("vortex","in simpleruta, after refreshkey, after menu redraw!!");
+						Start.singleton.changePage(new ProvytaTemplate(), "Provyta");					
 					}
 
 				})
@@ -292,9 +292,11 @@ public class SimpleRutaTemplate extends Executor implements OnGesturePerformedLi
 
 
 	private void createInvTypSelection() {
+		if (al.createRutaKeyMap()!=null) {
 		gs.setKeyHash(al.createRutaKeyMap());
 		CreateEntryFieldBlock x = new CreateEntryFieldBlock("typSpinner","RutaSorteringsTyp", "Aggregation_panel_3",true,"DDD",false,Constants.NO_DEFAULT_VALUE);
-		x.create(myContext);	
+		x.create(myContext);
+		}
 	}
 
 

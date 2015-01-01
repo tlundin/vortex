@@ -106,7 +106,7 @@ public class WF_Instance_List extends WF_Static_List implements EventListener,Ev
 					for (String index:indexes) {
 						String value = indexToValue.get(index);					
 						myKeyHash.put(variatorColumn, index);				
-						Variable var = gs.getArtLista().getFixedVariableInstance(myKeyHash, varId,value);
+						Variable var = gs.getVariableConfiguration().getFixedVariableInstance(myKeyHash, varId,value);
 						if (var!=null) {
 							String entryInstanceLabel = al.getEntryLabel(var.getBackingDataSet())+" ["+index+"]";
 							WF_ClickableField_Selection ef = entryFields.get(entryInstanceLabel);

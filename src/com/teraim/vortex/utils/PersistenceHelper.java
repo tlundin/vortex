@@ -24,6 +24,7 @@ public class PersistenceHelper {
 	public static final String FIRST_TIME_KEY = "firzzt";
 	public static final String DEVELOPER_SWITCH = "dev_switch";
 	public static final String VERSION_CONTROL_SWITCH_OFF = "no_version_control";
+	public static final String SYNC_FEATURE = "sync_feature";
 	public static final String CURRENT_VERSION_OF_VARPATTERN_FILE = "current_version_varpattern";
 	public static final String TIME_OF_LAST_SYNC = "kakkadua";
 	public static final String HistoricalRutorList = "historical_rutor";

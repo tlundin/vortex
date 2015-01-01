@@ -110,7 +110,7 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 		h = (TextView)smaRemainingView.findViewById(R.id.header);
 		h.setText("Småytor gjorda");
 		h = (TextView)synkadMedView.findViewById(R.id.header);
-		h.setText("Syster");
+		h.setText("Synkad mot: ");
 
 		delOutputValueField = (TextView)delytorRemainingView.findViewById(R.id.outputValueField);
 		smaOutputValueField= (TextView)smaRemainingView.findViewById(R.id.outputValueField);
@@ -289,7 +289,7 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 			smayteKnappar[i].create(myContext);
 		}
 			
-		
+		gs.setKeyHash(al.createProvytaKeyMap());
 		myContext.drawRecursively(myC);
 		
 		

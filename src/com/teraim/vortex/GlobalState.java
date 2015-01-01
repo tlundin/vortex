@@ -21,7 +21,9 @@ import com.teraim.vortex.bluetooth.MessageHandler;
 import com.teraim.vortex.bluetooth.SlaveMessageHandler;
 import com.teraim.vortex.bluetooth.SyncEntry;
 import com.teraim.vortex.bluetooth.SyncEntryHeader;
+import com.teraim.vortex.bluetooth.SyncMessage;
 import com.teraim.vortex.dynamic.VariableConfiguration;
+import com.teraim.vortex.dynamic.blocks.StartBlock;
 import com.teraim.vortex.dynamic.types.SpinnerDefinition;
 import com.teraim.vortex.dynamic.types.Table;
 import com.teraim.vortex.dynamic.types.VarCache;
@@ -32,6 +34,7 @@ import com.teraim.vortex.expr.Aritmetic;
 import com.teraim.vortex.expr.Parser;
 import com.teraim.vortex.log.DummyLogger;
 import com.teraim.vortex.log.FastLogger;
+import com.teraim.vortex.log.Logger;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.non_generics.StatusHandler;
@@ -106,7 +109,7 @@ public class GlobalState  {
 		ph = new PersistenceHelper(myC.getSharedPreferences("nilsPrefs", Context.MODE_PRIVATE));
 		//Logger. Note that logger must be initialized with a TextView when used! 
 		if (ph.getB(PersistenceHelper.DEVELOPER_SWITCH))
-			log = new FastLogger(this.getContext(),"RUNTIME");
+			log = new Logger(this.getContext(),"RUNTIME");
 		//removeLogger();
 		else {
 			Log.d("nils","LOGGER WAS REMOVED");
@@ -196,7 +199,7 @@ public class GlobalState  {
 		return myC;
 	}
 
-	public VariableConfiguration getArtLista() {
+	public VariableConfiguration getVariableConfiguration() {
 		return artLista;
 	}
 
@@ -454,13 +457,14 @@ public class GlobalState  {
 		log = new DummyLogger();
 	}
 
-	Map<String,String> myKeyHash;
+	private Map<String,String> myKeyHash;
 
 
 	private Map<String, Variable> myRawHash;
 
 
 	public Map<String,String> getCurrentKeyHash() {
+		Log.d("vortex","getCurrentKeyHash returned "+myKeyHash);
 		return myKeyHash;
 	}
 
@@ -468,12 +472,14 @@ public class GlobalState  {
 	public void  setKeyHash(Map<String,String> h) { 	
 		artLista.destroyCache();
 		myKeyHash=h;
+		Log.d("vortex","SetKeyHash was called with "+h.toString());
 	}
 
 	public void setRawHash(Map<String,Variable> h) {
 		myRawHash = h;
 	}
 
+	//TODO:This is not working since keyhash is changed separately from rawhash.
 	public Map<String, String> refreshKeyHash() {
 		if (myRawHash == null) {
 			Log.d("nils","Failed to renew hash - no raw hash available");
@@ -481,6 +487,7 @@ public class GlobalState  {
 		} else {
 			for (String s:myRawHash.keySet()) {
 				Variable v= myRawHash.get(s);
+				Log.d("vortex"," RH Var "+v.getLabel()+" value "+v.getValue());
 				String value = v.getValue();
 				myKeyHash.put(s, value);
 			}
@@ -528,8 +535,6 @@ public class GlobalState  {
 		config_not_found,spinners_not_found,
 		missing_lag_id,
 		missing_user_id,
-		current_ruta_not_set,
-		current_provyta_not_set,
 		no_handler_available
 
 	}
@@ -547,10 +552,6 @@ public class GlobalState  {
 			return ErrorCode.missing_user_id;
 		else if (myHandler ==null)
 			return ErrorCode.no_handler_available;
-		else if (isMaster()&&getArtLista().getVariableValue(null, "Current_Ruta")==null)
-			return ErrorCode.current_ruta_not_set;
-		else if (isMaster()&&getArtLista().getVariableValue(null, "Current_Provyta")==null)
-			return ErrorCode.current_provyta_not_set;
 		else 
 			return ErrorCode.ok;
 	}
@@ -588,18 +589,18 @@ public class GlobalState  {
 		getContext().sendBroadcast(intent);
 	}
 
-	Object message;
+	SyncMessage message;
 
 
 	private StatusHandler myStatusHandler;
 
 
 
-	public void setMsg(Object message) {
+	public void setSyncMessage(SyncMessage message) {
 		this.message=message;
 	}
 
-	public Object getOriginalMessage() {
+	public SyncMessage getOriginalMessage() {
 		return message;
 	}
 
@@ -657,6 +658,118 @@ public class GlobalState  {
 	public Map<String, Workflow> getWfs() {
 		return myWfs;
 	}
+
+
+	//Change current context (side effect) to the context given in the workflow startblock.
+	//If no context can be built (missing variable values), return error. Otherwise, return null.
+	public String evaluateContextFromWorkflow(Workflow wf) {
+		boolean contextError=false;
+		String err = "undefined error";
+		LoggerI o = getLogger();
+		String cContext = wf.getContext();
+		o.addRow("");
+		o.addRow("Creating context...for workflow "+wf.getName());
+		if (cContext==null||cContext.isEmpty()) {
+			Log.d("nils","No context!!");
+			o.addRow("");
+			o.addRow("Empty or missing context. This is a potential error");
+			err=null;
+		} else {
+			Log.d("nils","Found context!!");
+			String[] pairs = cContext.split(",");
+			if (pairs==null||pairs.length==0) {
+				o.addRow("Could not split context on comma (,)");
+				err = "Could not split context on comma (,). ";
+				contextError = true;			
+			} else {
+
+				Map<String, String> keyHash = new HashMap<String, String>();
+				Map<String, Variable> rawHash = new HashMap<String, Variable>();
+				for (String pair:pairs) {
+					Log.d("nils","found pair: "+pair);
+					if (pair!=null&&!pair.isEmpty()) {
+						String[] kv = pair.split("=");
+						if (kv==null||kv.length<2) {
+							o.addRow("");
+							o.addRedText("Could not split context on equal sign (=).");
+							contextError=true;
+							err = "Could not split context on equal sign (=).";
+						} else {
+							//Calculate value of context variables, if any.
+							//is it a variable or a value?
+							String arg = kv[0].trim();
+							String val = kv[1].trim();
+							Log.d("nils","Keypair: "+arg+","+val);
+
+							if (val.isEmpty()||arg.isEmpty()) {
+								o.addRow("");
+								o.addRedText("Empty variable or argument in definition");
+								err = "Empty variable or argument in definition";
+								contextError=true;
+								break;
+							} else {
+
+								if (Character.isDigit(val.charAt(0))) {
+									//constant
+									keyHash.put(arg, val);
+									Log.d("nils","Added "+arg+","+val+" to current context");
+								} 
+								else {
+									//Variable. need to evaluate first..
+									Variable v = getVariableConfiguration().getVariableInstance(val);
+									if (v==null) {
+										contextError=true;
+										o.addRow("");
+										o.addRedText("One of the variables missing: "+val);
+										err = "Context missing (at least) variable: "+val;
+										Log.d("nils","Couldn't find variable "+val);
+										break;
+									} else {
+										String varVal = v.getValue();
+										if(varVal==null||varVal.isEmpty()) {
+											contextError=true;
+											err = "Context missing value for (at least): "+val;
+											o.addRow("");
+											o.addRedText("One of the variables used in current context("+v.getId()+") has no value in database");
+											Log.e("nils","var was null or empty: "+v.getId());
+											break;
+										} else {
+
+											keyHash.put(arg, varVal);
+											rawHash.put(arg,v);
+											Log.d("nils","Added "+arg+","+varVal+" to current context");
+											v.setKeyChainVariable(arg);
+											//update status menu
+											sendEvent(MenuActivity.REDRAW);
+										}
+
+									}
+
+								}
+							}
+						}
+					} else
+						Log.d("nils","Found empty or null pair");
+				} 
+				if (!contextError && !keyHash.isEmpty()) {
+					Log.d("nils","added keyhash to gs");
+					//This destroys the cache. Need to add back the keychain variables.
+					setKeyHash(keyHash);
+					//for (Variable v:rawHash.values()) 
+					//	getVariableConfiguration().addToCache(v);
+					//Keep this if the hash values change.
+					setRawHash(rawHash);
+				} 
+
+			}
+		}
+	
+
+	if(contextError)
+		return err;
+	else 
+		return null;
+}
 
 
 }

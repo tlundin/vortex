@@ -39,19 +39,14 @@ public abstract class MessageHandler {
 				Log.d("nils","syncsuccessful null or -1");
 			
 		}
-		else if (message instanceof LinjeStarted) {
-			//Toast.makeText(gs.getContext(), "Andra dosan startade linje", Toast.LENGTH_SHORT).show();
-			gs.setMsg(message);
+		else if (message instanceof EnvelopedMessage) {
+			//Open envelope, and save in globalstate.
+			gs.setSyncMessage(((EnvelopedMessage)message).getMessage());
 			o.addRow("");
-			o.addGreenText("[BT MESSAGE -->Received LinjeStarted message!]");
-			gs.sendEvent(BluetoothConnectionService.LINJE_STARTED);
+			o.addGreenText("[BT MESSAGE -->Received message: "+gs.getOriginalMessage().toString()+"]");
+			gs.sendEvent(BluetoothConnectionService.BLUETOOTH_MESSAGE_RECEIVED);
 		}
-		else if (message instanceof LinjeDone) {
-			gs.setMsg(message);
-			o.addRow("");
-			o.addGreenText("[BT MESSAGE -->Received Linje_Done message!]");
-			gs.sendEvent(BluetoothConnectionService.LINJE_DONE);
-		}
+		
 		else
 			handleSpecialized(message);
 	}

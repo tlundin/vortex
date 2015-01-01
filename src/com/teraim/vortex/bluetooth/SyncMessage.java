@@ -2,7 +2,7 @@ package com.teraim.vortex.bluetooth;
 
 import java.io.Serializable;
 
-public class SyncMessage implements Serializable {
+public abstract class SyncMessage implements Serializable {
 
 	/**
 	 * 

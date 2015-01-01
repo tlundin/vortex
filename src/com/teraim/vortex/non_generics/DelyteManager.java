@@ -477,7 +477,7 @@ public class DelyteManager {
 	private DelyteManager(GlobalState gs,int pyId) {
 		this.gs = gs;
 		myPyID=pyId;
-		al = gs.getArtLista();
+		al = gs.getVariableConfiguration();
 	}
 
 	public static DelyteManager create(GlobalState gs, int pyId) {
@@ -603,7 +603,7 @@ public class DelyteManager {
 
 	public void init() {
 		myDelytor.clear();
-		gs.setKeyHash(al.createDelytaKeyMap());
+		//gs.setKeyHash(al.createDelytaKeyMap());
 		generateFromCurrentContext();
 		analyze();
 	}

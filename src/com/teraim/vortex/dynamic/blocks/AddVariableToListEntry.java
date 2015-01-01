@@ -37,7 +37,7 @@ public class AddVariableToListEntry extends Block {
 	public Variable create(WF_Context myContext) {
 		gs = GlobalState.getInstance(myContext.getContext());
 		o = gs.getLogger();
-		VariableConfiguration al = gs.getArtLista();
+		VariableConfiguration al = gs.getVariableConfiguration();
 		
 		WF_Static_List l= myContext.getList(targetList);
 			if (l!=null) {

@@ -33,7 +33,7 @@ public class AddVariableToEntryFieldBlock extends Block {
 	public Variable create(WF_Context myContext) {
 		gs = GlobalState.getInstance(myContext.getContext());
 		o = gs.getLogger();
-		VariableConfiguration al = gs.getArtLista();
+		VariableConfiguration al = gs.getVariableConfiguration();
 
 		WF_ClickableField_Selection myField = (WF_ClickableField_Selection)myContext.getDrawable(target);
 		if (myField == null) {

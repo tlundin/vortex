@@ -1128,11 +1128,11 @@ public class DbHelper extends SQLiteOpenHelper {
 			Log.d("nils","Adding sync message");
 			insertDeleteDelytorAuditEntry(currentRuta,currentProvyta);
 		}
-		Map<String, String> baseKey = gs.getArtLista().createProvytaKeyMap();
+		Map<String, String> baseKey = gs.getVariableConfiguration().createProvytaKeyMap();
 		for (int delyteID=0;delyteID<=DelyteManager.MAX_DELYTEID;delyteID++) {
 			baseKey.put("delyta", delyteID+"");	
 			if (delyteID >0) {
-				Variable tagV = gs.getArtLista().getVariableUsingKey(baseKey,NamedVariables.DELNINGSTAG);
+				Variable tagV = gs.getVariableConfiguration().getVariableUsingKey(baseKey,NamedVariables.DELNINGSTAG);
 				//Hack to prevent synk.
 				
 				if (tagV!=null) {

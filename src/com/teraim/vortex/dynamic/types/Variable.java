@@ -220,7 +220,7 @@ public class Variable implements Serializable {
 	public Variable(String name,String label,List<String> row,Map<String,String>keyChain, GlobalState gs,String valueColumn, String defaultOrExistingValue, Boolean valueIsPersisted) {
 		Log.d("nils","Creating variable ["+name+"]");
 		this.gs=gs;
-		al=gs.getArtLista();
+		al=gs.getVariableConfiguration();
 		this.name = name;
 		if (row!=null) {
 			myRow = row;

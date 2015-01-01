@@ -32,7 +32,7 @@ public class ImageHandler {
 		c = a;
 
 		this.gs = gs;
-		this.al = gs.getArtLista();
+		this.al = gs.getVariableConfiguration();
 	}
 
 

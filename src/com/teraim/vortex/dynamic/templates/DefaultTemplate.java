@@ -31,7 +31,7 @@ public class DefaultTemplate extends Executor {
 	private ListView lv; 
 	//private ValidatorListAdapter mAdapter;
 	private LinearLayout my_root;
-	private TextView errorView;
+	//private TextView errorView;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -60,7 +60,7 @@ public class DefaultTemplate extends Executor {
 		Log.d("nils","I'm in the onCreateView method");
 
 		View v = inflater.inflate(R.layout.template_wf_default, container, false);	
-		errorView = (TextView)v.findViewById(R.id.errortext);
+//		errorView = (TextView)v.findViewById(R.id.errortext);
 		my_root = (LinearLayout)v.findViewById(R.id.myRoot);
 		myContext.addContainers(getContainers());
 

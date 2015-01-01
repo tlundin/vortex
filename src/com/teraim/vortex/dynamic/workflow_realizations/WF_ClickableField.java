@@ -210,7 +210,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 		gs = GlobalState.getInstance(context.getContext());
 		ruleExecutor = RuleExecutor.getInstance(gs.getContext());
 		sd = gs.getSpinnerDefinitions();
-		al = gs.getArtLista();
+		al = gs.getVariableConfiguration();
 		o = gs.getLogger();
 		//SpannableString content = new SpannableString(headerT);
 		//content.setSpan(new UnderlineSpan(), 0, content.length(), 0);

@@ -428,7 +428,7 @@ public class Tools {
 
 	public static String[] generateList(GlobalState gs, Variable variable) {
 		String[] opt=null;
-		VariableConfiguration al = gs.getArtLista();
+		VariableConfiguration al = gs.getVariableConfiguration();
 		LoggerI o = gs.getLogger();
 		List<String >listValues = al.getListElements(variable.getBackingDataSet());
 		Log.d("nils","Found dynamic list definition..parsing");

@@ -23,11 +23,11 @@ public class Constants {
 	//Root for NILS
 	
 	public final static String HISTORICAL_TOKEN = "*HISTORICAL*";
-	public final static String NILS_ROOT_DIR = path+"/nils/";
-	public final static String CONFIG_FILES_DIR = NILS_ROOT_DIR + "config/";
-	public static final String EXPORT_FILES_DIR = NILS_ROOT_DIR + "export/";
-	public static final String PIC_ROOT_DIR = NILS_ROOT_DIR + "pics/";
-	public static final String OLD_PIC_ROOT_DIR = NILS_ROOT_DIR + "old_pics/";
+	public final static String VORTEX_ROOT_DIR = path+"/vortex/";
+	public final static String CONFIG_FILES_DIR = VORTEX_ROOT_DIR + "config/";
+	public static final String EXPORT_FILES_DIR = VORTEX_ROOT_DIR + "export/";
+	public static final String PIC_ROOT_DIR = VORTEX_ROOT_DIR + "pics/";
+	public static final String OLD_PIC_ROOT_DIR = VORTEX_ROOT_DIR + "old_pics/";
 	
 	//public static String NILS_BASE_DIR = "/nils";
 	public static String UNDEFINED = "undefined";
@@ -64,11 +64,6 @@ public class Constants {
 
 	public static final String SLU_URL = "https://arbetsplats.slu.se/sites/srh/Landskapsanalys/Faltportal/default.aspx";
 
-	public static final int MAX_NILS = 16;
-
-	public static final int MIN_ABO = 50;
-
-	public static final int MAX_ABO = 99;
 
 	
 	public static final String STATUS_INITIAL = "0";
@@ -77,11 +72,6 @@ public class Constants {
 	public static final String STATUS_AVSLUTAD_OK = "3";
 	public static final String STATUS_DISABLED = "4";
 	public static final int MAX_NILS_LINJER = 12;
-
-	public static final String MOJO = "speziale4";
-
-
-
 	public static final String NORR = "SYD";
 	public static final String SYD = "NORR";
 	public static final String OST = "VAST";
@@ -114,7 +104,12 @@ public class Constants {
 	}
 
 
+//TODO: REMOVE
+	public static final int MAX_NILS = 16;
 
+	public static final int MIN_ABO = 50;
+
+	public static final int MAX_ABO = 99;
 
 	public static boolean isAbo(int pyID) {
 		return pyID>=Constants.MIN_ABO && pyID<=Constants.MAX_ABO;

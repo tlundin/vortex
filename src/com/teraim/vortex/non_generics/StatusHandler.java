@@ -78,27 +78,27 @@ public class StatusHandler {
 
 
 	public void setStatusProvyta() {
-		Map<String, String> pyKeyMap = gs.getArtLista().createProvytaKeyMap();
+		Map<String, String> pyKeyMap = gs.getVariableConfiguration().createProvytaKeyMap();
 		if (pyKeyMap == null)
 			return;
 		Kvot k1 = getStatusSmaProv();
 		Kvot k2 = getStatusDelytor();
 		boolean done = (k1.allDone() && k2.allDone());
-		gs.getArtLista().getVariableUsingKey(pyKeyMap, 
+		gs.getVariableConfiguration().getVariableUsingKey(pyKeyMap, 
 				"status_provyta").setValue(done?Constants.STATUS_AVSLUTAD_OK:Constants.STATUS_INITIAL);
 	}
 
 	public void setStatusRuta() {
-		Map<String, String> rutaKeyMap = gs.getArtLista().createRutaKeyMap();
+		Map<String, String> rutaKeyMap = gs.getVariableConfiguration().createRutaKeyMap();
 		if (rutaKeyMap == null)
 			return;
 		Kvot k = getStatusProvytor();
-		gs.getArtLista().getVariableUsingKey(rutaKeyMap, 
+		gs.getVariableConfiguration().getVariableUsingKey(rutaKeyMap, 
 				"status_ruta").setValue(k.allDone()?Constants.STATUS_AVSLUTAD_OK:Constants.STATUS_INITIAL);
 	}
 
 	public Kvot getStatusSmaProv() {	
-		keySet = gs.getArtLista().createProvytaKeyMap();
+		keySet = gs.getVariableConfiguration().createProvytaKeyMap();
 		int done = getNumberOfElementsDone(keySet,"status_smaprovyta");
 		int tot = Constants.isAbo(DelyteManager.getInstance().getPyID())?9:3;
 		//int tot = getCount(keySet,"smaprovyta");
@@ -106,17 +106,17 @@ public class StatusHandler {
 	}
 
 	public Kvot getStatusDelytor() {
-		keySet = gs.getArtLista().createProvytaKeyMap();
+		keySet = gs.getVariableConfiguration().createProvytaKeyMap();
 		int done = getNumberOfElementsDone(keySet,"status_delyta");		
 		int tot = 1;
-		String totS = gs.getArtLista().getVariableUsingKey(gs.getArtLista().createProvytaKeyMap(), "noOfDelytor").getValue();
+		String totS = gs.getVariableConfiguration().getVariableUsingKey(gs.getVariableConfiguration().createProvytaKeyMap(), "noOfDelytor").getValue();
 		if (totS != null)
 			tot = Integer.parseInt(totS);
 		return new Kvot(done,tot);
 	}
 	
 	public Kvot getStatusLinjer() {
-		keySet = gs.getArtLista().createRutaKeyMap();
+		keySet = gs.getVariableConfiguration().createRutaKeyMap();
 		int done = getNumberOfElementsDone(keySet,"status_linje");		
 		int tot = Constants.MAX_NILS_LINJER;
 		return new Kvot(done,tot);
@@ -124,7 +124,7 @@ public class StatusHandler {
 
 	public Kvot getStatusProvytor() {
 		Log.d("nils","GetStatus: Provytor");
-		keySet = gs.getArtLista().createRutaKeyMap();
+		keySet = gs.getVariableConfiguration().createRutaKeyMap();
 		Log.d("nils","Keyset: "+keySet.toString());
 		int done = getNumberOfElementsDone(keySet,"status_provyta");
 		//set?
@@ -134,7 +134,7 @@ public class StatusHandler {
 			//last resort: count.
 			if (noOfProvytor ==-1) {
 			Map<String,String> p = new HashMap<String,String>();
-			p.put("ruta", gs.getArtLista().getCurrentRuta());
+			p.put("ruta", gs.getVariableConfiguration().getCurrentRuta());
 			noOfProvytor = getCount(p,"provyta");
 			}
 		}

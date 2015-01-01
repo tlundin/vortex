@@ -88,7 +88,7 @@ public class WF_SorterWidget extends WF_Widget {
 			};
 			//Generate buttons from artlista. 
 			//Pick fields that are of type Familj
-			VariableConfiguration al = GlobalState.getInstance(ctx.getContext()).getArtLista();
+			VariableConfiguration al = GlobalState.getInstance(ctx.getContext()).getVariableConfiguration();
 			Table t = al.getTable();
 			List<List<String>> rows = t.getRowsContaining(selectionField,selectionPattern);
 			Log.d("nils","SORTERWIDGET: GETROWS RETURNED "+rows.size()+" FOR SELFIELD "+selectionField+" AND SELP: "+selectionPattern);

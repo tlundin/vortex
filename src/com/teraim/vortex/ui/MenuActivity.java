@@ -1,5 +1,7 @@
 package com.teraim.vortex.ui;
 
+import java.util.Map;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -51,8 +53,8 @@ public class MenuActivity extends Activity {
 		ph = gs.getPersistence();
 		
 		x =  new AlertDialog.Builder(MenuActivity.this)
-		.setTitle("Lång synk - mycket data")
-		.setMessage("Skriver in data") 
+		.setTitle("Synchronizing")
+		.setMessage("Receiving data..standby") 
 				.setIcon(android.R.drawable.ic_dialog_alert)
 				.setCancelable(false)
 				.setPositiveButton("Continue in background", new DialogInterface.OnClickListener() {
@@ -239,31 +241,31 @@ public class MenuActivity extends Activity {
 			return;
 		}
 		int c=0;
-		String r,p,l,d;
-		p= gs.getArtLista().getVariableValue(null,"Current_Provyta");
-		r= gs.getArtLista().getVariableValue(null,"Current_Ruta");
-		l= gs.getArtLista().getVariableValue(null, "Current_Linje");
-		d= gs.getArtLista().getVariableValue(null, "Current_Delyta");
-		String pid = p==null?"?":p;
-		String rid = r==null?"?":r;
-		String lid = l==null?"?":l;
-		String did = d==null?"?":d;
+		/*
+		String pid,rid,lid,did;
+		pid= gs.getVariableConfiguration().getVariableValue(null,"Current_Provyta");
+		rid= gs.getVariableConfiguration().getVariableValue(null,"Current_Ruta");
+		lid= gs.getVariableConfiguration().getVariableValue(null, "Current_Linje");
+		did= gs.getVariableConfiguration().getVariableValue(null, "Current_Delyta");
+		*/
 		mnu[c++].setTitle("Osynkat: "+gs.getDb().getNumberOfUnsyncedEntries());
-		mnu[c++].setTitle("R:"+rid+" P:"+pid+" L:"+lid+" D:"+did);
+		String mContextH = null;
+		Map<String, String> hash = gs.getCurrentKeyHash();
+		if (hash!=null)
+			mContextH = hash.toString();
+		mnu[c++].setTitle(mContextH);
 		mnu[c++].setTitle("LOG");
+		
 		mnu[c++].setTitle("SYNK "+gs.getSyncStatusS());
 		//mnu[c++].setTitle("Användare: "+gs.getPersistence().get(PersistenceHelper.USER_ID_KEY));
 		//mnu[c++].setTitle("Typ: "+gs.getDeviceType());
-		if(!ph.getB(PersistenceHelper.DEVELOPER_SWITCH)) {
-			Log.d("nils","devswitch off");
-			mnu[2].setVisible(false);
-		}
-		else {
-			Log.d("nils","devswitch on");
-			mnu[2].setVisible(true);
-		}
 
-
+		mnu[0].setVisible(ph.getB(PersistenceHelper.SYNC_FEATURE));	
+		//If (title is empty, don't show r-p-d-l status
+		mnu[1].setVisible(mContextH!=null && mContextH.length()!=0);		
+		mnu[2].setVisible(ph.getB(PersistenceHelper.DEVELOPER_SWITCH));
+		mnu[3].setVisible(ph.getB(PersistenceHelper.SYNC_FEATURE));
+		
 	}
 
 	private boolean BTInProgress=false;
@@ -370,6 +372,9 @@ public class MenuActivity extends Activity {
 			}
 			break;
 		case 4:
+			//close drawer menu if open
+			if (gs.getDrawerMenu()!=null)
+				gs.getDrawerMenu().closeDrawer();
 			Intent intent = new Intent(getBaseContext(),ConfigMenu.class);
 			startActivity(intent);
 			return true;

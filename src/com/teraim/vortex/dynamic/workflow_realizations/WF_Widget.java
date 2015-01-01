@@ -15,7 +15,7 @@ public class WF_Widget extends WF_Thing implements Drawable {
 	
 	public WF_Widget(String id,View v,boolean isVisible,WF_Context myContext) {
 		super(id);
-		al = GlobalState.getInstance(myContext.getContext()).getArtLista();
+		al = GlobalState.getInstance(myContext.getContext()).getVariableConfiguration();
 		myView = v;
 		if (!isVisible)
 			hide();

@@ -1,5 +1,8 @@
 package com.teraim.vortex.ui;
 
+import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -15,6 +18,7 @@ import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
+import com.teraim.vortex.Start;
 import com.teraim.vortex.bluetooth.BluetoothConnectionService;
 import com.teraim.vortex.utils.PersistenceHelper;
 
@@ -27,7 +31,7 @@ public class ConfigMenu extends PreferenceActivity {
 		getFragmentManager().beginTransaction()
 		.replace(android.R.id.content, new SettingsFragment())
 		.commit();
-		setTitle("Ändra inställningar");
+		setTitle("Change Configuration");
 	}
 
 
@@ -106,12 +110,18 @@ public class ConfigMenu extends PreferenceActivity {
 				if (key.equals(PersistenceHelper.BUNDLE_NAME)) {
 					Log.d("nils","Bundle file changed. Removing version check");
 					GlobalState.getInstance(this.getActivity()).getPersistence().put(PersistenceHelper.CURRENT_VERSION_OF_WF_BUNDLE, PersistenceHelper.UNDEFINED);
-					
-				} else
-					if (key.equals(PersistenceHelper.CONFIG_LOCATION)) {
-						Log.d("nils","Config location changed. Removing version check");
-						GlobalState.getInstance(this.getActivity()).getPersistence().put(PersistenceHelper.CURRENT_VERSION_OF_CONFIG_FILE, PersistenceHelper.UNDEFINED);					
-					}
+					GlobalState.getInstance(this.getActivity()).getPersistence().put(PersistenceHelper.CURRENT_VERSION_OF_CONFIG_FILE, PersistenceHelper.UNDEFINED);					
+					GlobalState.getInstance(this.getActivity()).getPersistence().put(PersistenceHelper.CURRENT_VERSION_OF_HISTORY_FILE, PersistenceHelper.UNDEFINED);					
+					GlobalState.getInstance(this.getActivity()).getPersistence().put(PersistenceHelper.CURRENT_VERSION_OF_VARPATTERN_FILE, PersistenceHelper.UNDEFINED);	
+					//Try to restart the app.
+					Activity context = this.getActivity();
+					Intent mStartActivity = new Intent(context, Start.class);
+					int mPendingIntentId = 123456;
+					PendingIntent mPendingIntent = PendingIntent.getActivity(context, mPendingIntentId,    mStartActivity, PendingIntent.FLAG_CANCEL_CURRENT);
+					AlarmManager mgr = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
+					mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, mPendingIntent);
+					System.exit(0);
+				}
 
 					
 			}

@@ -24,6 +24,7 @@ import android.widget.ToggleButton;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
+import com.teraim.vortex.Start;
 import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.types.Rule;
 import com.teraim.vortex.dynamic.types.Variable;
@@ -136,7 +137,7 @@ public  class ButtonBlock extends Block {
 			int layoutId = R.layout.button_normal;
 
 			if (statusVar != null) {
-				VariableConfiguration al = gs.getArtLista();
+				VariableConfiguration al = gs.getVariableConfiguration();
 				Variable statusVariable = al.getVariableUsingKey(buttonContext,statusVar);
 				if (statusVariable!=null) {
 					Log.e("nils","STATUSVAR: "+statusVariable.getId()+" key: "+statusVariable.getKeyChain()+ "Value: "+statusVariable.getValue());
@@ -208,7 +209,7 @@ public  class ButtonBlock extends Block {
 							String statusVar = myContext.getStatusVariable();
 							if (statusVar != null) {
 
-								VariableConfiguration al = gs.getArtLista();
+								VariableConfiguration al = gs.getVariableConfiguration();
 								Log.d("nils","My button context is: "+buttonContext.toString());
 								statusVariable = al.getVariableUsingKey(buttonContext,statusVar);
 							} else
@@ -343,18 +344,9 @@ public  class ButtonBlock extends Block {
 							} else {
 								o.addRow("");
 								o.addRow("Action button pressed. Executing wf: "+target);
-								Fragment f = wf.createFragment();
-								if (f == null) {
-									o.addRow("");
-									o.addRedText("Couldn't create new fragment...Template was named"+wf.getName());
-								}
-								Bundle b = new Bundle();
-								b.putString("workflow_name", target); //Your id
-								b.putString("status_variable", statusVar);
-								f.setArguments(b); //Put your id to your next Intent
 								//save all changes
 								if (statusVar!=null) {
-									VariableConfiguration al = gs.getArtLista();
+									VariableConfiguration al = gs.getVariableConfiguration();
 									statusVariable = al.getVariableUsingKey(buttonContext,statusVar);
 									if (statusVariable == null) {
 										o.addRow("");
@@ -366,10 +358,11 @@ public  class ButtonBlock extends Block {
 										myContext.registerEvent(new WF_Event_OnSave(ButtonBlock.this.getBlockId()));
 									}
 								}
-								final FragmentTransaction ft = myContext.getActivity().getFragmentManager().beginTransaction(); 
-								ft.replace(myContext.getRootContainer(), f);
-								ft.addToBackStack(null);
-								ft.commit(); 
+								Start.singleton.changePage(wf,statusVar);
+								//final FragmentTransaction ft = myContext.getActivity().getFragmentManager().beginTransaction(); 
+								//ft.replace(myContext.getRootContainer(), f);
+								//ft.addToBackStack(null);
+								//ft.commit(); 
 								//Validation?
 							}
 

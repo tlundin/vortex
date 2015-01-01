@@ -18,8 +18,8 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.teraim.vortex.R;
+import com.teraim.vortex.Start;
 import com.teraim.vortex.dynamic.types.Workflow;
-import com.teraim.vortex.non_generics.Start;
 import com.teraim.vortex.ui.DrawerMenuAdapter.RowType;
 
 public class DrawerMenu {
@@ -78,13 +78,10 @@ public class DrawerMenu {
 					Log.e("vortex","ups!!! Got null when looking for workflow ");
 				else {
 					// Create a new fragment and specify the  to show based on position
-					Fragment fragment=wf.createFragment();
-					Bundle args = new Bundle();
-					args.putString("workflow_name", wf.getName());
-					fragment.setArguments(args);
 					DrawerMenu.this.closeDrawer();
 					// Insert the fragment by replacing any existing fragment
-					Start.singleton.changePage(fragment, wf.getLabel());
+					//TODO: This might not work...might need to know statusvariable.
+					Start.singleton.changePage(wf,null);
 				}
 			} else
 				Log.e("vortex","Could not find any entry for menu position "+position);

@@ -43,6 +43,7 @@ import com.teraim.vortex.dynamic.blocks.MenuHeaderBlock;
 import com.teraim.vortex.dynamic.blocks.PageDefineBlock;
 import com.teraim.vortex.dynamic.blocks.SetValueBlock;
 import com.teraim.vortex.dynamic.blocks.StartBlock;
+import com.teraim.vortex.dynamic.blocks.TextFieldBlock;
 import com.teraim.vortex.dynamic.types.Workflow;
 import com.teraim.vortex.dynamic.types.Workflow.Unit;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Not_ClickableField_SumAndCountOfVariables;
@@ -74,7 +75,6 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 	public WorkflowParser(GlobalState gs, FileLoadedCb fileLoadedCb) {
 		this.ph=gs.getPersistence();
 		this.cb = fileLoadedCb;
-		Log.d("vortex","in workflowparser, workflows: "+gs.getWfs());
 		workflowsExist = gs.getWfs()!=null;
 
 	}
@@ -303,7 +303,8 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 				blocks.add(readBlockDefineMenuHeader(parser));
 			else if (name.equals("block_defineMenuEntry"))
 				blocks.add(readBlockDefineMenuEntry(parser));			
-
+			else if (name.equals("block_create_text_field"))
+				blocks.add(readBlockCreateTextField(parser));
 			else {			
 				skip(name,parser);
 			}
@@ -312,6 +313,35 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 		return blocks;
 	}
 
+	
+	private Block readBlockCreateTextField(XmlPullParser parser) throws IOException, XmlPullParserException {
+		//		o.addRow("Parsing block: block_set_value...");
+		String id=null,label=null,container=null;
+		boolean isVisible=true;
+		parser.require(XmlPullParser.START_TAG, null,"block_create_text_field");
+		while (parser.next() != XmlPullParser.END_TAG) {
+			if (parser.getEventType() != XmlPullParser.START_TAG) {
+				continue;
+			}
+			String name= parser.getName();
+			if (name.equals("block_ID")) {
+				id = readText("block_ID",parser);
+			} else if (name.equals("label")) {
+				label = readText("label",parser);
+			} else if (name.equals("container_name")) {
+				container = readText("container_name",parser);
+			} 
+			else if (name.equals("is_visible")) {
+				isVisible = !readText("is_visible",parser).equals("false");
+			}
+			else
+				skip(name,parser);
+
+		}
+		checkForNull("block_ID",id,"label",label,"container",container);
+		return new TextFieldBlock(id,label,container,isVisible);
+
+	}
 
 	private Block readBlockDefineMenuHeader(XmlPullParser parser) throws IOException, XmlPullParserException {
 		//		o.addRow("Parsing block: block_set_value...");
@@ -337,7 +367,9 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 		checkForNull("block_ID",id,"label",label,"text_color",textColor,"bck_color",bgColor);
 		return new MenuHeaderBlock(id,label,textColor,bgColor);
 
-	}	private Block readBlockDefineMenuEntry(XmlPullParser parser) throws IOException, XmlPullParserException {
+	}	
+	
+	private Block readBlockDefineMenuEntry(XmlPullParser parser) throws IOException, XmlPullParserException {
 		//		o.addRow("Parsing block: block_set_value...");
 		String id=null,type=null,target=null,textColor=null,bgColor=null;
 		parser.require(XmlPullParser.START_TAG, null,"block_defineMenuEntry");

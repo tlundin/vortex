@@ -108,6 +108,8 @@ public class WF_Context {
 
 
 	public Container getContainer(String id) {
+		if (containers == null)
+			return null;
 		//Log.d("nils","GetContainer. looking for container "+id);
 		if (id==null || id.length()==0) {
 			Log.d("nils","Container: null. Defaulting to root.");
@@ -122,7 +124,9 @@ public class WF_Context {
 		return null;
 	}
 
-	
+	public boolean hasContainers() {
+		return containers!=null && !containers.isEmpty();
+	}
 	
 	public void resetState() {
 		emptyContainers();

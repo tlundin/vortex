@@ -6,14 +6,13 @@ public abstract class Event {
 		onSave,
 		onClick,
 		onRedraw,
-		nyLinjeStarted,
-		linjeEnded, 
+		onBluetoothMessageReceived,
 		onMasterChangedData
 	}
 	
 	private  String generatorId;
 	private  EventType myType;
-	
+	public final static String EXTERNAL_SOURCE = "ext";
 
 	public Event (String fromId, EventType et) {
 		this.generatorId = fromId;

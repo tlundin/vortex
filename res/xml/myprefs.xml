@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen
 xmlns:android="http://schemas.android.com/apk/res/android" >
-<PreferenceCategory android:title="Allmänt">
-    android:title="Allmänt" 
+<PreferenceCategory android:title="General">
+    android:title="General" 
  <ListPreference 
      android:key="device_type"
      android:entryValues="@array/deviceTypes" 
@@ -15,6 +15,7 @@ xmlns:android="http://schemas.android.com/apk/res/android" >
             android:title="Team" 
             android:summary="Name of team"
             android:dialogTitle="Team"
+            android:inputType="textCapSentences"  
             android:dialogMessage="Name of team"    
     />
 <EditTextPreference 
@@ -23,6 +24,7 @@ xmlns:android="http://schemas.android.com/apk/res/android" >
     android:dialogMessage="Write your name here!" 
     android:negativeButtonText="Cancel" 
     android:positiveButtonText="Ok" 
+    android:inputType="textCapSentences"  
     android:key="user_id" 
     /> 
  </PreferenceCategory>
@@ -39,10 +41,11 @@ xmlns:android="http://schemas.android.com/apk/res/android" >
     
 <EditTextPreference
             android:key="bundle_name"
-            android:title="Name of Application Bundle" 
+            android:title="Name of Application Bundle (change forces restart)" 
             android:dialogTitle="Application"
-            android:dialogMessage="Enter the application name. No '.xml', only the name!"    
-            android:defaultValue="nilsbundle2.xml" />
+            android:dialogMessage="Enter the application name. No '.xml', only the name!\n NOTE: CHANGING THIS VALUE WILL RESTART THE PROGRAM!!"  
+            android:inputType="textCapSentences"  
+            android:defaultValue="Vortex.xml" />
 <CheckBoxPreference
     		android:key="dev_switch"
     		android:title="Developer functions"
@@ -57,11 +60,16 @@ xmlns:android="http://schemas.android.com/apk/res/android" >
     		android:dialogTitle=""
     		android:dialogMessage=""
     		android:defaultValue="false" />
+<CheckBoxPreference
+    		android:key="sync_feature"
+    		android:title="Sync"
+    		android:summary="Turn on or off the sync feature"
+    		android:dialogTitle=""
+    		android:dialogMessage=""
+    		android:defaultValue="false" />
 
 </PreferenceCategory>
 
-	public static final String ARTLISTA_LOCATION = "config_name";
-	public static final String BUNDLE_LOCATION = "bundle_name";
-	public static final CharSequence SERVER_URL = "server_location";
+
 
 </PreferenceScreen>

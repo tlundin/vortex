@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import android.util.Log;
 
@@ -153,8 +155,16 @@ public class VariableConfiguration {
 	}
 
 	public String getKeyChain(List<String> row) {
+		//Check for null or empty
 		if (row==null)
 			return null;
+		Pattern pattern = Pattern.compile("\\s");
+		Matcher matcher = pattern.matcher(row.get(0));
+		if(matcher.find()) {
+			Log.e("vortex","Space char found in keychain: "+row.get(0)+" length : "+row.get(0).length()+" size: "+row.size());
+			return null;
+		}
+			
 		else
 			return row.get(fromNameToColumn.get(requiredColumns.get(KEY_CHAIN)));		
 	}
@@ -371,7 +381,7 @@ public class VariableConfiguration {
 		String currentRuta = getVariableValue(null,NamedVariables.CURRENT_RUTA);
 		String currentProvyta = getVariableValue(null,NamedVariables.CURRENT_PROVYTA);		
 		String currentSmayta = getVariableValue(null,NamedVariables.CURRENT_SMAPROVYTA);		
-		if (currentRuta == null||currentProvyta==null||currentSmayta==null)
+		if (currentYear == null || currentRuta == null||currentProvyta==null||currentSmayta==null)
 			return null;
 		return Tools.createKeyMap(KEY_YEAR,currentYear,"ruta",currentRuta,"provyta",currentProvyta,"smaprovyta",currentSmayta);
 	}
@@ -381,12 +391,25 @@ public class VariableConfiguration {
 		String currentRuta = getVariableValue(null,NamedVariables.CURRENT_RUTA);
 		String currentProvyta = getVariableValue(null,NamedVariables.CURRENT_PROVYTA);		
 		String currentDelyta = getVariableValue(null,NamedVariables.CURRENT_DELYTA);		
-		if (currentRuta == null||currentProvyta==null||currentDelyta==null) {
+		if (currentYear == null || currentRuta == null||currentProvyta==null||currentDelyta==null) {
 			Log.e("nils","CreateDelytaKeyMap failed. Missing value");
 			return null;
 		}
 		return Tools.createKeyMap(KEY_YEAR,currentYear,"ruta",currentRuta,"provyta",currentProvyta,"delyta",currentDelyta);
-	}	
+	}
+	
+	//note that provyta is the key for current linje.
+	public Map<String, String> createLinjeKeyMap() {
+		String currentYear = getVariableValue(null,NamedVariables.CURRENT_YEAR);
+		String currentRuta = getVariableValue(null,NamedVariables.CURRENT_RUTA);		
+		String currentLinje = getVariableValue(null,NamedVariables.CURRENT_LINJE);		
+		if (currentYear == null || currentRuta == null||currentLinje==null) {
+			Log.e("nils","CreateLinjeKeyMap failed. Missing value");
+			return null;
+		}
+
+		return Tools.createKeyMap(VariableConfiguration.KEY_YEAR,currentYear,"ruta",currentRuta,"provyta",currentLinje);
+	}
 
 	public String getCurrentRuta() {
 		return getVariableValue(null,NamedVariables.CURRENT_RUTA);
@@ -424,6 +447,8 @@ public class VariableConfiguration {
 		Log.d("nils","In add to cache...will not be needed");
 		myCache.put(v.getId(), v);
 	}
+
+
 
 
 

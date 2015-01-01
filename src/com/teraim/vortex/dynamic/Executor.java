@@ -27,8 +27,6 @@ import android.util.Log;
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
 import com.teraim.vortex.bluetooth.BluetoothConnectionService;
-import com.teraim.vortex.bluetooth.LinjeDone;
-import com.teraim.vortex.bluetooth.LinjeStarted;
 import com.teraim.vortex.dynamic.blocks.AddEntryToFieldListBlock;
 import com.teraim.vortex.dynamic.blocks.AddRuleBlock;
 import com.teraim.vortex.dynamic.blocks.AddSumOrCountBlock;
@@ -49,6 +47,7 @@ import com.teraim.vortex.dynamic.blocks.MenuHeaderBlock;
 import com.teraim.vortex.dynamic.blocks.SetValueBlock;
 import com.teraim.vortex.dynamic.blocks.SetValueBlock.ExecutionBehavior;
 import com.teraim.vortex.dynamic.blocks.StartBlock;
+import com.teraim.vortex.dynamic.blocks.TextFieldBlock;
 import com.teraim.vortex.dynamic.types.Rule;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.types.Variable.DataType;
@@ -60,11 +59,12 @@ import com.teraim.vortex.dynamic.workflow_abstracts.EventListener;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Container;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Event;
-import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnLinjeStatusChanged;
+import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnBluetoothMessageReceived;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnSave;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Static_List;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
+import com.teraim.vortex.ui.MenuActivity;
 import com.teraim.vortex.utils.RuleExecutor;
 
 /*
@@ -111,7 +111,7 @@ public abstract class Executor extends Fragment {
 		activity = this.getActivity();
 		gs = GlobalState.getInstance((Context)activity);
 		myContext = new WF_Context((Context)activity,this,R.id.content_frame);
-		al = gs.getArtLista();
+		al = gs.getVariableConfiguration();
 		o = gs.getLogger();
 		wf = getFlow();
 		
@@ -119,25 +119,24 @@ public abstract class Executor extends Fragment {
 		
 		ifi = new IntentFilter();
 		ifi.addAction(BluetoothConnectionService.SYNK_DATA_RECEIVED);
-		ifi.addAction(BluetoothConnectionService.LINJE_STARTED);
-		ifi.addAction(BluetoothConnectionService.LINJE_DONE);
+		ifi.addAction(BluetoothConnectionService.BLUETOOTH_MESSAGE_RECEIVED);
 		ifi.addAction(BluetoothConnectionService.MASTER_CHANGED_MY_CONFIG);
+		//This receiver will forward events to the current context.
+		//Bluetoothmessages are saved in the global context by the message handler.
 		brr = new BroadcastReceiver() {
 			@Override
 			public void onReceive(Context ctx, Intent intent) {
 				Log.d("nils","GETS HERE::::::");
 				if (intent.getAction().equals(BluetoothConnectionService.SYNK_DATA_RECEIVED)) {
-					gs.getArtLista().invalidateCache();	
+					gs.getVariableConfiguration().invalidateCache();	
 					Log.d("nils","Cache invalidated");
 					myContext.registerEvent(new WF_Event_OnSave(Constants.SYNC_ID));
 					Log.d("nils","Reg event - onsave");
-				} else if (intent.getAction().equals(BluetoothConnectionService.LINJE_STARTED)) {
-					Log.d("nils","Linje started!");
-					myContext.registerEvent(new WF_Event_OnLinjeStatusChanged(((LinjeStarted)gs.getOriginalMessage()).linjeId,true));
-				} else if (intent.getAction().equals(BluetoothConnectionService.LINJE_DONE)) {
-					Log.d("nils","Linje done!");
-					myContext.registerEvent(new WF_Event_OnLinjeStatusChanged(((LinjeDone)gs.getOriginalMessage()).linjeId,false));
-				} else if (intent.getAction().equals(BluetoothConnectionService.MASTER_CHANGED_MY_CONFIG)) {
+				} else if (intent.getAction().equals(BluetoothConnectionService.BLUETOOTH_MESSAGE_RECEIVED)) {
+					Log.d("nils","New bluetoot message received event!");
+					myContext.registerEvent(new WF_Event_OnBluetoothMessageReceived());
+				}
+				else if (intent.getAction().equals(BluetoothConnectionService.MASTER_CHANGED_MY_CONFIG)) {
 					myContext.registerEvent(new WF_Event(EventType.onMasterChangedData,null,"Executor"));
 				} 
 			}
@@ -179,6 +178,8 @@ public abstract class Executor extends Fragment {
 				o.addYellowText("Workflow "+name+" NOT found!");
 				return null;
 			} else {
+				o.addRow("");
+				o.addRow("");
 				o.addRow("*******EXECUTING: "+name);
 
 			}
@@ -198,105 +199,13 @@ public abstract class Executor extends Fragment {
 			boolean notDone = true;
 			int blockP = 0;
 			Set<Variable>blockVars;
-			boolean contextError = false;
 			boolean hasDrawer=false;
 			Variable missingVariable = null;
 			String cContext = null;
 			while(notDone) {
 				Block b = blocks.get(blockP);
-				if (b instanceof StartBlock) {
-					o.addRow("");
-					o.addYellowText("Startblock found "+b.getBlockId());
-					StartBlock bl = (StartBlock)b;
-					cContext = bl.getWorkFlowContext();
-					if (cContext==null||cContext.isEmpty()) {
-						Log.d("nils","No context!!");
-						o.addRow("No context...will use existing");
-					} else {
-						Log.d("nils","Found context!!");
-						String[] pairs = cContext.split(",");
-						if (pairs==null||pairs.length==0) {
-							o.addRow("Could not split context on comma (,). Syntax error?");
-							contextError = true;
-							break;
-						} else {
 
-							Map<String, String> keyHash = new HashMap<String, String>();
-							Map<String, Variable> rawHash = new HashMap<String, Variable>();
-							for (String pair:pairs) {
-								Log.d("nils","found pair: "+pair);
-								if (pair!=null&&!pair.isEmpty()) {
-									String[] kv = pair.split("=");
-									if (kv==null||kv.length<2) {
-										o.addRow("");
-										o.addRedText("Could not split context on comma (,). Syntax error?");
-										contextError=true;
-									} else {
-										//Calculate value of context variables, if any.
-										//is it a variable or a value?
-										String arg = kv[0].trim();
-										String val = kv[1].trim();
-										Log.d("nils","Keypair: "+arg+","+val);
-
-										if (val.isEmpty()||arg.isEmpty()) {
-											o.addRow("");
-											o.addRedText("Empty variable or argument in definition");
-											contextError=true;
-										} else {
-
-											if (Character.isDigit(val.charAt(0))) {
-												//constant
-												keyHash.put(arg, val);
-												Log.d("nils","Added "+arg+","+val+" to current context");
-											} 
-											else {
-												//Variable. need to evaluate first..
-												Variable v = gs.getArtLista().getVariableInstance(val);
-												if (v==null) {
-													contextError=true;
-													o.addRow("");
-													o.addRedText("One of the variables missing: "+val);
-													Log.d("nils","Couldn't find variable "+val);
-												} else {
-													String varVal = v.getValue();
-													if(varVal==null||varVal.isEmpty()) {
-														contextError=true;
-														missingVariable = v;
-														o.addRow("");
-														o.addRedText("One of the variables used in current context("+v.getId()+") has no value in database");
-														Log.e("nils","var was null or empty: "+v.getId());
-													} else {
-
-														keyHash.put(arg, varVal);
-														rawHash.put(arg,v);
-														Log.d("nils","Added "+arg+","+varVal+" to current context");
-														v.setKeyChainVariable(arg);
-													}
-
-												}
-
-											}
-										}
-									}
-								} else
-									Log.d("nils","Found empty or null pair");
-							} if (!contextError && !keyHash.isEmpty()) {
-								Log.d("nils","added keyhash to gs");
-								//This destroys the cache. Need to add back the keychain variables.
-								gs.setKeyHash(keyHash);
-								for (Variable v:rawHash.values()) 
-									al.addToCache(v);
-								//Keep this if the hash values change.
-								gs.setRawHash(rawHash);
-							} else {
-								break;
-							}
-
-						}
-					}
-				}
-
-				else if (b instanceof ContainerDefineBlock) {
+				if (b instanceof ContainerDefineBlock) {
 					o.addRow("");
 					o.addYellowText("ContainerDefineBlock found "+b.getBlockId());
 					String id = (((ContainerDefineBlock) b).getContainerName());
@@ -318,6 +227,12 @@ public abstract class Executor extends Fragment {
 					ButtonBlock bl = (ButtonBlock) b;
 					bl.create(myContext);
 				}			
+				else if (b instanceof TextFieldBlock) {
+					o.addRow("");
+					o.addYellowText("CreatTextBlock found "+b.getBlockId());
+					TextFieldBlock bl = (TextFieldBlock) b;
+					bl.create(myContext);
+				}
 				else if (b instanceof CreateSortWidgetBlock) {
 					o.addRow("");
 					o.addYellowText("CreateSortWidgetBlock found "+b.getBlockId());
@@ -580,7 +495,11 @@ public abstract class Executor extends Fragment {
 				if (blockP>=blocks.size())
 					notDone=false;
 			}
-			if (!contextError) {
+			Container root = myContext.getContainer("root");
+			if (root==null && myContext.hasContainers()) {
+				o.addRow("");
+				o.addRedText("TEMPLATE ERROR: Cannot find the root container. \nEach template must have a root! Execution aborted.");				
+			} else {
 				//Now all blocks are executed.
 				//Draw the UI.
 				o.addRow("");
@@ -590,12 +509,12 @@ public abstract class Executor extends Fragment {
 					l.draw();
 				//Trgger redraw event on lists.
 				//myContext.registerEvent(new WF_Event_OnSave("fackabuudle"));
-				Container root = myContext.getContainer("root");
-				if (root!=null) {
+				if (root!=null) 
 					myContext.drawRecursively(root);
 				//open menu if any
+
 				if (hasDrawer) {
-					Log.d("vortex","Opening drawer menu!");
+					Log.d("vortex","Drawing menu");
 					gs.getDrawerMenu().openDrawer();
 				}
 	/*
@@ -612,28 +531,8 @@ public abstract class Executor extends Fragment {
 						
 					}
 			*/
-				}
-				else {
-					o.addRow("");
-					o.addRedText("TEMPLATE ERROR: Cannot find the root container. \nEach template must have a root! Execution aborted.");				
-				}
-			} else {
-				String dialogText = "Du kan inte köra flödet just nu pga fel i kontext: ["+cContext+"]";
-				if (missingVariable!=null) 
-					dialogText = "Du kan inte köra flödet just nu eftersom kontextvariabeln "+missingVariable.getId()+" saknar ett värde. ";
-				new AlertDialog.Builder(getActivity())
-				.setTitle("Kontext problem")
-				.setMessage(dialogText) 
-				.setIcon(android.R.drawable.ic_dialog_alert)
-				.setCancelable(false)
-				.setNeutralButton("Okej!",new OnClickListener() {				
-					@Override
-					public void onClick(DialogInterface dialog, int which) {
-						// TODO Auto-generated method stub
-						
-					}
-				} )
-				.show();
+				
+				
 			}
 
 		} catch (Exception e) {

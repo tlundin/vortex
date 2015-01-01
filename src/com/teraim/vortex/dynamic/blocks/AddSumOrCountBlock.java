@@ -45,7 +45,7 @@ public  class AddSumOrCountBlock extends Block {
 	
 	public void create(WF_Context myContext) {
 		o = GlobalState.getInstance(myContext.getContext()).getLogger();
-		al = GlobalState.getInstance(myContext.getContext()).getArtLista();
+		al = GlobalState.getInstance(myContext.getContext()).getVariableConfiguration();
 
 		Container myContainer = myContext.getContainer(containerId);
 		WF_Not_ClickableField_SumAndCountOfVariables field = new WF_Not_ClickableField_SumAndCountOfVariables(

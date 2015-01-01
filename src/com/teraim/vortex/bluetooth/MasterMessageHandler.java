@@ -21,11 +21,6 @@ public class MasterMessageHandler extends MessageHandler {
 			Log.d("nils","Received Ping from Slave");
 			o.addRow("[BT MESSAGE--->PING]");				
 			gs.setMyPartner(sp.getPartner());
-			if (gs.getPersistence().get(Constants.MOJO).equals(PersistenceHelper.UNDEFINED)) {
-				Log.d("nils","Resetting timestamp of sync to 0 in master");
-				gs.getPersistence().put(PersistenceHelper.TIME_OF_LAST_SYNC, Long.toString(0));
-				gs.getPersistence().put(Constants.MOJO, "Lifeasweknowit");
-			}				
 			gs.triggerTransfer();
 			} else 
 				Log.e("nils","received extra slave ping");

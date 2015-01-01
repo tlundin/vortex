@@ -173,7 +173,7 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 			avstandB.setChecked(true);
 		}
 		
-		VariableConfiguration al = gs.getArtLista();
+		VariableConfiguration al = gs.getVariableConfiguration();
 		
 		Toast.makeText(this.activity,"<<<< Svep åt vänster för historiska bilder!", Toast.LENGTH_SHORT).show();
 		

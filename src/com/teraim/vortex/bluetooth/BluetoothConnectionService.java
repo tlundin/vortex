@@ -62,8 +62,7 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 	public static final String SAME_SAME_SYNDROME = "com.teraim.vortex.master_syndrome";
 	public static final String SYNK_DATA_RECEIVED = "com.teraim.vortex.synk_data_received";
 	public static final String SYNK_DATA_TRANSFER_DONE = "com.teraim.vortex.sync_data_transfer_done";
-	public static final String LINJE_STARTED = "com.teraim.vortex.linje_started";
-	public static final String LINJE_DONE = "com.teraim.vortex.linje_done";
+	public static final String BLUETOOTH_MESSAGE_RECEIVED = "com.teraim.vortex.templatemessage";
 	public static final String RUTA_DONE = "com.teraim.vortex.ruta_done";
 	public static final String MASTER_CHANGED_MY_CONFIG = "com.teraim.vortex.master_changed_my_config";
 	public static final String SYNK_BLOCK_UI = "com.teraim.vortex.synk_block_ui";
@@ -216,8 +215,7 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 		String myName, myLag;
 		myName = gs.getPersistence().get(PersistenceHelper.USER_ID_KEY);
 		myLag = gs.getPersistence().get(PersistenceHelper.LAG_ID_KEY);
-		send(gs.isMaster()?new MasterPing(gs.getArtLista().getVariableValue(null,NamedVariables.CURRENT_RUTA),
-		gs.getArtLista().getVariableValue(null,NamedVariables.CURRENT_PROVYTA),myName,myLag):new SlavePing(myName,myLag));
+		send(gs.isMaster()?new MasterPing(myName,myLag):new SlavePing(myName,myLag));
 	}
 
 
@@ -498,6 +496,7 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 	 */
 
 	final static int MESSAGE_READ = 1;
+
 
 
 

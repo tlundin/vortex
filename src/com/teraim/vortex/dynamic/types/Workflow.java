@@ -88,10 +88,10 @@ public class Workflow implements Serializable {
 	}
 
 	
-	public Fragment createFragment() {
+	public Fragment createFragment(String templateName) {
 		Fragment f = null;
 		try {
-			Class<?> cs = Class.forName("com.teraim.vortex.dynamic.templates."+getType());
+			Class<?> cs = Class.forName("com.teraim.vortex.dynamic.templates."+templateName);
 			f = (Fragment)cs.newInstance();
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
@@ -103,15 +103,16 @@ public class Workflow implements Serializable {
 	return f;
 }
 
-public String getType() {
+public String getTemplate() {
 	for (Block b:blocks) {
 		if (b instanceof PageDefineBlock) {
 			PageDefineBlock bl = (PageDefineBlock)b;
 			return bl.getPageType();
 		}
 	}
-	Log.e("NILS","Could not find PageDefineBlock for workflow "+this.getName()+" Will default to Default type");
-	return "DefaultTemplate";
+	Log.d("vortex","Could not find a PageDefineBlock for workflow "+this.getName());
+	
+	return null;
 }
 
 public String getApplication() {
@@ -121,6 +122,18 @@ public String getApplication() {
 public String getApplicationVersion() {
 	return applicationVersion;
 }
+
+public String getContext() {
+	if (blocks!=null && blocks.size()>0) {
+		StartBlock bl = ((StartBlock)blocks.get(0));
+		return bl.getWorkFlowContext();
+	} 
+	
+	Log.e("vortex","startblock missing");
+	return null;
+}
+
+
 
 
 

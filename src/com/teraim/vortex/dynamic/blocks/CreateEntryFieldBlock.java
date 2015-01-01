@@ -63,7 +63,7 @@ public class CreateEntryFieldBlock extends Block {
 		gs = GlobalState.getInstance(myContext.getContext());
 		Container myContainer = myContext.getContainer(containerId);
 		o = gs.getLogger();
-		VariableConfiguration al = gs.getArtLista();
+		VariableConfiguration al = gs.getVariableConfiguration();
 		Log.d("nils","NAME: "+name);
 		Variable v = al.getVariableInstance(name,initialValue);
 		if (v == null) {

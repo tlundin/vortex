@@ -67,7 +67,7 @@ public class HistoricalDataImport extends AsyncTask<GlobalState ,Integer,LoadRes
 
 		Log.d("nils","In scanData");
 		gs = params[0];
-		al = gs.getArtLista();
+		al = gs.getVariableConfiguration();
 		o = gs.getLogger();
 		myDb=gs.getDb();
 		PersistenceHelper ph = gs.getPersistence();
@@ -89,7 +89,7 @@ public class HistoricalDataImport extends AsyncTask<GlobalState ,Integer,LoadRes
 			return null;
 		}
 		bundle = bundle.toLowerCase();
-		LoadResult ec=load(serverUrl+"/"+bundle+"/"+Constants.PY_HISTORICAL_FILE_NAME);
+		LoadResult ec=load(serverUrl+bundle+"/"+Constants.PY_HISTORICAL_FILE_NAME);
 
 		if (ec.errCode==ErrorCode.HistoricalLoaded) {
 			int histCounter = ph.getI(PersistenceHelper.HIST_LOAD_COUNTER+vNo);

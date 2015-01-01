@@ -9,7 +9,6 @@ import java.util.Map;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.Fragment;
-import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -39,6 +38,8 @@ import android.widget.TableLayout.LayoutParams;
 import android.widget.TextView;
 
 import com.teraim.vortex.R;
+import com.teraim.vortex.Start;
+import com.teraim.vortex.bluetooth.EnvelopedMessage;
 import com.teraim.vortex.bluetooth.LinjeDone;
 import com.teraim.vortex.bluetooth.LinjeStarted;
 import com.teraim.vortex.dynamic.Executor;
@@ -51,7 +52,7 @@ import com.teraim.vortex.dynamic.workflow_abstracts.Event;
 import com.teraim.vortex.dynamic.workflow_abstracts.Event.EventType;
 import com.teraim.vortex.dynamic.workflow_abstracts.EventListener;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Container;
-import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnLinjeStatusChanged;
+import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnBluetoothMessageReceived;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnSave;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Linje_Meter_List;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_TimeOrder_Sorter;
@@ -102,10 +103,8 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 			Bundle savedInstanceState) {
 		Log.d("nils","in onCreateView of LinjePortalTemplate");
 		myContext.resetState();
-		myContext.addEventListener(this, EventType.nyLinjeStarted);
-		myContext.addEventListener(this, EventType.linjeEnded);
-		myContext.addEventListener(this, EventType.onMasterChangedData);
-
+		//Listen to LinjeStarted and LinjeDone events.
+		myContext.addEventListener(this, EventType.onBluetoothMessageReceived);
 		View v = inflater.inflate(R.layout.template_linje_portal_wf, container, false);	
 		root = new WF_Container("root", (LinearLayout)v.findViewById(R.id.root), null);
 		aggregatePanel = (LinearLayout)v.findViewById(R.id.aggregates);
@@ -119,7 +118,7 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 		stopB = (Button)new Button(this.getActivity());
 		startB = (Button)fieldList.findViewById(R.id.startB);
 
-		al = gs.getArtLista();
+		al = gs.getVariableConfiguration();
 		db = gs.getDb();
 		currentYear = al.getVariableValue(null,"Current_Year");
 		currentLinje = al.getVariableValue(null,"Current_Linje");
@@ -146,11 +145,9 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 			}
 
 			Log.e("nils","eastW: "+eastW+" westW: "+westW+" southW:"+southW+" northW: "+northW);
-			Map<String,String>pyKeyMap = Tools.createKeyMap(VariableConfiguration.KEY_YEAR,currentYear,"ruta",al.getVariableValue(null,"Current_Ruta"),"provyta",al.getVariableValue(null, "Current_Linje"));
+			Map<String,String>pyKeyMap = al.createLinjeKeyMap();
 			linjeKey = Tools.createKeyMap(VariableConfiguration.KEY_YEAR,currentYear,"ruta",al.getVariableValue(null,"Current_Ruta"),"linje",currentLinje);
 			linjeStatus = al.getVariableUsingKey(linjeKey, NamedVariables.STATUS_LINJE);
-			gs.setKeyHash(pyKeyMap);
-
 			Variable pyCentrumNorr = al.getVariableUsingKey(pyKeyMap, "CentrumGPSNS");
 			Variable pyCentrumOst = al.getVariableUsingKey(pyKeyMap, "CentrumGPSEW");
 			histNorr = pyCentrumNorr.getHistoricalValue();
@@ -345,7 +342,8 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 											Log.d("nils","startSPinner: "+startSp.getSelectedItemPosition());
 										if (gs.syncIsAllowed()) {
 											gs.triggerTransfer();
-											gs.sendMessage(new LinjeStarted(currentLinje));
+											//Send a LinjeStarted Message in an envelope.
+											gs.sendMessage(new EnvelopedMessage(new LinjeStarted(currentLinje)));
 										}
 
 
@@ -674,7 +672,7 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 								Log.d("nils","Trying to start workflow "+"wf_"+linjeObjLabel);
 								Workflow wf = gs.getWorkflow("wf_"+linjeObjLabel);
 								if (wf!=null) {
-									Fragment f = wf.createFragment();
+									Fragment f = wf.createFragment(wf.getTemplate());
 									if (f == null) {
 										o.addRow("");
 										o.addRedText("Couldn't create new fragment...Workflow was named"+wf.getName());
@@ -683,11 +681,9 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 									Bundle b = new Bundle();
 									b.putString("workflow_name", "wf_"+linjeObjLabel); //Your id
 									f.setArguments(b); //Put your id to your next Intent
-									//save all changes
-									final FragmentTransaction ft = myContext.getActivity().getFragmentManager().beginTransaction(); 
-									ft.replace(myContext.getRootContainer(), f);
-									ft.addToBackStack(null);
-									ft.commit(); 
+									//save all changes¨
+									gs.evaluateContextFromWorkflow(wf);
+									Start.singleton.changePage(f,linjeObjLabel);
 									Log.d("nils","Should have started "+"wf_"+linjeObjLabel);
 								} else {
 									o.addRow("");
@@ -717,31 +713,26 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 	@Override
 	public void onEvent(Event e) {
 		//Py ruta changed. Force reload of page with new settings.
-		if (e.getType()==EventType.onMasterChangedData) {
-			Log.d("nils","The master changed the ruta provyta!");
-			final FragmentTransaction ft = myContext.getActivity().getFragmentManager().beginTransaction(); 
-			ft.replace(myContext.getRootContainer(),new LinjePortalTemplate());		
-			ft.commit(); 		
-		} else {
-
-			String linjeId = e.getProvider();
-
-			if (linjeId!=null && linjeId.equals(currentLinje)) {
-				if (e instanceof WF_Event_OnLinjeStatusChanged) { 
-					if (e.getType() == EventType.nyLinjeStarted  && !isRunning()) {
+		
+			
+				if (e instanceof WF_Event_OnBluetoothMessageReceived) { 
+					if ((gs.getOriginalMessage() instanceof LinjeStarted) && !isRunning()) {
+						String linjeId = ((LinjeStarted)gs.getOriginalMessage()).linjeId;
+						if (linjeId!=null && linjeId.equals(currentLinje)) {
 						if (linjeStartEast.getValue()!=null && linjeStartNorth!=null) {
 							double lStartE = Double.parseDouble(linjeStartEast.getValue());
 							double lStartN = Double.parseDouble(linjeStartNorth.getValue());										
 							setStart(lStartE,lStartN);
 						}
+						}
 					}
-					else if (e.getType()== EventType.linjeEnded && isRunning())
-						setEnded();
+					else if (gs.getOriginalMessage() instanceof LinjeDone && isRunning()) {
+						String linjeId = ((LinjeDone)gs.getOriginalMessage()).linjeId;
+						if (linjeId!=null && linjeId.equals(currentLinje)) 
+							setEnded();
+					
+					}
 				}
-			}
-		}
-
-
 	}
 
 	public boolean isRunning() {
@@ -749,8 +740,8 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 	}
 
 
-	private static String ticker = "          Väntar på att tillräckligt många GPS Satelliter ska dyka upp på himlavalvet. Tyvärr så kan detta ta lite tid..det är lite involverat. Speciellt på den här apparaten. Det är därför som den här texten är rätt lång. Under tiden - visste du att: ... en ankas kvackande ekar inte? ... att dödsorsaken för en huvudlös kackerlacka är svält? ... att i genomsnitt i livet sover varje människa i 26 år? ... att ett Kungsörnsbo kan väga över ett ton?"
-			+ "...att det finns fler organismer på huden av en vuxen människa, än vad det finns människor på jorden?";
+	private static String ticker = "         Väntar på GPS...det kan ta upp till flera minuter på den här dosan. Kanske en kaffekopp?";
+			
 
 	private int tStrLen = 10, curPos=0;
 	private void updateStatus() {

@@ -62,7 +62,7 @@ public class ConfigFileParser extends AsyncTask<Context,Void,ErrorCode>{
 	public ConfigFileParser(GlobalState gs, FileLoadedCb fileLoadedCb) {
 		this.ph=gs.getPersistence();
 		this.cb = fileLoadedCb;
-		configFilesExist = gs.getArtLista()!=null && gs.getArtLista().getTable()!=null;
+		configFilesExist = gs.getVariableConfiguration()!=null && gs.getVariableConfiguration().getTable()!=null;
 	}
 
 

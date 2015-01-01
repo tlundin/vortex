@@ -101,7 +101,7 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 
 		py.addView(pyv);
 
-		al = gs.getArtLista();
+		al = gs.getVariableConfiguration();
 		//Get all variables from group "delningstag".
 
 		//Delyta equals variable name..eg. Tåg1 = Delyta 1 asf.
@@ -189,7 +189,7 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 
 
 						//Mark as nyutlägg.
-						Variable nyUtlagg = gs.getArtLista().getVariableUsingKey(gs.getArtLista().createProvytaKeyMap(), NamedVariables.NYUTLAGG);
+						Variable nyUtlagg = gs.getVariableConfiguration().getVariableUsingKey(gs.getVariableConfiguration().createProvytaKeyMap(), NamedVariables.NYUTLAGG);
 						nyUtlagg.setValue("1");
 						//init.
 						dym.init();

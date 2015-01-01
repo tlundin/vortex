@@ -70,11 +70,11 @@ public class VarCache {
 				return ret.get(0);
 			}
 		}
-		List<String> row = gs.getArtLista().getCompleteVariableDefinition(varId);
+		List<String> row = gs.getVariableConfiguration().getCompleteVariableDefinition(varId);
 		if (row==null) {
 			Log.e("nils","Variabel definition missing for "+varId);
 			o.addRow("");
-			o.addRedText("Variabel definition missing for "+varId);
+			o.addYellowText("Variabel definition missing for "+varId);
 			if (newA)
 				cache.remove(ret);
 			return null;
@@ -82,11 +82,11 @@ public class VarCache {
 		//Find the variable with specified key from cache.
 		Map<String, String> instKey;
 		try {
-			instKey = buildDbKey(gs.getArtLista().getKeyChain(row),context);
+			instKey = buildDbKey(gs.getVariableConfiguration().getKeyChain(row),context);
 		} catch (KeyException e) {
 			Log.e("nils","Current context is not complete! ");
 			if (context!=null)
-				Log.e("nils","KeyChain: "+gs.getArtLista().getKeyChain(row)+" Context: "+context.toString());
+				Log.e("nils","KeyChain: "+gs.getVariableConfiguration().getKeyChain(row)+" Context: "+context.toString());
 			if (newA)
 				cache.remove(ret);
 			return null;
@@ -96,7 +96,7 @@ public class VarCache {
 		//Here we know that the variable is not in the cache. So here we should insert historical or default value.
 		if (v == null) {
 			//Log.d("nils","Variable not found. Inserting"+varId+" with chain "+(instKey==null?"null":instKey.toString()));							
-			String header = gs.getArtLista().getVarLabel(row);
+			String header = gs.getVariableConfiguration().getVarLabel(row);
 			//String header = row==null?null:al.getVarLabel(row);
 			Log.d("nils","Creating new variable: "+varId+" known value: "+hasValueInDB);
 			v = new Variable(varId,header,row,instKey,gs,vCol,defaultValue,hasValueInDB);
@@ -159,11 +159,12 @@ public class VarCache {
 //			Log.d("nils","Keychain null or empty. returning from buildDBKey");
 			return null;
 		}
-//		if (cMap!=null)
-//			Log.d("nils","Current context: "+cMap.toString());
-		//Log.e("nils","Keys in chain:"+keyChain);
-		//Log.e("nils","Keys available: "+cMap.keySet().toString());
-		//Log.e("nils","Key values:"+cMap.entrySet().toString());
+		if (cMap!=null){
+			Log.d("nils","Current context: "+cMap.toString());
+			Log.e("nils","Key values:"+cMap.entrySet().toString());
+		}
+		Log.e("nils","Keys in chain:"+keyChain);
+
 		String[] keys = keyChain.split("\\|");
 		Map<String, String> vMap = new HashMap<String,String>();
 		for (String key:keys) {	
