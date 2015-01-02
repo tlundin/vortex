@@ -81,7 +81,7 @@ public class Constants {
 
 	public static final String NO_DEFAULT_VALUE = "*NULL*";
 
-	public static final String TypesFileName = "Types.csv";
+	public static final String TypesFileName = "Groups.csv";
 
 	public static final String VariablesFileName = "Variables.csv";
 	

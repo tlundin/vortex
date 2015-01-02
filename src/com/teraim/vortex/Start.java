@@ -46,7 +46,7 @@ import com.teraim.vortex.utils.WorkflowParser;
 
 public class Start extends MenuActivity {
 
-	private final String VORTEX_VERSION = "Vortex 0_8_6";
+	private final String VORTEX_VERSION = "Vortex 0_8_8";
 
 	private GlobalState gs;
 	private PersistenceHelper ph;
@@ -536,7 +536,7 @@ public class Start extends MenuActivity {
 
 				ft.add(fragmentToExecute,"EmptyTemplate");
 				Log.i("vortex", "Committing Empty transaction");
-				ft.commit();
+				ft.commitAllowingStateLoss();
 				Log.i("vortex", "Committed transaction");
 			} else {
 				fragmentToExecute = wf.createFragment(template);
