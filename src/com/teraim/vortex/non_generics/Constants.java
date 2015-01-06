@@ -29,6 +29,9 @@ public class Constants {
 	public static final String PIC_ROOT_DIR = VORTEX_ROOT_DIR + "pics/";
 	public static final String OLD_PIC_ROOT_DIR = VORTEX_ROOT_DIR + "old_pics/";
 	
+	//Folders for backup on SD card.
+	public static final String EXT_BACKUP_DIR = VORTEX_ROOT_DIR + "Backup";
+	
 	//public static String NILS_BASE_DIR = "/nils";
 	public static String UNDEFINED = "undefined";
 

@@ -74,7 +74,7 @@ public  class AddSumOrCountBlock extends Block {
 			
 		
 		field.matchAndRecalculateMe();
-		field.refreshOutputFields();
+		field.refresh();
 		myContainer.add(field);
 	}
 

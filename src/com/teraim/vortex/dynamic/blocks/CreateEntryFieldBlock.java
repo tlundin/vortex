@@ -82,7 +82,7 @@ public class CreateEntryFieldBlock extends Block {
 			if(myContainer !=null) {
 				myContainer.add(myField);
 //				myField.refreshInputFields();	
-				myField.refreshOutputFields();
+				myField.refresh();
 			}
 
 		}

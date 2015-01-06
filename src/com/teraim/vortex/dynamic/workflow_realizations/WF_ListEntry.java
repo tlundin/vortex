@@ -20,8 +20,8 @@ public abstract class WF_ListEntry extends WF_Widget implements Listable,Compara
 	String label = "";
 	Variable myVar = null;
 	
-	public abstract void refreshOutputFields();
-	public abstract void refreshInputFields();
+	public abstract void refresh();
+//	public abstract void refreshInputFields();
 
 	public WF_ListEntry(String id,View v,WF_Context ctx,boolean isVisible) {
 		super(id,v,isVisible,ctx);

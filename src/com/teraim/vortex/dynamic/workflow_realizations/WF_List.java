@@ -94,7 +94,7 @@ public abstract class WF_List extends WF_Widget implements Sortable,Filterable {
 					myWidget.removeAllViews();
 					for (Listable l:filteredList) {
 						//l.refreshInputFields();
-						l.refreshOutputFields();						
+						l.refresh();						
 						//Everything is WF_Widgets, so this is safe!					
 						myWidget.addView(((WF_Widget)l).getWidget());
 					} 

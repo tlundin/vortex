@@ -89,7 +89,6 @@ public class GISTemplate extends Executor {
 		});
 		
 		
-	
 		return v;
 	}
 	
@@ -172,4 +171,17 @@ public class GISTemplate extends Executor {
 	    }
 	};
 
+
+	@Override
+	public void onPause() {
+		if (mActionMode != null) {
+			mActionMode.finish();
+        }
+		super.onPause();
+	}
+
+
+
+	
+	
 }

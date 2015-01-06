@@ -27,7 +27,7 @@ public class WF_ClickableField_Selection_OnSave extends WF_ClickableField_Select
 			Log.d("nils","In onEvent for WF_ClickableField_Selection_OnSave. Provider: "+e.getProvider());
 			if (iAmOpen)
 				refreshInputFields();
-			refreshOutputFields();
+			refresh();
 		} else
 			Log.d("nils","Discarded...from me");
 	}

@@ -33,7 +33,7 @@ public class WF_SimpleCounter extends WF_Not_ClickableField {
 			Variable noOfAvslutade = gs.getVariableConfiguration().getVariableInstance(NamedVariables.NO_OF_AVSLUTADE);
 			noOfAvslutade.setValue(count+"");
 			this.addVariable(noOfAvslutade, true, null, true);
-			this.refreshOutputFields();
+			this.refresh();
 		}
 	}
 

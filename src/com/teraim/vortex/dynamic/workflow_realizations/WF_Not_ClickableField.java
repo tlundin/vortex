@@ -151,7 +151,7 @@ public abstract class WF_Not_ClickableField extends WF_ListEntry {
 	}
 	
 	@Override
-	public void refreshOutputFields() {
+	public void refresh() {
 		//Log.d("nils","refreshoutput called on "+myHeader);
 		Iterator<Map.Entry<Variable,OutC>> it = myOutputFields.entrySet().iterator();
 		while (it.hasNext()) {
@@ -161,11 +161,7 @@ public abstract class WF_Not_ClickableField extends WF_ListEntry {
 		}	
 	}
 
-	//TODO: This is of course  wrong.
-	@Override
-	public void refreshInputFields() {
-
-	}
+	
 
 	public String getFormattedText(Variable varId, String value, String format) {
 		int lf=0,rf=0;

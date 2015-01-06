@@ -61,7 +61,7 @@ WF_Not_ClickableField implements EventListener {
 				"type of event: "+e.getType().name());
 		if (e.getProvider().equals(targetList.getId())) {
 			matchAndRecalculateMe();
-			this.refreshOutputFields();
+			refresh();
 		} else
 			Log.d("nils","event discarded - from wrong list");
 

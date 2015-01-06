@@ -216,7 +216,11 @@ public class VariableConfiguration {
 	public String getEntryLabel(List<String> row) {
 		if (row == null)
 			return null;
-		String res= myTable.getElement("Svenskt Namn", row);
+		String  res= myTable.getElement("Label", row);
+		if (res == null) {
+			res= myTable.getElement("Svenskt Namn", row);
+			Log.d("vortex","Column label not found, trying 'svenskt namn'");
+		}
 		//If this is a non-art variable, use varlabel instead.
 		if (res==null) 
 			res =this.getVarLabel(row);

@@ -172,7 +172,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 				
 				}
 				save();
-				refreshOutputFields();
+				refresh();
 				mode.finish(); // Action picked, so close the CAB
 				return true;
 			case R.id.menu_info:
@@ -262,7 +262,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 					 else 						
 						 nej.setChecked(true);					
 					save();
-					refreshOutputFields();
+					refresh();
 					v.setBackgroundDrawable(originalBackground);
 				} else {
 				//On click, create dialog 			
@@ -275,7 +275,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 					public void onClick(DialogInterface dialog, int whichButton) {
 						iAmOpen = false;
 						save();
-						refreshOutputFields();
+						refresh();
 						ViewGroup x = ((ViewGroup)inputContainer.getParent());
 						if (x!=null)
 							x.removeView(inputContainer);
@@ -668,7 +668,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 
 	}
 
-	@Override
+	//@Override
 	public void refreshInputFields(){
 		DataType numType;
 		Log.d("nils","In refreshinputfields");
@@ -782,12 +782,12 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 
 
 
-
+/*
 	private CombinedRangeAndListFilter getFilter(EditText et) {
 		InputFilter[] tmp = et.getFilters();
 		return tmp.length==0?null:(CombinedRangeAndListFilter)tmp[0];						
 	}
-
+*/
 
 }
 

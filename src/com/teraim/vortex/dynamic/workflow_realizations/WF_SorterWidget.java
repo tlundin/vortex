@@ -32,6 +32,7 @@ public class WF_SorterWidget extends WF_Widget {
 	public WF_SorterWidget(String name,WF_Context ctx, String type, final WF_Static_List targetList,final String selectionField, final String displayField,String selectionPattern,boolean isVisible) {
 		super(name,new LinearLayout(ctx.getContext()),isVisible,ctx);
 		LinearLayout buttonPanel;
+		o = GlobalState.getInstance(ctx.getActivity()).getLogger();
 		LayoutParams lp = new LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.WRAP_CONTENT);
 		buttonPanel = (LinearLayout) getWidget();
 		buttonPanel.setOrientation(LinearLayout.VERTICAL);
@@ -111,7 +112,7 @@ public class WF_SorterWidget extends WF_Widget {
 				
 			} else{
 				o.addRow("");
-				o.addRedText("Could not find column "+selectionField+" in WF_SorterWidget. Check your <selection_field>");
+				o.addRedText("Could not find column <display_field>: "+displayField+" in WF_SorterWidget. Check your xml for block_create_sort_widget");
 			}
 			
 		}

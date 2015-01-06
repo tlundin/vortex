@@ -276,7 +276,7 @@ public class GisImageView extends GestureImageView {
 
 	
 		//Draw a small circle at the head of the current polygon being drawn.
-		if (myPoints!=null && myPoints.size()>0) {
+		if (drawActive && myPoints!=null && myPoints.size()>0) {
 			int s = myPoints.size()-1;
 			canvas.drawCircle(myPoints.get(s).x, myPoints.get(s).y,15, markerPaint);
 		} 
@@ -292,8 +292,7 @@ public class GisImageView extends GestureImageView {
 			}
 		}
 		//Draw a blinking square cursor at current location if nothing else is happening
-		if (drawActive)
-			canvas.drawCircle((polyVertexX-fixedX)*1/fixScale,(polyVertexY-fixedY)*1/fixScale, 10, currCursorPaint);
+		canvas.drawCircle((polyVertexX-fixedX)*1/fixScale,(polyVertexY-fixedY)*1/fixScale, 10, currCursorPaint);
 
 		
 		canvas.restore();

@@ -39,7 +39,7 @@ public class DbHelper extends SQLiteOpenHelper {
 	// Database Version
 	private static final int DATABASE_VERSION = 6;
 	// Database Name
-	private static final String DATABASE_NAME = "Nils";
+	public static final String DATABASE_NAME = "Nils";
 
 	// Books table name
 	private static final String TABLE_VARIABLES = "variabler";
@@ -116,6 +116,7 @@ public class DbHelper extends SQLiteOpenHelper {
 	public DbHelper(Context context,Table t, PersistenceHelper ph) {
 		super(context, DATABASE_NAME, null, DATABASE_VERSION);  
 		ctx = context;
+		
 		db = this.getWritableDatabase();
 		this.ph=ph;
 		if (t!=null)
@@ -123,6 +124,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		else {
 			Log.d("nils","Table doesn't exist yet...postpone init");
 		}
+		
 	}
 
 
@@ -466,7 +468,7 @@ public class DbHelper extends SQLiteOpenHelper {
 			String column = getColumnName(entry.getKey());
 			changes+=column+"="+value;
 			if (it.hasNext()) 
-				changes+="ยง";
+				changes+="ง";
 			else 
 				break;	
 
@@ -959,7 +961,7 @@ public class DbHelper extends SQLiteOpenHelper {
 					continue;
 				}
 				String[] keys = s.getKeys().split("\\|");
-				String[] values = s.getValues().split("ยง");
+				String[] values = s.getValues().split("ง");
 				String[] pair;
 
 				for (String keyPair:keys) {

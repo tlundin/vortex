@@ -46,7 +46,7 @@ import com.teraim.vortex.utils.WorkflowParser;
 
 public class Start extends MenuActivity {
 
-	private final String VORTEX_VERSION = "Vortex 0_8_8";
+	private final String VORTEX_VERSION = "Vortex 0_9_0";
 
 	private GlobalState gs;
 	private PersistenceHelper ph;
@@ -160,8 +160,9 @@ public class Start extends MenuActivity {
 					+ "* Wfs with no PagedefineBlock has no UI\n"
 					+ "* new generic Envelope for bluetooth messaging\n"
 					+ "* Stricter handling of context for workflows\n"
-					+ "* Automatic restart of App when bundle is changed"
-					+ "* First GIS prototype"
+					+ "* Automatic restart of App when bundle is changed\n"
+					+ "* First GIS prototype\n"
+					+ "* Backup support"
 					);
 
 			if (this.isNetworkAvailable()) {
