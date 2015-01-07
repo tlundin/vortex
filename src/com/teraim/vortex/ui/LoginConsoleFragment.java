@@ -20,6 +20,7 @@ public class LoginConsoleFragment extends Fragment {
 	TextView log;
 	private TextView versionTxt;
 	private ImageView bgImage;
+	private TextView licenseTxt;
 
 	 @Override
 	  public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -30,6 +31,7 @@ public class LoginConsoleFragment extends Fragment {
 	    
 		log = (TextView)view.findViewById(R.id.logger);
 		versionTxt = (TextView)view.findViewById(R.id.versionTxt);
+		licenseTxt = (TextView)view.findViewById(R.id.licenseTxt);
 		bgImage = (ImageView)view.findViewById(R.id.bgImg);
 		Typeface type=Typeface.createFromAsset(getActivity().getAssets(),
 		        "clacon.ttf");
@@ -44,6 +46,10 @@ public class LoginConsoleFragment extends Fragment {
 	
 	public TextView getVersionField() {
 		return versionTxt;
+	}
+	
+	public TextView getLicenseField() {
+		return licenseTxt;
 	}
 
 

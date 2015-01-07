@@ -1,31 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    >
+    android:layout_height="match_parent" >
 
-    <ImageView 
+    <ImageView
         android:id="@+id/bgImg"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_centerInParent="true"
         android:scaleType="centerCrop"
-            android:src="@drawable/frontpic" />
+        android:src="@drawable/frontpic" />
 
-     <TextView
-         android:id="@+id/logger"
-         style="@style/ConsoleStyle"
-         android:layout_width="match_parent"
-         android:layout_height="250dp"
-         android:layout_alignParentBottom="true"
-         android:layout_marginBottom="10dp"
-         android:layout_marginLeft="10dp"
-         android:layout_marginRight="110dp"
-         android:background="#44000000"
-         android:maxLines="18"
-         android:paddingLeft="16dip"
-         android:scrollbars="vertical"
-         android:textSize="18sp" />
+    <TextView
+        android:id="@+id/logger"
+        style="@style/ConsoleStyle"
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="110dp"
+        android:background="#44000000"
+        android:maxLines="18"
+        android:paddingLeft="16dip"
+        android:scrollbars="vertical"
+        android:textSize="18sp" />
 
     <ImageView
         android:id="@+id/vortexlogo"
@@ -55,6 +54,15 @@
         android:layout_alignParentRight="true"
         android:layout_marginBottom="16dp"
         android:src="@drawable/teraim_small" />
-	
-</RelativeLayout>
 
+    <TextView
+        android:id="@+id/licenseTxt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/logger"
+        android:layout_alignParentRight="true"
+        android:layout_marginLeft="10dp"
+        android:textColor="@color/white"
+        android:textSize="12sp" />
+
+</RelativeLayout>

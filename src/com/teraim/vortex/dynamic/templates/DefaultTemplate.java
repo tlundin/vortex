@@ -30,7 +30,7 @@ public class DefaultTemplate extends Executor {
 	View view;
 	private ListView lv; 
 	//private ValidatorListAdapter mAdapter;
-	private LinearLayout my_root;
+	private LinearLayout my_root,my_pie;
 	//private TextView errorView;
 	
 	@Override
@@ -62,6 +62,7 @@ public class DefaultTemplate extends Executor {
 		View v = inflater.inflate(R.layout.template_wf_default, container, false);	
 //		errorView = (TextView)v.findViewById(R.id.errortext);
 		my_root = (LinearLayout)v.findViewById(R.id.myRoot);
+//		my_pie = (LinearLayout)v.findViewById(R.id.pieRoot);
 		myContext.addContainers(getContainers());
 
 		if (wf!=null) {
@@ -78,6 +79,8 @@ public class DefaultTemplate extends Executor {
 	protected List<WF_Container> getContainers() {
 		ArrayList<WF_Container> ret = new ArrayList<WF_Container>();
 		ret.add(new WF_Container("root",my_root,null));
+//		ret.add(new WF_Container("pie",my_pie,null));
+
 		return ret;
 	}
 	@Override

@@ -20,8 +20,8 @@ import android.util.Log;
 import android.util.Xml;
 
 import com.teraim.vortex.FileLoadedCb;
-import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.FileLoadedCb.ErrorCode;
+import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.blocks.AddEntryToFieldListBlock;
 import com.teraim.vortex.dynamic.blocks.AddRuleBlock;
 import com.teraim.vortex.dynamic.blocks.AddSumOrCountBlock;
@@ -41,9 +41,11 @@ import com.teraim.vortex.dynamic.blocks.LayoutBlock;
 import com.teraim.vortex.dynamic.blocks.MenuEntryBlock;
 import com.teraim.vortex.dynamic.blocks.MenuHeaderBlock;
 import com.teraim.vortex.dynamic.blocks.PageDefineBlock;
+import com.teraim.vortex.dynamic.blocks.RoundChartBlock;
 import com.teraim.vortex.dynamic.blocks.SetValueBlock;
 import com.teraim.vortex.dynamic.blocks.StartBlock;
 import com.teraim.vortex.dynamic.blocks.TextFieldBlock;
+import com.teraim.vortex.dynamic.blocks.VarValueSourceBlock;
 import com.teraim.vortex.dynamic.types.Workflow;
 import com.teraim.vortex.dynamic.types.Workflow.Unit;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Not_ClickableField_SumAndCountOfVariables;
@@ -199,7 +201,6 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 				continue;
 			}
 			String name = parser.getName();
-			Log.d("NILS","Doing: "+name);
 			// Starts by looking for the entry tag
 			if (name.equals("workflow")) {
 				bundle.add(readWorkflow(parser));
@@ -305,6 +306,10 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 				blocks.add(readBlockDefineMenuEntry(parser));			
 			else if (name.equals("block_create_text_field"))
 				blocks.add(readBlockCreateTextField(parser));
+			else if (name.equals("block_create_round_chart"))
+				blocks.add(readBlockCreateRoundChart(parser));
+			else if (name.equals("block_create_var_value_source"))
+				blocks.add(readBlockCreateVarValueSource(parser));
 			else {			
 				skip(name,parser);
 			}
@@ -312,8 +317,86 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 
 		return blocks;
 	}
-
 	
+	private Block readBlockCreateVarValueSource(XmlPullParser parser) throws IOException, XmlPullParserException {
+		//		o.addRow("Parsing block: block_set_value...");
+		String id=null,filter=null;
+		parser.require(XmlPullParser.START_TAG, null,"block_create_var_value_source");
+		while (parser.next() != XmlPullParser.END_TAG) {
+			if (parser.getEventType() != XmlPullParser.START_TAG) {
+				continue;
+			}
+			String name= parser.getName();
+			if (name.equals("block_ID")) {
+				id = readText("block_ID",parser);
+			} else if (name.equals("filter")) {
+				filter = readText("filter",parser);
+			} 
+			else
+				skip(name,parser);
+
+		}
+		checkForNull("block_ID",id,"filter",filter);
+		return new VarValueSourceBlock(id,filter);
+
+	}
+
+	private Block readBlockCreateRoundChart(XmlPullParser parser) throws IOException, XmlPullParserException {
+		//		o.addRow("Parsing block: block_set_value...");
+		String id=null,label=null,container=null;
+		String type=null,axisTitle=null,textSize=null,margins=null,startAngle=null, dataSource=null;
+		boolean isVisible=true,displayValues=true,percentage=false;
+		parser.require(XmlPullParser.START_TAG, null,"block_create_round_chart");
+		while (parser.next() != XmlPullParser.END_TAG) {
+			if (parser.getEventType() != XmlPullParser.START_TAG) {
+				continue;
+			}
+			String name= parser.getName();
+			if (name.equals("block_ID")) {
+				id = readText("block_ID",parser);
+			} else if (name.equals("label")) {
+				label = readText("label",parser);
+			} else if (name.equals("container_name")) {
+				container = readText("container_name",parser);
+			} 
+			else if (name.equals("is_visible")) {
+				isVisible = !readText("is_visible",parser).equals("false");
+			}
+			else if (name.equals("type")) {
+				type = readText("type",parser);
+			}			
+			else if (name.equals("axis_title")) {
+				axisTitle = readText("axis_title",parser);
+			}			
+			else if (name.equals("text_size")) {
+				textSize = readText("text_size",parser);
+			}			
+			else if (name.equals("margins")) {
+				margins = readText("margins",parser);
+			}			
+			else if (name.equals("start_angle")) {
+				startAngle = readText("start_angle",parser);
+			}			
+			else if (name.equals("display_values")) {
+				displayValues = !readText("display_values",parser).equals("false");
+			}			
+			else if (name.equals("percentage")) {
+				percentage = !readText("percentage",parser).equals("false");
+			}			
+			else if (name.equals("data_source")) {
+				dataSource = readText("data_source",parser);
+			}			
+			else
+				skip(name,parser);
+
+		}
+		
+		checkForNull("block_ID",id,"label",label,"container",container,
+				"axis_title",axisTitle,"text_size",textSize,"margins",margins,"start_angle",startAngle,
+				"data_source",dataSource);
+		return new RoundChartBlock(id,label,container,type,axisTitle,textSize,margins,startAngle,displayValues,percentage,isVisible);
+
+	}
 	private Block readBlockCreateTextField(XmlPullParser parser) throws IOException, XmlPullParserException {
 		//		o.addRow("Parsing block: block_set_value...");
 		String id=null,label=null,container=null;
@@ -1052,6 +1135,8 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 				workflowName = readSymbol("workflowname",parser);
 				o.addRow("");
 				o.addGreenText("Reading workflow: ["+workflowName+"]");
+				Log.d("NILS","Reading workflow: "+workflowName);
+
 			}
 			else if (name.equals("inputvar")) {
 				args = readArray("inputvar",parser);

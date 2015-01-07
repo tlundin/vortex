@@ -162,7 +162,7 @@ public class WF_Context {
 		List<Container> cs = getChildren(c);
 		for(Container child:cs)
 			drawRecursively(child);
-
+		this.registerEvent(new WF_Event_OnAttach("Context"));
 	}
 	
 	private List<Container> getChildren(Container key) {

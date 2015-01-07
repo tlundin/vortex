@@ -30,7 +30,10 @@ public class WF_Container extends WF_Thing implements Container {
 	public Container getParent() {
 		return parent;
 	}
-
+	
+	public ViewGroup getViewGroup() {
+		return me;
+	}
 
 	@Override
 	public Container getRoot() {
@@ -57,9 +60,8 @@ public class WF_Container extends WF_Thing implements Container {
 				Log.d("nils","Parent of this object is me. Skip draw!!!");
 				continue;
 			}
-			if (v!=null) {
-				me.addView(v);
-			}
+			me.addView(v);
+			
 		} 
 
 	}

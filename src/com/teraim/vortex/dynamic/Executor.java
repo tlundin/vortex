@@ -12,12 +12,9 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
@@ -44,10 +41,11 @@ import com.teraim.vortex.dynamic.blocks.DisplayValueBlock;
 import com.teraim.vortex.dynamic.blocks.JumpBlock;
 import com.teraim.vortex.dynamic.blocks.MenuEntryBlock;
 import com.teraim.vortex.dynamic.blocks.MenuHeaderBlock;
+import com.teraim.vortex.dynamic.blocks.RoundChartBlock;
 import com.teraim.vortex.dynamic.blocks.SetValueBlock;
 import com.teraim.vortex.dynamic.blocks.SetValueBlock.ExecutionBehavior;
-import com.teraim.vortex.dynamic.blocks.StartBlock;
 import com.teraim.vortex.dynamic.blocks.TextFieldBlock;
+import com.teraim.vortex.dynamic.blocks.VarValueSourceBlock;
 import com.teraim.vortex.dynamic.types.Rule;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.types.Variable.DataType;
@@ -64,7 +62,6 @@ import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnSave;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Static_List;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
-import com.teraim.vortex.ui.MenuActivity;
 import com.teraim.vortex.utils.RuleExecutor;
 
 /*
@@ -200,8 +197,6 @@ public abstract class Executor extends Fragment {
 			int blockP = 0;
 			Set<Variable>blockVars;
 			boolean hasDrawer=false;
-			Variable missingVariable = null;
-			String cContext = null;
 			while(notDone) {
 				Block b = blocks.get(blockP);
 
@@ -481,6 +476,16 @@ public abstract class Executor extends Fragment {
 					((MenuEntryBlock) b).create(myContext);
 					hasDrawer=true;
 				}
+				else if (b instanceof RoundChartBlock) {
+					((RoundChartBlock) b).create(myContext);
+					
+				}
+				else if (b instanceof VarValueSourceBlock) {
+					((VarValueSourceBlock) b).create(myContext);
+					
+				}
+				
+				
 				
 				String cId = b.getBlockId();
 				String jNext = jump.get(cId);

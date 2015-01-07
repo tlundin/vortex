@@ -46,7 +46,8 @@ import com.teraim.vortex.utils.WorkflowParser;
 
 public class Start extends MenuActivity {
 
-	private final String VORTEX_VERSION = "Vortex 0_9_0";
+	private final String VORTEX_VERSION = "Vortex 0_9_1";
+	private final String License = "This sw uses 3rd party components that are under Apache 2.0 license.";
 
 	private GlobalState gs;
 	private PersistenceHelper ph;
@@ -140,7 +141,8 @@ public class Start extends MenuActivity {
 		this.invalidateOptionsMenu();
 
 		if (myState ==null) {
-			loginFragment.getVersionField().setText(VORTEX_VERSION	);
+			loginFragment.getVersionField().setText(VORTEX_VERSION);
+			loginFragment.getLicenseField().setText(License);
 			loginConsole.setOutputView(loginFragment.getTextWindow());
 			loginConsole.clear();
 			loginConsole.addYellowText("["+VORTEX_VERSION+"]");
@@ -162,6 +164,7 @@ public class Start extends MenuActivity {
 					+ "* Stricter handling of context for workflows\n"
 					+ "* Automatic restart of App when bundle is changed\n"
 					+ "* First GIS prototype\n"
+					+ "* Chart Engine\n"
 					+ "* Backup support"
 					);
 
