@@ -345,6 +345,8 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 		//		o.addRow("Parsing block: block_set_value...");
 		String id=null,label=null,container=null;
 		String type=null,axisTitle=null,textSize=null,margins=null,startAngle=null, dataSource=null;
+		String h = null, w=null;
+		int height=-1,width=-1;
 		boolean isVisible=true,displayValues=true,percentage=false;
 		parser.require(XmlPullParser.START_TAG, null,"block_create_round_chart");
 		while (parser.next() != XmlPullParser.END_TAG) {
@@ -376,7 +378,15 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 			}			
 			else if (name.equals("start_angle")) {
 				startAngle = readText("start_angle",parser);
-			}			
+			} 
+			else if (name.equals("height")) {
+				h = readText("height",parser);
+				height = (h==null||h.length()==0)?-1:Integer.parseInt(h);
+			}  
+			else if (name.equals("width")) {
+				w = readText("width",parser);
+				width = (w==null||w.length()==0)?-1:Integer.parseInt(w);
+			}
 			else if (name.equals("display_values")) {
 				displayValues = !readText("display_values",parser).equals("false");
 			}			
@@ -392,9 +402,9 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 		}
 		
 		checkForNull("block_ID",id,"label",label,"container",container,
-				"axis_title",axisTitle,"text_size",textSize,"margins",margins,"start_angle",startAngle,
+				"axis_title",axisTitle,"text_size",textSize,"margins",margins,"start_angle",startAngle,"height",h,"width",w,
 				"data_source",dataSource);
-		return new RoundChartBlock(id,label,container,type,axisTitle,textSize,margins,startAngle,displayValues,percentage,isVisible);
+		return new RoundChartBlock(id,label,container,type,axisTitle,textSize,margins,startAngle,height,width,displayValues,percentage,isVisible,dataSource);
 
 	}
 	private Block readBlockCreateTextField(XmlPullParser parser) throws IOException, XmlPullParserException {
@@ -417,6 +427,7 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 			else if (name.equals("is_visible")) {
 				isVisible = !readText("is_visible",parser).equals("false");
 			}
+			
 			else
 				skip(name,parser);
 

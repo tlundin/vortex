@@ -46,7 +46,7 @@ import com.teraim.vortex.utils.WorkflowParser;
 
 public class Start extends MenuActivity {
 
-	private final String VORTEX_VERSION = "Vortex 0_9_1";
+	private final String VORTEX_VERSION = "Vortex 0_9_3";
 	private final String License = "This sw uses 3rd party components that are under Apache 2.0 license.";
 
 	private GlobalState gs;

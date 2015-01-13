@@ -1,8 +1,9 @@
 package com.teraim.vortex.dynamic.blocks;
 
+import java.util.Random;
+
 import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
-import org.achartengine.chart.BarChart.Type;
 import org.achartengine.model.CategorySeries;
 import org.achartengine.renderer.DefaultRenderer;
 import org.achartengine.renderer.SimpleSeriesRenderer;
@@ -10,38 +11,38 @@ import org.achartengine.renderer.SimpleSeriesRenderer;
 import android.content.Context;
 import android.graphics.Color;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup.LayoutParams;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import com.teraim.vortex.GlobalState;
-import com.teraim.vortex.R;
 import com.teraim.vortex.dynamic.workflow_abstracts.Event;
 import com.teraim.vortex.dynamic.workflow_abstracts.Event.EventType;
 import com.teraim.vortex.dynamic.workflow_abstracts.EventListener;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Container;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
+import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnSave;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Widget;
 
 public class RoundChartBlock extends Block implements EventListener {
 
-	/**
-	 * 
-	 */
+
 	private static final long serialVersionUID = 4030652478782165890L;
 	String label, container,
-	type="Pie", axisTitle="", margins="0 0 0 0",startAngle = "0";
+	type, axisTitle, margins,startAngle, dataSource;
+
 	boolean displayValues=true,isVisible=true,percentage=false;
+	int height,width;
 	float textSize;
 	private WF_Widget myWidget;
 	GraphicalView pie;
-	
+	private CategorySeries distributionSeries;
+
 	public RoundChartBlock(String id, String label, String container,
 			String type, String axisTitle, String textSize, String margins,
-			String startAngle, boolean displayValues, boolean percentage,
-			boolean isVisible) {
+			String startAngle, int height,int width, boolean displayValues, boolean percentage,
+			boolean isVisible,String dataSource) {
 		super();
 		this.blockId = id;
 		this.label = label;
@@ -54,27 +55,38 @@ public class RoundChartBlock extends Block implements EventListener {
 		this.displayValues = displayValues;
 		this.isVisible = isVisible;
 		this.percentage = percentage;
-	
+		this.height=height;
+		this.width=width;
+		this.dataSource = dataSource;
+		Log.d("vortex","height"+height);
+
 	}
 
 	public void create(WF_Context myContext) {
 		o = GlobalState.getInstance(myContext.getContext()).getLogger();
 		WF_Container myContainer = (WF_Container)myContext.getContainer("root");
-//		WF_Container myPieContainer = (WF_Container)myContext.getContainer("pie");
+		//		WF_Container myPieContainer = (WF_Container)myContext.getContainer("pie");
 
+		//check strings
+		if (startAngle ==null||startAngle.isEmpty())
+			startAngle = "0";
 		pie = createPie(myContext.getContext());
-		
-		View mX = LayoutInflater.from(myContext.getContext()).inflate(R.layout.chart_wrapper,myContainer.getViewGroup());
-		LinearLayout mChart = (LinearLayout)mX.findViewById(R.id.myChart);
+
+		//View mX = LayoutInflater.from(myContext.getContext()).inflate(R.layout.chart_wrapper,myContainer.getViewGroup());
+		//LinearLayout mChart = (LinearLayout)mX.findViewById(R.id.myChart);
 		if (myContainer !=null) {
 			myWidget = new WF_Widget(blockId,pie,isVisible,myContext);	
-			LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) pie.getLayoutParams();
-			layoutParams.height=300;
 			myContainer.add(myWidget);
-			TextView tv = new TextView(myContext.getContext());
-		
-			tv.setText("Hooopla");
-			//myContainer.add(new WF_Widget("tst",tv,isVisible,myContext));
+			Button b = new Button(myContext.getContext());
+			b.setText("Generate some data");
+			b.setOnClickListener(new OnClickListener() {
+				
+				@Override
+				public void onClick(View v) {
+					RoundChartBlock.this.onEvent(new WF_Event_OnSave("me"));
+				}
+			});
+			myContainer.add(new WF_Widget("tst",b,isVisible,myContext));
 			Log.d("nils","Added pie chart "+myWidget.getId()+" to container "+myContainer.getId());
 			myContext.addEventListener(this, EventType.onAttach);
 		} else {
@@ -83,69 +95,87 @@ public class RoundChartBlock extends Block implements EventListener {
 		}
 
 	}
-	
+
 
 	private GraphicalView createPie(Context ctx){
 
 		//View mChart = LayoutInflater.from(ctx).inflate(R.layout.chart_wrapper,null);
-        // Pie Chart Section Names
-        String[] code = new String[] {
-            "Eclair & Older", "Froyo", "Gingerbread", "Honeycomb",
-            "IceCream Sandwich", "Jelly Bean"
-        };
+		// Pie Chart Section Names
+		String[] code = new String[] {
+				"Eclair & Older", "Froyo", "Gingerbread", "Honeycomb",
+				"IceCream Sandwich", "Jelly Bean"
+		};
 
-        // Pie Chart Section Value
-        double[] distribution = { 3.9, 12.9, 55.8, 1.9, 23.7, 1.8 } ;
+		// Pie Chart Section Value
+		double[] distribution = { 3.9, 12.9, 55.8, 1.9, 23.7, 1.8 } ;
+		
 
-        // Color of each Pie Chart Sections
-        int[] colors = { Color.BLUE, Color.MAGENTA, Color.GREEN, Color.CYAN, Color.RED,
-                        Color.YELLOW };
+		// Color of each Pie Chart Sections
+		int[] colors = { Color.BLUE, Color.MAGENTA, Color.GREEN, Color.CYAN, Color.RED,
+				Color.YELLOW };
 
-        // Instantiating CategorySeries to plot Pie Chart
-        CategorySeries distributionSeries = new CategorySeries("PIe");
-        for(int i=0 ;i < distribution.length;i++){
-            // Adding a slice with its values and name to the Pie Chart
-            distributionSeries.add(code[i], distribution[i]);
-        }
+		// Instantiating CategorySeries to plot Pie Chart
+		distributionSeries = new CategorySeries("PIe");
+		for(int i=0 ;i < distribution.length;i++){
+			// Adding a slice with its values and name to the Pie Chart
+			distributionSeries.add(code[i], distribution[i]);
+		}
 
-        // Instantiating a renderer for the Pie Chart
-        DefaultRenderer defaultRenderer  = new DefaultRenderer();
-        for(int i = 0 ;i<distribution.length;i++){
-            SimpleSeriesRenderer seriesRenderer = new SimpleSeriesRenderer();
-            seriesRenderer.setColor(colors[i]);
-            seriesRenderer.setDisplayChartValues(true);
-            // Adding a renderer for a slice
-            defaultRenderer.addSeriesRenderer(seriesRenderer);
-        }
+		// Instantiating a renderer for the Pie Chart
+		DefaultRenderer defaultRenderer  = new DefaultRenderer();
+		for(int i = 0 ;i<distribution.length;i++){
+			SimpleSeriesRenderer seriesRenderer = new SimpleSeriesRenderer();
+			seriesRenderer.setColor(colors[i]);
+			seriesRenderer.setDisplayChartValues(true);
+			// Adding a renderer for a slice
+			defaultRenderer.addSeriesRenderer(seriesRenderer);
+		}
 
-        defaultRenderer.setChartTitle(label);
-        defaultRenderer.setChartTitleTextSize(textSize+10);
-        //defaultRenderer.setZoomButtonsVisible(true);
-        defaultRenderer.setBackgroundColor(Color.GRAY);
-        defaultRenderer.setDisplayValues(true);
-        defaultRenderer.setInScroll(true);
-
-
-     // Getting a reference to LinearLayout of the MainActivity Layout
-        //LinearLayout chartContainer = (LinearLayout) findViewById(R.id.chart_container);
+		defaultRenderer.setChartTitle(label);
+		defaultRenderer.setChartTitleTextSize(textSize+10);
+		//defaultRenderer.setZoomButtonsVisible(true);
+		defaultRenderer.setBackgroundColor(Color.GRAY);
+		defaultRenderer.setDisplayValues(true);
+		defaultRenderer.setInScroll(true);
+		defaultRenderer.setStartAngle(Float.parseFloat(startAngle));
 
 
-        // Creating a Line Chart
-       // ((LinearLayout)mChart.findViewById(R.id.chart)).addView(ChartFactory.getPieChartView(ctx, distributionSeries , defaultRenderer),new LayoutParams
-       // 		(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+		//Need to create the datasource and ask for data.
 
-   
-        //Log.w("In Chart", mChart.toString() +"");
-        return ChartFactory.getPieChartView(ctx, distributionSeries , defaultRenderer);
 
-    }
+		// Getting a reference to LinearLayout of the MainActivity Layout
+		//LinearLayout chartContainer = (LinearLayout) findViewById(R.id.chart_container);
+
+
+		// Creating a Line Chart
+		// ((LinearLayout)mChart.findViewById(R.id.chart)).addView(ChartFactory.getPieChartView(ctx, distributionSeries , defaultRenderer),new LayoutParams
+		// 		(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+
+
+		//Log.w("In Chart", mChart.toString() +"");
+		return ChartFactory.getPieChartView(ctx, distributionSeries , defaultRenderer);
+
+	}
 
 	@Override
 	public void onEvent(Event e) {
-		Log.d("vortex","got onAttach event in pieblock");
-		//pie.repaint();
+		if (e.getType()==Event.EventType.onAttach) {
+			Log.d("vortex","got onAttach event in pieblock. h w "+height+","+width);
+			LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) pie.getLayoutParams();
+			layoutParams.height=(height!=-1?height:300);
+			layoutParams.width=(width!=-1?width:300);
+		} else if (e.getType()==Event.EventType.onSave) {
+			Random random = new Random();
+			int[] d2 = new int[6];
+			distributionSeries.clear();
+			for (int i=0;i<d2.length;i++) {
+			int R = random.nextInt(100);			
+				distributionSeries.add((double)R);
+			}
+			pie.repaint();
+		}
 	}
-	
-	
+
+
 
 }
