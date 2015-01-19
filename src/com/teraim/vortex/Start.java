@@ -46,7 +46,7 @@ import com.teraim.vortex.utils.WorkflowParser;
 
 public class Start extends MenuActivity {
 
-	private final String VORTEX_VERSION = "Vortex 0_9_3";
+	private final String VORTEX_VERSION = "Vortex 0_9_6";
 	private final String License = "This sw uses 3rd party components that are under Apache 2.0 license.";
 
 	private GlobalState gs;
@@ -92,7 +92,7 @@ public class Start extends MenuActivity {
 		//GlobalState
 		if (gs==null)
 			gs = GlobalState.getInstance(getApplicationContext());
-		ph = gs.getPersistence();
+		ph = gs.getGlobalPreferences();
 
 		//drawermenu
 		if (mDrawerMenu!=null)
@@ -165,7 +165,9 @@ public class Start extends MenuActivity {
 					+ "* Automatic restart of App when bundle is changed\n"
 					+ "* First GIS prototype\n"
 					+ "* Chart Engine\n"
-					+ "* Backup support"
+					+ "* Backup support\n"
+					+ "* TEXT concatenation for integers and texts\n"
+					
 					);
 
 			if (this.isNetworkAvailable()) {
@@ -291,7 +293,7 @@ public class Start extends MenuActivity {
 					//TODO: REMOVE
 					Variable v = gs.getVariableConfiguration().getVariableInstance(NamedVariables.CURRENT_YEAR);
 					if (v.getValue()==null)
-						v.setValue(Constants.CurrentYear);
+						v.setValue(Constants.getYear());
 
 					//Global counter for auto_increment variables.
 					v = gs.getVariableConfiguration().getVariableInstance(NamedVariables.CURRENT_SAMPLE_INDEX);
@@ -580,7 +582,7 @@ public class Start extends MenuActivity {
 	 */
 	private boolean initIfFirstTime() {
 		//If testFile doesnt exist it will be created and found next time.
-		PersistenceHelper ph = new PersistenceHelper(getSharedPreferences("nilsPrefs", Context.MODE_PRIVATE));
+		PersistenceHelper ph = new PersistenceHelper(getSharedPreferences("GlobalPrefs", Context.MODE_PRIVATE));
 		Log.d("Strand","Checking if this is first time use...");
 		boolean first = (ph.get(PersistenceHelper.FIRST_TIME_KEY).equals(PersistenceHelper.UNDEFINED));
 
@@ -615,8 +617,6 @@ public class Start extends MenuActivity {
 			Log.e("NILS","Failed to create export folder");
 
 
-		ph.put(PersistenceHelper.CURRENT_VERSION_OF_CONFIG_FILE, PersistenceHelper.UNDEFINED);
-		ph.put(PersistenceHelper.CURRENT_VERSION_OF_WF_BUNDLE, PersistenceHelper.UNDEFINED);
 		//Set defaults if none.
 		if (ph.get(PersistenceHelper.SERVER_URL).equals(PersistenceHelper.UNDEFINED))
 			ph.put(PersistenceHelper.SERVER_URL, "www.teraim.com");

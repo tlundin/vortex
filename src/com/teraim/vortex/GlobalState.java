@@ -92,6 +92,9 @@ public class GlobalState  {
 
 	private VarCache myVarCache;
 
+
+	private PersistenceHelper globalPh=null;
+
 	public static GlobalState getInstance(Context c) {
 		if (singleton == null) {			
 			singleton = new GlobalState(c.getApplicationContext());
@@ -103,10 +106,14 @@ public class GlobalState  {
 	private GlobalState(Context ctx)  {
 
 		myC = ctx;
-		//Shared PreferenceHelper 
-		//SharedPreferences sp=PreferenceManager.getDefaultSharedPreferences(ctx);
-
-		ph = new PersistenceHelper(myC.getSharedPreferences("nilsPrefs", Context.MODE_PRIVATE));
+		
+		//Use Name of Bundle (application) as name for sharedpreferences.
+		//If user switches between Apps on same device, the correct prefs are loaded.
+		globalPh = new PersistenceHelper(ctx.getSharedPreferences("GlobalPrefs", Context.MODE_PRIVATE));
+		String bundleName = globalPh.get(PersistenceHelper.BUNDLE_NAME);
+		if (bundleName == null || bundleName.length()==0)
+			bundleName = "Vortex";
+		ph = new PersistenceHelper(myC.getSharedPreferences(bundleName, Context.MODE_PRIVATE));
 		//Logger. Note that logger must be initialized with a TextView when used! 
 		if (ph.getB(PersistenceHelper.DEVELOPER_SWITCH))
 			log = new Logger(this.getContext(),"RUNTIME");
@@ -123,8 +130,8 @@ public class GlobalState  {
 
 		artLista = new VariableConfiguration(this,myVarCache);	
 
-		//Database Helper
-		db = new DbHelper(ctx,artLista.getTable(),ph);
+		//Database Helper. Database will be named "bundleName"
+		db = new DbHelper(ctx,artLista.getTable(),ph,globalPh,bundleName);
 
 		myWfs = thawWorkflows();		
 
@@ -153,8 +160,7 @@ public class GlobalState  {
 			return ErrorCode.workflows_not_found;
 		if (artLista == null)
 			return ErrorCode.config_not_found;
-		if (mySpinnerDef==null)
-			return ErrorCode.spinners_not_found;
+			//return ErrorCode.spinners_not_found;
 		else {
 			ErrorCode artL = artLista.validateAndInit();
 			if (artL != ErrorCode.ok)
@@ -183,9 +189,16 @@ public class GlobalState  {
 		mySpinnerDef=sd;
 	}
 
-	public PersistenceHelper getPersistence() {
+	//Persistance for app specific variables.
+	public PersistenceHelper getPreferences() {
 		return ph;
 	}
+	
+	//Persistence for global, non app specific variables
+	public PersistenceHelper getGlobalPreferences() {
+		return globalPh;
+	}
+	
 
 	public DbHelper getDb() {
 		return db;

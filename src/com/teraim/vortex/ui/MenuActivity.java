@@ -37,7 +37,7 @@ public class MenuActivity extends Activity {
 
 	private BroadcastReceiver brr;
 	private GlobalState gs;
-	private PersistenceHelper ph;
+	private PersistenceHelper globalPh;
 	private AlertDialog x;
 	
 	public final static String REDRAW = "com.teraim.vortex.menu_redraw";
@@ -50,7 +50,8 @@ public class MenuActivity extends Activity {
 		final MenuActivity me = this;
 
 		gs = GlobalState.getInstance(this);
-		ph = gs.getPersistence();
+		globalPh = gs.getGlobalPreferences();
+		Log.d("vortex","Global prefs: "+gs.getGlobalPreferences()+" isdev "+globalPh.getB(PersistenceHelper.DEVELOPER_SWITCH));
 		
 		x =  new AlertDialog.Builder(MenuActivity.this)
 		.setTitle("Synchronizing")
@@ -240,7 +241,7 @@ public class MenuActivity extends Activity {
 			Log.d("nils","no status before init is done");
 			return;
 		}
-		int c=0;
+
 		/*
 		String pid,rid,lid,did;
 		pid= gs.getVariableConfiguration().getVariableValue(null,"Current_Provyta");
@@ -248,23 +249,23 @@ public class MenuActivity extends Activity {
 		lid= gs.getVariableConfiguration().getVariableValue(null, "Current_Linje");
 		did= gs.getVariableConfiguration().getVariableValue(null, "Current_Delyta");
 		*/
-		mnu[c++].setTitle("Osynkat: "+gs.getDb().getNumberOfUnsyncedEntries());
+		mnu[0].setTitle("Osynkat: "+gs.getDb().getNumberOfUnsyncedEntries());
 		String mContextH = null;
 		Map<String, String> hash = gs.getCurrentKeyHash();
 		if (hash!=null)
 			mContextH = hash.toString();
-		mnu[c++].setTitle(mContextH);
-		mnu[c++].setTitle("LOG");
+		mnu[1].setTitle(mContextH);
+		mnu[2].setTitle("LOG");
 		
-		mnu[c++].setTitle("SYNK "+gs.getSyncStatusS());
+		mnu[3].setTitle("SYNK "+gs.getSyncStatusS());
 		//mnu[c++].setTitle("Användare: "+gs.getPersistence().get(PersistenceHelper.USER_ID_KEY));
 		//mnu[c++].setTitle("Typ: "+gs.getDeviceType());
 
-		mnu[0].setVisible(ph.getB(PersistenceHelper.SYNC_FEATURE));	
+		mnu[0].setVisible(globalPh.getB(PersistenceHelper.SYNC_FEATURE));	
 		//If (title is empty, don't show r-p-d-l status
 		mnu[1].setVisible(mContextH!=null && mContextH.length()!=0);		
-		mnu[2].setVisible(ph.getB(PersistenceHelper.DEVELOPER_SWITCH));
-		mnu[3].setVisible(ph.getB(PersistenceHelper.SYNC_FEATURE));
+		mnu[2].setVisible(globalPh.getB(PersistenceHelper.DEVELOPER_SWITCH));
+		mnu[3].setVisible(globalPh.getB(PersistenceHelper.SYNC_FEATURE));
 		
 	}
 

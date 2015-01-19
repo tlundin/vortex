@@ -35,10 +35,10 @@ public class SlaveMessageHandler extends MessageHandler {
 
 
 				String masterLag = p.getPartnerLagId();
-				String clientLag = gs.getPersistence().get(PersistenceHelper.LAG_ID_KEY);
+				String clientLag = gs.getGlobalPreferences().get(PersistenceHelper.LAG_ID_KEY);
 
 				if (masterLag!=null && !masterLag.equals(clientLag)) {
-					gs.getPersistence().put(PersistenceHelper.LAG_ID_KEY, masterLag);
+					gs.getGlobalPreferences().put(PersistenceHelper.LAG_ID_KEY, masterLag);
 				}
 				gs.setMyPartner(p.getPartner());
 				//currently no change that triggers this event. Might pop up in future.

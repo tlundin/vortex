@@ -70,9 +70,10 @@ public class HistoricalDataImport extends AsyncTask<GlobalState ,Integer,LoadRes
 		al = gs.getVariableConfiguration();
 		o = gs.getLogger();
 		myDb=gs.getDb();
-		PersistenceHelper ph = gs.getPersistence();
-
-		String serverUrl = ph.get(PersistenceHelper.SERVER_URL);
+		PersistenceHelper globalPh = gs.getGlobalPreferences();
+		PersistenceHelper ph = gs.getPreferences();
+	
+		String serverUrl = globalPh.get(PersistenceHelper.SERVER_URL);
 		if (serverUrl ==null || serverUrl.equals(PersistenceHelper.UNDEFINED) || serverUrl.length()==0)
 			return new LoadResult(ErrorCode.configurationError,null);
 		//Add / if missing.
@@ -83,7 +84,7 @@ public class HistoricalDataImport extends AsyncTask<GlobalState ,Integer,LoadRes
 			serverUrl = "http://"+serverUrl;
 			o.addRow("server url name missing http header...adding");		
 		}
-		String bundle = ph.get(PersistenceHelper.BUNDLE_NAME);
+		String bundle = globalPh.get(PersistenceHelper.BUNDLE_NAME);
 		if (bundle == null) {
 			Log.d("vortex","missing bundle name...returning");
 			return null;
@@ -213,7 +214,7 @@ public class HistoricalDataImport extends AsyncTask<GlobalState ,Integer,LoadRes
 					o.addRedText("Header empty in history import");
 					return new LoadResult(ErrorCode.configurationError,null);
 				} else {
-					if (gs.getPersistence().getB(PersistenceHelper.VERSION_CONTROL_SWITCH_OFF)) {
+					if (gs.getPreferences().getB(PersistenceHelper.VERSION_CONTROL_SWITCH_OFF)) {
 						o.addRow("Version control is switched off.");
 						Log.d("nils","Version control is switched off.");
 					} else {
@@ -231,9 +232,9 @@ public class HistoricalDataImport extends AsyncTask<GlobalState ,Integer,LoadRes
 //							String currentHistoryVersion = gs.getPersistence().get(PersistenceHelper.CURRENT_VERSION_OF_HISTORY_FILE);
 							if (currentHistoryVersion!=null&&currentHistoryVersion.equals(vNo)) {
 								Log.d("nils","Version equal");
-								if (gs.getPersistence().getI(PersistenceHelper.HIST_LOAD_COUNTER+vNo)!=-1) {
+								if (gs.getPreferences().getI(PersistenceHelper.HIST_LOAD_COUNTER+vNo)!=-1) {
 									Log.d("nils","Loadcounter not zero..will not load. Countervalue: "+
-											gs.getPersistence().getI(PersistenceHelper.HIST_LOAD_COUNTER+vNo));
+											gs.getPreferences().getI(PersistenceHelper.HIST_LOAD_COUNTER+vNo));
 									return new LoadResult(ErrorCode.sameold,vNo);
 								}
 							}  else

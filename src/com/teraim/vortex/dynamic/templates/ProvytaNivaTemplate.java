@@ -214,8 +214,8 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 		Variable pyMarkTypV = al.getVariableUsingKey(al.createProvytaKeyMap(),"ProvytacentrumMarkeringstyp");
 		String pyMarkTyp = pyMarkTypV.getHistoricalValue();
 		Log.d("nils","ProvytacentrumMarkeringstyp: "+pyMarkTyp);
-		Log.d("nils","FlyttatCentrumVarning"+currRuta+"_"+currPy+" equals "+gs.getPersistence().get("FlyttatCentrumVarning"+currRuta+"_"+currPy));
-		if (pyMarkTyp!=null && pyMarkTyp.equals("2")&&gs.getPersistence().get("FlyttatCentrumVarning"+currRuta+"_"+currPy).equals(PersistenceHelper.UNDEFINED)) {
+		Log.d("nils","FlyttatCentrumVarning"+currRuta+"_"+currPy+" equals "+gs.getPreferences().get("FlyttatCentrumVarning"+currRuta+"_"+currPy));
+		if (pyMarkTyp!=null && pyMarkTyp.equals("2")&&gs.getPreferences().get("FlyttatCentrumVarning"+currRuta+"_"+currPy).equals(PersistenceHelper.UNDEFINED)) {
 			//String avst = al.getVariableValue(pyKeyMap,"ProfilAvstand");
 			//String rikt = al.getVariableValue(pyKeyMap,"ProfilRiktning");
 			AlertDialog.Builder alert = new AlertDialog.Builder(v.getContext());
@@ -224,7 +224,7 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 			alert.setCancelable(false);
 			alert.setPositiveButton("Okej", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int whichButton) {
-					gs.getPersistence().put("FlyttatCentrumVarning"+currRuta+"_"+currPy,"Marked");
+					gs.getPreferences().put("FlyttatCentrumVarning"+currRuta+"_"+currPy,"Marked");
 				}
 
 

@@ -26,7 +26,7 @@ public class StatusHandler {
 	public StatusHandler(GlobalState gs) {
 		this.gs = gs;
 		dbh = gs.getDb();
-		ph = gs.getPersistence();
+		ph = gs.getPreferences();
 	}
 
 

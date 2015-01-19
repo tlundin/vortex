@@ -66,7 +66,7 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 
 	Context ctx;
 	//Location of bundle.
-	PersistenceHelper ph;
+	PersistenceHelper ph,globalPh;
 	FileLoadedCb cb;
 	String myVersion,myApplication;
 	List<Workflow> myFlow = null;
@@ -75,7 +75,8 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 
 
 	public WorkflowParser(GlobalState gs, FileLoadedCb fileLoadedCb) {
-		this.ph=gs.getPersistence();
+		this.globalPh=gs.getGlobalPreferences();
+		this.ph=gs.getPreferences();
 		this.cb = fileLoadedCb;
 		workflowsExist = gs.getWfs()!=null;
 
@@ -89,7 +90,7 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 	protected ErrorCode doInBackground(Context... params) {
 		ctx = params[0];
 		o = GlobalState.getInstance(ctx).getLogger();
-		String serverUrl = ph.get(PersistenceHelper.SERVER_URL);
+		String serverUrl = globalPh.get(PersistenceHelper.SERVER_URL);
 		if (serverUrl ==null || serverUrl.equals(PersistenceHelper.UNDEFINED) || serverUrl.length()==0)
 			return ErrorCode.configurationError;
 		//Add / if missing.
@@ -100,14 +101,14 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 			serverUrl = "http://"+serverUrl;
 			o.addRow("server url name missing http header...adding");		
 		}
-		String bundle = ph.get(PersistenceHelper.BUNDLE_NAME);
+		String bundle = globalPh.get(PersistenceHelper.BUNDLE_NAME);
 		if (bundle == null) {
 			Log.d("vortex","missing bundle name...returning");
 			return null;
 		}
 		bundle = bundle.toLowerCase();
 
-		return parse(serverUrl+bundle+"/"+ph.get(PersistenceHelper.BUNDLE_NAME)+".xml");
+		return parse(serverUrl+bundle+"/"+globalPh.get(PersistenceHelper.BUNDLE_NAME)+".xml");
 	}
 
 	@Override
@@ -187,10 +188,10 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 		myVersion = parser.getAttributeValue(null, "version");
 		o.addRow("File workflow bundle version: ");o.addYellowText(myVersion);
 		if (workflowsExist) {
-			if (ph.getB(PersistenceHelper.VERSION_CONTROL_SWITCH_OFF)) {
+			if (globalPh.getB(PersistenceHelper.VERSION_CONTROL_SWITCH_OFF)) {
 				o.addRow("Version control is switched off.");
 			} else 
-				if(myVersion.equals(ph.get(PersistenceHelper.CURRENT_VERSION_OF_WF_BUNDLE))) 			
+				if(myVersion.equals(globalPh.get(PersistenceHelper.CURRENT_VERSION_OF_WF_BUNDLE))) 			
 					throw new SameOldException();	
 			o.addRow("Saved workflow bundle version: ");o.addYellowText(ph.get(PersistenceHelper.CURRENT_VERSION_OF_WF_BUNDLE));
 		} else

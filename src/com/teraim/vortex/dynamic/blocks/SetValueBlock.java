@@ -19,8 +19,8 @@ public class SetValueBlock extends Block {
 	public enum ExecutionBehavior {
 		constant,dynamic,update_flow
 	}
-	
-	
+
+
 	String target,expression;
 	ExecutionBehavior executionBehaviour=ExecutionBehavior.update_flow;
 	public SetValueBlock(String id,String target,String expression,String eb) {
@@ -40,39 +40,42 @@ public class SetValueBlock extends Block {
 	public String getFormula() {
 		return expression;
 	}
-	
+
 	public String getMyVariable() {
 		return target;
 	}
-	
+
 	public ExecutionBehavior getBehavior() {
 		return executionBehaviour;
 	}
 
-	
+
 	RuleExecutor re;
 	public String evaluate(GlobalState gs,String formula,
-			Set<Entry<String, DataType>> vars) {
+			Set<Entry<String, DataType>> vars, boolean stringT) {
 		//assume fail
 		String strRes = null;
 		re = RuleExecutor.getInstance(gs.getContext());
-		
-		String subst =null;
-		if (vars!=null) {
-			Log.d("nils","Number of Variables found: "+vars.size());
-			subst = re.substituteVariables(vars,formula,false);
+		if (stringT) 
+			strRes = re.substituteVariables(vars,formula,stringT);
+		else {
+			String subst =null;
+			if (vars!=null) {
+				Log.d("nils","Number of Variables found: "+vars.size());
+				subst = re.substituteVariables(vars,formula,stringT);
+			}
+			else
+				subst = formula;
+
+			if (subst!=null) {
+				strRes = re.parseExpression(formula,subst);
+
+			} else 
+				Log.e("nils","Formula null after substitution: ["+formula+"]");
+
+
+			Log.d("nils","New eval returns "+strRes);
 		}
-		else
-			subst = formula;
-		if (subst!=null) {
-			strRes = re.parseExpression(formula,subst);
-			
-		} else 
-			Log.e("nils","Formula null after substitution: ["+formula+"]");
-		
-	
-		Log.d("nils","New eval returns "+strRes);
-		
 		return strRes;
 	}
 

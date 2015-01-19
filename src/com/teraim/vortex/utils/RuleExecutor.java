@@ -27,6 +27,7 @@ import com.teraim.vortex.expr.Expr;
 import com.teraim.vortex.expr.Parser;
 import com.teraim.vortex.expr.SyntaxException;
 import com.teraim.vortex.log.LoggerI;
+import com.teraim.vortex.non_generics.Constants;
 
 public class RuleExecutor {
 
@@ -88,23 +89,24 @@ public class RuleExecutor {
 		//Try parsing the formula.
 		String pattern = "<>=+-*/().0123456789";
 		String inPattern = "<>=+-*/()";
-		boolean in = false,function=false;
+		boolean in = false,parseFunctionParameters=false;
 		String curVar = "";
+		//TODO: Separate between tokens: function names, arguments, variables immediately.
 		if (formula !=null) {
 			for (int i = 0; i < formula.length(); i++){
 				char c = formula.charAt(i);  
-				//if has, don't parse. Just take all chars until first spc.
-				if (function) {
-					if (Character.isWhitespace(c)) {
-						function = false;
+				//if function, collect parameters. 
+				if (parseFunctionParameters) {
+					if (Character.isWhitespace(c)||c==',') {
+						parseFunctionParameters = false;
 						in = false;
 						Log.d("nils","Adding functional argument: "+curVar);
 						potVars.add(curVar);
 						curVar = "";
 						continue;
 					} else
-						//add if not parantesis.
-						in = (c != '(' && c != ')');											
+						//add if not right parantesis.
+						in = (c != ')');											
 				} else {
 					if (!in) {
 						//assume its in & test
@@ -119,29 +121,33 @@ public class RuleExecutor {
 							}
 					} else {
 						//ok we are in. check if char is part of inPattern
-						for(int j=0;j<inPattern.length();j++)
+						for(int j=0;j<inPattern.length();j++) {
+							//check if this is a function, eg. x(y). Look for left paranthesis.
+
 							if (c == inPattern.charAt(j)||Character.isWhitespace(c)) {
-								System.out.println("found non-var char inside: ["
-										+(c == inPattern.charAt(j)?inPattern.charAt(j):"<spc>")+"]");
+								if (c == '(') {
+									Log.d("nils","Found paranthesis. Parsing func parameter(s) next");
+									parseFunctionParameters = true;									
+								} else 
+									System.out.println("found non-var char inside: ["
+											+(c == inPattern.charAt(j)?inPattern.charAt(j):"<spc>")+"]");
 								//fail.
 								in = false;
 								System.out.println("Found variable: "+curVar);
 								potVars.add(curVar);								
 								//special case for HAS.
-								if (curVar.startsWith("has")) {
-									Log.d("nils","parsing HAS parameter(s) next");
-									function = true;									
-								} 
+								//								if (curVar.startsWith("has")) {
 								curVar="";
 								break;
 							}
+						}
 					}
 				}
 				//Add if in.
 				if (in)
 					curVar += c;		    		    	
 			}
-			if (function)
+			if (parseFunctionParameters)
 				Log.d("nils","Adding final has argument: "+curVar);
 
 			if (curVar.length()>0) 
@@ -154,6 +160,7 @@ public class RuleExecutor {
 					potentialVar = it.next();
 					Log.d("nils","PotentialVar: "+potentialVar+" Length: "+potentialVar.length());
 					if (isKeyWord(potentialVar)) {
+
 						if (potentialVar.equals("hasAll")) {
 							it.remove();
 							String nextVar = it.next();
@@ -174,6 +181,11 @@ public class RuleExecutor {
 							String nextVar = it.next();
 							Log.d("nils","variable after historical is: "+nextVar);
 							filters.put(nextVar,DataType.historical);
+						} 
+						else if (potentialVar.equals("getcurrentyear")) {
+							potentialVar = Constants.getYear();
+							Log.d("nils","inserting current year: "+Constants.getYear());
+
 						} 
 
 
@@ -219,10 +231,11 @@ public class RuleExecutor {
 		return null;
 	}
 
-	static final String[] KeyWordA = {"HAS","AND","OR","MAX","MIN","ABS","has","hasAll","hasSome","hasMost","historical","and","or","max","min","abs"};
+	static final String[] KeyWordA = {"has","hasAll","hasSome","hasMost","historical","getcurrentyear","and","or","max","min","abs"};
 	static final Set<String> KeyWordSet = new HashSet<String>(Arrays.asList(KeyWordA));
 
 	private boolean isKeyWord(String s) {
+		s = s.toLowerCase();
 		boolean t =  KeyWordSet.contains(s);
 		if (t) 
 			Log.d("nils","Found keyword "+s+" in formula");	
@@ -231,7 +244,7 @@ public class RuleExecutor {
 
 	Map<String,Set<String>> relations = new HashMap<String,Set<String>>();
 
-	
+
 	private void xAffectVars(String curVar, String mainVar) {
 		//If a key word, the following variable would be a new keyvar.
 		//TODO FIX THIS
@@ -264,24 +277,31 @@ public class RuleExecutor {
 					o.addRow("");
 					o.addRedText("Variable "+entry.getKey()+" in formula ["+formula+"] is null.");
 				} else
-					if (st.getValue()==null) {
-						o.addRow("");
-						o.addRow("Variable value for "+entry.getKey()+" in formula ["+formula+"] is null.");
-						Log.d("nils","Before substitution of: "+st.getId()+": "+subst);
-						subst = subst.replace(st.getId().toLowerCase(), "null");	
-						Log.d("nils","After substitutionx: "+subst);
+					if (stringT) {
+						String stringValue = st.getValue();
+						if (stringValue!=null) {
+							strRes=stringValue+strRes;
+							Log.d("vortex","String type in RuleExec. Adding "+st.getValue());
 
-					} else {
-						if (stringT) {
-							strRes+=st.getValue();
 						}
-						else {
+						Log.d("vortex","Result "+strRes);
+					} else
+
+						if (st.getValue()==null) {
+							o.addRow("");
+							o.addRow("Variable value for "+entry.getKey()+" in formula ["+formula+"] is null.");
+							Log.d("nils","Before substitution of: "+st.getId()+": "+subst);
+							subst = subst.replace(st.getId().toLowerCase(), "null");	
+							Log.d("nils","After substitutionx: "+subst);
+
+						} else {
+
 							Log.d("nils","Substituting Variable: ["+st.getId()+"] with value "+st.getValue());
 							subst = subst.replace(st.getId().toLowerCase(), st.getValue());
 							Log.d("nils","After substitutiony: "+subst);
 
+
 						}
-					}
 			} else {
 				String filterRes = applyFilter(entry.getKey(),entry.getValue());
 				Log.d("nils","Before substitution: "+subst);
@@ -293,7 +313,8 @@ public class RuleExecutor {
 			}
 
 		}		
-
+		if (stringT)
+			return strRes;
 		subst = subst.replaceAll("(HAS|has)\\(null\\)", "0");
 		subst = subst.replaceAll("(HAS|has)\\([+|-]?[0-9]+\\)", "1");
 		Log.d("nils","Formula after substitution: "+subst);
@@ -304,9 +325,7 @@ public class RuleExecutor {
 			o.addRow("At least one variable did not have a value after substitution.");
 			//return null;
 		}
-		if (stringT)
-			return strRes;
-		else
+
 			return subst;
 	}
 
@@ -445,13 +464,13 @@ public class RuleExecutor {
 	}
 
 
-
+	/*
 	public Boolean evaluate(String rule) {
 		String result = parseExpression(rule, substituteVariables(parseFormula(rule,null),rule,false));		
 		Log.d("nils","Evaluation of rule: "+rule+" returned "+result);
 		return (result!=null?result.equals("1"):null);
 	}
-
+	 */
 
 
 }

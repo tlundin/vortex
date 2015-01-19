@@ -158,6 +158,8 @@ public class VariableConfiguration {
 		//Check for null or empty
 		if (row==null)
 			return null;
+		else 
+			Log.d("vortex","Row is "+row+" length_: "+row.size()+" fromname "+fromNameToColumn);
 		Pattern pattern = Pattern.compile("\\s");
 		Matcher matcher = pattern.matcher(row.get(0));
 		if(matcher.find()) {

@@ -270,7 +270,7 @@ public  class ButtonBlock extends Block {
 								ImageView indicator;
 								//Assume correct.
 								validationResult = true;
-								boolean isDeveloper = gs.getPersistence().getB(PersistenceHelper.DEVELOPER_SWITCH);
+								boolean isDeveloper = gs.getGlobalPreferences().getB(PersistenceHelper.DEVELOPER_SWITCH);
 
 								for (Rule r:myRules) {
 									boolean ok=false;

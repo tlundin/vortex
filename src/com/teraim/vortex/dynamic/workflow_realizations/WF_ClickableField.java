@@ -271,7 +271,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 				alert.setMessage(descriptionT);
 				refreshInputFields();
 				iAmOpen = true;
-				alert.setPositiveButton("Spara", new DialogInterface.OnClickListener() {
+				alert.setPositiveButton("Save", new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int whichButton) {
 						iAmOpen = false;
 						save();
@@ -282,7 +282,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 						v.setBackgroundDrawable(originalBackground);
 					}
 				});
-				alert.setNegativeButton("Avbryt", new DialogInterface.OnClickListener() {
+				alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int whichButton) {
 						iAmOpen = false;
 						ViewGroup x = ((ViewGroup)inputContainer.getParent());
@@ -511,7 +511,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 
 			break;
 		case text:
-			//o.addRow("Adding text field for dy-variable with label "+label+", name "+varId+", type "+var.getType().name()+" and unit "+unit.name());
+			Log.d("vortex","Adding text field for dy-variable with label "+label+", name "+varId+", type "+var.getType().name());
 			View l = LayoutInflater.from(myContext.getContext()).inflate(R.layout.edit_field_text,null);
 			header = (TextView)l.findViewById(R.id.header);
 			header.setText(varLabel+" "+unit+(hist!=null?" ("+hist+")":""));

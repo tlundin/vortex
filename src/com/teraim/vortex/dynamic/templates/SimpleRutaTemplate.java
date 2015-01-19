@@ -110,7 +110,7 @@ public class SimpleRutaTemplate extends Executor implements OnGesturePerformedLi
 			@Override
 			public void onClick(View v) {
 				final String currentRuta = gs.getVariableConfiguration().getVariableInstance(NamedVariables.CURRENT_RUTA).getValue();
-				final String lagID = gs.getPersistence().get(PersistenceHelper.LAG_ID_KEY);
+				final String lagID = gs.getGlobalPreferences().get(PersistenceHelper.LAG_ID_KEY);
 				if (currentRuta == null) {
 					new AlertDialog.Builder(getActivity())
 					.setTitle("Ingen ruta vald")

@@ -25,6 +25,7 @@ public class JSONExporter {
 	PersistenceHelper ph;
 	StringWriter sw;
 	private VariableConfiguration al;
+	private PersistenceHelper globalPh;
 
 	public class Report {
 		public String result;
@@ -42,7 +43,8 @@ public class JSONExporter {
 	private JSONExporter(Context ctx) {
 		this.gs=GlobalState.getInstance(ctx);
 		al = gs.getVariableConfiguration();
-		ph = gs.getPersistence();
+		ph = gs.getPreferences();
+		globalPh = gs.getGlobalPreferences();
 		
 	}
 
@@ -189,7 +191,7 @@ public class JSONExporter {
 		Log.d("nils","Exporting database");
 		write("date",DateFormat.getInstance().format(now));
 		write("time",DateFormat.getTimeInstance().format(now));
-		write("programversion",ph.get(PersistenceHelper.CURRENT_VERSION_OF_PROGRAM));
+		write("programversion",globalPh.get(PersistenceHelper.CURRENT_VERSION_OF_PROGRAM));
 		write("workflow bundle version",ph.get(PersistenceHelper.CURRENT_VERSION_OF_WF_BUNDLE));
 		write("Artlista version",ph.get(PersistenceHelper.CURRENT_VERSION_OF_CONFIG_FILE));
 		write("Variable Definition version",ph.get(PersistenceHelper.CURRENT_VERSION_OF_VARPATTERN_FILE));

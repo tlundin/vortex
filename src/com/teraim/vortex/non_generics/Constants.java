@@ -7,6 +7,7 @@ package com.teraim.vortex.non_generics;
  * For now, persistence implemented via SharedPreferences only.
  */
 
+import java.util.Calendar;
 import java.util.UUID;
 
 import android.os.Environment;
@@ -62,13 +63,8 @@ public class Constants {
 	public static final String CONFIG_FROZEN_FILE_ID = "artlista";
 
 	public static final int KEY_LENGTH = 10;
-
 	public static final String WF_FROZEN_SPINNER_ID = "spinnerdefinitions";
-
 	public static final String SLU_URL = "https://arbetsplats.slu.se/sites/srh/Landskapsanalys/Faltportal/default.aspx";
-
-
-	
 	public static final String STATUS_INITIAL = "0";
 	public static final String STATUS_STARTAD_MEN_INTE_KLAR = "1";
 	public static final String STATUS_STARTAD_MED_FEL = "2";
@@ -118,14 +114,32 @@ public class Constants {
 		return pyID>=Constants.MIN_ABO && pyID<=Constants.MAX_ABO;
 	}
 
- 	//Persisted variables.
+ 	//Static Time providers.
 
 
-
-
+	public static String getDate() {
+		 return Integer.toString(Calendar.getInstance().get(Calendar.DATE));
+	}
 	
+	public static String getWeekNumber() {
+		 return Integer.toString(Calendar.getInstance().get(Calendar.WEEK_OF_YEAR));
+	}
+
+	public static String getMonth() {
+		 return Integer.toString(Calendar.getInstance().get(Calendar.MONTH));
+	}
+
+	public static String getDayOfMonth() {
+		 return Integer.toString(Calendar.getInstance().get(Calendar.DAY_OF_MONTH));
+	}
 	
+	public static String getYear() {
+		 return Integer.toString(Calendar.getInstance().get(Calendar.YEAR));
+	}
 	
+	public static String getMinute() {
+		 return Integer.toString(Calendar.getInstance().get(Calendar.MINUTE));
+	}
 
 	
 

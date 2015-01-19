@@ -168,7 +168,7 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 		
 		
 		
-		if (gs.getPersistence().getB(PersistenceHelper.AVSTAND_IS_PRESSED)) {
+		if (gs.getPreferences().getB(PersistenceHelper.AVSTAND_IS_PRESSED)) {
 			toggleAvstand(true);
 			avstandB.setChecked(true);
 		}
@@ -211,7 +211,7 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 		ostT.setVisibility(status);
 		spT.setVisibility(status);
 		sydT.setVisibility(status);
-		gs.getPersistence().put(PersistenceHelper.AVSTAND_IS_PRESSED,avstand);
+		gs.getPreferences().put(PersistenceHelper.AVSTAND_IS_PRESSED,avstand);
 	}
 	
 

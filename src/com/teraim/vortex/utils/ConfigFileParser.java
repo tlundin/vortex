@@ -43,7 +43,7 @@ public class ConfigFileParser extends AsyncTask<Context,Void,ErrorCode>{
 
 	Context ctx;
 	//Location of bundle.
-	PersistenceHelper ph;
+	PersistenceHelper ph,globalPh;
 	FileLoadedCb cb;
 	String fVersion = null;
 	String vVersion = null;
@@ -60,7 +60,8 @@ public class ConfigFileParser extends AsyncTask<Context,Void,ErrorCode>{
 
 
 	public ConfigFileParser(GlobalState gs, FileLoadedCb fileLoadedCb) {
-		this.ph=gs.getPersistence();
+		this.ph=gs.getPreferences();
+		this.globalPh=gs.getGlobalPreferences();
 		this.cb = fileLoadedCb;
 		configFilesExist = gs.getVariableConfiguration()!=null && gs.getVariableConfiguration().getTable()!=null;
 	}
@@ -73,7 +74,7 @@ public class ConfigFileParser extends AsyncTask<Context,Void,ErrorCode>{
 	protected ErrorCode doInBackground(Context... params) {
 		ctx = params[0];
 		o = GlobalState.getInstance(ctx).getLogger();
-		String serverUrl = ph.get(PersistenceHelper.SERVER_URL);
+		String serverUrl = globalPh.get(PersistenceHelper.SERVER_URL);
 
 		if (serverUrl ==null || serverUrl.equals(PersistenceHelper.UNDEFINED) || serverUrl.length()==0)
 			return ErrorCode.configurationError;
@@ -116,8 +117,8 @@ public class ConfigFileParser extends AsyncTask<Context,Void,ErrorCode>{
 
 
 	public ErrorCode parse(String serverUrl) {
-		final String FileUrl = serverUrl+ph.get(PersistenceHelper.BUNDLE_NAME).toLowerCase()+"/"+Constants.TypesFileName;
-		final String VarUrl = serverUrl+ph.get(PersistenceHelper.BUNDLE_NAME).toLowerCase()+"/"+Constants.VariablesFileName;
+		final String FileUrl = serverUrl+globalPh.get(PersistenceHelper.BUNDLE_NAME).toLowerCase()+"/"+Constants.TypesFileName;
+		final String VarUrl = serverUrl+globalPh.get(PersistenceHelper.BUNDLE_NAME).toLowerCase()+"/"+Constants.VariablesFileName;
 		boolean parseConfig=true,parseVarPattern=true;
 
 		o.addRow("");
@@ -162,7 +163,7 @@ public class ConfigFileParser extends AsyncTask<Context,Void,ErrorCode>{
 					vVersion = vvers[1];
 					o.addRow("Config file version: ");o.addYellowText(fVersion);
 					if (configFilesExist) {
-					if (ph.getB(PersistenceHelper.VERSION_CONTROL_SWITCH_OFF)) {
+					if (globalPh.getB(PersistenceHelper.VERSION_CONTROL_SWITCH_OFF)) {
 						o.addRow("Version control is switched off.");
 					} else {
 						if (fVersion.equals(ph.get(PersistenceHelper.CURRENT_VERSION_OF_CONFIG_FILE))) {

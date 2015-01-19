@@ -213,8 +213,8 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 		//Send a ping to see if we can connect straight away.
 		Log.d("NILS","Sending ping");
 		String myName, myLag;
-		myName = gs.getPersistence().get(PersistenceHelper.USER_ID_KEY);
-		myLag = gs.getPersistence().get(PersistenceHelper.LAG_ID_KEY);
+		myName = gs.getGlobalPreferences().get(PersistenceHelper.USER_ID_KEY);
+		myLag = gs.getGlobalPreferences().get(PersistenceHelper.LAG_ID_KEY);
 		send(gs.isMaster()?new MasterPing(myName,myLag):new SlavePing(myName,myLag));
 	}
 

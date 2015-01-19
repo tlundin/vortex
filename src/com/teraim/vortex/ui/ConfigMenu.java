@@ -39,13 +39,13 @@ public class ConfigMenu extends PreferenceActivity {
 		@Override
 		public void onCreate(Bundle savedInstanceState) {
 			super.onCreate(savedInstanceState);
-			this.getPreferenceManager().setSharedPreferencesName("nilsPrefs");
+			this.getPreferenceManager().setSharedPreferencesName("GlobalPrefs");
 			// Load the preferences from an XML resource
 			addPreferencesFromResource(R.xml.myprefs);
 			//Set default values for the prefs.
 //			getPreferenceScreen().getSharedPreferences()
 //			.registerOnSharedPreferenceChangeListener(this);
-			this.getActivity().getSharedPreferences("nilsPrefs", Context.MODE_PRIVATE)
+			this.getActivity().getSharedPreferences("GlobalPrefs", Context.MODE_PRIVATE)
 			.registerOnSharedPreferenceChangeListener(this);
 		
 			EditTextPreference epref = (EditTextPreference) findPreference(PersistenceHelper.LAG_ID_KEY);
@@ -77,7 +77,7 @@ public class ConfigMenu extends PreferenceActivity {
 		 */
 		@Override
 		public void onPause() {
-			this.getActivity().getSharedPreferences("nilsPrefs", Context.MODE_PRIVATE)
+			this.getActivity().getSharedPreferences("GlobalPrefs", Context.MODE_PRIVATE)
 			.unregisterOnSharedPreferenceChangeListener(this);
 			super.onPause();
 		}
@@ -91,7 +91,7 @@ public class ConfigMenu extends PreferenceActivity {
 		@Override
 		public void onResume() {
 			//this.getPreferenceManager().setSharedPreferencesName(phone);
-			this.getActivity().getSharedPreferences("nilsPrefs", Context.MODE_PRIVATE)
+			this.getActivity().getSharedPreferences("GlobalPrefs", Context.MODE_PRIVATE)
 			.registerOnSharedPreferenceChangeListener(this);			
 			//getPreferenceScreen().getSharedPreferences()
 			//.registerOnSharedPreferenceChangeListener(this);
@@ -109,10 +109,10 @@ public class ConfigMenu extends PreferenceActivity {
 				pref.setSummary(etp.getText());
 				if (key.equals(PersistenceHelper.BUNDLE_NAME)) {
 					Log.d("nils","Bundle file changed. Removing version check");
-					GlobalState.getInstance(this.getActivity()).getPersistence().put(PersistenceHelper.CURRENT_VERSION_OF_WF_BUNDLE, PersistenceHelper.UNDEFINED);
-					GlobalState.getInstance(this.getActivity()).getPersistence().put(PersistenceHelper.CURRENT_VERSION_OF_CONFIG_FILE, PersistenceHelper.UNDEFINED);					
-					GlobalState.getInstance(this.getActivity()).getPersistence().put(PersistenceHelper.CURRENT_VERSION_OF_HISTORY_FILE, PersistenceHelper.UNDEFINED);					
-					GlobalState.getInstance(this.getActivity()).getPersistence().put(PersistenceHelper.CURRENT_VERSION_OF_VARPATTERN_FILE, PersistenceHelper.UNDEFINED);	
+					GlobalState.getInstance(this.getActivity()).getPreferences().put(PersistenceHelper.CURRENT_VERSION_OF_WF_BUNDLE, PersistenceHelper.UNDEFINED);
+					GlobalState.getInstance(this.getActivity()).getPreferences().put(PersistenceHelper.CURRENT_VERSION_OF_CONFIG_FILE, PersistenceHelper.UNDEFINED);					
+					GlobalState.getInstance(this.getActivity()).getPreferences().put(PersistenceHelper.CURRENT_VERSION_OF_HISTORY_FILE, PersistenceHelper.UNDEFINED);					
+					GlobalState.getInstance(this.getActivity()).getPreferences().put(PersistenceHelper.CURRENT_VERSION_OF_VARPATTERN_FILE, PersistenceHelper.UNDEFINED);	
 					//Try to restart the app.
 					Activity context = this.getActivity();
 					Intent mStartActivity = new Intent(context, Start.class);

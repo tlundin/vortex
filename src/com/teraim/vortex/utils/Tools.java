@@ -316,9 +316,9 @@ public class Tools {
 		// Create dummylogger if o set to null.
 		if (o==null)
 			o = new DummyLogger();
-		PersistenceHelper ph = GlobalState.getInstance(myC).getPersistence();
-		String bundle = ph.get(PersistenceHelper.BUNDLE_NAME);
-		String serverUrl = ph.get(PersistenceHelper.SERVER_URL);
+		PersistenceHelper globalPh = GlobalState.getInstance(myC).getGlobalPreferences();
+		String bundle = globalPh.get(PersistenceHelper.BUNDLE_NAME);
+		String serverUrl = globalPh.get(PersistenceHelper.SERVER_URL);
 		if (bundle == null || serverUrl == null) {
 			Log.d("vortex","missing "+(bundle==null?"bundle":"server")+" name...returning.");
 			return null;
@@ -556,7 +556,7 @@ public class Tools {
 		Log.d("nils","NO NETWORK. Loading file spinner def");
 		sd = (SpinnerDefinition)Tools.readObjectFromFile(myC,Constants.CONFIG_FILES_DIR+Constants.WF_FROZEN_SPINNER_ID);		
 		if (sd==null) 
-			Log.e("NILS","No frozen Spinner definition");
+			Log.d("vortex","No frozen Spinner definition");
 		else
 			Log.d("nils","Thawspinners called. Returned "+sd.size()+" spinners");
 		return sd;

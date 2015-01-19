@@ -52,7 +52,7 @@ public class DbHelper extends SQLiteOpenHelper {
 	private static final int NO_OF_KEYS = 10;
 	private static final String SYNC_SPLIT_SYMBOL = "_$_";
 	private final SQLiteDatabase db;
-	private final PersistenceHelper ph;
+	private final PersistenceHelper globalPh,ph;
 
 	private final Map<String,String> keyColM = new HashMap<String,String>();
 	private Map<String,String> colKeyM = new HashMap<String,String>();
@@ -113,12 +113,13 @@ public class DbHelper extends SQLiteOpenHelper {
 	}
 
 
-	public DbHelper(Context context,Table t, PersistenceHelper ph) {
-		super(context, DATABASE_NAME, null, DATABASE_VERSION);  
+	public DbHelper(Context context,Table t, PersistenceHelper globalPh,PersistenceHelper appPh,String bundleName) {
+		super(context, bundleName, null, DATABASE_VERSION);  
+		Log.d("vortex","Bundle name: "+bundleName);
 		ctx = context;
-		
 		db = this.getWritableDatabase();
-		this.ph=ph;
+		this.globalPh=globalPh;
+		this.ph = appPh;
 		if (t!=null)
 			init(t.getKeyParts());
 		else {
@@ -278,7 +279,7 @@ public class DbHelper extends SQLiteOpenHelper {
 	//Export all rows that have Column = Value
 	public JsonReport export(String column,String key, boolean isKlar, String rutaSorteringsTyp) {
 		//Check LagID.
-		String lagID = ph.get(PersistenceHelper.LAG_ID_KEY);
+		String lagID = globalPh.get(PersistenceHelper.LAG_ID_KEY);
 
 		Log.d("nils","Started exportRuta");
 		JSONExporter exporter = JSONExporter.getInstance(ctx);
@@ -709,9 +710,9 @@ public class DbHelper extends SQLiteOpenHelper {
 		//Log.d("nils","Inserting new value into column "+var.getValueColumnName()+" ("+getColumnName(var.getValueColumnName())+")");
 		values.put(getColumnName(var.getValueColumnName()), newValue);
 		//}
-		values.put("lag",ph.get(PersistenceHelper.LAG_ID_KEY));
+		values.put("lag",globalPh.get(PersistenceHelper.LAG_ID_KEY));
 		values.put("timestamp", timeStamp);
-		values.put("author", ph.get(PersistenceHelper.USER_ID_KEY));
+		values.put("author", globalPh.get(PersistenceHelper.USER_ID_KEY));
 
 		// 3. insert
 		long rId;
@@ -738,9 +739,9 @@ public class DbHelper extends SQLiteOpenHelper {
 				Map <String,String> valueSet = new HashMap<String,String>();
 				//if (!var.isKeyVariable())
 				valueSet.put(getColumnName(var.getValueColumnName()), newValue);
-				valueSet.put("lag",ph.get(PersistenceHelper.LAG_ID_KEY));
+				valueSet.put("lag",globalPh.get(PersistenceHelper.LAG_ID_KEY));
 				valueSet.put("timestamp", timeStamp);
-				valueSet.put("author", ph.get(PersistenceHelper.USER_ID_KEY));
+				valueSet.put("author", globalPh.get(PersistenceHelper.USER_ID_KEY));
 				insertAuditEntry(var,valueSet);
 
 			}
@@ -1188,9 +1189,9 @@ public class DbHelper extends SQLiteOpenHelper {
 			valuez.put(getColumnName(k), key.get(k));	
 		valuez.put("var", varId);
 		valuez.put("value", value);
-		valuez.put("lag",ph.get(PersistenceHelper.LAG_ID_KEY));
+		valuez.put("lag",globalPh.get(PersistenceHelper.LAG_ID_KEY));
 		valuez.put("timestamp", timeStamp);
-		valuez.put("author", ph.get(PersistenceHelper.USER_ID_KEY));
+		valuez.put("author", globalPh.get(PersistenceHelper.USER_ID_KEY));
 
 
 		Log.d("nils","inserting:  "+valuez.toString());

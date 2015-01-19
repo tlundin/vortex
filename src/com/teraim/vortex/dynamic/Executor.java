@@ -317,8 +317,8 @@ public abstract class Executor extends Fragment {
 							@Override
 							public void onEvent(Event e) {
 								if (!e.getProvider().equals(bl.getBlockId())) {
-									String eval = bl.evaluate(gs,bl.getFormula(),vars);
 									Variable v = al.getVariableInstance(bl.getMyVariable());
+									String	eval = bl.evaluate(gs,bl.getFormula(),vars,v.getType()== DataType.text);
 									if (v!=null) {
 										String val = v.getValue();
 										o.addRow("Value: "+val+" Eval: "+eval);
@@ -365,7 +365,8 @@ public abstract class Executor extends Fragment {
 						myContext.addEventListener(tiva, EventType.onSave);	
 					}
 					//Evaluate
-					String eval = bl.evaluate(gs,bl.getFormula(),vars);
+					Variable v = al.getVariableInstance(bl.getMyVariable());
+					String eval = bl.evaluate(gs,bl.getFormula(),vars,v.getType()==DataType.text);
 					if (eval==null) {
 						o.addRow("");
 						o.addRow("Execution stopped on SetValueBlock "+bl.getBlockId()+". Expression "+bl.getFormula()+"evaluates to null");
@@ -373,7 +374,6 @@ public abstract class Executor extends Fragment {
 						notDone = false;
 					} else 
 						o.addRow("SetValueBlock "+bl.getBlockId()+" eval result: "+eval);					
-					Variable v = al.getVariableInstance(bl.getMyVariable());
 					if (v!=null) {
 						String val = v.getValue();
 						if ((val == null && eval == null)||
