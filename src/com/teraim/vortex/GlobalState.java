@@ -115,7 +115,7 @@ public class GlobalState  {
 			bundleName = "Vortex";
 		ph = new PersistenceHelper(myC.getSharedPreferences(bundleName, Context.MODE_PRIVATE));
 		//Logger. Note that logger must be initialized with a TextView when used! 
-		if (ph.getB(PersistenceHelper.DEVELOPER_SWITCH))
+		if (globalPh.getB(PersistenceHelper.DEVELOPER_SWITCH))
 			log = new Logger(this.getContext(),"RUNTIME");
 		//removeLogger();
 		else {
@@ -131,7 +131,7 @@ public class GlobalState  {
 		artLista = new VariableConfiguration(this,myVarCache);	
 
 		//Database Helper. Database will be named "bundleName"
-		db = new DbHelper(ctx,artLista.getTable(),ph,globalPh,bundleName);
+		db = new DbHelper(ctx,artLista.getTable(),globalPh,ph,bundleName);
 
 		myWfs = thawWorkflows();		
 
@@ -140,9 +140,6 @@ public class GlobalState  {
 
 		//Event Handler on the Bluetooth interface.
 		myHandler = getHandler();
-
-		//Get ParameterSafe.
-		mySafe = getSafe();
 
 		//Handles status for 
 		myStatusHandler = new StatusHandler(this);
@@ -216,38 +213,9 @@ public class GlobalState  {
 		return artLista;
 	}
 
-	public ParameterSafe getSafe() {
-		//if null, try read from file.
-		if (mySafe==null)
-			mySafe = (ParameterSafe) Tools.readObjectFromFile(myC, Constants.CONFIG_FILES_DIR+"mysafe");
-		//if fail, create new.
-		if (mySafe == null)
-			createSafe();
-		return mySafe;
-	}
+	
 
-	public void createSafe() {
-		Log.d("nils","CREATING NEW SAFE OBJECT!!!!");
-		mySafe = new ParameterSafe();
-		ArrayList<Integer> rutor = new ArrayList<Integer>();
-		HashSet<Integer> temp = new HashSet<Integer>();
-		List<String[]> values=null;
-		try {
-			values = getDb().getValues(new String[] {getDb().getColumnName("ruta")}, new Selection());
-		} catch (SQLiteException e) {
-			Log.e("nils","Error calling database");
-			e.printStackTrace();
-		}
-		if (values!=null) {
-			for (String[] val:values)
-				temp.add(Integer.parseInt(val[0]));
-			rutor.addAll(temp);
-			Collections.sort(rutor);
-			mySafe.setRutor(rutor);						
-		}
-		Tools.witeObjectToFile(myC, mySafe, Constants.CONFIG_FILES_DIR+"mysafe");
-
-	}
+	
 
 	/**************************************************
 	 * 
@@ -462,8 +430,8 @@ public class GlobalState  {
 
 	int logID=1;
 	public void createLogger() {
-		log = new FastLogger(this.getContext(),"CREATED "+logID++);
-		//log = new Logger(this.getContext(),"CREATED "+logID++);
+		//log = new FastLogger(this.getContext(),"CREATED "+logID++);
+		log = new Logger(this.getContext(),"CREATED "+logID++);
 	}
 
 	public void removeLogger() {
@@ -675,19 +643,35 @@ public class GlobalState  {
 
 	//Change current context (side effect) to the context given in the workflow startblock.
 	//If no context can be built (missing variable values), return error. Otherwise, return null.
-	public String evaluateContextFromWorkflow(Workflow wf) {
+	public class CHash {
+		public CHash(Map<String, String> keyHash, Map<String, Variable> rawHash) {
+			this.keyHash = keyHash;
+			this.rawHash = rawHash;
+		}
+		public CHash(String err) {
+			this.err=err;
+		}
+		public String err = null;
+		public Map<String, String> keyHash;
+		public Map<String, Variable> rawHash;
+
+		
+	}
+	
+	public CHash evaluateContext(String cContext) {
 		boolean contextError=false;
 		String err = "undefined error";
+		Map<String, String> keyHash = null;
+		Map<String, Variable> rawHash = null;
 		LoggerI o = getLogger();
-		String cContext = wf.getContext();
-		o.addRow("");
-		o.addRow("Creating context...for workflow "+wf.getName());
 		if (cContext==null||cContext.isEmpty()) {
 			Log.d("nils","No context!!");
 			o.addRow("");
 			o.addRow("Empty or missing context. This is a potential error");
 			err=null;
 		} else {
+			keyHash = new HashMap<String, String>();
+			rawHash = new HashMap<String, Variable>();
 			Log.d("nils","Found context!!");
 			String[] pairs = cContext.split(",");
 			if (pairs==null||pairs.length==0) {
@@ -696,8 +680,6 @@ public class GlobalState  {
 				contextError = true;			
 			} else {
 
-				Map<String, String> keyHash = new HashMap<String, String>();
-				Map<String, Variable> rawHash = new HashMap<String, Variable>();
 				for (String pair:pairs) {
 					Log.d("nils","found pair: "+pair);
 					if (pair!=null&&!pair.isEmpty()) {
@@ -764,24 +746,16 @@ public class GlobalState  {
 					} else
 						Log.d("nils","Found empty or null pair");
 				} 
-				if (!contextError && !keyHash.isEmpty()) {
-					Log.d("nils","added keyhash to gs");
-					//This destroys the cache. Need to add back the keychain variables.
-					setKeyHash(keyHash);
-					//for (Variable v:rawHash.values()) 
-					//	getVariableConfiguration().addToCache(v);
-					//Keep this if the hash values change.
-					setRawHash(rawHash);
-				} 
-
+				
 			}
 		}
 	
 
-	if(contextError)
-		return err;
-	else 
-		return null;
+	if (keyHash!=null && !contextError && !keyHash.isEmpty()) 
+		return new CHash(keyHash,rawHash);
+	else
+		return new CHash(err);
+
 }
 
 

@@ -17,38 +17,15 @@ import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.utils.DbHelper.DBColumnPicker;
 import com.teraim.vortex.utils.DbHelper.StoredVariableData;
 
-public class JSONExporter {
+public class JSONExporter extends Exporter {
 
-	GlobalState gs;
-	DbHelper db;
 	JsonWriter writer;
-	PersistenceHelper ph;
 	StringWriter sw;
-	private VariableConfiguration al;
-	private PersistenceHelper globalPh;
+	int varC=0;
 
-	public class Report {
-		public String result;
-		public int noOfVars = 0;
+	public JSONExporter(Context ctx) {
+		super(ctx);		
 	}
-
-	private static JSONExporter instance = null;
-
-	public static JSONExporter getInstance(Context ctx) {
-		if (instance == null) {
-			instance = new JSONExporter(ctx);
-		}
-		return instance;
-	}
-	private JSONExporter(Context ctx) {
-		this.gs=GlobalState.getInstance(ctx);
-		al = gs.getVariableConfiguration();
-		ph = gs.getPreferences();
-		globalPh = gs.getGlobalPreferences();
-		
-	}
-
-
 
 	public Report writeVariables(DBColumnPicker cp) {
 
@@ -66,13 +43,13 @@ public class JSONExporter {
 				writer.beginArray();
 				boolean more = true;
 				do {
-					Log.d("nils","Gets here once?");
 					//writer.name("NewKey");
 					writer.beginObject();
 					writeSubHeader(currentKeys);
 					writer.name("Variables");
 					writer.beginArray();					
 					while (true) {
+						varC++;
 						writeVariable(cp.getVariable());
 						more = cp.next();
 						if (!more)
@@ -98,12 +75,7 @@ public class JSONExporter {
 				writer.close();
 				Log.d("nils","finished writing JSON");
 				Log.d("nils", sw.toString());
-				Report r = new Report();
-				r.result=sw.toString();
-				return r;
-				
-				
-
+				return new Report(sw.toString(),varC);
 
 			} else {
 				Log.e("nils","cursor empty in writeVariables.");
@@ -129,20 +101,7 @@ public class JSONExporter {
 
 
 
-	private boolean sameKeys(Map<String, String> m1,
-			Map<String, String> m2) {
-		if (m1.size() != m2.size())
-			return false;
-		for (String key: m1.keySet()) {
-			Log.d("nils","Key:"+key+" m1: "+(m1==null?"null":m1.toString())+" m2: "+(m2==null?"null":m2.toString()));
-			if (m1.get(key)==null&&m2.get(key)==null)
-				continue;
-			if ((m1.get(key)==null || m2.get(key)==null)||!m1.get(key).equals(m2.get(key)))
-				return false;
-		}
-		Log.d("nils","keys equal..no header");
-		return true;
-	}
+
 
 	
 	private void write(String name,String value) throws IOException {
@@ -198,6 +157,11 @@ public class JSONExporter {
 
 		Log.d("nils",writer.toString());
 		
+	}
+
+	@Override
+	public String getType() {
+		return "json";
 	}
 
 

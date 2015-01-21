@@ -228,8 +228,7 @@ public class HistoricalDataImport extends AsyncTask<GlobalState ,Integer,LoadRes
 							vNo=h[1].trim();
 							o.addRow("Historical data version: "+vNo);
 							//check with current version.
-							String currentHistoryVersion = gs.getSafe().getHistoricalFileVersion();
-//							String currentHistoryVersion = gs.getPersistence().get(PersistenceHelper.CURRENT_VERSION_OF_HISTORY_FILE);
+							String currentHistoryVersion = gs.getPreferences().get(PersistenceHelper.CURRENT_VERSION_OF_HISTORY_FILE);
 							if (currentHistoryVersion!=null&&currentHistoryVersion.equals(vNo)) {
 								Log.d("nils","Version equal");
 								if (gs.getPreferences().getI(PersistenceHelper.HIST_LOAD_COUNTER+vNo)!=-1) {

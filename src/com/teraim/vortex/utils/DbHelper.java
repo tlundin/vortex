@@ -1,10 +1,7 @@
 package com.teraim.vortex.utils;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -32,7 +29,8 @@ import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.non_generics.DelyteManager;
 import com.teraim.vortex.non_generics.NamedVariables;
-import com.teraim.vortex.utils.JSONExporter.Report;
+import com.teraim.vortex.utils.Exporter.ExportReport;
+import com.teraim.vortex.utils.Exporter.Report;
 
 public class DbHelper extends SQLiteOpenHelper {
 
@@ -70,8 +68,6 @@ public class DbHelper extends SQLiteOpenHelper {
 		}
 
 		public StoredVariableData getVariable() {
-			//Type is stored in extended data. Grab it first.
-
 			return new StoredVariableData(pick(NAME),pick(VALUE),pick(TIMESTAMP),pick(LAG),pick(CREATOR));
 		}
 		public Map<String,String> getKeyColumnValues() {
@@ -125,7 +121,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		else {
 			Log.d("nils","Table doesn't exist yet...postpone init");
 		}
-		
+
 	}
 
 
@@ -270,59 +266,57 @@ public class DbHelper extends SQLiteOpenHelper {
 		}
 	}
 
-	public enum JsonReport {
-		OK,
-		NO_DATA,
-		FILE_WRITE_ERROR,
-		COLUMN_DOES_NOT_EXIST
-	}
-	//Export all rows that have Column = Value
-	public JsonReport export(String column,String key, boolean isKlar, String rutaSorteringsTyp) {
+
+	//Export a specific context with a specific Exporter.
+	public Report export(Map<String,String> context, Exporter exporter, String exportFileName) {
 		//Check LagID.
-		String lagID = globalPh.get(PersistenceHelper.LAG_ID_KEY);
-
-		Log.d("nils","Started exportRuta");
-		JSONExporter exporter = JSONExporter.getInstance(ctx);
-		String col = keyColM.get(column);
-		if (col==null) {
-			Log.e("nils","Could not find column mapping to columnHeader "+column);
-			return JsonReport.COLUMN_DOES_NOT_EXIST;
-		}
-		else {
-			String selection = col+"= ? and "+keyColM.get(VariableConfiguration.KEY_YEAR)+"= ?";
-			String selectionArgs[] = new String[] {key,Constants.CurrentYear};
-			Cursor c = db.query(TABLE_VARIABLES,null,selection,
-					selectionArgs,null,null,null,null);	
-			if (c!=null) {
-				Log.d("nils","Variables found in db for column "+column);
-				//Wrap the cursor in an object that understand how to pick it!
-				Report r = exporter.writeVariables(new DBColumnPicker(c));
-				if (r!=null) {
-					DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HH_mm");
-					Date date = new Date();
-					String dS = (dateFormat.format(date));
-
-					String typPrefix = rutaSorteringsTyp==null||rutaSorteringsTyp.equals("Normal")?"N_":
-						(rutaSorteringsTyp.equals("Kontroll")?"K_":(rutaSorteringsTyp.equals("Flaggskepp")?"F_":"N_"));
-
-					if (Tools.writeToFile(Constants.EXPORT_FILES_DIR+typPrefix+lagID+"_"+column+"_"+key+"_"+dS+(isKlar?"_KLAR":""),r.result)) {
-						Log.d("nils","Exported json file succesfully");
-						return JsonReport.OK;
-					} else {
-						Log.d("nils","Export of json file failed");
-						return JsonReport.FILE_WRITE_ERROR;
-					}
-				} else {
-					Log.e("nils", "Got NULL back from JSONwriter!");
-					return JsonReport.NO_DATA;
+		if (exporter == null)
+			return new Report(ExportReport.EXPORTFORMAT_UNKNOWN);
+		Log.d("nils","Started export");
+		String selection = null;
+		String[] selArgs = null;
+		if (context!=null) {
+			selArgs = new String[context.size()];
+			selection = "";
+			int i=0;
+			String col = null;
+			//Build query
+			for (String key:context.keySet()) {
+				col = this.getColumnName(key);
+				if (col==null) {
+					Log.e("nils","Could not find column mapping to columnHeader "+key);
+					return new Report(ExportReport.COLUMN_DOES_NOT_EXIST);
 				}
-
-			} else {
-				Log.e("nils","NO Variables found in db for column "+column+" with key value "+key);
-				return JsonReport.NO_DATA;
+				selection += col+(i<(selArgs.length-1)?"= ? AND":"");			
+				selArgs[i++]=context.get(key);
 			}
 		}
+		//Select.
+		Cursor c = db.query(TABLE_VARIABLES,null,selection,
+				selArgs,null,null,null,null);	
+		if (c!=null) {
+			Log.d("nils","Variables found in db for context "+context);
+			//Wrap the cursor in an object that understand how to pick it!
+			Report r = exporter.writeVariables(new DBColumnPicker(c));
+			if (r!=null) {
+				if (Tools.writeToFile(Constants.EXPORT_FILES_DIR+exportFileName+"."+exporter.getType(),r.result)) {
+					Log.d("nils","Exported file succesfully");
+					return r;
+				} else {
+					Log.e("nils","Export of file failed");
+					return new Report(ExportReport.FILE_WRITE_ERROR);
+				}
+			} else {
+				Log.e("nils", "Got NULL back from Exportwriter!");
+				return new Report(ExportReport.NO_DATA);
+			}
+
+		} else {
+			Log.e("nils","NO Variables found in db for context "+context);
+			return new Report(ExportReport.NO_DATA);
+		}
 	}
+
 
 
 	public void printAuditVariables() {
@@ -413,12 +407,12 @@ public class DbHelper extends SQLiteOpenHelper {
 		int aff = db.delete(TABLE_VARIABLES, //table name
 				s.selection,  // selections
 				s.selectionArgs); //selections args
-		
+
 		//if(aff==0) 
 		//	Log.e("nils","Couldn't delete "+name+" from database. Not found. Sel: "+s.selection+" Args: "+print(s.selectionArgs));
 		//else 
 		//	Log.d("nils","DELETED: "+ name);
-		 
+
 		if (isSynchronized)
 			insertDeleteAuditEntry(s,name);
 	}
@@ -920,10 +914,10 @@ public class DbHelper extends SQLiteOpenHelper {
 			SyncEntry[] myChanges = getMyChanges();
 			//Check if incoming entry has changed by me.
 			//Arrange the variables I have touched into Set.
-			
+
 			if (myChanges!=null) {
 				Set<String> myChangesSet=new HashSet<String>();
-			
+
 				for (SyncEntry s:myChanges) {							
 					myChangesSet.add(s.getKeys());
 				}
@@ -938,15 +932,15 @@ public class DbHelper extends SQLiteOpenHelper {
 				}					
 			}
 		}
-		*/
+		 */
 		synC=0;
 		if (ses==null||ses.length<2) {
 			Log.e("nils","either syncarray is short or null. no data to sync.");
 			return;
 		}
-			Log.d("nils","In Synchronize with "+ses.length+" arguments. I am "+(isMaster?"Master":"Client"));
+		Log.d("nils","In Synchronize with "+ses.length+" arguments. I am "+(isMaster?"Master":"Client"));
 		for (SyncEntry s:ses) {
-			
+
 			if (synC++%10==0)
 				gs.sendEvent(BluetoothConnectionService.PING_FROM_UPDATE);			
 			if (s.isInvalid()) {
@@ -1098,21 +1092,21 @@ public class DbHelper extends SQLiteOpenHelper {
 		//else
 		//	Log.d("nils","maxstamp 0");
 	}
-	
-	
+
+
 	public int getNumberOfUnsyncedEntries() {
 		String timestamp = ph.get(PersistenceHelper.TIME_OF_LAST_SYNC);
 		if (timestamp==null||timestamp.equals(PersistenceHelper.UNDEFINED))
 			timestamp = "0";
 		Log.d("nils","Time of last sync is "+timestamp+" in getNumberOfUnsyncedEntries (dbHelper)");
-			Cursor c = db.query(TABLE_AUDIT,null,
-					"timestamp > ?",new String[] {timestamp},null,null,"timestamp asc",null);
+		Cursor c = db.query(TABLE_AUDIT,null,
+				"timestamp > ?",new String[] {timestamp},null,null,"timestamp asc",null);
 		if (c != null && c.getCount()>0) {
 			return c.getCount();
 		}
 		else 
 			return 0;
-		
+
 	}
 
 
@@ -1137,7 +1131,7 @@ public class DbHelper extends SQLiteOpenHelper {
 			if (delyteID >0) {
 				Variable tagV = gs.getVariableConfiguration().getVariableUsingKey(baseKey,NamedVariables.DELNINGSTAG);
 				//Hack to prevent synk.
-				
+
 				if (tagV!=null) {
 					if (synk)
 						tagV.deleteValue();
@@ -1148,7 +1142,7 @@ public class DbHelper extends SQLiteOpenHelper {
 					break;
 			}
 			gs.getVariableCache().invalidateOnKey(baseKey);															
-			
+
 		}
 
 	}
@@ -1210,13 +1204,13 @@ public class DbHelper extends SQLiteOpenHelper {
 		sc= getColumnName("smaprovyta");
 		ac= getColumnName("år");
 	}
-	
+
 	public void deleteHistory() {
 		Log.d("nils","deleting all historical values");
 		int rows = db.delete(TABLE_VARIABLES, getColumnName("år")+"= ?", new String[]{VariableConfiguration.HISTORICAL_MARKER});
 		Log.d("nils","Deleted "+rows+" rows of history");
 	}
-	
+
 	public void fastHistoricalInsert(String rID,String pID,String dID,String sID,
 			String varId, String value) {
 
@@ -1240,13 +1234,13 @@ public class DbHelper extends SQLiteOpenHelper {
 				); 	
 		//Log.d("nils",".");
 	}
-/*	
+	/*	
 	public String getHistoricalValue(String varName,Map<String, String> keyChain) {
 		HashMap<String, String> histKeyChain = new HashMap<String,String>(keyChain);
 		histKeyChain.put(VariableConfiguration.KEY_YEAR, VariableConfiguration.HISTORICAL_MARKER);		
 		return getValue(varName,createSelection(histKeyChain,varName),new String[] {VALUE});
 	}
-*/
+	 */
 
 	//Generates keychains for all instances.
 	public Set<Map<String,String>> getAllInstances(String varID,

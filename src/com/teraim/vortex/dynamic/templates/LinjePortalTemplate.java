@@ -37,6 +37,7 @@ import android.widget.Spinner;
 import android.widget.TableLayout.LayoutParams;
 import android.widget.TextView;
 
+import com.teraim.vortex.GlobalState.CHash;
 import com.teraim.vortex.R;
 import com.teraim.vortex.Start;
 import com.teraim.vortex.bluetooth.EnvelopedMessage;
@@ -682,9 +683,18 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 									b.putString("workflow_name", "wf_"+linjeObjLabel); //Your id
 									f.setArguments(b); //Put your id to your next Intent
 									//save all changes¨
-									gs.evaluateContextFromWorkflow(wf);
+									CHash r = gs.evaluateContext(wf.getContext());
+									if (r.err==null) {
+									gs.setKeyHash(r.keyHash);
+									//Keep this if the hash values change.
+									gs.setRawHash(r.rawHash);
+
 									Start.singleton.changePage(f,linjeObjLabel);
 									Log.d("nils","Should have started "+"wf_"+linjeObjLabel);
+									} else {
+										o.addRow("");
+										o.addRedText("Error in context when trying to start : "+"wf_"+linjeObjLabel+". Error: "+r.err);
+									}
 								} else {
 									o.addRow("");
 									o.addRedText("Couldn't find workflow named "+"wf_"+linjeObjLabel);

@@ -3,11 +3,10 @@ package com.teraim.vortex.dynamic.blocks;
 import java.util.Map;
 import java.util.Set;
 
-import android.app.Fragment;
-import android.app.FragmentTransaction;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Color;
-import android.os.Bundle;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -25,6 +24,7 @@ import android.widget.ToggleButton;
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
 import com.teraim.vortex.Start;
+import com.teraim.vortex.GlobalState.CHash;
 import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.types.Rule;
 import com.teraim.vortex.dynamic.types.Variable;
@@ -36,6 +36,9 @@ import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnSave;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Widget;
 import com.teraim.vortex.expr.SyntaxException;
 import com.teraim.vortex.non_generics.Constants;
+import com.teraim.vortex.utils.Exporter;
+import com.teraim.vortex.utils.Exporter.ExportReport;
+import com.teraim.vortex.utils.Exporter.Report;
 import com.teraim.vortex.utils.PersistenceHelper;
 
 
@@ -62,10 +65,14 @@ public  class ButtonBlock extends Block {
 	WF_Context myContext;
 	private boolean isVisible;
 	private String statusVar=null;
-	private OnclickExtra onClickSpeziale=null;
+	private OnclickExtra extraActionOnClick=null;
 	private GlobalState gs;
 	private Map<String, String> buttonContext;
 	private PopupWindow mpopup=null;
+	private Map<String,String> exportContext;
+	private String exportContextS;
+	private String exportFormat;
+	private String exportFileName = null;
 
 
 	enum Type {
@@ -80,13 +87,14 @@ public  class ButtonBlock extends Block {
 		ready
 	}
 
+	//Function used with buttons that need to attach customized actions after click
 	public ButtonBlock(String id,String lbl,String action, String name,String container,String target, String type, String statusVariable,boolean isVisible,
-			OnclickExtra onclickExtra,Map<String,String> buttonContext) {		
-		this(id,lbl,action,name,container,target,type,statusVariable,isVisible);
-		onClickSpeziale = onclickExtra;
+			OnclickExtra onclickExtra,Map<String,String> buttonContext, int dummy) {		
+		this(id,lbl,action,name,container,target,type,statusVariable,isVisible,null,null);
+		extraActionOnClick = onclickExtra;
 		this.buttonContext=buttonContext;
 	}
-	public ButtonBlock(String id,String lbl,String action, String name,String container,String target, String type, String statusVariable,boolean isVisible) {
+	public ButtonBlock(String id,String lbl,String action, String name,String container,String target, String type, String statusVariable,boolean isVisible,String exportContextS, String exportFormat) {
 		Log.d("NILS","BUTTONBLOCK type Action. Action is set to "+action);
 		this.blockId=id;
 		this.text = lbl;
@@ -98,9 +106,12 @@ public  class ButtonBlock extends Block {
 		this.isVisible = isVisible;
 		this.statusVar = statusVariable;
 		this.buttonContext=null;
-		//Sett null
+		//Set null
 		if (statusVar!=null&&statusVar.length()==0)
 			this.statusVar=null;
+		this.exportContextS = exportContextS;
+		this.exportFormat = exportFormat;
+
 	}
 
 
@@ -124,7 +135,8 @@ public  class ButtonBlock extends Block {
 		final Context ctx = myContext.getContext();
 		gs = GlobalState.getInstance(ctx);
 		o=gs.getLogger();
-		if (onClickSpeziale==null) {
+
+		if (extraActionOnClick==null) {
 			Log.d("nils","Buttoncontext set to: "+gs.getCurrentKeyHash()+" for button: "+getText());
 			buttonContext = gs.getCurrentKeyHash();
 		}
@@ -195,8 +207,8 @@ public  class ButtonBlock extends Block {
 					button.setBackgroundColor(Color.parseColor(Constants.Color_Pressed));
 					//ACtion = workflow to execute.
 					//Commence!
-					if (onClickSpeziale!=null) {
-						onClickSpeziale.onClick();
+					if (extraActionOnClick!=null) {
+						extraActionOnClick.onClick();
 					}
 
 					if (onClick.startsWith("template"))
@@ -244,7 +256,7 @@ public  class ButtonBlock extends Block {
 
 										else
 											Log.d("nils","Found no status variable");
-										
+
 										Set<Variable> variablesToSave = myContext.getTemplate().getVariables();
 										Log.d("nils", "Variables To save contains "+variablesToSave==null?"null":variablesToSave.size()+" objects.");
 										for (Variable var:variablesToSave) {
@@ -366,7 +378,45 @@ public  class ButtonBlock extends Block {
 								//Validation?
 							}
 
-						} else {
+						} else if (onClick.equals("export")) {
+							Log.d("vortex","Export button clicked!");
+							CHash r = gs.evaluateContext(exportContextS);
+							//Context ok?
+							String msg, btnText;
+							if (r.err==null) {
+								exportFileName = gs.getGlobalPreferences().get(PersistenceHelper.BUNDLE_NAME)+"_";
+								if (target!=null)
+									exportFileName += target+"_";
+								exportFileName+=Constants.getTimeStamp();
+
+								if (exportFormat  == null) 
+									exportFormat = "csv";
+								exportFormat = exportFormat.toLowerCase();
+								Report jRep = gs.getDb().export(exportContext, Exporter.getInstance(ctx, exportFormat), exportFileName);
+								if (jRep.er == ExportReport.OK) {
+									msg = jRep.noOfVars+" variables exported to file: "+exportFileName+"."+exportFormat+"\n";
+									msg+= "You can find this file under "+Constants.EXPORT_FILES_DIR+" on your device";
+									btnText = "Ok, thanks";
+								} else {
+									msg = "Export failed. Reason: "+jRep.er.name();
+									btnText = "Ok";
+								}
+								//Context was broken
+							} else {
+								msg = "Export failed. export_context contain errors. Error: "+r.err;
+								btnText= "Ok";
+							}
+							new AlertDialog.Builder(ctx)
+							.setTitle("Export done")
+							.setMessage(msg)
+							.setPositiveButton(btnText, new DialogInterface.OnClickListener() {
+								public void onClick(DialogInterface dialog, int which) { 								
+								}
+							})			    
+							.setIcon(android.R.drawable.ic_dialog_alert)
+							.show();
+						}
+						else {
 							o.addRow("");
 							o.addRedText("Action button had no associated action!");
 						}

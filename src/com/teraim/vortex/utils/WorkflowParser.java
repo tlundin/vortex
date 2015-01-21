@@ -8,7 +8,9 @@ import java.io.StringWriter;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -22,6 +24,7 @@ import android.util.Xml;
 import com.teraim.vortex.FileLoadedCb;
 import com.teraim.vortex.FileLoadedCb.ErrorCode;
 import com.teraim.vortex.GlobalState;
+import com.teraim.vortex.GlobalState.CHash;
 import com.teraim.vortex.dynamic.blocks.AddEntryToFieldListBlock;
 import com.teraim.vortex.dynamic.blocks.AddRuleBlock;
 import com.teraim.vortex.dynamic.blocks.AddSumOrCountBlock;
@@ -72,12 +75,13 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 	List<Workflow> myFlow = null;
 	LoggerI o;
 	boolean workflowsExist;
-
+	GlobalState gs;
 
 	public WorkflowParser(GlobalState gs, FileLoadedCb fileLoadedCb) {
 		this.globalPh=gs.getGlobalPreferences();
 		this.ph=gs.getPreferences();
 		this.cb = fileLoadedCb;
+		this.gs=gs;
 		workflowsExist = gs.getWfs()!=null;
 
 	}
@@ -1083,7 +1087,7 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 	private ButtonBlock readBlockButton(XmlPullParser parser) throws IOException, XmlPullParserException {
 		//o.addRow("Parsing block: block_button...");
 		String label=null,onClick=null,myname=null,containerName=null,
-				target=null,type=null,id=null,statusVariable=null;
+				target=null,type=null,id=null,statusVariable=null,exportContextS=null,exportFormat=null;
 		boolean isVisible = true;
 		parser.require(XmlPullParser.START_TAG, null,"block_button");
 		while (parser.next() != XmlPullParser.END_TAG) {
@@ -1108,6 +1112,12 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 			else if (name.equals("container_name")) {
 				containerName = readText("container_name",parser);		
 			}
+			else if (name.equals("export_context")) {
+				exportContextS = readText("export_context",parser);		
+			}
+			else if (name.equals("export_format")) {
+				exportFormat = readText("export_format",parser);		
+			}
 			else if (name.equals("target")) {
 				target = readText("target",parser);
 			}
@@ -1121,8 +1131,14 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 		}
 		checkForNull("block_ID",id,"type",type,"name",myname,"label",label,"container_name",
 				containerName,"target",target);
-		return new ButtonBlock(id,label,onClick,myname,containerName,target,type,statusVariable,isVisible);
+		
+		return new ButtonBlock(id,label,onClick,myname,containerName,target,type,statusVariable,isVisible,exportContextS,exportFormat);
 	}
+
+	
+	
+
+
 
 	/**
 	 *  Creates a Startblock. 

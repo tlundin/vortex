@@ -157,9 +157,9 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 			}
 		});
 
-		fixPunkter = new ButtonBlock("_","Fixpunkter","Start_Workflow", "fixpunktbutton","Field_List_panel_1",NamedVariables.WF_FIXPUNKTER,"action", "status_fixpunkter",true);
+		fixPunkter = new ButtonBlock("_","Fixpunkter","Start_Workflow", "fixpunktbutton","Field_List_panel_1",NamedVariables.WF_FIXPUNKTER,"action", "status_fixpunkter",true,null,null);
 		
-		spillning = new ButtonBlock("_s","Spillning","Start_Workflow", "spillningbutton","Field_List_panel_1",NamedVariables.WF_SPILLNING,"action","status_spillning",true);
+		spillning = new ButtonBlock("_s","Spillning","Start_Workflow", "spillningbutton","Field_List_panel_1",NamedVariables.WF_SPILLNING,"action","status_spillning",true,null,null);
 	
 		for (int i=0; i<DelyteManager.MAX_DELYTEID;i++) {
 			final int I = i;
@@ -175,7 +175,7 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 							dym.setSelected(dy);
 							Log.d("nils","Selected delyta set to "+dy.getId()+"");						
 							gs.sendEvent(MenuActivity.REDRAW);
-						} },buttonContext);
+						} },buttonContext,-1);
 		}
 		
 		for (int i=0; i<(isAbo?9:3);i++) {
@@ -206,7 +206,7 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 				public void onClick() {
 					Log.d("nils","Setting current småprov to "+I);
 					al.getVariableInstance(NamedVariables.CURRENT_SMAPROVYTA).setValue(I);
-				} },buttonContext);
+				} },buttonContext,-1);
 		}
 		
 		

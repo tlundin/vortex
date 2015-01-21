@@ -27,6 +27,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.teraim.vortex.FileLoadedCb.ErrorCode;
+import com.teraim.vortex.GlobalState.CHash;
 import com.teraim.vortex.dynamic.templates.LinjePortalTemplate;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.types.Workflow;
@@ -41,12 +42,11 @@ import com.teraim.vortex.utils.ConfigFileParser;
 import com.teraim.vortex.utils.HistoricalDataImport;
 import com.teraim.vortex.utils.LoadResult;
 import com.teraim.vortex.utils.PersistenceHelper;
-import com.teraim.vortex.utils.Tools;
 import com.teraim.vortex.utils.WorkflowParser;
 
 public class Start extends MenuActivity {
 
-	private final String VORTEX_VERSION = "Vortex 0_9_6";
+	private final String VORTEX_VERSION = "Vortex 0_9_8";
 	private final String License = "This sw uses 3rd party components that are under Apache 2.0 license.";
 
 	private GlobalState gs;
@@ -167,6 +167,10 @@ public class Start extends MenuActivity {
 					+ "* Chart Engine\n"
 					+ "* Backup support\n"
 					+ "* TEXT concatenation for integers and texts\n"
+					+ "* Safe object removed (Nils specific)\n"
+					+ "* Export to CSV or JSON based on context\n"
+					+ "* Export Button block\n"
+					+ "* Separate Persistence for different Bundles\n"
 					
 					);
 
@@ -376,10 +380,9 @@ public class Start extends MenuActivity {
 							dialog.setOnDismissListener(null);
 							dialog.dismiss();
 							if (errCode == ErrorCode.HistoricalLoaded) {
-								//The safe needs to be recreated.
-								gs.createSafe();
+								//The safe needs to be recreated.								
 								Log.d("nils","in onfileloaded for Historical. Returns version: "+histVer);
-								gs.getSafe().setHistoricalFileVersion(histVer);						
+								gs.getPreferences().put(PersistenceHelper.CURRENT_VERSION_OF_HISTORY_FILE,histVer);						
 								loginConsole.addText("["+histVer+"]");
 								loader(State.HISTORICAL_LOADED,errCode);
 							}
@@ -475,11 +478,6 @@ public class Start extends MenuActivity {
 
 
 
-
-
-
-
-
 	@Override
 	protected void onPostCreate(Bundle savedInstanceState) {
 		super.onPostCreate(savedInstanceState);
@@ -524,9 +522,11 @@ public class Start extends MenuActivity {
 		String label = wf.getLabel();
 		String template = wf.getTemplate();
 		//Set context.
-		String err = gs.evaluateContextFromWorkflow(wf);
+		CHash r = gs.evaluateContext(wf.getContext());
 		//if Ok err is null.
-		if (err==null) {
+		if (r.err==null) {
+			gs.setRawHash(r.rawHash);
+			gs.setKeyHash(r.keyHash);
 			//No template. This flow does not have a ui. Hand over to Executor.
 			Fragment fragmentToExecute;
 			Bundle args = new Bundle();
@@ -551,7 +551,7 @@ public class Start extends MenuActivity {
 			}
 			//show error message.
 		} else 
-			showErrorMsg(err, wf);
+			showErrorMsg(r.err, wf);
 	}
 	public void changePage(Fragment newPage, String label) {
 		FragmentManager fragmentManager = getFragmentManager();
@@ -651,8 +651,6 @@ public class Start extends MenuActivity {
 
 	@Override
 	public void onDestroy() {
-		Log.d("nils","Saving Safe");
-		Tools.witeObjectToFile(getApplication(), gs.getSafe(), Constants.CONFIG_FILES_DIR+"mysafe");
 		if (histT!=null) {
 			Log.d("nils","Trying to cancel histT");
 			histT.cancel(true);

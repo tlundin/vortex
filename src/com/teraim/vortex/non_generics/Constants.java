@@ -117,10 +117,14 @@ public class Constants {
  	//Static Time providers.
 
 
-	public static String getDate() {
-		 return Integer.toString(Calendar.getInstance().get(Calendar.DATE));
+	public static String getTimeStamp() {
+		 return getYear()+getMonth()+getDayOfMonth()+"_"+getHour()+"_"+getMinute();
 	}
 	
+	public static String getYear() {
+		 return Integer.toString(Calendar.getInstance().get(Calendar.YEAR));
+	}
+
 	public static String getWeekNumber() {
 		 return Integer.toString(Calendar.getInstance().get(Calendar.WEEK_OF_YEAR));
 	}
@@ -132,9 +136,9 @@ public class Constants {
 	public static String getDayOfMonth() {
 		 return Integer.toString(Calendar.getInstance().get(Calendar.DAY_OF_MONTH));
 	}
-	
-	public static String getYear() {
-		 return Integer.toString(Calendar.getInstance().get(Calendar.YEAR));
+		
+	public static String getHour() {
+		 return Integer.toString(Calendar.getInstance().get(Calendar.HOUR));
 	}
 	
 	public static String getMinute() {

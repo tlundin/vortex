@@ -61,18 +61,11 @@ import com.teraim.vortex.utils.Tools;
 public class ProvytaTemplate extends Executor implements EventListener,OnGesturePerformedListener {
 	List<WF_Container> myLayouts;
 
-
-
-
-
 	/* (non-Javadoc)
 	 * @see android.app.Fragment#onCreateView(android.view.LayoutInflater, android.view.ViewGroup, android.os.Bundle)
 	 */
 	ViewGroup myContainer = null;
 	private GestureLibrary gestureLib;
-	private PersistenceHelper ph;
-	private ParameterSafe ps;
-	private EditText vg;
 	private String[] linjeA=new String[Constants.MAX_NILS_LINJER+1];
 	private Variable liv,pyv;
 	private String provytaThatWasSelected=null;
@@ -149,8 +142,6 @@ public class ProvytaTemplate extends Executor implements EventListener,OnGesture
 	@Override
 	public View onCreateView(final LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-
-		ps = gs.getSafe();
 		liv = gs.getVariableConfiguration().getVariableInstance(NamedVariables.CURRENT_LINJE);
 		pyv = gs.getVariableConfiguration().getVariableInstance(NamedVariables.CURRENT_PROVYTA);
 		myContext.resetState();
@@ -311,7 +302,7 @@ public class ProvytaTemplate extends Executor implements EventListener,OnGesture
 		}  
 
 
-		final List<Integer> prevProvytor = ps.getPrevYtor();
+		final List<Integer> prevProvytor = new ArrayList<Integer>();
 		List<String> nilsProvytor = new ArrayList<String>();
 		nilsProvytor.add(NONE_SELECTED);
 		List<String> aboProvytor = new ArrayList<String>();

@@ -1,14 +1,15 @@
 package com.teraim.vortex.dynamic.templates;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
 import android.app.AlertDialog;
 import android.app.Fragment;
-import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.DialogInterface;
 import android.gesture.Gesture;
@@ -32,7 +33,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.teraim.vortex.ParameterSafe;
 import com.teraim.vortex.R;
 import com.teraim.vortex.Start;
 import com.teraim.vortex.dynamic.Executor;
@@ -45,8 +45,10 @@ import com.teraim.vortex.non_generics.StatusHandler;
 import com.teraim.vortex.non_generics.StatusHandler.Kvot;
 import com.teraim.vortex.ui.MenuActivity;
 import com.teraim.vortex.utils.DbHelper;
-import com.teraim.vortex.utils.DbHelper.JsonReport;
 import com.teraim.vortex.utils.DbHelper.Selection;
+import com.teraim.vortex.utils.Exporter;
+import com.teraim.vortex.utils.Exporter.ExportReport;
+import com.teraim.vortex.utils.Exporter.Report;
 import com.teraim.vortex.utils.PersistenceHelper;
 import com.teraim.vortex.utils.Tools;
 
@@ -61,7 +63,6 @@ public class SimpleRutaTemplate extends Executor implements OnGesturePerformedLi
 	 */
 	ViewGroup myContainer = null;
 	private GestureLibrary gestureLib;
-	private ParameterSafe ps;
 	private List<Integer> rutor;
 	private  ArrayAdapter<Integer> fieldListAdapter;
 
@@ -73,7 +74,7 @@ public class SimpleRutaTemplate extends Executor implements OnGesturePerformedLi
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-		ps = gs.getSafe();
+
 		al = gs.getVariableConfiguration();
 		myContext.resetState();
 		myLayouts = new ArrayList<WF_Container>();
@@ -188,11 +189,9 @@ public class SimpleRutaTemplate extends Executor implements OnGesturePerformedLi
 		}  
 
 
-		final List<Integer> prevRutor = ps.getPrevRutor();
+		final List<Integer> prevRutor = new ArrayList<Integer>();
 
 		DbHelper db = gs.getDb();
-		rutor = ps.getRutor();
-		
 		if (rutor == null) {
 			rutor = new ArrayList<Integer>();
 			HashSet<Integer> temp = new HashSet<Integer>();
@@ -200,8 +199,7 @@ public class SimpleRutaTemplate extends Executor implements OnGesturePerformedLi
 			for (String[] val:values)
 				temp.add(Integer.parseInt(val[0]));
 			rutor.addAll(temp);
-			Collections.sort(rutor);
-			gs.getSafe().setRutor(rutor);
+			Collections.sort(rutor);		
 		} 
 		
 		
@@ -355,16 +353,26 @@ public class SimpleRutaTemplate extends Executor implements OnGesturePerformedLi
 
 	}
 	
-	
+	//Export current Ruta
 	private void export(boolean isKlar, String currentRuta) {
 		String rutaSorteringsTyp = al.getVariableValue(al.createRutaKeyMap(), "RutaSorteringsTyp");
-		JsonReport jRep = gs.getDb().export("ruta",currentRuta,isKlar,rutaSorteringsTyp);
+		
+		//Build up filename
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HH_mm");
+		Date date = new Date();
+		String dS = (dateFormat.format(date));
+		String typPrefix = rutaSorteringsTyp==null||rutaSorteringsTyp.equals("Normal")?"N_":
+			(rutaSorteringsTyp.equals("Kontroll")?"K_":(rutaSorteringsTyp.equals("Flaggskepp")?"F_":"N_"));
+		String lagID = gs.getGlobalPreferences().get(PersistenceHelper.LAG_ID_KEY);
+
+		String exportFileName = typPrefix+lagID+"_ruta_"+currentRuta+"_"+dS+(isKlar?"_KLAR":"");
+		Report jRep = gs.getDb().export(al.createRutaKeyMap(),Exporter.getInstance(this.getActivity(),"JSON"),exportFileName);
 		String msg, btnText;
-		if (jRep == JsonReport.OK) {
-			msg = "Filen har sparats och kommer att synkas automatiskt med Umeå.";
+		if (jRep.er == ExportReport.OK) {
+			msg = "Filen har sparats. "+jRep.noOfVars+" variabler exporterade";
 			btnText = "Ok, vad bra!";
 		} else {
-			msg = "Exporten fungerade inte. Orsak: "+jRep.name();
+			msg = "Exporten fungerade inte. Orsak: "+jRep.er.name();
 			btnText = "Ok";
 		}
 		new AlertDialog.Builder(getActivity())
