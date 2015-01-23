@@ -1,19 +1,16 @@
 package com.teraim.vortex.dynamic.types;
 
 import java.io.Serializable;
-import java.util.Set;
-import java.util.Map.Entry;
+import java.util.List;
 
 import android.content.Context;
 import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
-import com.teraim.vortex.dynamic.types.Variable.DataType;
-import com.teraim.vortex.exceptions.RuleException;
 import com.teraim.vortex.expr.Expr;
-import com.teraim.vortex.expr.Parser;
 import com.teraim.vortex.expr.SyntaxException;
 import com.teraim.vortex.utils.RuleExecutor;
+import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 
 public class Rule implements Serializable {
 
@@ -24,7 +21,7 @@ public class Rule implements Serializable {
 	public String targetName, condition, action, errorMsg,label,id;
 	private Context ctx;
 	private Type myType;
-	private Set<Entry<String, DataType>> vars;
+	private List<TokenizedItem> tokens;
 	private RuleExecutor re;
 	private boolean initDone = false;
 
@@ -51,7 +48,7 @@ public class Rule implements Serializable {
 
 	public void init() {
 		re = RuleExecutor.getInstance(GlobalState.getInstance(ctx).getContext());
-		vars = re.parseFormula(condition,null);
+		tokens = re.findTokens(condition,null);
 		initDone=true;
 	}
 
@@ -62,10 +59,9 @@ public class Rule implements Serializable {
 		if (!initDone)
 			init();
 		Expr result=null;
-		String subst = re.substituteVariables(vars,condition,false);
+		String subst = re.substituteForValue(tokens,condition,false);
 		Log.d("nils","CONDITION: "+condition);
-		if (vars!=null && subst!=null) {
-			Log.d("nils","VARS: "+vars.toString());
+		if (subst!=null) {
 			Log.d("nils","SUBST: "+subst+" isnull? "+(subst==null));		
 			result = gs.getParser().parse(subst);
 			if (result!=null && result.value()!=null) {

@@ -29,6 +29,7 @@ public class Constants {
 	public static final String EXPORT_FILES_DIR = VORTEX_ROOT_DIR + "export/";
 	public static final String PIC_ROOT_DIR = VORTEX_ROOT_DIR + "pics/";
 	public static final String OLD_PIC_ROOT_DIR = VORTEX_ROOT_DIR + "old_pics/";
+	public static final String GIS_DATA_DIR = PIC_ROOT_DIR + "flygdata/";
 	
 	//Folders for backup on SD card.
 	public static final String EXT_BACKUP_DIR = VORTEX_ROOT_DIR + "Backup";
@@ -144,7 +145,9 @@ public class Constants {
 	public static String getMinute() {
 		 return Integer.toString(Calendar.getInstance().get(Calendar.MINUTE));
 	}
-
+	public static String getSecond() {
+		 return Integer.toString(Calendar.getInstance().get(Calendar.SECOND));
+	}
 	
 
 

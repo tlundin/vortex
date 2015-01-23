@@ -298,19 +298,16 @@ public class DbHelper extends SQLiteOpenHelper {
 			Log.d("nils","Variables found in db for context "+context);
 			//Wrap the cursor in an object that understand how to pick it!
 			Report r = exporter.writeVariables(new DBColumnPicker(c));
-			if (r!=null) {
+			if (r!=null&&r.noOfVars>0) {
 				if (Tools.writeToFile(Constants.EXPORT_FILES_DIR+exportFileName+"."+exporter.getType(),r.result)) {
 					Log.d("nils","Exported file succesfully");
 					return r;
 				} else {
 					Log.e("nils","Export of file failed");
-					return new Report(ExportReport.FILE_WRITE_ERROR);
+						return new Report(ExportReport.FILE_WRITE_ERROR);
 				}
-			} else {
-				Log.e("nils", "Got NULL back from Exportwriter!");
+			} else 
 				return new Report(ExportReport.NO_DATA);
-			}
-
 		} else {
 			Log.e("nils","NO Variables found in db for context "+context);
 			return new Report(ExportReport.NO_DATA);

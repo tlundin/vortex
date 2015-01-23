@@ -46,7 +46,7 @@ import com.teraim.vortex.utils.WorkflowParser;
 
 public class Start extends MenuActivity {
 
-	private final String VORTEX_VERSION = "Vortex 0_9_8";
+	private final String VORTEX_VERSION = "Vortex 0_9_8_2";
 	private final String License = "This sw uses 3rd party components that are under Apache 2.0 license.";
 
 	private GlobalState gs;
@@ -154,9 +154,10 @@ public class Start extends MenuActivity {
 			}
 			loginConsole.addRow("");
 			loginConsole.addText("Changes:\n"					
-					+ "* Main flow generating menus.\n"
+					+ "* Dynamic menus.\n"
 					+ "* Colored log.\n"
 					+ "* Colored menus.\n"
+					+ "* New time functions: getyear(), gethour(), getsecond() etc"
 					+ "* Improved startup cycle.\n"
 					+ "* Sync feature can be hidden from menu\n"
 					+ "* Wfs with no PagedefineBlock has no UI\n"
@@ -164,14 +165,14 @@ public class Start extends MenuActivity {
 					+ "* Stricter handling of context for workflows\n"
 					+ "* Automatic restart of App when bundle is changed\n"
 					+ "* First GIS prototype\n"
-					+ "* Chart Engine\n"
+					+ "* Chart Engine proto\n"
 					+ "* Backup support\n"
 					+ "* TEXT concatenation for integers and texts\n"
 					+ "* Safe object removed (Nils specific)\n"
 					+ "* Export to CSV or JSON based on context\n"
 					+ "* Export Button block\n"
 					+ "* Separate Persistence for different Bundles\n"
-					
+					+ "* New more Efficient Rule Executor with Tokenizer\n"
 					);
 
 			if (this.isNetworkAvailable()) {
@@ -303,6 +304,11 @@ public class Start extends MenuActivity {
 					v = gs.getVariableConfiguration().getVariableInstance(NamedVariables.CURRENT_SAMPLE_INDEX);
 					if (v!=null&&v.getValue()==null)
 						v.setValue("0");
+					
+					//TODO: REMOVE - TEST CODE
+					v = gs.getVariableConfiguration().getVariableInstance("Temp_Ruta");
+					if (v!=null&&v.getValue()==null)
+						v.setValue("1");
 					/*
 					v = gs.getArtLista().getVariableInstance("Current_Ruta");
 					if (v!=null&&v.getValue()==null)
@@ -384,16 +390,15 @@ public class Start extends MenuActivity {
 								Log.d("nils","in onfileloaded for Historical. Returns version: "+histVer);
 								gs.getPreferences().put(PersistenceHelper.CURRENT_VERSION_OF_HISTORY_FILE,histVer);						
 								loginConsole.addText("["+histVer+"]");
-								loader(State.HISTORICAL_LOADED,errCode);
+								
 							}
 							if (errCode == ErrorCode.notFound) {
 								loginConsole.addYellowText("[Importdata.json not found]");
-								loader(State.HISTORICAL_LOADED,ErrorCode.HistoricalLoaded);
+								errCode = ErrorCode.HistoricalLoaded;
 							}
-							else {
-								loginConsole.addRedText("["+errCode+"]");
+							//If user has loaded in background, discard this one.
+							if (myState == State.VALIDATE)
 								loader(State.HISTORICAL_LOADED,errCode);
-							}
 						}
 					})).execute(gs);
 					dialog.setTitle("Laddar GammData");

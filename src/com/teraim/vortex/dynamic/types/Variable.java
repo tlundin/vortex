@@ -90,7 +90,7 @@ public class Variable implements Serializable {
 	private boolean usingDefault = false;
 
 	public enum DataType {
-		numeric,bool,list,text,existence,auto_increment, filterAll,filterSome,filterMost,historical
+		numeric,bool,list,text,existence,auto_increment
 	}
 
 	public String getValue() {

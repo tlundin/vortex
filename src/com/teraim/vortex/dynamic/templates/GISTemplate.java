@@ -3,6 +3,12 @@ package com.teraim.vortex.dynamic.templates;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.ActionMode;
@@ -18,28 +24,37 @@ import android.widget.LinearLayout;
 import com.teraim.vortex.R;
 import com.teraim.vortex.Start;
 import com.teraim.vortex.dynamic.Executor;
+import com.teraim.vortex.dynamic.types.SweLocation;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Container;
 import com.teraim.vortex.gis.GisImageView;
+import com.teraim.vortex.non_generics.Constants;
+import com.teraim.vortex.utils.Geomatte;
+import com.teraim.vortex.utils.Tools;
 /**
  * 
  * @author Terje
  * Template used to generate GIS user interface.
  */
-public class GISTemplate extends Executor {
+public class GISTemplate extends Executor implements LocationListener {
 
 	private LinearLayout my_root;
 	private GisImageView gi;
-	private 	ActionMode mActionMode;
+	private ActionMode mActionMode;
     private boolean drawActive=false;
+	private LocationManager lm;
+	private Context ctx;
 
 	
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
+		ctx = this.getActivity();
 		View v = inflater.inflate(R.layout.template_gis, container, false);	
 		my_root = (LinearLayout)v.findViewById(R.id.myRoot);
-		gi = (GisImageView)my_root.findViewById(R.id.gis_image);  
+		gi = (GisImageView)my_root.findViewById(R.id.gis_image);
+		
 		myContext.addContainers(getContainers());
+		//gi.setI
 
 		if (wf!=null) {
 			Log.d("vortex","Executing workflow!!");
@@ -47,6 +62,12 @@ public class GISTemplate extends Executor {
 		} else
 			Log.d("vortex","No workflow found in oncreate default!!!!");
 			
+		String picName = "R207_3x3_feb_2014.jpg";
+		Bitmap bmp = Tools.getScaledImage(ctx, Constants.GIS_DATA_DIR+picName);
+		gi.setImageBitmap(bmp);
+		if (bmp==null)
+			Log.e("vortex","blimp was null!!");
+		Log.d("nils","bmp w h"+bmp.getWidth()+" "+bmp.getHeight());
 		gi.setOnLongClickListener(new View.OnLongClickListener() {
 			
 			// Called when the user long-clicks on someView
@@ -88,7 +109,9 @@ public class GISTemplate extends Executor {
 			}
 		});
 		
-		
+		lm = (LocationManager)this.getActivity().getSystemService(Context.LOCATION_SERVICE);
+
+
 		return v;
 	}
 	
@@ -170,14 +193,74 @@ public class GISTemplate extends Executor {
 	        mActionMode = null;
 	    }
 	};
+	private SweLocation myL;
+	private double centerNorth;
+	private double centerEast;
 
 
 	@Override
 	public void onPause() {
+		lm.removeUpdates(this);
 		if (mActionMode != null) {
 			mActionMode.finish();
         }
 		super.onPause();
+	}
+	
+
+
+	
+	@Override
+	public void onStart() {
+		if (!lm.isProviderEnabled(LocationManager.GPS_PROVIDER))
+			startActivityForResult(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS), 0);
+
+		super.onStart();
+	}
+	
+	@Override
+	public void onResume() {
+		lm.requestLocationUpdates(
+				LocationManager.GPS_PROVIDER,
+				0,
+				1,
+				this);
+
+
+
+		super.onResume();
+	}
+
+	@Override
+	public void onLocationChanged(Location location) {
+		myL = Geomatte.convertToSweRef(location.getLatitude(), location.getLongitude());
+
+		//double distance = Geomatte.sweDist(myL.east, myL.north, center.east, center.north);
+		//gpsView.setText(((int)distance)+"");
+		
+		double distCenterN = myL.north - centerNorth; //negative = on top of.
+		double distCenterE = myL.east - centerEast;
+		
+	}
+
+	@Override
+	public void onStatusChanged(String provider, int status, Bundle extras) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void onProviderEnabled(String provider) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void onProviderDisabled(String provider) {
+		// TODO Auto-generated method stub
+		
 	}
 
 

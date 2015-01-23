@@ -48,6 +48,7 @@ public class GisImageView extends GestureImageView {
 	}
 	
 	int rNum =1;
+	private Paint borderPaint;
 	private class Poly {
 		
 		Path mPath;
@@ -56,6 +57,7 @@ public class GisImageView extends GestureImageView {
 		Paint myPaint;
 		boolean isReady =false;
 		Rect bounds;
+		int picW,picH;
 
 		
 		public Poly(Path p, float lx, float ly) {
@@ -116,7 +118,11 @@ public class GisImageView extends GestureImageView {
 		txtPaint.setColor(Color.WHITE);
 		txtPaint.setStyle(Paint.Style.STROKE);
 		txtPaint.setTextAlign(Paint.Align.CENTER);
-		
+
+		borderPaint = new Paint();
+		borderPaint.setColor(Color.WHITE);
+		borderPaint.setStyle(Paint.Style.STROKE);
+		borderPaint.setStrokeWidth(3);
 		
 		currCursorPaint = wCursorPaint;
 
@@ -294,6 +300,11 @@ public class GisImageView extends GestureImageView {
 		//Draw a blinking square cursor at current location if nothing else is happening
 		canvas.drawCircle((polyVertexX-fixedX)*1/fixScale,(polyVertexY-fixedY)*1/fixScale, 10, currCursorPaint);
 
+		//Draw a square around edge of picture
+		
+		canvas.drawRect(fCalcX(-canvas.getWidth()), fCalcY(100), fCalcX(canvas.getWidth()+50), fCalcY(canvas.getHeight()-100), borderPaint);
+		
+		//If person visible, draw a little figure at location.
 		
 		canvas.restore();
 	}
@@ -305,7 +316,12 @@ public class GisImageView extends GestureImageView {
 		return (my-y)*1/fixScale;
 	}
 
-
+	private float fCalcX(float mx) {
+		return (mx-fixedX)*1/fixScale;
+	}
+	private float fCalcY(float my) {
+		return (my-fixedY)*1/fixScale;
+	}
 
 
 }

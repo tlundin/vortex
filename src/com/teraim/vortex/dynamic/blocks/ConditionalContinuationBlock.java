@@ -1,15 +1,12 @@
 package com.teraim.vortex.dynamic.blocks;
 
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.Set;
 
 import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
-import com.teraim.vortex.dynamic.types.Variable.DataType;
 import com.teraim.vortex.utils.RuleExecutor;
-import com.teraim.vortex.utils.Tools;
+import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 
 public class ConditionalContinuationBlock extends Block {
 
@@ -38,12 +35,11 @@ public class ConditionalContinuationBlock extends Block {
     Integer lastEval = null;
     RuleExecutor re;
 	public boolean evaluate(GlobalState gs,String formula,
-				Set<Entry<String, DataType>> vars) {
+				List<TokenizedItem> tokens) {
 			//assume fail
 			re = RuleExecutor.getInstance(gs.getContext());
 			int eval=STOP;
-			Log.d("nils","Variables found: "+vars.size());
-			String subst = re.substituteVariables(vars,formula,false);
+			String subst = re.substituteForValue(tokens,formula,false);
 			if (subst!=null) {
 				String strRes = re.parseExpression(formula,subst);
 				if (strRes != null) {

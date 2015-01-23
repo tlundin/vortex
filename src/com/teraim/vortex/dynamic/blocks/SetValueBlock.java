@@ -1,5 +1,6 @@
 package com.teraim.vortex.dynamic.blocks;
 
+import java.util.List;
 import java.util.Set;
 import java.util.Map.Entry;
 
@@ -8,6 +9,7 @@ import android.util.Log;
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.types.Variable.DataType;
 import com.teraim.vortex.utils.RuleExecutor;
+import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 
 public class SetValueBlock extends Block {
 
@@ -52,21 +54,16 @@ public class SetValueBlock extends Block {
 
 	RuleExecutor re;
 	public String evaluate(GlobalState gs,String formula,
-			Set<Entry<String, DataType>> vars, boolean stringT) {
+			List<TokenizedItem> tokens, boolean stringT) {
 		//assume fail
 		String strRes = null;
 		re = RuleExecutor.getInstance(gs.getContext());
 		if (stringT) 
-			strRes = re.substituteVariables(vars,formula,stringT);
+			strRes = re.substituteForValue(tokens,formula,stringT);
 		else {
 			String subst =null;
-			if (vars!=null) {
-				Log.d("nils","Number of Variables found: "+vars.size());
-				subst = re.substituteVariables(vars,formula,stringT);
-			}
-			else
-				subst = formula;
-
+			//substitute any variables or functions.
+			subst = re.substituteForValue(tokens,formula,stringT);
 			if (subst!=null) {
 				strRes = re.parseExpression(formula,subst);
 

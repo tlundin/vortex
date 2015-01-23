@@ -398,7 +398,10 @@ public  class ButtonBlock extends Block {
 									msg+= "You can find this file under "+Constants.EXPORT_FILES_DIR+" on your device";
 									btnText = "Ok, thanks";
 								} else {
-									msg = "Export failed. Reason: "+jRep.er.name();
+									if (jRep.er==ExportReport.NO_DATA)
+										msg = "Nothing to export! Have you entered any values? Have you marked your export variables as 'global'? (Local variables are not exported)";
+									else
+										msg = "Export failed. Reason: "+jRep.er.name();
 									btnText = "Ok";
 								}
 								//Context was broken

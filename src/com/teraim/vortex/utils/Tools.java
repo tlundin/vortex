@@ -33,18 +33,20 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.util.DisplayMetrics;
 import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.VariableConfiguration;
-import com.teraim.vortex.dynamic.types.SpinnerDefinition;
-import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.types.Numerable.Type;
+import com.teraim.vortex.dynamic.types.SpinnerDefinition;
 import com.teraim.vortex.dynamic.types.SpinnerDefinition.SpinnerElement;
+import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.types.Workflow.Unit;
 import com.teraim.vortex.log.DummyLogger;
 import com.teraim.vortex.log.LoggerI;
@@ -212,7 +214,61 @@ public class Tools {
 		}
 	}
 
+	//Scales an image to a size that can be displayed.
 
+	public static Bitmap getScaledImage(Context ctx,String fileName) {
+
+		//Try to load pic from disk, if any.
+		//To avoid memory issues, we need to figure out how big bitmap to allocate, approximately
+		//Picture is in landscape & should be approx half the screen width, and 1/5th of the height.
+		//First get the ration between h and w of the pic.
+		final BitmapFactory.Options options = new BitmapFactory.Options();
+		if (fileName == null) {			
+			return null;
+		}
+		options.inJustDecodeBounds=true;
+		BitmapFactory.decodeFile(fileName,options);		
+
+		//there is a picture..
+		int realW = options.outWidth;
+		int realH = options.outHeight;
+
+
+		//check if file exists
+		if (realW>0) {
+			double ratio = realH/realW;
+			//Height should not be higher than width.
+			Log.d("nils", "realW realH"+realW+" "+realH);
+
+			//Find out screen size.
+			
+			DisplayMetrics metrics = ctx.getResources().getDisplayMetrics();
+			int sWidth = metrics.widthPixels;
+	
+			//Target width should be about half the screen width.
+
+			double tWidth = sWidth;
+			//height is then the ratio times this..
+			int tHeight = (int) (tWidth*ratio);
+
+			//use target values to calculate the correct inSampleSize
+			options.inSampleSize = Tools.calculateInSampleSize(options, (int)tWidth, tHeight);
+
+			Log.d("nils"," Calculated insamplesize "+options.inSampleSize);
+			//now create real bitmap using insampleSize
+
+			options.inJustDecodeBounds = false;
+			Log.d("nils","Filename: "+fileName);
+			return BitmapFactory.decodeFile(fileName,options);
+			
+
+		}
+		else {
+			Log.e("Vortex","Did not find picture "+fileName);
+			//need to set the width equal to the height...
+			return null;
+		}
+	}
 	public static Bitmap decodeSampledBitmapFromResource(Resources res, int resId,
 			int reqWidth, int reqHeight) {
 
@@ -561,6 +617,22 @@ public class Tools {
 			Log.d("nils","Thawspinners called. Returned "+sd.size()+" spinners");
 		return sd;
 		
+	}
+	
+	//Check if two keys are equal
+	public static boolean sameKeys(Map<String, String> m1,
+			Map<String, String> m2) {
+		if (m1.size() != m2.size())
+			return false;
+		for (String key: m1.keySet()) {
+			Log.d("nils","Key:"+key+" m1: "+(m1==null?"null":m1.toString())+" m2: "+(m2==null?"null":m2.toString()));
+			if (m1.get(key)==null&&m2.get(key)==null)
+				continue;
+			if ((m1.get(key)==null || m2.get(key)==null)||!m1.get(key).equals(m2.get(key)))
+				return false;
+		}
+		Log.d("nils","keys equal..no header");
+		return true;
 	}
 
 

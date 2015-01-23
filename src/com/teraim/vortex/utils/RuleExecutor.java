@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -29,12 +30,129 @@ import com.teraim.vortex.expr.SyntaxException;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
 
-public class RuleExecutor {
+
+
+/**
+ Parser for formulas.
+ Author Terje Lundin
+
+ Parses formulas and, if ok, allows evaluation.
+
+ */
+@SuppressLint("DefaultLocale") public class RuleExecutor {
 
 	private GlobalState gs;
-	private Map<String,Set<Entry<String,DataType>>> formulaCache = new HashMap<String,Set<Entry<String,DataType>>>();
+	private Map<String,List<TokenizedItem>> formulaCache = new HashMap<String,List<TokenizedItem>>();
 	static RuleExecutor singleton=null;
 	private VariableConfiguration al;
+
+	//Rather complex enum for all token types.
+
+	public class TokenizedItem {
+
+		private String[] args;
+		private TokenType myType;
+		private String original;
+
+		public TokenizedItem(String token, TokenType t, String ...arguments) {
+			this.myType=t;
+			this.args=arguments;
+			this.original=token;
+		}
+		
+		//This is the string we found. 
+		public String get() {
+			return original;
+		}
+		public TokenType getType() {
+			return myType;
+		}
+		public String[] getArguments() {
+			return args;
+		}
+
+	}
+
+	//The tokens currently supported.
+
+	public enum TokenType {
+		function(null,-1),
+				has(function,1),
+				hasAll(function,1),
+				hasMore(function,1),
+				hasSome(function,1),
+				hasMost(function,1),
+				historical(function,1),
+				getCurrentYear(function,0),
+				getCurrentMonth(function,0),
+				getCurrentDay(function,0),
+				getCurrentHour(function,0),
+				getCurrentSecond(function,0),
+				getCurrentWeekNumber(function,0),
+		variabletypes(null,-1),
+				text(variabletypes,0),
+				numeric(variabletypes,0),
+				bool(variabletypes,0),
+				list(variabletypes,0),
+				existence(variabletypes,0),
+				auto_increment(variabletypes,0),
+		math(function,-1),						
+				abs(math,0), 
+				acos(math,0), 
+				asin(math,0), 
+				atan(math,0),  
+				ceil(math,0), 
+				cos(math,0), 
+				exp(math,0), 
+				floor(math,0), 
+				log(math,0), 
+				round(math,0), 
+				sin(math,0), 
+				sqrt(math,0),  
+				tan(math,0),
+				atan2(math,0),
+				max(math,0),
+				min(math,0),
+				;
+		private TokenType parent = null;
+		private List<TokenType> children = new ArrayList<TokenType>();
+		private int cardinality;
+		public int cardinality() {
+			return cardinality;
+		}
+		private TokenType(TokenType parent, int cardinality) {
+			this.parent = parent;
+			if (this.parent != null) {
+				this.parent.addChild(this);
+			}
+			this.cardinality = cardinality;
+		}
+
+		private void addChild(TokenType child) {
+			children.add(child);
+		}
+		public TokenType[] getChildren() {
+			return children.toArray(new TokenType[children.size()]);
+		}
+
+		public TokenType[] allChildren() {
+			List<TokenType> list = new ArrayList<TokenType>();
+			addChildren(this, list);
+			return list.toArray(new TokenType[list.size()]);
+		}
+
+		private static void addChildren(TokenType root, List<TokenType> list) {
+			list.addAll(root.children);
+			for (TokenType child : root.children) {
+				addChildren(child, list);
+			}
+		}
+
+	}
+
+
+
+
 	private RuleExecutor(Context ctx) {
 		gs = GlobalState.getInstance(ctx);
 		al = gs.getVariableConfiguration();
@@ -69,7 +187,7 @@ public class RuleExecutor {
 			return;
 		String[] formulaA = formulas.split(",");
 		for (String formula:formulaA) {
-			parseFormula(formula,mainVar);
+			findTokens(formula,mainVar);
 			Log.d("nils","Found formula: "+formula+" in ParseFormula");
 		}
 
@@ -77,21 +195,21 @@ public class RuleExecutor {
 
 	}
 
+	//Breaks down a formula into identified tokens.
 
-	public Set<Entry<String,DataType>> parseFormula(String formula,String mainVar) {		
+	public List<TokenizedItem>findTokens(String formula,String mainVar) {		
 		if (formulaCache.get(formula)!=null)
 			return formulaCache.get(formula);
-
+		Log.d("vortex","parsing formula ["+formula+"]");
 		List<String> potVars = new ArrayList<String>();
-		Map<String,DataType> filters = new HashMap<String,DataType>();
 		LoggerI o = gs.getLogger();
-		boolean fail = false;
 		//Try parsing the formula.
-		String pattern = "<>=+-*/().0123456789";
-		String inPattern = "<>=+-*/()";
+		String pattern = "<>=+-*/().0123456789,";
+		String inPattern = "<>=+-*/(),";
 		boolean in = false,parseFunctionParameters=false;
-		String curVar = "";
-		//TODO: Separate between tokens: function names, arguments, variables immediately.
+		String curToken = "";
+		List<TokenizedItem> myFormulaTokens =null;
+
 		if (formula !=null) {
 			for (int i = 0; i < formula.length(); i++){
 				char c = formula.charAt(i);  
@@ -100,9 +218,9 @@ public class RuleExecutor {
 					if (Character.isWhitespace(c)||c==',') {
 						parseFunctionParameters = false;
 						in = false;
-						Log.d("nils","Adding functional argument: "+curVar);
-						potVars.add(curVar);
-						curVar = "";
+						Log.d("nils","Adding functional argument: "+curToken);
+						potVars.add(curToken);
+						curToken = "";
 						continue;
 					} else
 						//add if not right parantesis.
@@ -111,7 +229,6 @@ public class RuleExecutor {
 					if (!in) {
 						//assume its in & test
 						in = true;   
-						curVar = "";
 						for(int j=0;j<pattern.length();j++)
 							if (c == pattern.charAt(j)||Character.isWhitespace(c)) {
 								//System.out.println("found non-var char: "+pattern.charAt(j));
@@ -133,114 +250,93 @@ public class RuleExecutor {
 											+(c == inPattern.charAt(j)?inPattern.charAt(j):"<spc>")+"]");
 								//fail.
 								in = false;
-								System.out.println("Found variable: "+curVar);
-								potVars.add(curVar);								
+								System.out.println("Found variable: "+curToken);
+								potVars.add(curToken);								
 								//special case for HAS.
 								//								if (curVar.startsWith("has")) {
-								curVar="";
+								curToken="";
 								break;
 							}
 						}
 					}
 				}
-				//Add if in.
 				if (in)
-					curVar += c;		    		    	
+					curToken += c;		    		    	
 			}
 			if (parseFunctionParameters)
-				Log.d("nils","Adding final has argument: "+curVar);
+				Log.d("nils","Adding final has argument: "+curToken);
 
-			if (curVar.length()>0) 
-				potVars.add(curVar);
 
-			if (potVars.size()>1) {
+			if (curToken.length()>0) 
+				potVars.add(curToken);
+			//Now all the tokens have been identified. 
+			//scan and match functions and variables to token
+			if (potVars.size()>0) {
+				myFormulaTokens = new ArrayList<TokenizedItem>();
 				Iterator<String> it = potVars.iterator();
 				String potentialVar;
+				String[] args;
 				while (it.hasNext()) {
+					args = null;
 					potentialVar = it.next();
 					Log.d("nils","PotentialVar: "+potentialVar+" Length: "+potentialVar.length());
-					if (isKeyWord(potentialVar)) {
-
-						if (potentialVar.equals("hasAll")) {
-							it.remove();
-							String nextVar = it.next();
-							Log.d("nils","variable after HASALL is: "+nextVar);
-							filters.put(nextVar,DataType.filterAll);
-						} else if (potentialVar.equals("hasMost")) {
-							it.remove();
-							String nextVar = it.next();
-							Log.d("nils","variable after HASMOST is: "+nextVar);
-							filters.put(nextVar,DataType.filterMost);
-						} else if (potentialVar.equals("hasSome")) {
-							it.remove();
-							String nextVar = it.next();
-							Log.d("nils","variable after HASSOME is: "+nextVar);
-							filters.put(nextVar,DataType.filterSome);
-						} else if (potentialVar.equals("historical")) {
-							it.remove();
-							String nextVar = it.next();
-							Log.d("nils","variable after historical is: "+nextVar);
-							filters.put(nextVar,DataType.historical);
-						} 
-						else if (potentialVar.equals("getcurrentyear")) {
-							potentialVar = Constants.getYear();
-							Log.d("nils","inserting current year: "+Constants.getYear());
-
-						} 
-
-
-						it.remove();		
-					}
-					//else 
-					//	xAffectVars(potentialVar,mainVar);
-
+					potentialVar = potentialVar.toLowerCase();
+					TokenType token = isToken(potentialVar);
+					if (token !=null) {
+					//if token has arguments, catch
+					int c = token.cardinality();
+					args = new String[c];
+					int i = 0;
+					while (c-->0 && it.hasNext()) 
+						args[i++] = it.next();
+					} else
+						token = TokenType.variabletypes;
+					myFormulaTokens.add(new TokenizedItem(potentialVar,token,args));
+					//No match to token. This is either a variable or an error.
+					
 				}
 
 			}
-			Set<Entry<String,DataType>> myVariables=null;
-			if (potVars.size()==0 && filters.size()==0) {
-				fail = true; 
-				o.addRow("Found no variables in formula "+formula+". Variables starts with a..zA..z");
-			}
-			else {
-				myVariables = new HashSet<Entry<String,DataType>>();
-				for (String var:potVars) {
-					List<String> row = gs.getVariableConfiguration().getCompleteVariableDefinition(var);
-					if (row == null) {
-						//this could be a filter. Try..
-						o.addRow("");
-						o.addRedText("Couldn't find variable "+var+" referenced in formula "+formula);
-						fail = true;
-					} else {
-						DataType type = gs.getVariableConfiguration().getnumType(row);					
-						myVariables.add(new AbstractMap.SimpleEntry<String, DataType>(var.trim(),type));
-					}
-				}
-				for (String f:filters.keySet())
-					myVariables.add(new AbstractMap.SimpleEntry<String, DataType>(f.trim(),filters.get(f)));
-			}
-
-			if (!fail)
-				return myVariables;
-
-		} else {
-			Log.d("nils","got null in formula, Tools.parseFormula");
-			o.addRow("");
-			o.addRedText("Formula evaluates to null in Tools.parseFormula");			
 		}
+		if (myFormulaTokens == null) {
+			Log.d("vortex","Found no variables in formula "+formula+". Variables starts with a..zA..z");
+			o.addRow("Found no variables in formula "+formula+". Variables starts with a..zA..z");
+		} else
+			formulaCache.put(formula, myFormulaTokens);
+		return myFormulaTokens;
+
+	}
+
+	TokenType[] functions = TokenType.function.allChildren();
+	TokenType[] math = TokenType.math.allChildren();
+	TokenType[] varTypes = TokenType.variabletypes.allChildren();
+	
+	private TokenType isToken(String s) {
+		Log.d("vortex","testing keyword "+s+" length of s: "+s.length());
+		for (TokenType token:functions) {
+			if (s.equalsIgnoreCase(token.name())) {
+				Log.d("vortex", "found Function match:" +token.name());
+				if (token.cardinality()==-1) {
+					Log.d("vortex","this is not a token...return null");
+					return null;
+				}
+				return token;
+			}
+		}
+		for (TokenType token:math) {
+			if (s.equalsIgnoreCase(token.name())) {
+				Log.d("vortex", "found Math match:" +token.name()); 
+				if (token.cardinality()==-1) {
+					Log.d("vortex","this is a parent token...return null");
+				}
+				return token;
+			}
+		}
+		Log.d("nils","Found no match for "+s+" in formula...variable?");	
 		return null;
 	}
 
-	static final String[] KeyWordA = {"has","hasAll","hasSome","hasMost","historical","getcurrentyear","and","or","max","min","abs"};
-	static final Set<String> KeyWordSet = new HashSet<String>(Arrays.asList(KeyWordA));
 
-	private boolean isKeyWord(String s) {
-		s = s.toLowerCase();
-		boolean t =  KeyWordSet.contains(s);
-		if (t) 
-			Log.d("nils","Found keyword "+s+" in formula");	
-		return t;
-	}
 
 	Map<String,Set<String>> relations = new HashMap<String,Set<String>>();
 
@@ -262,63 +358,74 @@ public class RuleExecutor {
 		Log.d("nils",curVar+" now has dependants: "+x.toString());		
 	}
 
-	public String substituteVariables(Set<Entry<String,DataType>> myVariables,String formula,boolean stringT) {
-		if (myVariables == null||formula ==null)
+	public String substituteForValue(List<TokenizedItem> myTokens,String formula,boolean stringT) {
+		if (formula ==null)
 			return null;
-		String subst = new String(formula.toLowerCase());
-		String strRes = "";
+		//No tokens to substitute? Then formula is ok as is.
+		if (myTokens == null)
+			return formula;
+		String strRes = "",subst = formula.toLowerCase(),var;
+		TokenType type;
 		Variable st;
 		LoggerI o = gs.getLogger();
-		for (Entry<String, DataType> entry:myVariables) {
-			if (!isFilter(entry.getValue())) {
-				Log.d("nils","Substituting Variable: "+entry.getKey()+" with type "+entry.getValue());
-				st = gs.getVariableConfiguration().getVariableInstance(entry.getKey());		
-				if (st==null) {
-					o.addRow("");
-					o.addRedText("Variable "+entry.getKey()+" in formula ["+formula+"] is null.");
-				} else
-					if (stringT) {
-						String stringValue = st.getValue();
-						if (stringValue!=null) {
-							strRes=stringValue+strRes;
-							Log.d("vortex","String type in RuleExec. Adding "+st.getValue());
+		for (TokenizedItem item:myTokens) {
 
-						}
-						Log.d("vortex","Result "+strRes);
-					} else
-
-						if (st.getValue()==null) {
-							o.addRow("");
-							o.addRow("Variable value for "+entry.getKey()+" in formula ["+formula+"] is null.");
-							Log.d("nils","Before substitution of: "+st.getId()+": "+subst);
-							subst = subst.replace(st.getId().toLowerCase(), "null");	
-							Log.d("nils","After substitutionx: "+subst);
-
-						} else {
-
-							Log.d("nils","Substituting Variable: ["+st.getId()+"] with value "+st.getValue());
-							subst = subst.replace(st.getId().toLowerCase(), st.getValue());
-							Log.d("nils","After substitutiony: "+subst);
-
-
-						}
-			} else {
-				String filterRes = applyFilter(entry.getKey(),entry.getValue());
+			type = item.getType();
+			//check if function
+			if (type.parent == TokenType.function) {
+				String funcEval = evalFunc(item);
 				Log.d("nils","Before substitution: "+subst);
-				Log.d("nils","Matching filter "+entry.getKey()+" got result "+filterRes);
-				String replaceThis = filterName(entry.getValue())+"("+entry.getKey()+")";
-				subst = subst.replace(replaceThis.toLowerCase(), filterRes);
+				Log.d("nils","Matching filter "+item.get()+" got result "+funcEval);
+				//Try to replace fn(x,y,z) with evaluated value.
+				String replaceThis = type.name()+"(";
+				String args[] = item.getArguments();
+				for (int i=0;i<args.length;i++) {
+					if (i < (args.length-1))
+							replaceThis+=args[i]+",";
+						replaceThis+=args[i];
+				}
+				replaceThis+=")";
+				subst = subst.replace(replaceThis.toLowerCase(), funcEval);
 				Log.d("nils","Trying to substitute:["+replaceThis+"]. After Substitutionz: "+subst);
 
-			}
+			} else
+				if (type == TokenType.variabletypes){
+					var = item.get();
+					st = gs.getVariableConfiguration().getVariableInstance(var);		
+					if (st==null) {
+						o.addRow("");
+						o.addRedText("Variable "+var+" in formula ["+formula+"] is null.");
+					} else {
+						String value = st.getValue();
+						if (stringT) {
+							if (value!=null) {
+								strRes=strRes+value;
+								Log.d("vortex","String type in RuleExec. Adding "+st.getValue());
+							}
+							Log.d("vortex","Result "+strRes);
+						} else
+							if (st.getValue()==null) {
+								o.addRow("");
+								o.addRow("Variable value for "+var+" in formula ["+formula+"] is null.");
+								Log.d("nils","Before substitution of: "+st.getId()+": "+subst);
+								subst = subst.replace(st.getId().toLowerCase(), "null");	
+								Log.d("nils","After substitutionx: "+subst);
+
+							} else {
+								Log.d("nils","Substituting Variable: ["+st.getId()+"] with value "+st.getValue());
+								subst = subst.replace(st.getId().toLowerCase(), st.getValue());
+								Log.d("nils","After substitutiony: "+subst);
+
+
+							}
+					}
+				} 
 
 		}		
-		if (stringT)
+		if (stringT) {
+			Log.d("vortex","string type returned with values substituted");
 			return strRes;
-		subst = subst.replaceAll("(HAS|has)\\(null\\)", "0");
-		subst = subst.replaceAll("(HAS|has)\\([+|-]?[0-9]+\\)", "1");
-		Log.d("nils","Formula after substitution: "+subst);
-		o.addRow("Formula after substitution: "+subst);
+		}
 		int firstNull = subst.indexOf("null");
 		if (firstNull!=-1) {
 			Log.d("nils","First null at "+firstNull);			
@@ -326,48 +433,54 @@ public class RuleExecutor {
 			//return null;
 		}
 
-			return subst;
+		return subst;
 	}
 
-	private String filterName(DataType value) {
-
-		switch (value) {
-		case filterAll:
-			return "hasAll";
-		case filterMost:
-			return "hasMost";
-		case filterSome:
-			return "hasSome";
-		case historical:
-			return "historical";
-		default:
-			return null;
-		}
-
-	}
-
-	private static boolean isFilter(DataType value) {
-		return (value==DataType.filterAll||value==DataType.filterMost||value==DataType.filterSome||value==DataType.historical);
-	}
-
-	private String applyFilter(String filter, DataType filterType) {
+	private String evalFunc(TokenizedItem item) {
 		String value;	
 		//Check if this is historical(x) function.
-		if (filterType.equals(DataType.historical)) {
-			Variable var = gs.getVariableCache().getVariable(filter);
+		if (item.getType()==TokenType.historical) {
+			Variable var = gs.getVariableCache().getVariable(item.get());
 			if (var != null) {
 				value = var.getHistoricalValue();
-				Log.d("nils","Found historical value "+value+" for variable "+filter);
+				Log.d("nils","Found historical value "+value+" for variable "+item.get());
 				return value;				
 			}
+		}
+		
+		if (item.getType()==TokenType.getCurrentYear) {
+			Log.d("vortex","Returning current year!");
+			return Constants.getYear();
+		}
+		if (item.getType()==TokenType.getCurrentMonth) {
+			return Constants.getMonth();
+		}
+		if (item.getType()==TokenType.getCurrentDay) {
+			return Constants.getDayOfMonth();
+		}
+		if (item.getType()==TokenType.getCurrentHour) {
+			return Constants.getHour();
+		}
+		if (item.getType()==TokenType.getCurrentSecond) {
+			return Constants.getSecond();
+		}
+		if (item.getType()==TokenType.getCurrentWeekNumber) {
+			return Constants.getWeekNumber();
+		}
+		//Check if variable has value
+		if (item.getType()==TokenType.has) {
+			Variable v = gs.getVariableConfiguration().getVariableInstance(item.get());
+			if (v==null||v.getValue()==null)
+				return "0";
+			return "1";
 		}
 		//Apply filter parameter <filter> on all variables in current table. Return those that match.
 		float failC=0;
 		//If any of the variables matching filter doesn't have a value, return 0. Otherwise 1.
-		List<List<String>> rows = al.getTable().getRowsContaining(VariableConfiguration.Col_Variable_Name, filter);
+		List<List<String>> rows = al.getTable().getRowsContaining(VariableConfiguration.Col_Variable_Name, item.get());
 		if (rows==null || rows.size()==0) {
 			gs.getLogger().addRow("");
-			gs.getLogger().addRedText("Filter returned emptylist in HASx construction. Filter: "+filter);
+			gs.getLogger().addRedText("Filter returned emptylist in HASx construction. Filter: "+item.get());
 			return null;
 		}
 		float rowC=rows.size();
@@ -375,7 +488,7 @@ public class RuleExecutor {
 		for (List<String>row:rows) {
 			value = gs.getVariableConfiguration().getVariableValue(gs.getCurrentKeyHash(), al.getVarName(row));
 			if (value==null) {
-				if (filterType==DataType.filterAll) {
+				if (item.getType()==TokenType.hasAll) {
 					gs.getLogger().addRow("");
 					gs.getLogger().addYellowText("hasAll filter stopped on variable "+al.getVarName(row)+" that is missing a value");
 					return "0";
@@ -383,18 +496,18 @@ public class RuleExecutor {
 				else 
 					failC++;
 			} else 
-				if (filterType==DataType.filterSome) {					
+				if (item.getType()==TokenType.hasSome) {					
 					gs.getLogger().addRow("");
 					gs.getLogger().addYellowText("hasSome filter succeeded on variable "+al.getVarName(row)+" that has value "+value);
 					return "1";			
 				}
 		}
-		if (failC == rowC && filterType == DataType.filterSome) {
+		if (failC == rowC && item.getType()==TokenType.hasSome) {
 			gs.getLogger().addRow("");
-			gs.getLogger().addYellowText("hasSome filter failed. No variables with values found for filter "+filter);
+			gs.getLogger().addYellowText("hasSome filter failed. No variables with values found for filter "+item.getType());
 			return "0";						
 		} 
-		if (filterType == DataType.filterAll) {
+		if (item.getType()==TokenType.hasAll) {
 			gs.getLogger().addRow("");
 			gs.getLogger().addYellowText("hasAll filter succeeded.");
 			return "1";			
@@ -429,11 +542,7 @@ public class RuleExecutor {
 			o.addText("Parsing Expr "+formula+" evaluates to null");	
 			return null;
 		} else {
-			//TODO: remove this to allow for calculations.
-			//If expression equals null, evaluate as true.
 			return exp.value()==null?null:(exp.value().intValue()+"");
-
-			//return Double.toString(exp.value());	
 		}
 	}
 

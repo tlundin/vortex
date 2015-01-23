@@ -170,6 +170,10 @@ public class ImageHandler {
 
 
 	}
+	
+
+
+
 	public final static int TAKE_PICTURE = 133;
 
 	private String currSaving=null;

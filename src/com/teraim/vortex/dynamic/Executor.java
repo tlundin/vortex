@@ -63,6 +63,7 @@ import com.teraim.vortex.dynamic.workflow_realizations.WF_Static_List;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.RuleExecutor;
+import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 
 /*
  * Executes workflow blocks. Child classes define layouts and other specialized behavior
@@ -311,14 +312,14 @@ public abstract class Executor extends Fragment {
 					o.addRow("");
 					o.addYellowText("Running SetValueBlock "+b.getBlockId());
 					final SetValueBlock bl = (SetValueBlock)b;
-					final Set<Entry<String, DataType>> vars = RuleExecutor.getInstance(gs.getContext()).parseFormula(bl.getFormula(),null);
+					final List<TokenizedItem> tokens = RuleExecutor.getInstance(gs.getContext()).findTokens(bl.getFormula(),null);
 					if (bl.getBehavior()!=ExecutionBehavior.constant) {
 						EventListener tiva = new EventListener() {
 							@Override
 							public void onEvent(Event e) {
 								if (!e.getProvider().equals(bl.getBlockId())) {
 									Variable v = al.getVariableInstance(bl.getMyVariable());
-									String	eval = bl.evaluate(gs,bl.getFormula(),vars,v.getType()== DataType.text);
+									String	eval = bl.evaluate(gs,bl.getFormula(),tokens,v.getType()== DataType.text);
 									if (v!=null) {
 										String val = v.getValue();
 										o.addRow("Value: "+val+" Eval: "+eval);
@@ -366,7 +367,7 @@ public abstract class Executor extends Fragment {
 					}
 					//Evaluate
 					Variable v = al.getVariableInstance(bl.getMyVariable());
-					String eval = bl.evaluate(gs,bl.getFormula(),vars,v.getType()==DataType.text);
+					String eval = bl.evaluate(gs,bl.getFormula(),tokens,v.getType()==DataType.text);
 					if (eval==null) {
 						o.addRow("");
 						o.addRow("Execution stopped on SetValueBlock "+bl.getBlockId()+". Expression "+bl.getFormula()+"evaluates to null");
@@ -403,7 +404,7 @@ public abstract class Executor extends Fragment {
 					o.addYellowText("ConditionalContinuationBlock found");
 					final ConditionalContinuationBlock bl = (ConditionalContinuationBlock)b;
 					final String formula = bl.getFormula();
-					final Set<Entry<String, DataType>> vars = RuleExecutor.getInstance(gs.getContext()).parseFormula(formula,null);
+					final List<TokenizedItem> vars = RuleExecutor.getInstance(gs.getContext()).findTokens(formula,null);
 					if (vars!=null) {
 						EventListener tiva = new EventListener() {
 							@Override

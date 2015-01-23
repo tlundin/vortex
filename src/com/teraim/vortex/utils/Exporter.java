@@ -8,7 +8,7 @@ import android.util.Log;
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.utils.DbHelper.DBColumnPicker;
-import com.teraim.vortex.utils.Exporter.ExportReport;
+
 
 public abstract class Exporter {
 	
@@ -58,18 +58,5 @@ public abstract class Exporter {
 	public abstract Report writeVariables(DBColumnPicker cp);
 	public abstract String getType();
 	
-	protected boolean sameKeys(Map<String, String> m1,
-			Map<String, String> m2) {
-		if (m1.size() != m2.size())
-			return false;
-		for (String key: m1.keySet()) {
-			Log.d("nils","Key:"+key+" m1: "+(m1==null?"null":m1.toString())+" m2: "+(m2==null?"null":m2.toString()));
-			if (m1.get(key)==null&&m2.get(key)==null)
-				continue;
-			if ((m1.get(key)==null || m2.get(key)==null)||!m1.get(key).equals(m2.get(key)))
-				return false;
-		}
-		Log.d("nils","keys equal..no header");
-		return true;
-	}
+
 }

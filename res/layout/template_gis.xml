@@ -13,5 +13,5 @@
     	android:layout_height="fill_parent" 
     	gesture-image:min-scale="0.75"
     	gesture-image:max-scale="10.0"
-    	android:src="@drawable/flygbildstor"/>
+    	/>
 </LinearLayout>
