@@ -8,9 +8,7 @@ import java.io.StringWriter;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -22,9 +20,7 @@ import android.util.Log;
 import android.util.Xml;
 
 import com.teraim.vortex.FileLoadedCb;
-import com.teraim.vortex.FileLoadedCb.ErrorCode;
 import com.teraim.vortex.GlobalState;
-import com.teraim.vortex.GlobalState.CHash;
 import com.teraim.vortex.dynamic.blocks.AddEntryToFieldListBlock;
 import com.teraim.vortex.dynamic.blocks.AddRuleBlock;
 import com.teraim.vortex.dynamic.blocks.AddSumOrCountBlock;
@@ -55,6 +51,7 @@ import com.teraim.vortex.dynamic.workflow_realizations.WF_Not_ClickableField_Sum
 import com.teraim.vortex.exceptions.SameOldException;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
+import com.teraim.vortex.utils.LoadResult.ErrorCode;
 
 /**
  * 
@@ -154,16 +151,16 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 			myFlow = readBundle(parser);
 		} catch (XmlPullParserException e) {
 			e.printStackTrace();
-			return FileLoadedCb.ErrorCode.parseError;
+			return ErrorCode.parseError;
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
-			return FileLoadedCb.ErrorCode.notFound;			
+			return ErrorCode.notFound;			
 		} catch (IOException e) {			
 			e.printStackTrace();
-			return FileLoadedCb.ErrorCode.ioError;
+			return ErrorCode.ioError;
 
 		} catch (SameOldException e) {
-			return FileLoadedCb.ErrorCode.sameold;
+			return ErrorCode.sameold;
 
 		} catch (Exception e) {
 			o.addRow("");
@@ -180,7 +177,7 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 			return ErrorCode.newConfigVersionLoaded;
 		}
 		//This should never happen.
-		return FileLoadedCb.ErrorCode.parseError;
+		return ErrorCode.parseError;
 	}
 
 

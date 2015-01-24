@@ -75,7 +75,9 @@ public class Logger implements LoggerI {
 		myTxt.clear();
 		if (log!=null) log.setText(myTxt);
 	}
+	
 
+	
 	@Override
 	public void addPurpleText(String text) {
 		 SpannableString s = new SpannableString(text);
@@ -89,4 +91,6 @@ public class Logger implements LoggerI {
 		myTxt.append(".");
 		draw();
 	}
+
+
 }

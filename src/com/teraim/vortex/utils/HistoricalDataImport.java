@@ -24,10 +24,10 @@ import android.widget.TextView;
 
 import com.teraim.vortex.FileLoadedCb;
 import com.teraim.vortex.GlobalState;
-import com.teraim.vortex.FileLoadedCb.ErrorCode;
 import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
+import com.teraim.vortex.utils.LoadResult.ErrorCode;
 
 public class HistoricalDataImport extends AsyncTask<GlobalState ,Integer,LoadResult>{
 
@@ -92,7 +92,7 @@ public class HistoricalDataImport extends AsyncTask<GlobalState ,Integer,LoadRes
 		bundle = bundle.toLowerCase();
 		LoadResult ec=load(serverUrl+bundle+"/"+Constants.PY_HISTORICAL_FILE_NAME);
 
-		if (ec.errCode==ErrorCode.HistoricalLoaded) {
+		if (ec.errCode==ErrorCode.Loaded) {
 			int histCounter = ph.getI(PersistenceHelper.HIST_LOAD_COUNTER+vNo);
 			histCounter = histCounter < 0 ? 0:histCounter;
 			Log.d("nils","Historical file scanned. Inserting to DB.");
@@ -274,7 +274,7 @@ public class HistoricalDataImport extends AsyncTask<GlobalState ,Integer,LoadRes
 			finally {
 				try {if (in!=null)in.close();}catch (Exception e){};
 			}
-			return new LoadResult(ErrorCode.HistoricalLoaded,vNo);
+			return new LoadResult(ErrorCode.Loaded,vNo);
 	}
 
 

@@ -1,7 +1,5 @@
 package com.teraim.vortex;
 
-import java.io.File;
-
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.Fragment;
@@ -9,7 +7,6 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.net.ConnectivityManager;
@@ -20,34 +17,18 @@ import android.support.v4.app.ActionBarDrawerToggle;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.Button;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 
-import com.teraim.vortex.FileLoadedCb.ErrorCode;
 import com.teraim.vortex.GlobalState.CHash;
 import com.teraim.vortex.dynamic.templates.LinjePortalTemplate;
-import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.types.Workflow;
-import com.teraim.vortex.log.Logger;
-import com.teraim.vortex.log.LoggerI;
-import com.teraim.vortex.non_generics.Constants;
-import com.teraim.vortex.non_generics.NamedVariables;
 import com.teraim.vortex.ui.DrawerMenu;
 import com.teraim.vortex.ui.LoginConsoleFragment;
 import com.teraim.vortex.ui.MenuActivity;
-import com.teraim.vortex.utils.ConfigFileParser;
-import com.teraim.vortex.utils.HistoricalDataImport;
 import com.teraim.vortex.utils.LoadResult;
 import com.teraim.vortex.utils.PersistenceHelper;
-import com.teraim.vortex.utils.WorkflowParser;
 
 public class Start extends MenuActivity {
 
-	private final String VORTEX_VERSION = "Vortex 0_9_8_2";
-	private final String License = "This sw uses 3rd party components that are under Apache 2.0 license.";
 
 	private GlobalState gs;
 	private PersistenceHelper ph;
@@ -55,9 +36,8 @@ public class Start extends MenuActivity {
 
 	//	private ArrayList<String> rutItems;
 	//	private ArrayList<String> wfItems;
-	private enum State {INITIAL, HISTORICAL_LOADED,WF_LOADED, CONF_LOADED, VALIDATE,POST_INIT};
+	private enum State {INITIAL, HISTORICAL_LOADED,WF_LOADED, CONF_LOADED, VALIDATE,POST_INIT, GIS_LOADED};
 	private LoginConsoleFragment loginFragment;
-	private LoggerI loginConsole;
 	private State myState=null;
 	private String[] wfs;
 	private AsyncTask<GlobalState, Integer, LoadResult> histT=null;
@@ -75,51 +55,21 @@ public class Start extends MenuActivity {
 		//This is the frame for all pages, defining the Action bar and Navigation menu.
 		setContentView(R.layout.naviframe);
 
-
-		if (loginConsole==null)
-			loginConsole = new Logger(this,"INITIAL");
-		//loginConsole = new DummyLogger();
-		//create subfolders. Copy assets..
-		if (this.initIfFirstTime()) {		
-			loginConsole.addRow("First time use...creating folders");
-			loginConsole.addRow("");
-			loginConsole.addYellowText("To change defaults, go to the config (wrench) menu");
-
-		}
 		//This combats an issue on the target panasonic platform having to do with http reading.
 		System.setProperty("http.keepAlive", "false"); 
 
-		//GlobalState
-		if (gs==null)
-			gs = GlobalState.getInstance(getApplicationContext());
-		ph = gs.getGlobalPreferences();
-
+		//Load the GlobalState
+		gs = GlobalState.getInstance(this);
 		//drawermenu
 		if (mDrawerMenu!=null)
 			mDrawerMenu.closeDrawer();
 		mDrawerMenu = new DrawerMenu(this);
 		gs.setDrawerMenu(mDrawerMenu);
 		mDrawerToggle = mDrawerMenu.getDrawerToggle();
-
-		//write down version..quickly! :)
-		ph.put(PersistenceHelper.CURRENT_VERSION_OF_PROGRAM, VORTEX_VERSION);
-
-
-
-		//Maps itemheaders to items.
-		//		menuStructure = new HashMap<String,List<String>>();
-		//		rutItems = new ArrayList<String>();
-		//		wfItems = new ArrayList<String>();
-		//Maps item numbers to Fragments.
-		//		menuStructure.put("Ruta och Provyta",rutItems);
-		//		menuStructure.put("Delyta",wfItems);
-
-
-
-
-
 		getActionBar().setDisplayHomeAsUpEnabled(true);
 		getActionBar().setHomeButtonEnabled(true);
+		
+		//Start the login fragment.
 		if (loginFragment == null) {
 			loginFragment = new LoginConsoleFragment();
 			FragmentManager fragmentManager = getFragmentManager();
@@ -127,8 +77,8 @@ public class Start extends MenuActivity {
 			.replace(R.id.content_frame, loginFragment)
 			.commit();
 		}
-		myState=null;
-		//Executon continues in onStart() since we have to wait for fragment to load.
+		
+		//Execution continues in loginFragment
 
 	}
 
@@ -138,59 +88,13 @@ public class Start extends MenuActivity {
 	@Override
 	protected void onStart() {
 		super.onStart();
-		this.invalidateOptionsMenu();
+	//	this.invalidateOptionsMenu();
 
-		if (myState ==null) {
-			loginFragment.getVersionField().setText(VORTEX_VERSION);
-			loginFragment.getLicenseField().setText(License);
-			loginConsole.setOutputView(loginFragment.getTextWindow());
-			loginConsole.clear();
-			loginConsole.addYellowText("["+VORTEX_VERSION+"]");
-			loginConsole.addRow("");
-			//loginConsole.addRedText("");
-			if (ph.get(PersistenceHelper.LAG_ID_KEY).equals(PersistenceHelper.UNDEFINED)||
-					ph.get(PersistenceHelper.USER_ID_KEY).equals(PersistenceHelper.UNDEFINED)) {
-				loginConsole.addYellowText("LagID och/eller Namn fattas.");				
-			}
-			loginConsole.addRow("");
-			loginConsole.addText("Changes:\n"					
-					+ "* Dynamic menus.\n"
-					+ "* Colored log.\n"
-					+ "* Colored menus.\n"
-					+ "* New time functions: getyear(), gethour(), getsecond() etc"
-					+ "* Improved startup cycle.\n"
-					+ "* Sync feature can be hidden from menu\n"
-					+ "* Wfs with no PagedefineBlock has no UI\n"
-					+ "* new generic Envelope for bluetooth messaging\n"
-					+ "* Stricter handling of context for workflows\n"
-					+ "* Automatic restart of App when bundle is changed\n"
-					+ "* First GIS prototype\n"
-					+ "* Chart Engine proto\n"
-					+ "* Backup support\n"
-					+ "* TEXT concatenation for integers and texts\n"
-					+ "* Safe object removed (Nils specific)\n"
-					+ "* Export to CSV or JSON based on context\n"
-					+ "* Export Button block\n"
-					+ "* Separate Persistence for different Bundles\n"
-					+ "* New more Efficient Rule Executor with Tokenizer\n"
-					);
 
-			if (this.isNetworkAvailable()) {
-
-				loginConsole.addRow("Loading configuration. Patience is a virtue.");
-				loginConsole.addRow("Server URL: "+ph.get(PersistenceHelper.SERVER_URL));
-
-				loader(State.INITIAL,null);
-			} else {
-				loginConsole.addRow("No network. Will use existing configuration. Please standby.");
-				loader(State.VALIDATE,null);
-			}
-
-		}
 	}
 
-	private boolean doRefresh=false;
-
+//	private boolean doRefresh=false;
+/*
 	private void loader(State state,ErrorCode errCode) {
 		myState=state;
 		loginConsole.draw();
@@ -215,9 +119,12 @@ public class Start extends MenuActivity {
 			break;
 
 		case HISTORICAL_LOADED:
+		case GIS_LOADED:
 		case WF_LOADED:
 		case CONF_LOADED:
+			
 			Log.d("nils","STATE: "+state);
+			
 			switch(errCode) {
 			case ioError:
 				loginConsole.addRedText("[IO-ERROR]");
@@ -250,7 +157,7 @@ public class Start extends MenuActivity {
 			case configurationError:
 				loginConsole.addRedText("[Configuration error]");
 				break;
-			case HistoricalLoaded:
+			case Loaded:
 				loginConsole.addGreenText("[OK]");				
 				break;
 			case Aborted:
@@ -262,6 +169,7 @@ public class Start extends MenuActivity {
 				break;
 
 			}	
+			//WORKFLOWS LOADED
 			if (state==State.WF_LOADED) {
 				loginConsole.addRow(Constants.TypesFileName+": ");			
 				new ConfigFileParser(gs, new FileLoadedCb() {
@@ -274,8 +182,12 @@ public class Start extends MenuActivity {
 					}
 				}
 						).execute(this);
-			} else if(state==State.CONF_LOADED)
+			} 
+			//CONFIGURATION LOADED
+			else if(state==State.CONF_LOADED)
 				loader(State.VALIDATE,ErrorCode.whatever);
+			
+			//HISTORICAL LOADED			
 			else if(state==State.HISTORICAL_LOADED) {
 				wfs = gs.getWorkflowLabels();
 				//make sure workflows exist. if so, get appname & version.
@@ -309,7 +221,7 @@ public class Start extends MenuActivity {
 					v = gs.getVariableConfiguration().getVariableInstance("Temp_Ruta");
 					if (v!=null&&v.getValue()==null)
 						v.setValue("1");
-					/*
+					
 					v = gs.getArtLista().getVariableInstance("Current_Ruta");
 					if (v!=null&&v.getValue()==null)
 						v.setValue("1");
@@ -319,7 +231,7 @@ public class Start extends MenuActivity {
 					v = gs.getArtLista().getVariableInstance("Current_Delyta");
 					if (v!=null&&v.getValue()==null)
 						v.setValue("1");
-					 */
+					 
 					//execute main workflow if it exists.
 					Workflow wf = gs.getWorkflow("Main");
 					if (wf == null) {
@@ -342,6 +254,9 @@ public class Start extends MenuActivity {
 			}
 
 			break;
+			
+			//GIS_LOADED:
+			
 
 		case VALIDATE:
 			//If a new version has been loaded and frozen, refresh global state.
@@ -385,7 +300,7 @@ public class Start extends MenuActivity {
 						public void onFileLoaded(ErrorCode errCode, String histVer) {		
 							dialog.setOnDismissListener(null);
 							dialog.dismiss();
-							if (errCode == ErrorCode.HistoricalLoaded) {
+							if (errCode == ErrorCode.Loaded) {
 								//The safe needs to be recreated.								
 								Log.d("nils","in onfileloaded for Historical. Returns version: "+histVer);
 								gs.getPreferences().put(PersistenceHelper.CURRENT_VERSION_OF_HISTORY_FILE,histVer);						
@@ -394,7 +309,7 @@ public class Start extends MenuActivity {
 							}
 							if (errCode == ErrorCode.notFound) {
 								loginConsole.addYellowText("[Importdata.json not found]");
-								errCode = ErrorCode.HistoricalLoaded;
+								errCode = ErrorCode.Loaded;
 							}
 							//If user has loaded in background, discard this one.
 							if (myState == State.VALIDATE)
@@ -423,14 +338,14 @@ public class Start extends MenuActivity {
 				} else
 					loader(State.HISTORICAL_LOADED,ErrorCode.whatever);
 
-				/*
+				
 				if (!success) {
 					Log.e("nils","scandelningsdata failed");
 					ec = GlobalState.ErrorCode.tagdata_not_found;
 					loginConsole.addRedText("[Tågdata corrupt or not found]");
 				} else 
 					loginConsole.addGreenText("[OK]");
-				 */
+				 
 				break;
 
 			default:
@@ -452,6 +367,7 @@ public class Start extends MenuActivity {
 
 
 	}
+	*/
 
 
 
@@ -582,61 +498,7 @@ public class Start extends MenuActivity {
 		return activeNetworkInfo != null && activeNetworkInfo.isConnected();
 	}
 
-	/******************************
-	 * First time? If so, create subfolders.
-	 */
-	private boolean initIfFirstTime() {
-		//If testFile doesnt exist it will be created and found next time.
-		PersistenceHelper ph = new PersistenceHelper(getSharedPreferences("GlobalPrefs", Context.MODE_PRIVATE));
-		Log.d("Strand","Checking if this is first time use...");
-		boolean first = (ph.get(PersistenceHelper.FIRST_TIME_KEY).equals(PersistenceHelper.UNDEFINED));
 
-
-		if (first) {
-			ph.put(PersistenceHelper.FIRST_TIME_KEY,"NotEmpty");
-			Log.d("Strand","Yes..executing  first time init");
-			initialize(ph);   
-			return true;
-		}
-		else {
-			Log.d("Strand","..Not first time");
-			return false;
-		}
-
-	}
-
-	private void initialize(PersistenceHelper ph) {
-
-		//create data folder. This will also create the ROOT folder for the Strand app.
-		File folder = new File(Constants.CONFIG_FILES_DIR);
-		if(!folder.mkdirs())
-			Log.e("NILS","Failed to create config root folder");
-		folder = new File(Constants.PIC_ROOT_DIR);
-		if(!folder.mkdirs())
-			Log.e("NILS","Failed to create pic root folder");
-		folder = new File(Constants.OLD_PIC_ROOT_DIR);
-		if(!folder.mkdirs())
-			Log.e("NILS","Failed to create old pic root folder");
-		folder = new File(Constants.EXPORT_FILES_DIR);
-		if(!folder.mkdirs())
-			Log.e("NILS","Failed to create export folder");
-
-
-		//Set defaults if none.
-		if (ph.get(PersistenceHelper.SERVER_URL).equals(PersistenceHelper.UNDEFINED))
-			ph.put(PersistenceHelper.SERVER_URL, "www.teraim.com");
-		if (ph.get(PersistenceHelper.BUNDLE_NAME).equals(PersistenceHelper.UNDEFINED))
-			ph.put(PersistenceHelper.BUNDLE_NAME, "Vortex");
-		if (ph.get(PersistenceHelper.DEVELOPER_SWITCH).equals(PersistenceHelper.UNDEFINED))
-			ph.put(PersistenceHelper.DEVELOPER_SWITCH, false);
-		if (ph.get(PersistenceHelper.VERSION_CONTROL_SWITCH_OFF).equals(PersistenceHelper.UNDEFINED))
-			ph.put(PersistenceHelper.VERSION_CONTROL_SWITCH_OFF, false);
-
-		//copy the configuration files into the root dir.
-		//copyAssets();
-
-
-	}
 
 
 
@@ -711,5 +573,7 @@ public class Start extends MenuActivity {
 			.show();
 		}
 	}
+	
+
 
 }

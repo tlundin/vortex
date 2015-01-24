@@ -53,13 +53,19 @@ import com.teraim.vortex.non_generics.Constants;
 		private String[] args;
 		private TokenType myType;
 		private String original;
+		private Variable var;
 
 		public TokenizedItem(String token, TokenType t, String ...arguments) {
 			this.myType=t;
 			this.args=arguments;
 			this.original=token;
 		}
-		
+		public TokenizedItem(Variable v) {
+			this.myType=TokenType.variable;
+			this.var = v;
+			this.original=v.getLabel();			
+		}
+
 		//This is the string we found. 
 		public String get() {
 			return original;
@@ -71,49 +77,54 @@ import com.teraim.vortex.non_generics.Constants;
 			return args;
 		}
 
+		public Variable getVariable() {
+			return var;
+		}
+
 	}
 
 	//The tokens currently supported.
 
 	public enum TokenType {
 		function(null,-1),
-				has(function,1),
-				hasAll(function,1),
-				hasMore(function,1),
-				hasSome(function,1),
-				hasMost(function,1),
-				historical(function,1),
-				getCurrentYear(function,0),
-				getCurrentMonth(function,0),
-				getCurrentDay(function,0),
-				getCurrentHour(function,0),
-				getCurrentSecond(function,0),
-				getCurrentWeekNumber(function,0),
-		variabletypes(null,-1),
-				text(variabletypes,0),
-				numeric(variabletypes,0),
-				bool(variabletypes,0),
-				list(variabletypes,0),
-				existence(variabletypes,0),
-				auto_increment(variabletypes,0),
+		has(function,1),
+		hasAll(function,1),
+		hasMore(function,1),
+		hasSome(function,1),
+		hasMost(function,1),
+		historical(function,1),
+		getCurrentYear(function,0),
+		getCurrentMonth(function,0),
+		getCurrentDay(function,0),
+		getCurrentHour(function,0),
+		getCurrentSecond(function,0),
+		getCurrentWeekNumber(function,0),
+		variable(null,-1),
+		text(variable,0),
+		numeric(variable,0),
+		bool(variable,0),
+		list(variable,0),
+		existence(variable,0),
+		auto_increment(variable,0),
 		math(function,-1),						
-				abs(math,0), 
-				acos(math,0), 
-				asin(math,0), 
-				atan(math,0),  
-				ceil(math,0), 
-				cos(math,0), 
-				exp(math,0), 
-				floor(math,0), 
-				log(math,0), 
-				round(math,0), 
-				sin(math,0), 
-				sqrt(math,0),  
-				tan(math,0),
-				atan2(math,0),
-				max(math,0),
-				min(math,0),
-				;
+		abs(math,0), 
+		acos(math,0), 
+		asin(math,0), 
+		atan(math,0),  
+		ceil(math,0), 
+		cos(math,0), 
+		exp(math,0), 
+		floor(math,0), 
+		log(math,0), 
+		round(math,0), 
+		sin(math,0), 
+		sqrt(math,0),  
+		tan(math,0),
+		atan2(math,0),
+		max(math,0),
+		min(math,0),
+		unknown(null,-1)
+		;
 		private TokenType parent = null;
 		private List<TokenType> children = new ArrayList<TokenType>();
 		private int cardinality;
@@ -274,28 +285,69 @@ import com.teraim.vortex.non_generics.Constants;
 			if (potVars.size()>0) {
 				myFormulaTokens = new ArrayList<TokenizedItem>();
 				Iterator<String> it = potVars.iterator();
-				String potentialVar;
+				String unclassifiedToken;
 				String[] args;
+				TokenizedItem ti;
+				TokenType resultToken;
 				while (it.hasNext()) {
+					resultToken = null;
 					args = null;
-					potentialVar = it.next();
-					Log.d("nils","PotentialVar: "+potentialVar+" Length: "+potentialVar.length());
-					potentialVar = potentialVar.toLowerCase();
-					TokenType token = isToken(potentialVar);
-					if (token !=null) {
-					//if token has arguments, catch
-					int c = token.cardinality();
-					args = new String[c];
-					int i = 0;
-					while (c-->0 && it.hasNext()) 
-						args[i++] = it.next();
-					} else
-						token = TokenType.variabletypes;
-					myFormulaTokens.add(new TokenizedItem(potentialVar,token,args));
-					//No match to token. This is either a variable or an error.
-					
-				}
+					unclassifiedToken = it.next();
+					ti=null;
+					Log.d("vortex","PotentialVar: "+unclassifiedToken+" Length: "+unclassifiedToken.length());
+					unclassifiedToken = unclassifiedToken.toLowerCase();
 
+					for (TokenType token:functions) {
+						if (unclassifiedToken.equalsIgnoreCase(token.name())) {
+							Log.d("vortex", "found Function match:" +token.name());
+							if (token.cardinality()==-1) {
+								Log.d("vortex","this is not a token...return null");
+
+							} else {
+								resultToken = token;
+								break;
+							}
+						}
+					}
+					if (resultToken == null) {
+						for (TokenType token:math) {
+							if (unclassifiedToken.equalsIgnoreCase(token.name())) {
+								Log.d("vortex", "found Math match:" +token.name()); 
+								if (token.cardinality()==-1) {
+									Log.d("vortex","this is a parent token...return null");
+								} else {
+									resultToken = token;
+									break ;
+								}
+							}
+						}
+						if (resultToken == null) {
+							Variable var = gs.getVariableConfiguration().getVariableInstance(unclassifiedToken);
+							if (var!=null) {
+								Log.d("vortex","Found variable match for "+unclassifiedToken+" in formula");
+								ti = new TokenizedItem(var);
+
+							} else {
+								Log.e("vortex","unrecognized token in formula: "+unclassifiedToken);
+								o.addRow("");
+								o.addRedText("unrecognized token in formula: "+unclassifiedToken);
+								continue;
+							}
+						}
+					}
+					if (ti==null) {
+						//if token has arguments, catch
+						int c = resultToken.cardinality();
+						args = new String[c];
+						int i = 0;
+						while (c-->0 && it.hasNext()) 
+							args[i++] = it.next(); 
+						ti = new TokenizedItem(unclassifiedToken,resultToken,args);
+					}
+
+					myFormulaTokens.add(ti);
+					//No match to token. This is either a variable or an error.
+				}
 			}
 		}
 		if (myFormulaTokens == null) {
@@ -307,34 +359,13 @@ import com.teraim.vortex.non_generics.Constants;
 
 	}
 
+
+
 	TokenType[] functions = TokenType.function.allChildren();
 	TokenType[] math = TokenType.math.allChildren();
-	TokenType[] varTypes = TokenType.variabletypes.allChildren();
-	
-	private TokenType isToken(String s) {
-		Log.d("vortex","testing keyword "+s+" length of s: "+s.length());
-		for (TokenType token:functions) {
-			if (s.equalsIgnoreCase(token.name())) {
-				Log.d("vortex", "found Function match:" +token.name());
-				if (token.cardinality()==-1) {
-					Log.d("vortex","this is not a token...return null");
-					return null;
-				}
-				return token;
-			}
-		}
-		for (TokenType token:math) {
-			if (s.equalsIgnoreCase(token.name())) {
-				Log.d("vortex", "found Math match:" +token.name()); 
-				if (token.cardinality()==-1) {
-					Log.d("vortex","this is a parent token...return null");
-				}
-				return token;
-			}
-		}
-		Log.d("nils","Found no match for "+s+" in formula...variable?");	
-		return null;
-	}
+	TokenType[] varTypes = TokenType.variable.allChildren();
+
+
 
 
 
@@ -359,6 +390,8 @@ import com.teraim.vortex.non_generics.Constants;
 	}
 
 	public String substituteForValue(List<TokenizedItem> myTokens,String formula,boolean stringT) {
+		LoggerI o = gs.getLogger();
+		o.addRow("Before substitution: "+formula);
 		if (formula ==null)
 			return null;
 		//No tokens to substitute? Then formula is ok as is.
@@ -367,42 +400,44 @@ import com.teraim.vortex.non_generics.Constants;
 		String strRes = "",subst = formula.toLowerCase(),var;
 		TokenType type;
 		Variable st;
-		LoggerI o = gs.getLogger();
 		for (TokenizedItem item:myTokens) {
 
 			type = item.getType();
 			//check if function
 			if (type.parent == TokenType.function) {
 				String funcEval = evalFunc(item);
-				Log.d("nils","Before substitution: "+subst);
 				Log.d("nils","Matching filter "+item.get()+" got result "+funcEval);
 				//Try to replace fn(x,y,z) with evaluated value.
 				String replaceThis = type.name()+"(";
 				String args[] = item.getArguments();
 				for (int i=0;i<args.length;i++) {
 					if (i < (args.length-1))
-							replaceThis+=args[i]+",";
-						replaceThis+=args[i];
+						replaceThis+=args[i]+",";
+					replaceThis+=args[i];
 				}
 				replaceThis+=")";
 				subst = subst.replace(replaceThis.toLowerCase(), funcEval);
 				Log.d("nils","Trying to substitute:["+replaceThis+"]. After Substitutionz: "+subst);
 
 			} else
-				if (type == TokenType.variabletypes){
+				if (type == TokenType.variable){
 					var = item.get();
-					st = gs.getVariableConfiguration().getVariableInstance(var);		
+					st = item.getVariable();		
 					if (st==null) {
 						o.addRow("");
 						o.addRedText("Variable "+var+" in formula ["+formula+"] is null.");
 					} else {
 						String value = st.getValue();
+						if (st.getType()==DataType.text) {
+							stringT=true;
+						}
+						//Stringtype is true if either any individual variable is text type or the result variable is a text
+						//If string type, just concatenate. Dont evaluate..
 						if (stringT) {
 							if (value!=null) {
 								strRes=strRes+value;
-								Log.d("vortex","String type in RuleExec. Adding "+st.getValue());
+								Log.d("vortex","string concatenation "+strRes);
 							}
-							Log.d("vortex","Result "+strRes);
 						} else
 							if (st.getValue()==null) {
 								o.addRow("");
@@ -424,6 +459,7 @@ import com.teraim.vortex.non_generics.Constants;
 		}		
 		if (stringT) {
 			Log.d("vortex","string type returned with values substituted");
+			o.addRow("After substitution: "+strRes);
 			return strRes;
 		}
 		int firstNull = subst.indexOf("null");
@@ -432,6 +468,7 @@ import com.teraim.vortex.non_generics.Constants;
 			o.addRow("At least one variable did not have a value after substitution.");
 			//return null;
 		}
+		o.addRow("After substitution: "+subst);
 
 		return subst;
 	}
@@ -447,7 +484,7 @@ import com.teraim.vortex.non_generics.Constants;
 				return value;				
 			}
 		}
-		
+
 		if (item.getType()==TokenType.getCurrentYear) {
 			Log.d("vortex","Returning current year!");
 			return Constants.getYear();

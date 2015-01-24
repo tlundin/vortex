@@ -23,12 +23,12 @@ import android.util.Log;
 
 import com.teraim.vortex.FileLoadedCb;
 import com.teraim.vortex.GlobalState;
-import com.teraim.vortex.FileLoadedCb.ErrorCode;
 import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.types.Table;
 import com.teraim.vortex.dynamic.types.Table.ErrCode;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
+import com.teraim.vortex.utils.LoadResult.ErrorCode;
 
 /**
  * 
@@ -108,7 +108,7 @@ public class ConfigFileParser extends AsyncTask<Context,Void,ErrorCode>{
 		}
 
 
-		cb.onFileLoaded(code,"VC: "+vVersion+" AL: "+fVersion);	
+		//cb.onFileLoaded(code,"VC: "+vVersion+" AL: "+fVersion);	
 	}
 
 
@@ -118,13 +118,11 @@ public class ConfigFileParser extends AsyncTask<Context,Void,ErrorCode>{
 
 	public ErrorCode parse(String serverUrl) {
 		final String FileUrl = serverUrl+globalPh.get(PersistenceHelper.BUNDLE_NAME).toLowerCase()+"/"+Constants.TypesFileName;
-		final String VarUrl = serverUrl+globalPh.get(PersistenceHelper.BUNDLE_NAME).toLowerCase()+"/"+Constants.VariablesFileName;
+			final String VarUrl = serverUrl+globalPh.get(PersistenceHelper.BUNDLE_NAME).toLowerCase()+"/"+Constants.VariablesFileName;
 		boolean parseConfig=true,parseVarPattern=true;
 
 		o.addRow("");
 		o.addYellowText("Now parsing variable configuration files. ");
-		o.addRow("Vallista URL: "+FileUrl);
-		o.addRow("Variable URL: "+VarUrl);
 		try {	
 			URL url = new URL(FileUrl);
 			URL url2 = new URL(VarUrl);

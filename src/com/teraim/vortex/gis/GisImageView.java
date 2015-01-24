@@ -5,6 +5,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -12,12 +13,12 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
-import android.graphics.RectF;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 
 import com.teraim.vortex.dynamic.types.Point;
+import com.teraim.vortex.non_generics.Constants;
 
 public class GisImageView extends GestureImageView {
 
@@ -31,6 +32,8 @@ public class GisImageView extends GestureImageView {
 	private Paint currCursorPaint,mPaint,txtPaint;
 	private Handler handler;
 	private boolean drawActive = false;
+	private int rNum =1;
+	private Paint borderPaint;
 
 	public GisImageView(Context context) {
 		super(context);
@@ -45,58 +48,6 @@ public class GisImageView extends GestureImageView {
 	public GisImageView(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		init();
-	}
-	
-	int rNum =1;
-	private Paint borderPaint;
-	private class Poly {
-		
-		Path mPath;
-		String mLabel;
-		float labelX,labelY;
-		Paint myPaint;
-		boolean isReady =false;
-		Rect bounds;
-		int picW,picH;
-
-		
-		public Poly(Path p, float lx, float ly) {
-			mPath = p;
-			labelX=lx;
-			labelY=ly;
-			myPaint = createNewPaint();
-			bounds = new Rect();
-			setLabel("Poly "+rNum++);
-
-		}
-		
-		public void setLabel(String label) {
-			mLabel = label;
-			txtPaint.getTextBounds(mLabel, 0, mLabel.length(), bounds);
-			bounds.offset((int)labelX-bounds.width()/2,(int)labelY);
-
-		}
-		public Path getPath() {
-			return mPath;
-		}
-		public String getLabel() {
-			return mLabel;
-		}
-		public Paint getPaint() {
-			return myPaint;
-		}
-		
-		public void save() {
-			isReady=true;
-		}
-		
-		public boolean isComplete() {
-			return isReady;
-		}
-
-		public Rect getRect() {
-			return bounds;
-		}
 	}
 
 	private void init() {
@@ -164,8 +115,66 @@ public class GisImageView extends GestureImageView {
 	private float fixedX;
 	private float fixedY;
 	private float cX;
-	private float cY; 
+	private float cY;
+	GisImageData gisImage;
+	//difference in % between ruta and image size.
+	private float rXRatio,rYRatio;
+	
+	
+	public class GisImageData {
+		
+		float width,height;
+		int sweRefN,sweRefE;
+		public GisImageData(float width, float height, int sweRefN, int sweRefE) {
+			super();
+			this.width = width;
+			this.height = height;
+			this.sweRefN = sweRefN;
+			this.sweRefE = sweRefE;
+		}
+		public float getWidth() {
+			return width;
+		}
+		public void setWidth(float width) {
+			this.width = width;
+		}
+		public float getHeight() {
+			return height;
+		}
+		public void setHeight(float height) {
+			this.height = height;
+		}
+		public int getSweRefN() {
+			return sweRefN;
+		}
+		public void setSweRefN(int sweRefN) {
+			this.sweRefN = sweRefN;
+		}
+		public int getSweRefE() {
+			return sweRefE;
+		}
+		public void setSweRefE(int sweRefE) {
+			this.sweRefE = sweRefE;
+		}
+		
+		
+	}
+	
+	public class GisPolygon {
+		
+		
+		
+	}
 
+	public void setGisData(GisImageData gd, Set<GisPolygon> gPolys) {
+
+		gisImage = gd;
+		//calculate ratio between grid and ruta size.
+		rXRatio = (Constants.RUTA_SIZE-gd.getWidth())/gd.getWidth();
+		rYRatio = (Constants.RUTA_SIZE-gd.getHeight())/gd.getHeight();
+		Log.d("vortex","Calling.... "+rXRatio+","+rYRatio);
+	}
+	
 	public void startPoly() {
 		fixScale = scale * scaleAdjust;
 		Path mPath = new Path();
@@ -301,8 +310,10 @@ public class GisImageView extends GestureImageView {
 		canvas.drawCircle((polyVertexX-fixedX)*1/fixScale,(polyVertexY-fixedY)*1/fixScale, 10, currCursorPaint);
 
 		//Draw a square around edge of picture
-		
-		canvas.drawRect(fCalcX(-canvas.getWidth()), fCalcY(100), fCalcX(canvas.getWidth()+50), fCalcY(canvas.getHeight()-100), borderPaint);
+		float w =(this.getImageWidth()+this.getImageWidth()*rXRatio)/2.0f;
+		float h =(this.getImageHeight()+this.getImageHeight()*rXRatio)/2.0f;
+		Log.d("vortex","Drawing....");
+		canvas.drawRect(fCalcX(-w), fCalcY(-h), fCalcX(w), fCalcY(h), borderPaint);
 		
 		//If person visible, draw a little figure at location.
 		
@@ -323,5 +334,55 @@ public class GisImageView extends GestureImageView {
 		return (my-fixedY)*1/fixScale;
 	}
 
+	
+	private class Poly {
+		
+		Path mPath;
+		String mLabel;
+		float labelX,labelY;
+		Paint myPaint;
+		boolean isReady =false;
+		Rect bounds;
+		int picW,picH;
+
+		
+		public Poly(Path p, float lx, float ly) {
+			mPath = p;
+			labelX=lx;
+			labelY=ly;
+			myPaint = createNewPaint();
+			bounds = new Rect();
+			setLabel("Poly "+rNum++);
+
+		}
+		
+		private void setLabel(String label) {
+			mLabel = label;
+			txtPaint.getTextBounds(mLabel, 0, mLabel.length(), bounds);
+			bounds.offset((int)labelX-bounds.width()/2,(int)labelY);
+
+		}
+		private Path getPath() {
+			return mPath;
+		}
+		private String getLabel() {
+			return mLabel;
+		}
+		private Paint getPaint() {
+			return myPaint;
+		}
+		
+		public void save() {
+			isReady=true;
+		}
+		
+		public boolean isComplete() {
+			return isReady;
+		}
+
+		private Rect getRect() {
+			return bounds;
+		}
+	}
 
 }

@@ -18,6 +18,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.teraim.vortex.GlobalState;
@@ -338,6 +339,7 @@ public class MenuActivity extends Activity {
 			dialog.setContentView(R.layout.log_dialog_popup);
 			dialog.setTitle("Session Log");
 			final TextView tv=(TextView)dialog.findViewById(R.id.logger);
+			final ScrollView sv=(ScrollView)dialog.findViewById(R.id.logScroll);
 			Typeface type=Typeface.createFromAsset(getAssets(),
 					"clacon.ttf");
 			tv.setTypeface(type);
@@ -358,6 +360,18 @@ public class MenuActivity extends Activity {
 				@Override
 				public void onClick(View v) {
 					log.clear();
+				}
+			});
+			Button scrollD = (Button)dialog.findViewById(R.id.scrollDown);
+			scrollD.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					sv.post(new Runnable() {
+					    @Override
+					    public void run() {
+					        sv.fullScroll(ScrollView.FOCUS_DOWN);
+					    }
+					});
 				}
 			});
 

@@ -133,7 +133,7 @@ public class GlobalState  {
 		//Database Helper. Database will be named "bundleName"
 		db = new DbHelper(ctx,artLista.getTable(),globalPh,ph,bundleName);
 
-		myWfs = thawWorkflows();		
+		//myWfs = thawWorkflows();		
 
 		//Spinners
 		mySpinnerDef = Tools.thawSpinners(ctx);
@@ -222,7 +222,7 @@ public class GlobalState  {
 	 * Thawing of files to objects.
 	 */
 
-	public Map<String,Workflow> thawWorkflows() {
+/*	public Map<String,Workflow> thawWorkflows() {
 		Map<String,Workflow> ret=null;
 		List<Workflow> l = ((ArrayList<Workflow>)Tools.readObjectFromFile(myC,Constants.CONFIG_FILES_DIR+Constants.WF_FROZEN_FILE_ID));		
 		if (l==null) 
@@ -244,7 +244,7 @@ public class GlobalState  {
 		}
 		return ret;
 	}
-
+*/
 	public Table thawTable() { 	
 		return ((Table)Tools.readObjectFromFile(myC,Constants.CONFIG_FILES_DIR+Constants.CONFIG_FROZEN_FILE_ID));		
 	}
@@ -401,6 +401,7 @@ public class GlobalState  {
 
 
 	//IF new configuration files have been loaded, replace existing instances.
+	/*
 	public void refresh() {
 		artLista = new VariableConfiguration(this,myVarCache);	
 		myWfs = thawWorkflows();	
@@ -411,6 +412,7 @@ public class GlobalState  {
 			log.addRedText("Refresh failed - Table is missing. This is likely due to previous errors on startup");
 		}
 	}
+	*/
 
 	public VarCache getVariableCache() {
 		return myVarCache;

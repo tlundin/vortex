@@ -7,10 +7,20 @@ package com.teraim.vortex.non_generics;
  * For now, persistence implemented via SharedPreferences only.
  */
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.UUID;
 
+import android.content.Context;
 import android.os.Environment;
+
+import com.teraim.vortex.dynamic.types.ConfigurationModule;
+import com.teraim.vortex.dynamic.types.ConfigurationModule.Source;
+import com.teraim.vortex.dynamic.types.ConfigurationModule.Type;
+import com.teraim.vortex.dynamic.types.SpinnerConfiguration;
+import com.teraim.vortex.log.LoggerI;
+import com.teraim.vortex.utils.PersistenceHelper;
 
 public class Constants {
 
@@ -60,11 +70,8 @@ public class Constants {
 
 	//Static constants
 
-	public static final String WF_FROZEN_FILE_ID = "workflows";
-	public static final String CONFIG_FROZEN_FILE_ID = "artlista";
 
 	public static final int KEY_LENGTH = 10;
-	public static final String WF_FROZEN_SPINNER_ID = "spinnerdefinitions";
 	public static final String SLU_URL = "https://arbetsplats.slu.se/sites/srh/Landskapsanalys/Faltportal/default.aspx";
 	public static final String STATUS_INITIAL = "0";
 	public static final String STATUS_STARTAD_MEN_INTE_KLAR = "1";
@@ -81,13 +88,6 @@ public class Constants {
 
 	public static final String NO_DEFAULT_VALUE = "*NULL*";
 
-	public static final String TypesFileName = "Groups.csv";
-
-	public static final String VariablesFileName = "Variables.csv";
-	
-	public static final String SpinnersFileName = "Spinners.csv";
-
-	public static final String PY_HISTORICAL_FILE_NAME = "Importdata.json";
 
 
 	
@@ -110,6 +110,13 @@ public class Constants {
 	public static final int MIN_ABO = 50;
 
 	public static final int MAX_ABO = 99;
+	
+	//ruta size in meters.
+	public static final float RUTA_SIZE = 3000;
+
+	public static final String CONFIG_FROZEN_FILE_ID = null;
+
+	public static final String TypesFileName = null;
 
 	public static boolean isAbo(int pyID) {
 		return pyID>=Constants.MIN_ABO && pyID<=Constants.MAX_ABO;
@@ -147,6 +154,27 @@ public class Constants {
 	}
 	public static String getSecond() {
 		 return Integer.toString(Calendar.getInstance().get(Calendar.SECOND));
+	}
+	
+	public static final String GroupFileName = "Groups.csv";
+	public static final String VariablesFileName = "Variables.csv";
+	public static final String SpinnersFileName = "Spinners.csv";
+	public static final String PY_HISTORICAL_FILE_NAME = "Importdata.json";
+
+	public static final String WF_FROZEN_SPINNER_ID = null;
+
+	public static final String WF_FROZEN_FILE_ID = null;
+
+
+
+	public static List<ConfigurationModule> getCurrentlyKnownModules(PersistenceHelper globalPh,String server, String bundle, Context ctx) {
+		List<ConfigurationModule> ret = new ArrayList<ConfigurationModule>();
+		//Workflow xml. Named same as bundle.
+		
+		ret.add(new SpinnerConfiguration(globalPh,server,bundle,ctx));
+		
+		
+		return ret;
 	}
 	
 

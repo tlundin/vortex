@@ -1,23 +1,18 @@
 package com.teraim.vortex;
 
+import com.teraim.vortex.dynamic.types.ConfigurationModule;
+import com.teraim.vortex.utils.LoadResult;
+import com.teraim.vortex.utils.LoadResult.ErrorCode;
+
 public interface FileLoadedCb {
 
-	enum ErrorCode {
-		newConfigVersionLoaded,
-		newVarPatternVersionLoaded,
-		HistoricalLoaded,
-		bothFilesLoaded,
-		notFound,
-		parseError,
-		ioError,
-		sameold, 
-		whatever, 
-		configurationError, 
-		Aborted, 
-		LoadInBackground
-	}
 	
 	
-	public void onFileLoaded(ErrorCode errCode, String newVersion);
+	
+	public void onUpdate();
+
+	public void onFileLoaded(LoadResult res);
+
+	public void onFileLoaded(ErrorCode errCode, String version);
 	
 }

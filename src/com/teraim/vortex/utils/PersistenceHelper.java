@@ -27,6 +27,7 @@ public class PersistenceHelper {
 	public static final String CURRENT_VERSION_OF_CONFIG_FILE = "current_version_config";
 	public static final String CURRENT_VERSION_OF_PROGRAM = "prog_version";
 	public static final String CURRENT_VERSION_OF_HISTORY_FILE = "current_version_hist";
+	public static final String CURRENT_VERSION_OF_SPINNERS = "current_version_spinners";
 	public static final String FIRST_TIME_KEY = "firzzt";
 	public static final String DEVELOPER_SWITCH = "dev_switch";
 	public static final String VERSION_CONTROL_SWITCH_OFF = "no_version_control";
@@ -39,6 +40,7 @@ public class PersistenceHelper {
 	public static final String NO_OF_RUTOR = "antalrutor";
 	public static final String CHANGE_BUNDLE = "change_bundle";
 	public static final String HIST_LOAD_COUNTER = "hist_counter";
+
 
 	SharedPreferences sp;
 
