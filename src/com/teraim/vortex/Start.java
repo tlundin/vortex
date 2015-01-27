@@ -21,10 +21,10 @@ import android.view.MenuItem;
 import com.teraim.vortex.GlobalState.CHash;
 import com.teraim.vortex.dynamic.templates.LinjePortalTemplate;
 import com.teraim.vortex.dynamic.types.Workflow;
+import com.teraim.vortex.loadermodule.LoadResult;
 import com.teraim.vortex.ui.DrawerMenu;
 import com.teraim.vortex.ui.LoginConsoleFragment;
 import com.teraim.vortex.ui.MenuActivity;
-import com.teraim.vortex.utils.LoadResult;
 import com.teraim.vortex.utils.PersistenceHelper;
 
 public class Start extends MenuActivity {

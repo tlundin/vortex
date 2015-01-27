@@ -56,7 +56,7 @@ xmlns:android="http://schemas.android.com/apk/res/android" >
 <CheckBoxPreference
     		android:key="no_version_control"
     		android:title="Version Control"
-    		android:summary="Turn on or off the version control"
+    		android:summary="Check to turn OFF the version control"
     		android:dialogTitle=""
     		android:dialogMessage=""
     		android:defaultValue="false" />

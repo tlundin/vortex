@@ -15,6 +15,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
@@ -50,7 +51,7 @@ public class DbHelper extends SQLiteOpenHelper {
 	private static final int NO_OF_KEYS = 10;
 	private static final String SYNC_SPLIT_SYMBOL = "_$_";
 	private final SQLiteDatabase db;
-	private final PersistenceHelper globalPh,ph;
+	private PersistenceHelper globalPh=null,ph=null;
 
 	private final Map<String,String> keyColM = new HashMap<String,String>();
 	private Map<String,String> colKeyM = new HashMap<String,String>();
@@ -108,7 +109,13 @@ public class DbHelper extends SQLiteOpenHelper {
 
 	}
 
-
+	//Creates temporary DB Helper for insert only!
+	public DbHelper(Context context,String bundleName) {
+		super(context, bundleName, null, DATABASE_VERSION);  
+		Log.d("vortex","Bundle name: "+bundleName);
+		ctx = context;
+		db = this.getWritableDatabase();
+	}
 	public DbHelper(Context context,Table t, PersistenceHelper globalPh,PersistenceHelper appPh,String bundleName) {
 		super(context, bundleName, null, DATABASE_VERSION);  
 		Log.d("vortex","Bundle name: "+bundleName);
@@ -1202,10 +1209,16 @@ public class DbHelper extends SQLiteOpenHelper {
 		ac= getColumnName("år");
 	}
 
-	public void deleteHistory() {
+	public boolean deleteNilsHistory() {
+		try {
 		Log.d("nils","deleting all historical values");
 		int rows = db.delete(TABLE_VARIABLES, getColumnName("år")+"= ?", new String[]{VariableConfiguration.HISTORICAL_MARKER});
 		Log.d("nils","Deleted "+rows+" rows of history");
+		} catch (SQLiteException e) {
+			Log.d("nils","not a nils db");
+			return false;
+		}
+		return true;
 	}
 
 	public void fastHistoricalInsert(String rID,String pID,String dID,String sID,

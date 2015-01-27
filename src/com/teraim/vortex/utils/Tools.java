@@ -109,7 +109,7 @@ public class Tools {
 		return true;
 	}
 
-	public static boolean witeObjectToFile(Context context, Object object, String filename) {
+	public static void witeObjectToFile(Object object, String filename) throws IOException {
 
 		Log.d("nils","Writing frozen object to file "+filename);
 		ObjectOutputStream objectOut = null;
@@ -119,19 +119,16 @@ public class Tools {
 			objectOut.writeObject(object);
 			fileOut.getFD().sync();
 
-		} catch (IOException e) {
-			e.printStackTrace();
+		
 		} finally {
 			if (objectOut != null) {
 				try {
 					objectOut.close();
-					return true;
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
 		}
-		return false;
 	}
 
 
@@ -362,112 +359,20 @@ public class Tools {
 		return true;
 	}
 
-
+	public static boolean isVersionNumber(String str)
+	{	
+		if (str==null||str.length()==0)
+			return false;
+		for (char c : str.toCharArray())
+		{
+			if (!Character.isDigit(c) && c!='.')
+				return false;
+		}
+		return true;
+	}
 	//Create a map of references to variables. 
 
-	public static SpinnerDefinition scanSpinerDef(Context myC, LoggerI o) {
 
-		int noOfRequiredColumns=5;
-		SpinnerDefinition sd=null;
-		// Create dummylogger if o set to null.
-		if (o==null)
-			o = new DummyLogger();
-		PersistenceHelper globalPh = GlobalState.getInstance(myC).getGlobalPreferences();
-		String bundle = globalPh.get(PersistenceHelper.BUNDLE_NAME);
-		String serverUrl = globalPh.get(PersistenceHelper.SERVER_URL);
-		if (bundle == null || serverUrl == null) {
-			Log.d("vortex","missing "+(bundle==null?"bundle":"server")+" name...returning.");
-			return null;
-		}
-		bundle = bundle.toLowerCase();
-		
-		if (!serverUrl.endsWith("/")) {
-			serverUrl+="/";
-		}
-		if (!serverUrl.startsWith("http://")) 
-			serverUrl = "http://"+serverUrl;
-		final String spinnerUrl = serverUrl+bundle+"/"+Constants.SpinnersFileName;
-
-		if (isNetworkAvailable(myC)) {
-
-			URL url;
-			try {
-				url = new URL(spinnerUrl);
-				o.addRow("Fetching spinner configuration from: "+spinnerUrl);
-
-				/* Open a connection to that URL. */
-				URLConnection ucon = url.openConnection();
-				InputStream in = ucon.getInputStream();
-
-				BufferedReader br = new BufferedReader(new InputStreamReader(in, "UTF-8"));
-				String header = br.readLine();
-				int rowC=0;
-				if (header == null)  {
-					o.addRow("");
-					o.addRedText("Spinner header corrupt. Spinnerfile likely missing");
-					Log.e("nils","Spinner header corrupt");
-					return null;
-				} 
-				String row,spinnerID,value,opt,varMap,descr;
-				sd = new SpinnerDefinition();
-				List<SpinnerElement>sl = null;
-				Log.d("nils","spinnerheader: "+header);
-				String curId=null;
-				while((row = br.readLine())!=null) {
-					//Log.d("nils","SPINNING ROW: "+row);
-					String[]  r = split(row);
-					if (r.length<noOfRequiredColumns) {
-						Log.d("nils","TOO SHORT ROW on line in spinnerdef file."+rowC+" length: "+r.length);
-						for (int i=0;i<r.length;i++)
-							Log.d("nils","R"+i+":"+r[i]);
-						o.addRow("");
-						o.addRow("Line "+rowC+" of SpinnerDef file too short: "+row);
-					} else {
-
-						//for (int i=0;i<r.length;i++)
-						//	Log.d("nils","R"+i+":"+r[i]);
-
-						String id = r[0];
-						if (curId==null || !id.equals(curId)) {
-							sl = new ArrayList<SpinnerElement>();
-							sd.add(id, sl);
-							curId = id;
-						}
-						sl.add(sd.new SpinnerElement(r[1],r[2],r[3],r[4]));
-					}
-					rowC++;
-				}
-				Log.d("nils","loaded "+sd.size()+" spinner objects");
-				//Write Spinner Def to file.
-				boolean ok= Tools.witeObjectToFile(myC, sd, Constants.CONFIG_FILES_DIR+Constants.WF_FROZEN_SPINNER_ID);
-				if (!ok) {
-					Log.e("nils","Could not freeze spinner definition. I/O Error!");
-				} else {
-					Log.d("nils","Spinner def frozen");
-					o.addRow("Spinner definition loaded: ");o.addGreenText("[OK]");
-				}
-			} catch (MalformedURLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}  catch (FileNotFoundException e) {
-				e.printStackTrace();
-				o.addRow("");
-				o.addRedText("Could not find the file at the specified location");
-				return null;			
-			}  catch (IOException e) {
-				e.printStackTrace();
-				o.addRow("IO ERROR!");
-				StringWriter sw = new StringWriter();
-				PrintWriter pw = new PrintWriter(sw);
-				e.printStackTrace(pw);		
-				o.addRedText(sw.toString());
-			}
-
-		} 
-
-
-		return sd;
-	}
 
 	public static Bitmap drawableToBitmap (Drawable drawable) {
 		if (drawable instanceof BitmapDrawable) {
@@ -573,6 +478,36 @@ public class Tools {
 
 
 
+
+
+	public static SpinnerDefinition thawSpinners(Context myC) {		
+		SpinnerDefinition sd=null;
+		Log.d("nils","NO NETWORK. Loading file spinner def");
+		sd = (SpinnerDefinition)Tools.readObjectFromFile(myC,Constants.CONFIG_FILES_DIR+Constants.WF_FROZEN_SPINNER_ID);		
+		if (sd==null) 
+			Log.d("vortex","No frozen Spinner definition");
+		else
+			Log.d("nils","Thawspinners called. Returned "+sd.size()+" spinners");
+		return sd;
+		
+	}
+	
+	//Check if two keys are equal
+	public static boolean sameKeys(Map<String, String> m1,
+			Map<String, String> m2) {
+		if (m1.size() != m2.size())
+			return false;
+		for (String key: m1.keySet()) {
+			Log.d("nils","Key:"+key+" m1: "+(m1==null?"null":m1.toString())+" m2: "+(m2==null?"null":m2.toString()));
+			if (m1.get(key)==null&&m2.get(key)==null)
+				continue;
+			if ((m1.get(key)==null || m2.get(key)==null)||!m1.get(key).equals(m2.get(key)))
+				return false;
+		}
+		Log.d("nils","keys equal..no header");
+		return true;
+	}
+
 	public static String[] split(String input) {
 		List<String> result = new ArrayList<String>();
 		int start = 0;
@@ -606,36 +541,6 @@ public class Tools {
 			return result.toArray(new String[0]);
 
 	}
-
-	public static SpinnerDefinition thawSpinners(Context myC) {		
-		SpinnerDefinition sd=null;
-		Log.d("nils","NO NETWORK. Loading file spinner def");
-		sd = (SpinnerDefinition)Tools.readObjectFromFile(myC,Constants.CONFIG_FILES_DIR+Constants.WF_FROZEN_SPINNER_ID);		
-		if (sd==null) 
-			Log.d("vortex","No frozen Spinner definition");
-		else
-			Log.d("nils","Thawspinners called. Returned "+sd.size()+" spinners");
-		return sd;
-		
-	}
-	
-	//Check if two keys are equal
-	public static boolean sameKeys(Map<String, String> m1,
-			Map<String, String> m2) {
-		if (m1.size() != m2.size())
-			return false;
-		for (String key: m1.keySet()) {
-			Log.d("nils","Key:"+key+" m1: "+(m1==null?"null":m1.toString())+" m2: "+(m2==null?"null":m2.toString()));
-			if (m1.get(key)==null&&m2.get(key)==null)
-				continue;
-			if ((m1.get(key)==null || m2.get(key)==null)||!m1.get(key).equals(m2.get(key)))
-				return false;
-		}
-		Log.d("nils","keys equal..no header");
-		return true;
-	}
-
-
 
 
 }

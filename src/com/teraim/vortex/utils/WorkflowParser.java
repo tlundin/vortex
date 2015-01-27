@@ -49,9 +49,9 @@ import com.teraim.vortex.dynamic.types.Workflow;
 import com.teraim.vortex.dynamic.types.Workflow.Unit;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Not_ClickableField_SumAndCountOfVariables;
 import com.teraim.vortex.exceptions.SameOldException;
+import com.teraim.vortex.loadermodule.LoadResult.ErrorCode;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
-import com.teraim.vortex.utils.LoadResult.ErrorCode;
 
 /**
  * 
@@ -115,8 +115,8 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 	@Override
 	protected void onPostExecute(ErrorCode code) {
 		if (code == ErrorCode.newConfigVersionLoaded) {
-			boolean ok= Tools.witeObjectToFile(ctx, myFlow, Constants.CONFIG_FILES_DIR+Constants.WF_FROZEN_FILE_ID);
-			if (!ok)
+			//boolean ok= Tools.witeObjectToFile(ctx, myFlow, Constants.CONFIG_FILES_DIR+Constants.WF_FROZEN_FILE_ID);
+			if (false)
 				code = ErrorCode.ioError;
 			else {
 				o.addRow("Setting current version of workflow bundle to "+myVersion);

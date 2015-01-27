@@ -24,7 +24,7 @@
         android:maxLines="18"
         android:paddingLeft="16dip"
         android:scrollbars="vertical"
-        android:textSize="18sp" />
+        android:textSize="24sp" />
 
     <ImageView
         android:id="@+id/vortexlogo"

@@ -1,0 +1,140 @@
+package com.teraim.vortex.loadermodule.configurations;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.teraim.vortex.dynamic.VariableConfiguration;
+import com.teraim.vortex.loadermodule.CSVConfigurationModule;
+import com.teraim.vortex.loadermodule.LoadResult;
+import com.teraim.vortex.loadermodule.ConfigurationModule.Source;
+import com.teraim.vortex.loadermodule.LoadResult.ErrorCode;
+import com.teraim.vortex.log.LoggerI;
+import com.teraim.vortex.non_generics.Constants;
+import com.teraim.vortex.utils.PersistenceHelper;
+import com.teraim.vortex.utils.Tools;
+
+public class GroupsConfiguration extends CSVConfigurationModule {
+
+	private LoggerI o;
+	private boolean scanHeader;
+	private String[] groupsFileHeaderS;
+	Map <String, List<List<String>>> groups;
+	int groupIndex = -1;
+	int nameIndex = -1;
+	private static GroupsConfiguration singleton=null;
+
+	public GroupsConfiguration(PersistenceHelper globalPh, String server, String bundle, LoggerI debugConsole) {
+		super(globalPh, Source.internet,server+bundle.toLowerCase()+"/", "Groups", "Group module          ");
+		o = debugConsole;
+		singleton = null;
+	}
+
+	public static GroupsConfiguration getSingleton() {
+		return singleton;
+	}
+
+	@Override
+	protected LoadResult prepare() throws IOException {		
+		scanHeader=true;
+		groups=new HashMap<String,List<List<String>>>();
+		groupIndex = -1;
+		nameIndex = -1;
+		singleton = this;
+		return null;
+	}
+
+	
+
+
+	@Override
+	public LoadResult parse(String row, Integer currentRow) throws IOException {
+
+		//Scan header.
+		if (scanHeader && row!=null) {
+			groupsFileHeaderS = row.split(",");
+			o.addRow("Header for Groups file: "+row);
+			o.addRow("Has: "+groupsFileHeaderS.length+" elements");
+			scanHeader = false;
+			//Go through varpattern. Generate rows for the master table.
+			//...but first - find the key columns in Artlista.
+
+
+			//Find the Variable key row.
+			for (int i = 0; i<groupsFileHeaderS.length;i++) {
+				if (groupsFileHeaderS[i].trim().equals(VariableConfiguration.Col_Functional_Group))
+					groupIndex = i;
+				else if  (groupsFileHeaderS[i].trim().equals(VariableConfiguration.Col_Variable_Name))
+					nameIndex = i;
+			}
+
+			if (nameIndex ==-1 || groupIndex == -1) {
+				o.addRow("");
+				o.addRedText("Config file Header missing either name or functional group column. Load cannot proceed");
+				return new LoadResult(this,ErrorCode.parseError);
+			}
+		} else {
+			//Split config file into parts according to functional group.
+			String[] r = Tools.split(row);
+			if (r!=null) {
+				for(int i=0;i<r.length;i++) {
+					if (r[i]!=null)
+						r[i] = r[i].replace("\"", "");
+				}						
+				String group = r[groupIndex];
+				//Add group if not already found
+				List<List<String>> elem = groups.get(group); 
+				if (elem==null) {
+					elem = new ArrayList<List<String>>();
+					groups.put(group,elem);
+				}
+				elem.add(Arrays.asList(r));
+			} else {
+				o.addRow("");
+				o.addRedText("Impossible to split row: "+row);
+				return new LoadResult(this,ErrorCode.parseError);
+			}
+		}
+		return null;
+	}
+
+	@Override
+	public String getFrozenVersion() {
+		return (globalPh.get(PersistenceHelper.CURRENT_VERSION_OF_CONFIG_FILE));
+	}
+
+	@Override
+	protected void setFrozenVersion(String version) {
+		globalPh.put(PersistenceHelper.CURRENT_VERSION_OF_CONFIG_FILE,version);
+	}
+
+	@Override
+	public boolean isRequired() {
+		return false;
+	}
+
+	@Override
+	public Object getEssence() {
+		return groups;
+	}
+
+	public String[] getGroupFileColumns() {		
+		return groupsFileHeaderS;
+	}
+
+	public int getNameIndex() {
+		return nameIndex;
+	}
+	
+	public Map <String, List<List<String>>> getGroups() {
+		return groups;
+	}
+
+	public int getGroupIndex() {
+		// TODO Auto-generated method stub
+		return groupIndex;
+	}
+}

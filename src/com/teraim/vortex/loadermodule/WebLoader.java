@@ -1,4 +1,4 @@
-package com.teraim.vortex.utils;
+package com.teraim.vortex.loadermodule;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -7,23 +7,25 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.List;
+
+import org.json.JSONException;
+import org.xmlpull.v1.XmlPullParserException;
 
 import android.os.Build;
-import android.util.Log;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.teraim.vortex.FileLoadedCb;
-import com.teraim.vortex.dynamic.types.ConfigurationModule;
-import com.teraim.vortex.utils.LoadResult.ErrorCode;
+import com.teraim.vortex.loadermodule.LoadResult.ErrorCode;
 
 
 public class WebLoader extends Loader {
 
 	private InputStream in;
 
-	public WebLoader(ProgressBar pb, TextView tv, FileLoadedCb cb) {
-		super(pb, tv, cb);
+	public WebLoader(ProgressBar pb, TextView tv, FileLoadedCb cb, boolean versionControl) {
+		super(pb, tv, cb,versionControl);
 	}
 
 	@Override
@@ -39,33 +41,42 @@ public class WebLoader extends Loader {
 			in = ucon.getInputStream();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
 			StringBuilder sb = new StringBuilder();
-			String line = null;
+			
 			String header = reader.readLine();
-			while ((line = reader.readLine()) != null)
-			{
-				sb.append(line + "\n");
-				if(isCancelled()) {
-					reader.close();
-					return new LoadResult(module,ErrorCode.Aborted);
-				}
-				this.publishProgress(1);
-			}
+			//from this point, equal code independent of source. Implemented in parent.
+			ErrorCode ec = read(module,getVersion(header),reader,sb);
+			
 			
 			//setresult runs a parser before returning. Parser is depending on module type.
-			return module.setResult(sb.toString(),getVersion(header));
+			LoadResult lr;
+			if (ec==ErrorCode.loaded) {
+				lr = parse(module);
+				if (lr.errCode==ErrorCode.parsed)
+					return freeze(module);
+				else
+					return lr;
+			}
+			else
+				return new LoadResult(module,ec);
 
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
-			return new LoadResult(module,ErrorCode.Aborted);
+			return new LoadResult(module,ErrorCode.badURL);
 
 		} catch (IOException e) {
+			return new LoadResult(module,ErrorCode.ioError);
+		} catch (XmlPullParserException e) {
+			return new LoadResult(module,ErrorCode.parseError);
+		} catch (JSONException e) {
 			e.printStackTrace();
-			return new LoadResult(module,ErrorCode.Aborted);
+			return new LoadResult(module,ErrorCode.parseError);
 		}
 		finally {
 			try {if (in!=null)in.close();}catch (Exception e){};
 		}
 	}
+
+
 
 
 

@@ -75,8 +75,15 @@ public class FastLogger implements LoggerI {
 		myTxt.append(text);
 	}
 
+	
 	@Override
-	public void ticky() {
+	public void writeTicky(String tickyText) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void removeTicky() {
 		// TODO Auto-generated method stub
 		
 	}

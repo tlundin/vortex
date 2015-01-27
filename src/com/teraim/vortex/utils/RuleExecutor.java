@@ -97,6 +97,7 @@ import com.teraim.vortex.non_generics.Constants;
 		getCurrentMonth(function,0),
 		getCurrentDay(function,0),
 		getCurrentHour(function,0),
+		getCurrentMinute(function,0),
 		getCurrentSecond(function,0),
 		getCurrentWeekNumber(function,0),
 		variable(null,-1),
@@ -123,7 +124,7 @@ import com.teraim.vortex.non_generics.Constants;
 		atan2(math,0),
 		max(math,0),
 		min(math,0),
-		unknown(null,-1)
+		unknown(null,-1), 
 		;
 		private TokenType parent = null;
 		private List<TokenType> children = new ArrayList<TokenType>();
@@ -500,6 +501,9 @@ import com.teraim.vortex.non_generics.Constants;
 		}
 		if (item.getType()==TokenType.getCurrentSecond) {
 			return Constants.getSecond();
+		}
+		if (item.getType()==TokenType.getCurrentMinute) {
+			return Constants.getMinute();
 		}
 		if (item.getType()==TokenType.getCurrentWeekNumber) {
 			return Constants.getWeekNumber();

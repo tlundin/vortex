@@ -109,7 +109,7 @@ public class GlobalState  {
 		
 		//Use Name of Bundle (application) as name for sharedpreferences.
 		//If user switches between Apps on same device, the correct prefs are loaded.
-		globalPh = new PersistenceHelper(ctx.getSharedPreferences("GlobalPrefs", Context.MODE_PRIVATE));
+		globalPh = new PersistenceHelper(ctx.getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_PRIVATE));
 		String bundleName = globalPh.get(PersistenceHelper.BUNDLE_NAME);
 		if (bundleName == null || bundleName.length()==0)
 			bundleName = "Vortex";

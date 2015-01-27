@@ -26,9 +26,9 @@ import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.types.Table;
 import com.teraim.vortex.dynamic.types.Table.ErrCode;
+import com.teraim.vortex.loadermodule.LoadResult.ErrorCode;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
-import com.teraim.vortex.utils.LoadResult.ErrorCode;
 
 /**
  * 
@@ -52,7 +52,6 @@ public class ConfigFileParser extends AsyncTask<Context,Void,ErrorCode>{
 	private boolean configFilesExist;
 
 
-	final static int VAR_PATTERN_ROW_LENGTH = 11;
 
 
 
@@ -90,9 +89,8 @@ public class ConfigFileParser extends AsyncTask<Context,Void,ErrorCode>{
 		if (code == ErrorCode.newVarPatternVersionLoaded||
 				code == ErrorCode.newConfigVersionLoaded|| 
 				code == ErrorCode.bothFilesLoaded) 
-			if(!Tools.witeObjectToFile(ctx, myTable, Constants.CONFIG_FILES_DIR+Constants.CONFIG_FROZEN_FILE_ID))
+			//if(!Tools.witeObjectToFile(ctx, myTable, Constants.CONFIG_FILES_DIR+Constants.CONFIG_FROZEN_FILE_ID))
 				code = ErrorCode.ioError;
-		GlobalState.getInstance(ctx).setSpinnerDefinitions(Tools.scanSpinerDef(ctx, o));
 
 		return code;
 	}
@@ -193,7 +191,7 @@ public class ConfigFileParser extends AsyncTask<Context,Void,ErrorCode>{
 			o.addRow("Varpattern file header reads:["+varPatternFileHeader+"]");
 			if (configFileHeader != null && varPatternFileHeader != null) {	
 
-				String[] configFileHeaderS = configFileHeader.split(",");
+				String[] groupsFileHeaderS = configFileHeader.split(",");
 				String[] varPatternHeaderS = varPatternFileHeader.split(",");
 
 				//Go through varpattern. Generate rows for the master table.
@@ -205,10 +203,10 @@ public class ConfigFileParser extends AsyncTask<Context,Void,ErrorCode>{
 
 
 				//Find the Variable key row.
-				for (int i = 0; i<configFileHeaderS.length;i++) {
-					if (configFileHeaderS[i].trim().equals(VariableConfiguration.Col_Functional_Group))
+				for (int i = 0; i<groupsFileHeaderS.length;i++) {
+					if (groupsFileHeaderS[i].trim().equals(VariableConfiguration.Col_Functional_Group))
 						groupIndex = i;
-					else if  (configFileHeaderS[i].trim().equals(VariableConfiguration.Col_Variable_Name))
+					else if  (groupsFileHeaderS[i].trim().equals(VariableConfiguration.Col_Variable_Name))
 						nameIndex = i;
 				}
 
@@ -255,15 +253,6 @@ public class ConfigFileParser extends AsyncTask<Context,Void,ErrorCode>{
 
 				//Now all groups are created. 
 
-				//Create header. Remove duplicte group column and varname. 
-				final List<String> cheaderL =  new ArrayList<String>();
-				Collections.addAll(cheaderL,configFileHeaderS); 
-				cheaderL.remove(VariableConfiguration.Col_Functional_Group);
-				cheaderL.remove(VariableConfiguration.Col_Variable_Name);
-				List<String> vheaderL = new ArrayList<String>(trimmed(varPatternHeaderS));
-				vheaderL.addAll(cheaderL);
-				myTable = new Table(vheaderL,0,pNameIndex);
-
 				int rowC=1;
 				//Scan through VarPattern to generate variables.
 				Log.d("nils","Starting scan of varPattern");
@@ -273,7 +262,7 @@ public class ConfigFileParser extends AsyncTask<Context,Void,ErrorCode>{
 				while((row = br2.readLine())!=null) {
 					r = Tools.split(row);
 
-					if (r==null || r.length<VAR_PATTERN_ROW_LENGTH) {
+					if (r==null || r.length<Constants.VAR_PATTERN_ROW_LENGTH) {
 						Log.e("nils","found null or too short row at "+rowC+" in config file");
 					} else {	
 						for(int i=0;i<r.length;i++) {
@@ -375,7 +364,7 @@ public class ConfigFileParser extends AsyncTask<Context,Void,ErrorCode>{
 
 	private List<String> trimmed(String[] r) {
 		ArrayList<String> ret = new ArrayList<String>();
-		for(int i=0;i<VAR_PATTERN_ROW_LENGTH;i++)
+		for(int i=0;i<Constants.VAR_PATTERN_ROW_LENGTH;i++)
 			ret.add(r[i]);
 		return ret;
 	}

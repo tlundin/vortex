@@ -5,6 +5,7 @@ import java.io.File;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.Fragment;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -17,9 +18,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.teraim.vortex.GlobalState;
-import com.teraim.vortex.ModuleLoader;
 import com.teraim.vortex.R;
 import com.teraim.vortex.Start;
+import com.teraim.vortex.loadermodule.Configuration;
+import com.teraim.vortex.loadermodule.ModuleLoader;
 import com.teraim.vortex.log.Logger;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
@@ -32,13 +34,11 @@ public class LoginConsoleFragment extends Fragment {
 
 	TextView log;
 	private TextView versionTxt;
-	private ImageView bgImage;
 	private TextView licenseTxt;
 	private final String VORTEX_VERSION = "Vortex 0_9_9";
 	private final String License = "This sw uses 3rd party components that are under Apache 2.0 license.";
-	private LoggerI loginConsole;
-	private GlobalState gs;
-	private PersistenceHelper ph,globalPh;
+	private LoggerI loginConsole,debugConsole;
+	private PersistenceHelper globalPh;
 	private boolean configurationLoaded=false;
 	private ModuleLoader myLoader;
 
@@ -51,7 +51,6 @@ public class LoginConsoleFragment extends Fragment {
 		log = (TextView)view.findViewById(R.id.logger);
 		versionTxt = (TextView)view.findViewById(R.id.versionTxt);
 		licenseTxt = (TextView)view.findViewById(R.id.licenseTxt);
-		bgImage = (ImageView)view.findViewById(R.id.bgImg);
 		Typeface type=Typeface.createFromAsset(getActivity().getAssets(),
 				"clacon.ttf");
 		log.setTypeface(type);
@@ -60,14 +59,14 @@ public class LoginConsoleFragment extends Fragment {
 		licenseTxt.setText(License);
 
 		//Create global state
-		gs = GlobalState.getInstance(this.getActivity());
-		ph = gs.getPreferences();
-		globalPh = gs.getGlobalPreferences();
+		
+		
+		globalPh = new PersistenceHelper(this.getActivity().getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_PRIVATE));
 
-		//Create logger for startup.
-		if (loginConsole==null)
-			loginConsole = new Logger(this.getActivity(),"INITIAL");
+		loginConsole = new Logger(this.getActivity(),"INITIAL");
 		loginConsole.setOutputView(log);
+		debugConsole = new Logger(this.getActivity(),"DEBUG");
+		
 		
 
 		if (this.initIfFirstTime()) {
@@ -82,10 +81,10 @@ public class LoginConsoleFragment extends Fragment {
 			}
 		}
 		//write down version..quickly! :)
-		ph.put(PersistenceHelper.CURRENT_VERSION_OF_PROGRAM, VORTEX_VERSION);
+		globalPh.put(PersistenceHelper.CURRENT_VERSION_OF_PROGRAM, VORTEX_VERSION);
 
 		//create module descriptors for all known configuration files.
-		myLoader = new ModuleLoader(Constants.getCurrentlyKnownModules(globalPh,server(),bundle(),this.getActivity()),
+		myLoader = new ModuleLoader(new Configuration(Constants.getCurrentlyKnownModules(globalPh,server(),globalPh.get(PersistenceHelper.BUNDLE_NAME),this.getActivity(),debugConsole)),
 				loginConsole,globalPh);
 
 		return view;
@@ -98,6 +97,10 @@ public class LoginConsoleFragment extends Fragment {
 	@Override
 	public void onResume() {
 		super.onResume();
+		
+		loginConsole.addRow("Loading Modules for "+globalPh.get(PersistenceHelper.BUNDLE_NAME));
+		Log.d("vortex","Loading Modules for "+globalPh.get(PersistenceHelper.BUNDLE_NAME));
+	
 		myLoader.loadModulesIfRequired();
 	}
 
@@ -148,8 +151,8 @@ public class LoginConsoleFragment extends Fragment {
 		loginConsole.addYellowText("["+VORTEX_VERSION+"]");
 		loginConsole.addRow("");
 		//loginConsole.addRedText("");
-		if (ph.get(PersistenceHelper.LAG_ID_KEY).equals(PersistenceHelper.UNDEFINED)||
-				ph.get(PersistenceHelper.USER_ID_KEY).equals(PersistenceHelper.UNDEFINED)) {
+		if (globalPh.get(PersistenceHelper.LAG_ID_KEY).equals(PersistenceHelper.UNDEFINED)||
+				globalPh.get(PersistenceHelper.USER_ID_KEY).equals(PersistenceHelper.UNDEFINED)) {
 			loginConsole.addYellowText("LagID och/eller Namn fattas.");				
 		}
 		loginConsole.addRow("");
@@ -186,11 +189,11 @@ public class LoginConsoleFragment extends Fragment {
 
 
 		if (first) {
-			Log.d("Strand","Yes..executing  first time init");
+			Log.d("vortex","Yes..executing  first time init");
 			return true;
 		}
 		else {
-			Log.d("Strand","..Not first time");
+			Log.d("vortex","..Not first time");
 			return false;
 		}
 
@@ -252,7 +255,5 @@ public class LoginConsoleFragment extends Fragment {
 			serverUrl = "http://"+serverUrl;
 		return serverUrl;
 	}
-	public String bundle() {
-		return globalPh.get(PersistenceHelper.BUNDLE_NAME).toLowerCase()+"/";
-	}
+	
 }

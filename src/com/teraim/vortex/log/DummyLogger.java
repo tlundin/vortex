@@ -64,8 +64,16 @@ public class DummyLogger implements LoggerI {
 		
 	}
 
+
+
 	@Override
-	public void ticky() {
+	public void writeTicky(String tickyText) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void removeTicky() {
 		// TODO Auto-generated method stub
 		
 	}

@@ -15,10 +15,13 @@ import java.util.UUID;
 import android.content.Context;
 import android.os.Environment;
 
-import com.teraim.vortex.dynamic.types.ConfigurationModule;
-import com.teraim.vortex.dynamic.types.ConfigurationModule.Source;
-import com.teraim.vortex.dynamic.types.ConfigurationModule.Type;
-import com.teraim.vortex.dynamic.types.SpinnerConfiguration;
+import com.teraim.vortex.loadermodule.ConfigurationModule;
+import com.teraim.vortex.loadermodule.configurations.GisPolygonConfiguration;
+import com.teraim.vortex.loadermodule.configurations.GroupsConfiguration;
+import com.teraim.vortex.loadermodule.configurations.ImportDataConfiguration;
+import com.teraim.vortex.loadermodule.configurations.SpinnerConfiguration;
+import com.teraim.vortex.loadermodule.configurations.VariablesConfiguration;
+import com.teraim.vortex.loadermodule.configurations.WorkFlowBundleConfiguration;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.utils.PersistenceHelper;
 
@@ -165,14 +168,22 @@ public class Constants {
 
 	public static final String WF_FROZEN_FILE_ID = null;
 
+	public static final String GLOBAL_PREFS = "GlobalPrefs";
+
+	public final static int VAR_PATTERN_ROW_LENGTH = 11;
 
 
-	public static List<ConfigurationModule> getCurrentlyKnownModules(PersistenceHelper globalPh,String server, String bundle, Context ctx) {
+	public static List<ConfigurationModule> getCurrentlyKnownModules(PersistenceHelper globalPh,String server, String bundle, Context ctx, LoggerI debugConsole) {
 		List<ConfigurationModule> ret = new ArrayList<ConfigurationModule>();
 		//Workflow xml. Named same as bundle.
 		
-		ret.add(new SpinnerConfiguration(globalPh,server,bundle,ctx));
-		
+		ret.add(new SpinnerConfiguration(globalPh,server,bundle,debugConsole));
+		ret.add(new WorkFlowBundleConfiguration(globalPh,server,bundle,debugConsole));
+		ret.add(new GisPolygonConfiguration(globalPh,server,bundle,debugConsole));
+		ret.add(new GroupsConfiguration(globalPh,server,bundle,debugConsole));		
+		//VariableConfiguration depends on the Groups Configuration.
+		ret.add(new VariablesConfiguration(globalPh,server,bundle,debugConsole));
+		ret.add(new ImportDataConfiguration(globalPh,server,bundle,debugConsole,ctx));
 		
 		return ret;
 	}
