@@ -1,8 +1,6 @@
 package com.teraim.vortex.dynamic.workflow_realizations;
 
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.Set;
 
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -10,12 +8,12 @@ import android.widget.TextView;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
-import com.teraim.vortex.dynamic.types.Variable.DataType;
 import com.teraim.vortex.dynamic.types.Workflow.Unit;
 import com.teraim.vortex.dynamic.workflow_abstracts.Event;
 import com.teraim.vortex.dynamic.workflow_abstracts.Event.EventType;
 import com.teraim.vortex.dynamic.workflow_abstracts.EventListener;
 import com.teraim.vortex.utils.RuleExecutor;
+import com.teraim.vortex.utils.RuleExecutor.SubstiResult;
 import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 import com.teraim.vortex.utils.Tools;
 
@@ -53,18 +51,23 @@ public class WF_DisplayValueField extends WF_Widget implements EventListener {
 
 		String strRes="";
 		String subst;
+		SubstiResult sr;
 		Log.d("nils","Got event in WF_DisplayValueField");	
-		subst = ruleExecutor.substituteForValue(myTokens,formula,false);
-		if (Tools.isNumeric(subst)) 
-			strRes = subst;
-		else {
-			strRes = ruleExecutor.parseExpression(formula,subst);
-			if (strRes==null) {
-				o.addRow("");
-				o.addText("Formula "+formula+" returned null");	
-				return;
+		sr = ruleExecutor.substituteForValue(myTokens,formula,false);
+		if (!sr.IamAString) {
+			subst = sr.result;
+			if (Tools.isNumeric(subst)) 
+				strRes = subst;
+			else {
+				strRes = ruleExecutor.parseExpression(formula,subst);
+				if (strRes==null) {
+					o.addRow("");
+					o.addText("Formula "+formula+" returned null");	
+					return;
+				}
 			}
-		}
+		} else
+			strRes = sr.result;
 
 		o.addRow("");
 		o.addText("Text in DisplayField "+this.getId()+" is [");o.addGreenText(strRes); o.addText("]");

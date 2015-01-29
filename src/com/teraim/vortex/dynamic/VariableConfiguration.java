@@ -44,22 +44,23 @@ public class VariableConfiguration {
 		global_sync
 	}
 	
-	Map<String,Integer>fromNameToColumn = new HashMap<String,Integer>();
+	Map<String,Integer>fromNameToColumn; 
 
 
 	Table myTable;
 	GlobalState gs;
 	private VarCache myCache;
 
-	public VariableConfiguration(GlobalState gs,VarCache vc) {
+	public VariableConfiguration(GlobalState gs,VarCache vc,Table t) {
 		this.gs = gs;
-		myTable = gs.thawTable();
+		myTable = t;
 		myCache=vc;
+		//TODO: Call this from parser.
+		validateAndInit();
 	}
 
 	public ErrorCode validateAndInit() {
-		if (myTable==null)
-			return ErrorCode.file_not_found;
+		fromNameToColumn = new HashMap<String,Integer>();
 		for (String c:requiredColumns) {
 			int tableIndex = myTable.getColumnIndex(c);
 			if (tableIndex==-1) {

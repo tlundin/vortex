@@ -120,7 +120,7 @@ public class HistoricalDataImport extends AsyncTask<GlobalState ,Integer,LoadRes
 				//Erase old history if this is load from start.
 				if(histCounter == 0) {
 					Log.e("nils","HISTORIA RENSAS!!");
-					myDb.deleteHistory();
+					//myDb.deleteHistory();
 				}
 				myDb.fastPrep();
 				pb.setMax(jArray.length());

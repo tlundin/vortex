@@ -22,6 +22,8 @@ import com.teraim.vortex.GlobalState.CHash;
 import com.teraim.vortex.dynamic.templates.LinjePortalTemplate;
 import com.teraim.vortex.dynamic.types.Workflow;
 import com.teraim.vortex.loadermodule.LoadResult;
+import com.teraim.vortex.log.Logger;
+import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.ui.DrawerMenu;
 import com.teraim.vortex.ui.LoginConsoleFragment;
 import com.teraim.vortex.ui.MenuActivity;
@@ -29,8 +31,6 @@ import com.teraim.vortex.utils.PersistenceHelper;
 
 public class Start extends MenuActivity {
 
-
-	private GlobalState gs;
 	private PersistenceHelper ph;
 	//	private Map<String,List<String>> menuStructure;
 
@@ -38,13 +38,12 @@ public class Start extends MenuActivity {
 	//	private ArrayList<String> wfItems;
 	private enum State {INITIAL, HISTORICAL_LOADED,WF_LOADED, CONF_LOADED, VALIDATE,POST_INIT, GIS_LOADED};
 	private LoginConsoleFragment loginFragment;
-	private State myState=null;
-	private String[] wfs;
 	private AsyncTask<GlobalState, Integer, LoadResult> histT=null;
 	public static Start singleton;
 	private DrawerMenu mDrawerMenu;
 
 	private ActionBarDrawerToggle mDrawerToggle;
+	private Logger debugLogger;
 
 
 	@Override
@@ -58,16 +57,15 @@ public class Start extends MenuActivity {
 		//This combats an issue on the target panasonic platform having to do with http reading.
 		System.setProperty("http.keepAlive", "false"); 
 
-		//Load the GlobalState
-		gs = GlobalState.getInstance(this);
 		//drawermenu
-		if (mDrawerMenu!=null)
-			mDrawerMenu.closeDrawer();
+
 		mDrawerMenu = new DrawerMenu(this);
-		gs.setDrawerMenu(mDrawerMenu);
 		mDrawerToggle = mDrawerMenu.getDrawerToggle();
 		getActionBar().setDisplayHomeAsUpEnabled(true);
 		getActionBar().setHomeButtonEnabled(true);
+		
+		//Create a global logger.
+		debugLogger = new Logger(this,"DEBUG");
 		
 		//Start the login fragment.
 		if (loginFragment == null) {
@@ -440,6 +438,7 @@ public class Start extends MenuActivity {
 
 	//execute workflow.
 	public void changePage(Workflow wf, String statusVar) {
+		GlobalState gs = GlobalState.getInstance(this);
 		String label = wf.getLabel();
 		String template = wf.getTemplate();
 		//Set context.
@@ -572,6 +571,20 @@ public class Start extends MenuActivity {
 			} )
 			.show();
 		}
+	}
+
+
+
+
+	public DrawerMenu getDrawerMenu() {
+		return mDrawerMenu;
+	}
+
+
+
+
+	public LoggerI getLogger() {
+		return debugLogger;
 	}
 	
 

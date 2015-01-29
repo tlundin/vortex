@@ -9,11 +9,14 @@ import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.PersistenceHelper;
 
-public class GisPolygonConfiguration extends CSVConfigurationModule {
+public class GisPolygonConfiguration extends JSONConfigurationModule {
+	
+	private LoggerI o;
 
-	public GisPolygonConfiguration(PersistenceHelper globalPh, String server, String bundle, LoggerI debugConsole) {
-		super(globalPh, Source.file,Constants.GIS_DATA_DIR, "polydef", "Gis Polygons          ");
-		
+	public GisPolygonConfiguration(PersistenceHelper globalPh,PersistenceHelper ph, String server, String bundle, LoggerI debugConsole) {
+		super(globalPh,ph, Source.file,Constants.GIS_DATA_DIR, "blockdef", "Gis Blocks            ");
+		this.o = debugConsole;
+
 	}
 
 	@Override
@@ -21,16 +24,17 @@ public class GisPolygonConfiguration extends CSVConfigurationModule {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
+	
+	
 	@Override
 	public String getFrozenVersion() {
-		// TODO Auto-generated method stub
+		return (ph.get(PersistenceHelper.CURRENT_VERSION_OF_GIS_BLOCKS));
 		return null;
 	}
 
 	@Override
 	protected void setFrozenVersion(String version) {
-		// TODO Auto-generated method stub
+		ph.put(PersistenceHelper.CURRENT_VERSION_OF_GIS_BLOCKS,version);
 
 	}
 
@@ -49,5 +53,12 @@ public class GisPolygonConfiguration extends CSVConfigurationModule {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public void setEssence() {
+		// TODO Auto-generated method stub
+		
+	}
+
 
 }

@@ -12,7 +12,6 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
 
-import android.content.Context;
 import android.os.Environment;
 
 import com.teraim.vortex.loadermodule.ConfigurationModule;
@@ -23,11 +22,13 @@ import com.teraim.vortex.loadermodule.configurations.SpinnerConfiguration;
 import com.teraim.vortex.loadermodule.configurations.VariablesConfiguration;
 import com.teraim.vortex.loadermodule.configurations.WorkFlowBundleConfiguration;
 import com.teraim.vortex.log.LoggerI;
+import com.teraim.vortex.utils.DbHelper;
 import com.teraim.vortex.utils.PersistenceHelper;
 
 public class Constants {
 
-	
+	public final static float VORTEX_VERSION = 0.993f;
+
 	
 	//String constants
 	//The root folder for the SD card is in the global Environment.
@@ -38,7 +39,6 @@ public class Constants {
 	
 	public final static String HISTORICAL_TOKEN = "*HISTORICAL*";
 	public final static String VORTEX_ROOT_DIR = path+"/vortex/";
-	public final static String CONFIG_FILES_DIR = VORTEX_ROOT_DIR + "config/";
 	public static final String EXPORT_FILES_DIR = VORTEX_ROOT_DIR + "export/";
 	public static final String PIC_ROOT_DIR = VORTEX_ROOT_DIR + "pics/";
 	public static final String OLD_PIC_ROOT_DIR = VORTEX_ROOT_DIR + "old_pics/";
@@ -173,19 +173,24 @@ public class Constants {
 	public final static int VAR_PATTERN_ROW_LENGTH = 11;
 
 
-	public static List<ConfigurationModule> getCurrentlyKnownModules(PersistenceHelper globalPh,String server, String bundle, Context ctx, LoggerI debugConsole) {
+	public static List<ConfigurationModule> getCurrentlyKnownModules(PersistenceHelper globalPh,PersistenceHelper ph,String server, String bundle, LoggerI debugConsole) {
 		List<ConfigurationModule> ret = new ArrayList<ConfigurationModule>();
 		//Workflow xml. Named same as bundle.
 		
-		ret.add(new SpinnerConfiguration(globalPh,server,bundle,debugConsole));
-		ret.add(new WorkFlowBundleConfiguration(globalPh,server,bundle,debugConsole));
-		ret.add(new GisPolygonConfiguration(globalPh,server,bundle,debugConsole));
-		ret.add(new GroupsConfiguration(globalPh,server,bundle,debugConsole));		
+		ret.add(new SpinnerConfiguration(globalPh,ph,server,bundle,debugConsole));
+		ret.add(new WorkFlowBundleConfiguration(globalPh,ph,server,bundle,debugConsole));
+		ret.add(new GisPolygonConfiguration(globalPh,ph,server,bundle,debugConsole));
+		ret.add(new GroupsConfiguration(globalPh,ph,server,bundle,debugConsole));		
 		//VariableConfiguration depends on the Groups Configuration.
-		ret.add(new VariablesConfiguration(globalPh,server,bundle,debugConsole));
-		ret.add(new ImportDataConfiguration(globalPh,server,bundle,debugConsole,ctx));
+		ret.add(new VariablesConfiguration(globalPh,ph,server,bundle,debugConsole));
 		
 		return ret;
+	}
+
+	public static ConfigurationModule getDBImportModule(
+			PersistenceHelper globalPh, PersistenceHelper ph, String server,
+			String bundleName, LoggerI debugConsole,DbHelper db) {
+		 return new ImportDataConfiguration(globalPh,ph,server,bundleName,debugConsole,db);
 	}
 	
 

@@ -8,9 +8,9 @@ import com.teraim.vortex.utils.PersistenceHelper;
 
 public abstract class JSONConfigurationModule extends ConfigurationModule {
 
-	public JSONConfigurationModule(PersistenceHelper gPh,
+	public JSONConfigurationModule(PersistenceHelper gPh,PersistenceHelper ph,
 			Source source, String urlOrPath, String fileName, String moduleName) {
-		super(gPh, Type.json, source, urlOrPath, fileName, moduleName);
+		super(gPh,ph, Type.json, source, urlOrPath, fileName, moduleName);
 	}
 
 	protected abstract LoadResult prepare(String json) throws IOException, JSONException;

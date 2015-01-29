@@ -1,20 +1,13 @@
 package com.teraim.vortex.loadermodule;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.List;
 
-import android.content.Context;
-import android.os.Build;
+import android.provider.MediaStore.Files;
 import android.util.Log;
 
 import com.teraim.vortex.FileLoadedCb;
+import com.teraim.vortex.loadermodule.LoadResult.ErrorCode;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.PersistenceHelper;
 import com.teraim.vortex.utils.Tools;
@@ -36,23 +29,26 @@ public abstract class ConfigurationModule {
 	public Source source;
 	public Type type;
 	public  String urlOrPath;
-	public String rawData,version,fileName,fullPath,name,frozenPath;
-	protected PersistenceHelper globalPh;
+	public String rawData,version,fileName,fullPath,printedLabel,frozenPath;
+	protected PersistenceHelper globalPh,ph;
 	protected boolean IamLoaded=false,versionControl;
 
 	private Integer linesOfRawData;
 	private Configuration mModules;
+	protected Object essence;
+	private boolean notFound=false;
 	
 	
-	public ConfigurationModule(PersistenceHelper gPh, Type type, Source source, String urlOrPath,String fileName,String moduleName) {
+	public ConfigurationModule(PersistenceHelper gPh,PersistenceHelper ph, Type type, Source source, String urlOrPath,String fileName,String moduleName) {
 		this.source=source;
 		this.type=type;
 		this.urlOrPath=urlOrPath;
 		this.fileName=fileName;
 		this.globalPh=gPh;
-		this.name=moduleName;
+		this.ph=ph;
+		this.printedLabel=moduleName;
 		fullPath = urlOrPath+fileName+"."+type.name();
-		frozenPath = Constants.CONFIG_FILES_DIR+fileName;
+		frozenPath = Constants.VORTEX_ROOT_DIR+gPh.get(PersistenceHelper.BUNDLE_NAME)+"/config/"+fileName;
 		Log.d("vortex","full path "+fullPath);
 		this.versionControl=!globalPh.getB(PersistenceHelper.VERSION_CONTROL_SWITCH_OFF);
 	}
@@ -73,7 +69,10 @@ public abstract class ConfigurationModule {
 	//Freeze version number when load succesful
 	public void setLoaded() {
 		IamLoaded=true;
-		setFrozenVersion(version);
+	}
+	
+	public void setNotFound() {
+		notFound=true;
 	}
 	
 	protected abstract void setFrozenVersion(String version);
@@ -82,7 +81,7 @@ public abstract class ConfigurationModule {
 
 	public boolean isLoaded() {
 		// :)
-		return IamLoaded;
+		return IamLoaded||notFound;
 	}
 	
 	public void load(FileLoadedCb moduleLoader) {
@@ -113,18 +112,57 @@ public abstract class ConfigurationModule {
 	}
 
 	
-	public String getName() {
-		return name;
+	public String getFileName() {
+		return fileName;
+	}
+	
+	public String getLabel() {
+		return printedLabel;
 	}
 	
 	//Freeze this configuration.
-	public void freeze(Object object) throws IOException {
-		Tools.witeObjectToFile(object, this.frozenPath);
+	public boolean freeze() throws IOException {
+		this.setEssence();
+		if (essence!=null) {
+			Tools.witeObjectToFile(essence, this.frozenPath);
+			return true;
+		}
+		else
+			return false;
+	}
+	
+	public LoadResult thaw(){
+		try {
+			essence = Tools.readObjectFromFile(this.frozenPath);
+			if (essence==null)
+				Log.e("vortex","nä men va faaan!!");
+		} catch (IOException e) {
+			return new LoadResult(this,ErrorCode.ioError,"Failed to load frozen object");
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+			return new LoadResult(this,ErrorCode.classNotFound,"Failed to load frozen object");
+		}
+		return new LoadResult(this,ErrorCode.thawed);
 		
 	}
 
+	public Object getEssence() {
+		return essence;
+	}
+	
+	//Must set essence before freeze.
+	public abstract void setEssence();
 
-	public abstract Object getEssence();
+
+	public boolean deleteFrozen() {
+		return new File(this.frozenPath).delete();
+	}
+
+
+	
+
+
+	
 
 
 

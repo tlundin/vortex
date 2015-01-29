@@ -28,6 +28,7 @@ public class PersistenceHelper {
 	public static final String CURRENT_VERSION_OF_PROGRAM = "prog_version";
 	public static final String CURRENT_VERSION_OF_HISTORY_FILE = "current_version_hist";
 	public static final String CURRENT_VERSION_OF_SPINNERS = "current_version_spinners";
+	public static final String CURRENT_VERSION_OF_GIS_BLOCKS = "current_version_gis_blocks";
 	public static final String FIRST_TIME_KEY = "firzzt";
 	public static final String DEVELOPER_SWITCH = "dev_switch";
 	public static final String VERSION_CONTROL_SWITCH_OFF = "no_version_control";
@@ -64,6 +65,9 @@ public class PersistenceHelper {
 	public void put(String key, int value) {
 		sp.edit().putInt(key,value).commit();
 	}
+	public void put(String key, float value) {
+		sp.edit().putFloat(key,value).commit();
+	}
 
 	public boolean getB(String key) {
 		return sp.getBoolean(key, false);
@@ -71,6 +75,10 @@ public class PersistenceHelper {
 
 	public int getI(String key) {
 		return sp.getInt(key, -1);
+	}
+	
+	public float getF(String key) {
+		return sp.getFloat(key, -1);
 	}
 
 	/* Checks if external storage is available for read and write */

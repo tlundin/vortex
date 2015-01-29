@@ -36,22 +36,24 @@ public class VariablesConfiguration extends CSVConfigurationModule {
 	private int groupIndex;
 
 
-	public VariablesConfiguration(PersistenceHelper globalPh, String server, String bundle, LoggerI debugConsole) {
-		super(globalPh, Source.internet, server+bundle.toLowerCase()+"/", "Variables","Variables module      ");	 
+	public VariablesConfiguration(PersistenceHelper globalPh,PersistenceHelper ph, String server, String bundle, LoggerI debugConsole) {
+		super(globalPh,ph, Source.internet, server+bundle.toLowerCase()+"/",VariablesConfiguration.NAME,"Variables module      ");	 
 		this.o = debugConsole;
 
 
 	}
 
+	public static String NAME = "Variables";
+	
 
 	@Override
 	public String getFrozenVersion() {
-		return (globalPh.get(PersistenceHelper.CURRENT_VERSION_OF_VARPATTERN_FILE));
+		return (ph.get(PersistenceHelper.CURRENT_VERSION_OF_VARPATTERN_FILE));
 	}
 
 	@Override
 	protected void setFrozenVersion(String version) {
-		globalPh.put(PersistenceHelper.CURRENT_VERSION_OF_VARPATTERN_FILE,version);
+		ph.put(PersistenceHelper.CURRENT_VERSION_OF_VARPATTERN_FILE,version);
 
 	}
 
@@ -99,9 +101,8 @@ public class VariablesConfiguration extends CSVConfigurationModule {
 			myTable = new Table(vheaderL,0,pNameIndex);
 			scanHeader=false;
 
-
-
 		} else {
+			Log.d("vortex","Gets to parse variable");
 			List<List<String>> elems;
 
 
@@ -182,20 +183,18 @@ public class VariablesConfiguration extends CSVConfigurationModule {
 		return null;
 	}
 
-	@Override
-	public Object getEssence() {
-		return myTable;
-	}
-
-
-
-
+	
 
 	private List<String> trimmed(String[] r) {
 		ArrayList<String> ret = new ArrayList<String>();
 		for(int i=0;i<Constants.VAR_PATTERN_ROW_LENGTH;i++)
 			ret.add(r[i]);
 		return ret;
+	}
+
+	@Override
+	public void setEssence() {
+		essence = myTable;
 	}
 
 }

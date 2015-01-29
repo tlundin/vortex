@@ -22,6 +22,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.teraim.vortex.GlobalState;
+import com.teraim.vortex.Start;
 import com.teraim.vortex.GlobalState.ErrorCode;
 import com.teraim.vortex.R;
 import com.teraim.vortex.bluetooth.BluetoothConnectionService;
@@ -43,16 +44,13 @@ public class MenuActivity extends Activity {
 	
 	public final static String REDRAW = "com.teraim.vortex.menu_redraw";
 	public static final String INITDONE = "com.teraim.vortex.init_done";
-
+	public static final String INITSTARTS = "com.teraim.vortex.init_done";
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);	
 		final MenuActivity me = this;
 
-		gs = GlobalState.getInstance(this);
-		globalPh = gs.getGlobalPreferences();
-		Log.d("vortex","Global prefs: "+gs.getGlobalPreferences()+" isdev "+globalPh.getB(PersistenceHelper.DEVELOPER_SWITCH));
 		
 		x =  new AlertDialog.Builder(MenuActivity.this)
 		.setTitle("Synchronizing")
@@ -138,6 +136,8 @@ public class MenuActivity extends Activity {
 				}
 				else if (intent.getAction().equals(INITDONE))
 					initdone=true;
+				else if (intent.getAction().equals(INITSTARTS))
+					initdone=false;
 				else if (intent.getAction().equals(BluetoothConnectionService.SYNK_BLOCK_UI)) {
 					currentBlockCount = 0;
 					x.setMessage("Skriver in data: 0");
@@ -171,6 +171,7 @@ public class MenuActivity extends Activity {
 		filter.addAction(BluetoothConnectionService.SYNK_UNBLOCK_UI);
 		filter.addAction(BluetoothConnectionService.PING_FROM_UPDATE);
 		filter.addAction(INITDONE);		
+		filter.addAction(INITSTARTS);	
 		filter.addAction(REDRAW);
 
 		this.registerReceiver(brr, filter);
@@ -238,10 +239,17 @@ public class MenuActivity extends Activity {
 
 	protected void refreshStatusRow() {
 		Log.d("NILS","Refreshing status row ");
-		if (!initdone) {
+		mnu[2].setTitle("LOG");
+		mnu[2].setVisible(true);
+		gs = GlobalState.getInstance(this);
+
+		if (gs==null || !initdone) {
 			Log.d("nils","no status before init is done");
 			return;
 		}
+		globalPh = gs.getGlobalPreferences();
+		Log.d("vortex","Global prefs: "+gs.getGlobalPreferences()+" isdev "+globalPh.getB(PersistenceHelper.DEVELOPER_SWITCH));
+
 
 		/*
 		String pid,rid,lid,did;
@@ -256,7 +264,6 @@ public class MenuActivity extends Activity {
 		if (hash!=null)
 			mContextH = hash.toString();
 		mnu[1].setTitle(mContextH);
-		mnu[2].setTitle("LOG");
 		
 		mnu[3].setTitle("SYNK "+gs.getSyncStatusS());
 		//mnu[c++].setTitle("Användare: "+gs.getPersistence().get(PersistenceHelper.USER_ID_KEY));
@@ -343,7 +350,7 @@ public class MenuActivity extends Activity {
 			Typeface type=Typeface.createFromAsset(getAssets(),
 					"clacon.ttf");
 			tv.setTypeface(type);
-			final LoggerI log = gs.getLogger();
+			final LoggerI log = Start.singleton.getLogger();
 			log.setOutputView(tv);
 			//trigger redraw.
 			log.draw();
@@ -388,8 +395,8 @@ public class MenuActivity extends Activity {
 			break;
 		case 4:
 			//close drawer menu if open
-			if (gs.getDrawerMenu()!=null)
-				gs.getDrawerMenu().closeDrawer();
+			if (Start.singleton.getDrawerMenu()!=null)
+				Start.singleton.getDrawerMenu().closeDrawer();
 			Intent intent = new Intent(getBaseContext(),ConfigMenu.class);
 			startActivity(intent);
 			return true;

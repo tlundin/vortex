@@ -1,13 +1,6 @@
 package com.teraim.vortex.expr;
 
-//Syntax-error exception.
-//Copyright 1996 by Darius Bacon; see the file COPYING.
 
-/**
-* An exception indicating a problem in parsing an expression.  It can
-* produce a short, cryptic error message (with getMessage()) or a
-* long, hopefully helpful one (with explain()).
-*/
 public class SyntaxException extends Exception {
 
  /** An error code meaning the input string couldn't reach the end
@@ -31,14 +24,8 @@ public class SyntaxException extends Exception {
  /** An error code meaning the expression includes a variable not
      on the `allowed' list. */
  public static final int UNKNOWN_VARIABLE = 4;
-
- /** Make a new instance.
-  * @param complaint short error message
-  * @param parser the parser that hit this snag
-  * @param reason one of the error codes defined in this class
-  * @param expected if nonnull, the token the parser expected to
-  *        see (in place of the erroneous token it did see)
-  */
+ 
+ public SyntaxException() {};
  public SyntaxException(String complaint, 
 			   Parser parser,
 			   int reason, 
@@ -50,8 +37,6 @@ public class SyntaxException extends Exception {
 	this.expected = expected;
  }
 
- /** Give a long, hopefully helpful error message.
-  * @return the message */
  public String explain() {
 	StringBuffer sb = new StringBuffer();
 

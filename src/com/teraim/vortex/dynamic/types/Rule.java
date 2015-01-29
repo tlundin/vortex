@@ -9,7 +9,9 @@ import android.util.Log;
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.expr.Expr;
 import com.teraim.vortex.expr.SyntaxException;
+import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.utils.RuleExecutor;
+import com.teraim.vortex.utils.RuleExecutor.SubstiResult;
 import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 
 public class Rule implements Serializable {
@@ -24,6 +26,7 @@ public class Rule implements Serializable {
 	private List<TokenizedItem> tokens;
 	private RuleExecutor re;
 	private boolean initDone = false;
+	private LoggerI o;
 
 	public Rule(String id,String ruleLabel, String target, String condition,
 			String action, String errorMsg) {
@@ -37,8 +40,6 @@ public class Rule implements Serializable {
 		if (action!=null && action.equals("Error_severity"))
 			myType = Type.ERROR;
 
-
-
 	}
 
 	public enum Type {
@@ -46,10 +47,12 @@ public class Rule implements Serializable {
 		WARNING;
 	}
 
-	public void init() {
-		re = RuleExecutor.getInstance(GlobalState.getInstance(ctx).getContext());
+	public void init(GlobalState gs) {
+		re = RuleExecutor.getInstance(gs.getContext());
 		tokens = re.findTokens(condition,null);
 		initDone=true;
+		if (o==null)
+			this.o = gs.getLogger();
 	}
 
 	//Execute Rule. Target will be colored accordingly.
@@ -57,33 +60,44 @@ public class Rule implements Serializable {
 		GlobalState gs = GlobalState.getInstance(ctx);
 
 		if (!initDone)
-			init();
+			init(gs);
 		Expr result=null;
-		String subst = re.substituteForValue(tokens,condition,false);
+		SubstiResult sr = re.substituteForValue(tokens,condition,false);
 		Log.d("nils","CONDITION: "+condition);
-		if (subst!=null) {
-			Log.d("nils","SUBST: "+subst+" isnull? "+(subst==null));		
-			result = gs.getParser().parse(subst);
-			if (result!=null && result.value()!=null) {
-			Log.d("NILS","Result of rule eval was: "+result.value());
-			return (result.value().intValue()==1);
+		if (!sr.IamAString) {
+			String subst = sr.result;
+			if (subst!=null) {
+				Log.d("nils","SUBST: "+subst+" isnull? "+(subst==null));		
+				result = gs.getParser().parse(subst);
+				if (result!=null && result.value()!=null) {
+					Log.d("NILS","Result of rule eval was: "+result.value());
+					return (result.value().intValue()==1);
+				}
+			} else {
+
+				//return true if eval return null?
+				Log.d("nils","Expr evaluates to null - return true");
+				return true;
 			}
+
+		} else {
+			o.addRow("");
+			o.addRedText("Text type in Rule Condition. Will not work. Condition: "+condition);
+			throw new SyntaxException();
 		}
-		//return true if eval return null?
-		Log.d("nils","Expr evaluates to null - return true");
-		return true;
+		return false;
 	}
 
-	public String getRuleText() {
-		return errorMsg;
-	}
+		public String getRuleText() {
+			return errorMsg;
+		}
 
-	public String getRuleHeader() {
-		return label;
-	}
+		public String getRuleHeader() {
+			return label;
+		}
 
-	public Type getType() {
-		return myType;
-	}
+		public Type getType() {
+			return myType;
+		}
 
-}
+	}

@@ -109,13 +109,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
 	}
 
-	//Creates temporary DB Helper for insert only!
-	public DbHelper(Context context,String bundleName) {
-		super(context, bundleName, null, DATABASE_VERSION);  
-		Log.d("vortex","Bundle name: "+bundleName);
-		ctx = context;
-		db = this.getWritableDatabase();
-	}
+
 	public DbHelper(Context context,Table t, PersistenceHelper globalPh,PersistenceHelper appPh,String bundleName) {
 		super(context, bundleName, null, DATABASE_VERSION);  
 		Log.d("vortex","Bundle name: "+bundleName);
@@ -1209,6 +1203,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		ac= getColumnName("år");
 	}
 
+
 	public boolean deleteNilsHistory() {
 		try {
 		Log.d("nils","deleting all historical values");
@@ -1220,7 +1215,8 @@ public class DbHelper extends SQLiteOpenHelper {
 		}
 		return true;
 	}
-
+	
+	
 	public void fastHistoricalInsert(String rID,String pID,String dID,String sID,
 			String varId, String value) {
 

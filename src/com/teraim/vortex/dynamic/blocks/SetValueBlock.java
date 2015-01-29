@@ -9,6 +9,7 @@ import android.util.Log;
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.types.Variable.DataType;
 import com.teraim.vortex.utils.RuleExecutor;
+import com.teraim.vortex.utils.RuleExecutor.SubstiResult;
 import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 
 public class SetValueBlock extends Block {
@@ -56,24 +57,23 @@ public class SetValueBlock extends Block {
 	public String evaluate(GlobalState gs,String formula,
 			List<TokenizedItem> tokens, boolean stringT) {
 		//assume fail
-		String strRes = null;
 		re = RuleExecutor.getInstance(gs.getContext());
-		if (stringT) 
-			strRes = re.substituteForValue(tokens,formula,stringT);
-		else {
-			String subst =null;
-			//substitute any variables or functions.
-			subst = re.substituteForValue(tokens,formula,stringT);
-			if (subst!=null) {
-				strRes = re.parseExpression(formula,subst);
-
-			} else 
-				Log.e("nils","Formula null after substitution: ["+formula+"]");
-
-
-			Log.d("nils","New eval returns "+strRes);
+		//substitute any variables or functions.
+		SubstiResult sr = re.substituteForValue(tokens,formula,stringT);
+		String subst = sr.result;
+		if (subst!=null && !sr.IamAString) { 
+			subst = re.parseExpression(formula,subst);
+			return subst;
 		}
-		return strRes;
+		if (sr.IamAString && subst  == null) {
+			Log.e("nils","Formula null after substitution: ["+formula+"]");
+			return null;
+		}
+		else {
+			Log.d("nils","New eval returns "+subst);
+			return subst;
+		}
+
 	}
 
 }

@@ -18,24 +18,25 @@ import com.teraim.vortex.utils.Tools;
 
 public class SpinnerConfiguration extends CSVConfigurationModule {
 	
+	public final static String NAME = "Spinners";
 	private final static int noOfRequiredColumns=5;			
 	private final SpinnerDefinition sd=new SpinnerDefinition();
 	private LoggerI o;
 
-	public SpinnerConfiguration(PersistenceHelper globalPh, String server, String bundle, LoggerI debugConsole) {
-		super(globalPh, Source.internet, server+bundle.toLowerCase()+"/", "Spinners","Spinner module        ");	 
+	public SpinnerConfiguration(PersistenceHelper globalPh,PersistenceHelper ph, String server, String bundle, LoggerI debugConsole) {
+		super(globalPh, ph, Source.internet, server+bundle.toLowerCase()+"/", SpinnerConfiguration.NAME,"Spinner module        ");	 
 		this.o = debugConsole;
 		
 	}
 
 	@Override
 	public String getFrozenVersion() {
-		return (globalPh.get(PersistenceHelper.CURRENT_VERSION_OF_SPINNERS));
+		return (ph.get(PersistenceHelper.CURRENT_VERSION_OF_SPINNERS));
 	}
 
 	@Override
 	protected void setFrozenVersion(String version) {
-		globalPh.put(PersistenceHelper.CURRENT_VERSION_OF_SPINNERS,version);
+		ph.put(PersistenceHelper.CURRENT_VERSION_OF_SPINNERS,version);
 		
 	}
 
@@ -73,15 +74,16 @@ public class SpinnerConfiguration extends CSVConfigurationModule {
 		}
 
 
-	@Override
-	public Object getEssence() {
-		return sd;
-	}
-
+	
 	@Override
 	protected LoadResult prepare() throws IOException {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public void setEssence() {
+		essence = sd;
 	}
 		
 		

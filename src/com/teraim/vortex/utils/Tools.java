@@ -14,6 +14,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.io.Serializable;
+import java.io.StreamCorruptedException;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -119,7 +120,7 @@ public class Tools {
 			objectOut.writeObject(object);
 			fileOut.getFD().sync();
 
-		
+
 		} finally {
 			if (objectOut != null) {
 				try {
@@ -137,24 +138,18 @@ public class Tools {
 	 * @param context
 	 * @param filename
 	 * @return
+	 * @throws IOException 
+	 * @throws StreamCorruptedException 
+	 * @throws ClassNotFoundException 
 	 */
-	public static Object readObjectFromFile(Context context, String filename) {
-
-		Object object = null;
+	public static Object readObjectFromFile(String filename) throws StreamCorruptedException, IOException, ClassNotFoundException {
 		ObjectInputStream objectIn = null;
+		Object object = null;
 		try {
-			FileInputStream fileIn = new FileInputStream(filename);
-			objectIn = new ObjectInputStream(fileIn);
-			object = objectIn.readObject();
+		FileInputStream fileIn = new FileInputStream(filename);
+		objectIn = new ObjectInputStream(fileIn);
+		object = objectIn.readObject();
 
-		} catch (FileNotFoundException e) {
-			// e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 		finally {
 			if (objectIn != null) {
@@ -238,10 +233,10 @@ public class Tools {
 			Log.d("nils", "realW realH"+realW+" "+realH);
 
 			//Find out screen size.
-			
+
 			DisplayMetrics metrics = ctx.getResources().getDisplayMetrics();
 			int sWidth = metrics.widthPixels;
-	
+
 			//Target width should be about half the screen width.
 
 			double tWidth = sWidth;
@@ -257,7 +252,7 @@ public class Tools {
 			options.inJustDecodeBounds = false;
 			Log.d("nils","Filename: "+fileName);
 			return BitmapFactory.decodeFile(fileName,options);
-			
+
 
 		}
 		else {
@@ -479,7 +474,7 @@ public class Tools {
 
 
 
-
+	/*
 	public static SpinnerDefinition thawSpinners(Context myC) {		
 		SpinnerDefinition sd=null;
 		Log.d("nils","NO NETWORK. Loading file spinner def");
@@ -489,9 +484,9 @@ public class Tools {
 		else
 			Log.d("nils","Thawspinners called. Returned "+sd.size()+" spinners");
 		return sd;
-		
+
 	}
-	
+	 */
 	//Check if two keys are equal
 	public static boolean sameKeys(Map<String, String> m1,
 			Map<String, String> m2) {

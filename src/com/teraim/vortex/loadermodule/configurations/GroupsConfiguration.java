@@ -7,13 +7,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import android.util.Log;
+
 import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.loadermodule.CSVConfigurationModule;
 import com.teraim.vortex.loadermodule.LoadResult;
-import com.teraim.vortex.loadermodule.ConfigurationModule.Source;
 import com.teraim.vortex.loadermodule.LoadResult.ErrorCode;
 import com.teraim.vortex.log.LoggerI;
-import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.PersistenceHelper;
 import com.teraim.vortex.utils.Tools;
 
@@ -27,10 +27,11 @@ public class GroupsConfiguration extends CSVConfigurationModule {
 	int nameIndex = -1;
 	private static GroupsConfiguration singleton=null;
 
-	public GroupsConfiguration(PersistenceHelper globalPh, String server, String bundle, LoggerI debugConsole) {
-		super(globalPh, Source.internet,server+bundle.toLowerCase()+"/", "Groups", "Group module          ");
+	public GroupsConfiguration(PersistenceHelper globalPh,PersistenceHelper ph, String server, String bundle, LoggerI debugConsole) {
+		super(globalPh,ph, Source.internet,server+bundle.toLowerCase()+"/", "Groups", "Group module          ");
 		o = debugConsole;
 		singleton = null;
+		
 	}
 
 	public static GroupsConfiguration getSingleton() {
@@ -43,6 +44,7 @@ public class GroupsConfiguration extends CSVConfigurationModule {
 		groups=new HashMap<String,List<List<String>>>();
 		groupIndex = -1;
 		nameIndex = -1;
+		Log.d("vortex","in prepare for groups");
 		singleton = this;
 		return null;
 	}
@@ -52,9 +54,12 @@ public class GroupsConfiguration extends CSVConfigurationModule {
 
 	@Override
 	public LoadResult parse(String row, Integer currentRow) throws IOException {
+		Log.d("vortex","group parsing "+row);
 
 		//Scan header.
 		if (scanHeader && row!=null) {
+			Log.d("vortex","Header for groups is "+row);
+
 			groupsFileHeaderS = row.split(",");
 			o.addRow("Header for Groups file: "+row);
 			o.addRow("Has: "+groupsFileHeaderS.length+" elements");
@@ -103,12 +108,12 @@ public class GroupsConfiguration extends CSVConfigurationModule {
 
 	@Override
 	public String getFrozenVersion() {
-		return (globalPh.get(PersistenceHelper.CURRENT_VERSION_OF_CONFIG_FILE));
+		return (ph.get(PersistenceHelper.CURRENT_VERSION_OF_CONFIG_FILE));
 	}
 
 	@Override
 	protected void setFrozenVersion(String version) {
-		globalPh.put(PersistenceHelper.CURRENT_VERSION_OF_CONFIG_FILE,version);
+		ph.put(PersistenceHelper.CURRENT_VERSION_OF_CONFIG_FILE,version);
 	}
 
 	@Override
@@ -116,11 +121,7 @@ public class GroupsConfiguration extends CSVConfigurationModule {
 		return false;
 	}
 
-	@Override
-	public Object getEssence() {
-		return groups;
-	}
-
+	
 	public String[] getGroupFileColumns() {		
 		return groupsFileHeaderS;
 	}
@@ -136,5 +137,10 @@ public class GroupsConfiguration extends CSVConfigurationModule {
 	public int getGroupIndex() {
 		// TODO Auto-generated method stub
 		return groupIndex;
+	}
+
+	@Override
+	public void setEssence() {
+		essence=groups;
 	}
 }

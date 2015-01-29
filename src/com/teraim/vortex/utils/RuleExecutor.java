@@ -48,6 +48,18 @@ import com.teraim.vortex.non_generics.Constants;
 
 	//Rather complex enum for all token types.
 
+	
+	
+	public class SubstiResult {
+		public String result;
+		public boolean IamAString;
+		public SubstiResult(String result, boolean iamAString) {
+			this.result = result;
+			IamAString = iamAString;
+		}
+		
+		
+	}
 	public class TokenizedItem {
 
 		private String[] args;
@@ -390,14 +402,14 @@ import com.teraim.vortex.non_generics.Constants;
 		Log.d("nils",curVar+" now has dependants: "+x.toString());		
 	}
 
-	public String substituteForValue(List<TokenizedItem> myTokens,String formula,boolean stringT) {
+	public SubstiResult substituteForValue(List<TokenizedItem> myTokens,String formula,boolean stringT) {
 		LoggerI o = gs.getLogger();
 		o.addRow("Before substitution: "+formula);
 		if (formula ==null)
 			return null;
 		//No tokens to substitute? Then formula is ok as is.
 		if (myTokens == null)
-			return formula;
+			return new SubstiResult(formula,stringT);
 		String strRes = "",subst = formula.toLowerCase(),var;
 		TokenType type;
 		Variable st;
@@ -440,18 +452,19 @@ import com.teraim.vortex.non_generics.Constants;
 								Log.d("vortex","string concatenation "+strRes);
 							}
 						} else
-							if (st.getValue()==null) {
+							if (value==null) {
 								o.addRow("");
 								o.addRow("Variable value for "+var+" in formula ["+formula+"] is null.");
 								Log.d("nils","Before substitution of: "+st.getId()+": "+subst);
 								subst = subst.replace(st.getId().toLowerCase(), "null");	
 								Log.d("nils","After substitutionx: "+subst);
+								strRes=strRes+"null";
 
 							} else {
 								Log.d("nils","Substituting Variable: ["+st.getId()+"] with value "+st.getValue());
-								subst = subst.replace(st.getId().toLowerCase(), st.getValue());
+								subst = subst.replace(st.getId().toLowerCase(), value);
 								Log.d("nils","After substitutiony: "+subst);
-
+								strRes=strRes+value;
 
 							}
 					}
@@ -461,7 +474,7 @@ import com.teraim.vortex.non_generics.Constants;
 		if (stringT) {
 			Log.d("vortex","string type returned with values substituted");
 			o.addRow("After substitution: "+strRes);
-			return strRes;
+			return new SubstiResult(strRes,true);
 		}
 		int firstNull = subst.indexOf("null");
 		if (firstNull!=-1) {
@@ -469,9 +482,10 @@ import com.teraim.vortex.non_generics.Constants;
 			o.addRow("At least one variable did not have a value after substitution.");
 			//return null;
 		}
+		
+		
 		o.addRow("After substitution: "+subst);
-
-		return subst;
+		return new SubstiResult(subst,false);
 	}
 
 	private String evalFunc(TokenizedItem item) {

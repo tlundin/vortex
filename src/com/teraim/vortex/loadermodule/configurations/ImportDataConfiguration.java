@@ -10,8 +10,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
+import android.database.sqlite.SQLiteException;
+import android.util.Log;
+
+import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.loadermodule.JSONConfigurationModule;
 import com.teraim.vortex.loadermodule.LoadResult;
+import com.teraim.vortex.loadermodule.LoadResult.ErrorCode;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.utils.DbHelper;
 import com.teraim.vortex.utils.PersistenceHelper;
@@ -21,21 +26,22 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 	private LoggerI o;
 	private DbHelper myDb;
 
-	public ImportDataConfiguration(PersistenceHelper globalPh, String server, String bundle, LoggerI debugConsole,
-			Context ctx) {
-		super(globalPh, Source.internet, server+bundle.toLowerCase()+"/", "Importdata","Historical data module");	 
+	public ImportDataConfiguration(PersistenceHelper globalPh,PersistenceHelper ph, String server, String bundle, LoggerI debugConsole,
+			DbHelper myDb) {
+		super(globalPh,ph, Source.internet, server+bundle.toLowerCase()+"/", "Importdata","Historical data module");	 
 		this.o = debugConsole;
-		myDb = new DbHelper(ctx,bundle);
+		this.myDb = myDb;
+		
 	}
 
 	@Override
 	public String getFrozenVersion() {
-		return (globalPh.get(PersistenceHelper.CURRENT_VERSION_OF_HISTORY_FILE));
+		return (ph.get(PersistenceHelper.CURRENT_VERSION_OF_HISTORY_FILE));
 	}
 
 	@Override
 	protected void setFrozenVersion(String version) {
-		globalPh.put(PersistenceHelper.CURRENT_VERSION_OF_HISTORY_FILE,version);
+		ph.put(PersistenceHelper.CURRENT_VERSION_OF_HISTORY_FILE,version);
 		
 	}
 
@@ -52,22 +58,25 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 		//Erase old history
 		o.addRow("");
 		o.addYellowText("HISTORIA RENSAS!!");
-		myDb.deleteHistory();
-		myDb.fastPrep();
-		
+		if (myDb.deleteNilsHistory())
+			myDb.fastPrep();
+		else 
+			return new LoadResult(this,ErrorCode.Aborted,"Database is not a NILS database. Missing column 'år'");
 		return null;
 	}
 	
 	
 	
+
 	@Override
 	public LoadResult parse(String row, Integer currentRow) throws IOException, JSONException {
-
+		Log.d("nils","getzzzz");
 			JSONObject keyObj = jArray.getJSONObject(currentRow);
 			// Pulling items from the array
 			JSONArray varArray = keyObj.getJSONArray("Vars");
 			JSONObject varObj;
 			String varId,value;
+			Log.d("vortex","Vararray has "+varArray.length()+" members");
 			for (int a=0; a < varArray.length(); a++) {
 				varObj = varArray.getJSONObject(a);
 				varId = varObj.getString("name");
@@ -82,9 +91,10 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 		}
  
 	
+	
 	@Override
-	public Object getEssence() {
-		return null;
+	public void setEssence() {
+		essence=null;
 	}
 
 	

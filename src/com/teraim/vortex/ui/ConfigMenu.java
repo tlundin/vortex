@@ -108,19 +108,20 @@ public class ConfigMenu extends PreferenceActivity {
 				EditTextPreference etp = (EditTextPreference) pref;
 				pref.setSummary(etp.getText());
 				if (key.equals(PersistenceHelper.BUNDLE_NAME)) {
-					Log.d("nils","Bundle file changed. Removing version check");
-					GlobalState.getInstance(this.getActivity()).getPreferences().put(PersistenceHelper.CURRENT_VERSION_OF_WF_BUNDLE, PersistenceHelper.UNDEFINED);
-					GlobalState.getInstance(this.getActivity()).getPreferences().put(PersistenceHelper.CURRENT_VERSION_OF_CONFIG_FILE, PersistenceHelper.UNDEFINED);					
-					GlobalState.getInstance(this.getActivity()).getPreferences().put(PersistenceHelper.CURRENT_VERSION_OF_HISTORY_FILE, PersistenceHelper.UNDEFINED);					
-					GlobalState.getInstance(this.getActivity()).getPreferences().put(PersistenceHelper.CURRENT_VERSION_OF_VARPATTERN_FILE, PersistenceHelper.UNDEFINED);	
 					//Try to restart the app.
-					Activity context = this.getActivity();
+					/*Activity context = this.getActivity();
 					Intent mStartActivity = new Intent(context, Start.class);
 					int mPendingIntentId = 123456;
 					PendingIntent mPendingIntent = PendingIntent.getActivity(context, mPendingIntentId,    mStartActivity, PendingIntent.FLAG_CANCEL_CURRENT);
 					AlarmManager mgr = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
 					mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, mPendingIntent);
 					System.exit(0);
+					*/
+					GlobalState gs = GlobalState.getInstance(null);
+					if (gs != null) {
+						gs.getDrawerMenu().closeDrawer();
+						gs = null;				
+					}
 				}
 
 					

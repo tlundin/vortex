@@ -32,6 +32,7 @@ import com.teraim.vortex.dynamic.types.Workflow;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
 import com.teraim.vortex.expr.Aritmetic;
 import com.teraim.vortex.expr.Parser;
+import com.teraim.vortex.loadermodule.Configuration;
 import com.teraim.vortex.log.DummyLogger;
 import com.teraim.vortex.log.FastLogger;
 import com.teraim.vortex.log.Logger;
@@ -71,52 +72,34 @@ public class GlobalState  {
 	//Spinner definitions
 	private SpinnerDefinition mySpinnerDef;
 	private MessageHandler myHandler;
-
 	private DrawerMenu myDrawerMenu;
-
 	//Global state for sync.
 	private int syncStatus=BluetoothConnectionService.SYNK_STOPPED;	
-
-
-
 	public String TEXT_LARGE;
-
-
 	private WF_Context currentContext;
-
-
 	private ParameterSafe mySafe;
-
 	private String myPartner="?";
-
-
 	private VarCache myVarCache;
-
-
 	private PersistenceHelper globalPh=null;
-
 	public static GlobalState getInstance(Context c) {
 		if (singleton == null) {			
-			singleton = new GlobalState(c.getApplicationContext());
+			//singleton = new GlobalState(c.getApplicationContext());
+			Log.e("vortex","Global state was lost...ajabaja");
 		}
 		return singleton;
-
 	}
 
-	private GlobalState(Context ctx)  {
+	//private GlobalState(Context ctx)  {
+	public GlobalState(Context applicationContext, PersistenceHelper globalPh,
+			PersistenceHelper ph, LoggerI debugConsole, DbHelper myDb,
+			List<Workflow> workflows,Table t,SpinnerDefinition sd) {
 
-		myC = ctx;
-		
-		//Use Name of Bundle (application) as name for sharedpreferences.
-		//If user switches between Apps on same device, the correct prefs are loaded.
-		globalPh = new PersistenceHelper(ctx.getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_PRIVATE));
-		String bundleName = globalPh.get(PersistenceHelper.BUNDLE_NAME);
-		if (bundleName == null || bundleName.length()==0)
-			bundleName = "Vortex";
-		ph = new PersistenceHelper(myC.getSharedPreferences(bundleName, Context.MODE_PRIVATE));
-		//Logger. Note that logger must be initialized with a TextView when used! 
+		myC = applicationContext;
+		this.globalPh=globalPh;		
+		this.ph=ph;		
+		this.db=myDb;		
 		if (globalPh.getB(PersistenceHelper.DEVELOPER_SWITCH))
-			log = new Logger(this.getContext(),"RUNTIME");
+			log = debugConsole;
 		//removeLogger();
 		else {
 			Log.d("nils","LOGGER WAS REMOVED");
@@ -125,32 +108,27 @@ public class GlobalState  {
 		//Parser for rules
 		parser = new Parser(this);
 		//Artlista
-
 		myVarCache = new VarCache(this);
-
-		artLista = new VariableConfiguration(this,myVarCache);	
-
-		//Database Helper. Database will be named "bundleName"
-		db = new DbHelper(ctx,artLista.getTable(),globalPh,ph,bundleName);
-
-		//myWfs = thawWorkflows();		
-
-		//Spinners
-		mySpinnerDef = Tools.thawSpinners(ctx);
-
+		artLista = new VariableConfiguration(this,myVarCache,t);			
+		myWfs = mapWorkflowsToNames(workflows);		
 		//Event Handler on the Bluetooth interface.
 		myHandler = getHandler();
-
 		//Handles status for 
 		myStatusHandler = new StatusHandler(this);
-
-
+		
+		mySpinnerDef = sd;
+		
+		singleton =this;
 	}
 
+
+	
 
 	/*Validation
 	 * 
 	 */
+	
+	/*
 	public ErrorCode validateFrozenObjects() {
 
 		if (myWfs == null)
@@ -169,7 +147,7 @@ public class GlobalState  {
 					return ErrorCode.ok;
 		}
 	}
-
+	 */
 
 	/*Singletons available for all classes
 	 * 
@@ -177,7 +155,7 @@ public class GlobalState  {
 	public SpinnerDefinition getSpinnerDefinitions() {
 		return mySpinnerDef;
 	}
-
+/*
 	public void setSpinnerDefinitions(SpinnerDefinition sd) {
 		if (sd!=null)
 			Log.d("nils","SetSpinnerDef called with "+sd.size()+" spinners");
@@ -185,7 +163,7 @@ public class GlobalState  {
 			Log.e("nils","Spinnerdef null!!!");
 		mySpinnerDef=sd;
 	}
-
+*/
 	//Persistance for app specific variables.
 	public PersistenceHelper getPreferences() {
 		return ph;
@@ -219,12 +197,11 @@ public class GlobalState  {
 
 	/**************************************************
 	 * 
-	 * Thawing of files to objects.
+	 * Mapping workflow to workflow name.
 	 */
 
-/*	public Map<String,Workflow> thawWorkflows() {
+	public Map<String,Workflow> mapWorkflowsToNames(List<Workflow> l) {
 		Map<String,Workflow> ret=null;
-		List<Workflow> l = ((ArrayList<Workflow>)Tools.readObjectFromFile(myC,Constants.CONFIG_FILES_DIR+Constants.WF_FROZEN_FILE_ID));		
 		if (l==null) 
 			Log.e("NILS","Parse Error: Workflowlist is null in SetWorkFlows");
 		else {
@@ -244,10 +221,12 @@ public class GlobalState  {
 		}
 		return ret;
 	}
-*/
+
+	/*
 	public Table thawTable() { 	
 		return ((Table)Tools.readObjectFromFile(myC,Constants.CONFIG_FILES_DIR+Constants.CONFIG_FROZEN_FILE_ID));		
 	}
+	*/
 
 	public Workflow getWorkflow(String id) {
 		return myWfs.get(id);
@@ -455,7 +434,7 @@ public class GlobalState  {
 	public void  setKeyHash(Map<String,String> h) { 	
 		artLista.destroyCache();
 		myKeyHash=h;
-		Log.d("vortex","SetKeyHash was called with "+h.toString());
+		Log.d("vortex","SetKeyHash was called with "+h);
 	}
 
 	public void setRawHash(Map<String,Variable> h) {
@@ -601,6 +580,9 @@ public class GlobalState  {
 	}
 
 	boolean syncDone=false;
+
+
+	private Configuration myModules;
 	public void synchronise(SyncEntry[] ses, boolean isMaster) {	
 		Log.e("nils,","SYNCHRONIZE. MESSAGES: ");
 		setSyncStatus(BluetoothConnectionService.BUSY);
@@ -759,6 +741,14 @@ public class GlobalState  {
 		return new CHash(err);
 
 }
+
+	public void setModules(Configuration myModules) {
+		this.myModules = myModules;
+	}
+	
+	public void flushModules() {
+		myModules.flush();
+	}
 
 
 }

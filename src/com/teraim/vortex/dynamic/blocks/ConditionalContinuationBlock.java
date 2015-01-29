@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.utils.RuleExecutor;
+import com.teraim.vortex.utils.RuleExecutor.SubstiResult;
 import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 
 public class ConditionalContinuationBlock extends Block {
@@ -39,9 +40,10 @@ public class ConditionalContinuationBlock extends Block {
 			//assume fail
 			re = RuleExecutor.getInstance(gs.getContext());
 			int eval=STOP;
-			String subst = re.substituteForValue(tokens,formula,false);
-			if (subst!=null) {
-				String strRes = re.parseExpression(formula,subst);
+			SubstiResult sr = re.substituteForValue(tokens,formula,false);
+			
+			if (sr.result!=null && !sr.IamAString) {
+				String strRes = re.parseExpression(formula,sr.result);
 				if (strRes != null) {
 					if (Double.parseDouble(strRes)==1) {
 						Log.d("nils","Evaluates to true");
@@ -54,10 +56,10 @@ public class ConditionalContinuationBlock extends Block {
 					eval=STOP;
 				}
 			} else {
-				Log.e("nils","Substitution failed for formula ["+formula+"]");
+				Log.e("nils","Substitution failed for formula ["+formula+"]. Text type to blame? ["+sr.IamAString+"]");
 				eval=STOP;
 			}
-
+			
 		
 		boolean ret = lastEval==null?true:eval!=lastEval;
 		lastEval = eval;

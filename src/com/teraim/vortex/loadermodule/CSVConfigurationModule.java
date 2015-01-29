@@ -9,9 +9,9 @@ import com.teraim.vortex.utils.PersistenceHelper;
 
 public abstract class CSVConfigurationModule extends ConfigurationModule {
 
-	public CSVConfigurationModule(PersistenceHelper gPh,
+	public CSVConfigurationModule(PersistenceHelper gPh,PersistenceHelper ph,
 			Source source, String urlOrPath, String fileName, String moduleName) {
-		super(gPh, Type.csv, source, urlOrPath, fileName, moduleName);
+		super(gPh,ph, Type.csv, source, urlOrPath, fileName, moduleName);
 	}
 
 	protected abstract LoadResult prepare() throws IOException;

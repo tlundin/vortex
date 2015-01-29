@@ -1,5 +1,7 @@
 package com.teraim.vortex.loadermodule;
 
+import java.util.List;
+
 import android.util.Log;
 
 import com.teraim.vortex.FileLoadedCb;
@@ -9,34 +11,38 @@ import com.teraim.vortex.utils.PersistenceHelper;
 
 public class ModuleLoader implements FileLoadedCb{
 	private Configuration myModules;
-	private LoggerI o;
+	private LoggerI o,debug;
 	private PersistenceHelper globalPh;
-	public ModuleLoader(Configuration currentlyKnownModules, LoggerI o, PersistenceHelper glPh) {
+	private ModuleLoaderListener caller;
+	private String loaderId;
+
+	public interface ModuleLoaderListener {
+		
+		void loadSuccess(String loaderId);
+	}
+	
+	
+	
+	public ModuleLoader(String loaderId, Configuration currentlyKnownModules, LoggerI o, PersistenceHelper glPh, LoggerI debugConsole,ModuleLoaderListener caller) {
 		myModules = currentlyKnownModules;
 		this.o=o;
+		this.debug=debugConsole;
 		globalPh = glPh;
+		this.caller = caller;
+		this.loaderId=loaderId;
 	}
 
-	public void loadModulesIfRequired() {
+	public void loadModules() {
 
 		ConfigurationModule module;
-		do {
-			module = myModules.getCurrent();
-			if (module!=null) {
-			o.addRow(module.getName()+" :");
-			if (!module.isLoaded()) {
-				//This asynchronous call will return through callback
-				module.load(this);
-				break;
-			}
-			o.addRow(module.getName()+" :");
-			o.addText(": [");
-			o.addYellowText(module.version==null?"?":module.version);
-			o.addText("] ");
-			o.addGreenText("(OK)");
-			o.draw();
-			}
-		} while (myModules.next()); 
+		//check if any module needs to load.
+		if (myModules.hasNext()) {
+			module = myModules.next();
+			o.addRow(module.getLabel()+" :");
+			module.load(this);
+		} else 
+			caller.loadSuccess(loaderId);
+			
 	}
 
 
@@ -48,82 +54,98 @@ public class ModuleLoader implements FileLoadedCb{
 			o.writeTicky(args[0].toString());
 		else
 			o.writeTicky(args[0].toString()+"/"+args[1].toString());
-		
+
 	}
 
 	@Override
 	public void onFileLoaded(LoadResult res) {
 		o.removeTicky();
-		Log.d("vortex","got back!!!");
 		ConfigurationModule module = res.module;
 		if (module != null) { 
+			debug.addRow("Module "+res.module.fileName+" loaded. Returns code "+res.errCode.name()+(res.errorMessage!=null?" and errorMessage: "+res.errorMessage:""));
+			Log.d("vortex","Module "+res.module.fileName+" loaded. Returns code "+res.errCode.name()+(res.errorMessage!=null?" and errorMessage: "+res.errorMessage:""));
 			o.addText(" [");
-			if (res.errCode==ErrorCode.frozen || res.errCode == ErrorCode.sameold || res.errCode == ErrorCode.frozenWithoutVersion) {
-				//Now we can safely update the version of the module and set loaded. 
+			if (module.version!=null)
+				o.addText(module.version);
+			else
+				o.addText("?");
+			o.addText("]");
+
+			switch (res.errCode) {
+			
+			case sameold:
+				if (thawModule(module)) {;
+					module.setLoaded();
+					o.addText(" No update");
+				} else 
+					o.addYellowText(" Fail..will retry");
+					//failing thaw will lead to retry.
+				break;
+			case frozen:
+			case nothingToFreeze:
+			case noData:
 				module.setLoaded();
-				if (module.version==null)
-					o.addYellowText("?");
-				else
-					o.addGreenText(module.version);
-				o.addText("] ");				
-				switch (res.errCode) {
-				case frozen:
-					o.addGreenText("(New!)");
-					break;
-				case sameold:
-					o.addGreenText("(OK)");
-					break;
-				case frozenWithoutVersion:
-					o.addYellowText("(Ok)");
-					break;
+				o.addGreenText(" New!");
+				break;
+			case notSupported:
+			case ioError:
+			case badURL:
+			case parseError:
+				if (module.isRequired()) {
+					o.addRedText(" !");o.addText(res.errCode.name());o.addRedText("!");
 				}
-				
-				o.draw();
-				if (myModules.next())
-					loadModulesIfRequired();
-			} else {
-				//Not frozen..something happened..
-				
-				//frozen in earlier times?
+				if (res.errCode==ErrorCode.notSupported) {
+					o.addRow("The file contains instructions that this Vortex version is not able to run. Please upgrade.");
+				}
 				if (module.frozenFileExists()) {
-					o.addYellowText(module.getFrozenVersion());
-					o.addText("] ");
-					o.addYellowText("(load failed but found frozen)");
-					o.draw();
-					module.setLoadedFromFrozenCopy();
-					//Any modules left to load?
-					if (myModules.next())
-						loadModulesIfRequired();
-					//not frozen and error?
-				} else {
-					//Not ok if required!
-					if (module.isRequired()) {
-						o.addRedText("ERROR");
-						o.addText("] ");
-						o.addRedText("(load failed)");
-						o.addRow("Application load failed due to missing required module");
-						o.addRow("Error: "+res.errCode.name());
-						o.draw();
-						if (res.errorMessage!=null)
-							o.addRow("Detail: "+res.errorMessage);
-
+					if (thawModule(module)) {
+						o.addRow("");o.addYellowText("Current version will be used.");
 					} else {
-						o.addYellowText("Not Found");
-						o.addText("] ");
-						o.addGreenText("(OK)");
-						o.draw();
-						module.setLoadedFromFrozenCopy();
-						//Any modules left to load?
-						if (myModules.next())
-							loadModulesIfRequired();
-
+						if (module.isRequired()) {
+							o.addRow("Upstart aborted..could neither load file from Net or Disk");
+							o.draw();
+							return;
+						}
 					}
-				}
-
-			} 
+				} else 
+					if (module.isRequired()) {
+						o.addRow("Upstart aborted..could neither load file from Net or Disk");
+						o.draw();
+						return;
+					} else {
+						o.addText(" Not loaded");
+						module.setNotFound();
+					}
+				break;
+			default:
+				o.addText("?: "+res.errCode.name());
+				break;
+			}
 				
+			o.draw();
+			loadModules();
 		}
+
 	}
+
+	private boolean thawModule(ConfigurationModule module) {
+		LoadResult res = module.thaw();
+		if (res.errCode!=ErrorCode.thawed) {
+			debug.addRow("");
+			debug.addRedText("Failed to thaw module "+module.fileName+" due to "+res.errCode.name());
+			Log.e("vortex","Failed to thaw module "+module.fileName+" due to "+res.errCode.name());
+			//Remove the corrupt file and remove version.
+			if (module.deleteFrozen())
+				debug.addYellowText("Corrupt file has been deleted");
+			//retry loading the file - don't set it loaded.
+				return false;
+		}
+		debug.addText("Module "+module.getFileName()+"was thawed");
+		return true;
+	}
+
 	//TODO: REMOVE
-	public void onFileLoaded(ErrorCode errCode, String version) {};
+	public void onFileLoaded(ErrorCode errCode, String version) {}
+
+	
 }

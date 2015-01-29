@@ -195,6 +195,11 @@ public class DrawerMenu {
 		return mDrawerToggle;
 	}
 
+	public void clear() {
+		items.clear();
+		mAdapter.notifyDataSetChanged();				
+	}
+
 	
 
 }

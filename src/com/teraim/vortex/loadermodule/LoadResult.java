@@ -1,6 +1,5 @@
 package com.teraim.vortex.loadermodule;
 
-import com.teraim.vortex.loadermodule.LoadResult.ErrorCode;
 
 public class LoadResult {
 	
@@ -16,7 +15,7 @@ public class LoadResult {
 		whatever, 
 		configurationError, 
 		Aborted, 
-		LoadInBackground, newConfigVersionLoaded, badURL,frozen, parsed, noData, frozenWithoutVersion
+		LoadInBackground, newConfigVersionLoaded, badURL,frozen, parsed, noData, thawed, classNotFound, nothingToFreeze, notSupported
 	}
 	
 	

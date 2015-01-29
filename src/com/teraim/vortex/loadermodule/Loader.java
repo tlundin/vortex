@@ -176,6 +176,7 @@ public abstract class Loader extends AsyncTask<ConfigurationModule ,Integer,Load
 			if (rowC++%20==0)
 				this.publishProgress(rowC,noOfRows);
 			if (loadR!=null) {
+				Log.d("vortex","Returning JSON result: "+loadR.errCode);
 				res = loadR;
 				break;
 			}
@@ -188,9 +189,14 @@ public abstract class Loader extends AsyncTask<ConfigurationModule ,Integer,Load
 	
 
 	protected LoadResult freeze(ConfigurationModule m) throws IOException {
-		m.freeze(m.getEssence());
-		
-			return new LoadResult(m,m.version!=null?ErrorCode.frozen:ErrorCode.frozenWithoutVersion);
+		boolean hasEssence = m.freeze();
+		if (m.version!=null)
+			m.setFrozenVersion(m.version);
+
+		if (hasEssence)
+			return new LoadResult(m,ErrorCode.frozen);
+		else
+			return new LoadResult(m,ErrorCode.nothingToFreeze);
 	}
 
 }
