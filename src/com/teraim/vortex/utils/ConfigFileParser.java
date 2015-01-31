@@ -90,7 +90,7 @@ public class ConfigFileParser extends AsyncTask<Context,Void,ErrorCode>{
 				code == ErrorCode.newConfigVersionLoaded|| 
 				code == ErrorCode.bothFilesLoaded) 
 			//if(!Tools.witeObjectToFile(ctx, myTable, Constants.CONFIG_FILES_DIR+Constants.CONFIG_FROZEN_FILE_ID))
-				code = ErrorCode.ioError;
+				code = ErrorCode.IOError;
 
 		return code;
 	}
@@ -214,7 +214,7 @@ public class ConfigFileParser extends AsyncTask<Context,Void,ErrorCode>{
 					o.addRow("");
 					o.addRedText("Config file Header missing either name or functional group column. Load cannot proceed");
 					br.close();
-					return ErrorCode.parseError;
+					return ErrorCode.ParseError;
 				}
 
 
@@ -330,7 +330,7 @@ public class ConfigFileParser extends AsyncTask<Context,Void,ErrorCode>{
 			} else {
 				br.close();
 				br2.close();
-				return ErrorCode.parseError;
+				return ErrorCode.ParseError;
 			}			
 			br.close();	
 			br2.close();
@@ -346,7 +346,7 @@ public class ConfigFileParser extends AsyncTask<Context,Void,ErrorCode>{
 			PrintWriter pw = new PrintWriter(sw);
 			e.printStackTrace(pw);		
 			o.addRedText(sw.toString());
-			return ErrorCode.ioError;			
+			return ErrorCode.IOError;			
 		}
 		if (parseConfig && parseVarPattern) 
 			return ErrorCode.bothFilesLoaded;

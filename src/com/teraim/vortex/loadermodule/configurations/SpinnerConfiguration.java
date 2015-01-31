@@ -58,7 +58,7 @@ public class SpinnerConfiguration extends CSVConfigurationModule {
 				o.addRow("R"+i+":"+r[i]);
 			}
 			String errMsg = "Spinnerdef file corrupt. Check Log for details";
-			return new LoadResult(this,ErrorCode.parseError,errMsg);
+			return new LoadResult(this,ErrorCode.ParseError,errMsg);
 			} else {
 				String id = r[0];
 				if (curId==null || !id.equals(curId)) {

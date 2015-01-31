@@ -1,6 +1,7 @@
 package com.teraim.vortex.ui;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 import android.app.AlertDialog;
@@ -43,8 +44,6 @@ import com.teraim.vortex.utils.PersistenceHelper;
 public class LoginConsoleFragment extends Fragment implements ModuleLoaderListener {
 
 	TextView log;
-	private TextView versionTxt;
-	private TextView licenseTxt;
 	private final String License = "This sw uses 3rd party components that are under Apache 2.0 license.";
 	private LoggerI loginConsole,debugConsole;
 	private PersistenceHelper globalPh,ph;
@@ -53,23 +52,26 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 	private Configuration myModules;
 	private DbHelper myDb;
 	private boolean running=false;
+	private TextView appTxt;
+	private String oldV = "";
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 		View view = inflater.inflate(R.layout.fragment_login_console,
 				container, false);
+		TextView versionTxt,licenseTxt;
 
 		log = (TextView)view.findViewById(R.id.logger);
 		versionTxt = (TextView)view.findViewById(R.id.versionTxt);
 		licenseTxt = (TextView)view.findViewById(R.id.licenseTxt);
+		appTxt = (TextView)view.findViewById(R.id.appTxt);
 		Typeface type=Typeface.createFromAsset(getActivity().getAssets(),
 				"clacon.ttf");
 		log.setTypeface(type);
 		log.setMovementMethod(new ScrollingMovementMethod());
 		versionTxt.setText("Vortex, ver. "+Constants.VORTEX_VERSION);
 		licenseTxt.setText(License);
-
 		//Create global state
 
 
@@ -78,9 +80,10 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		bundleName = globalPh.get(PersistenceHelper.BUNDLE_NAME);
 		if (bundleName == null || bundleName.length()==0)
 			bundleName = "Vortex";
-
-
+		
 		ph	 = new PersistenceHelper(this.getActivity().getSharedPreferences(globalPh.get(PersistenceHelper.BUNDLE_NAME), Context.MODE_PRIVATE));
+		oldV= ph.get(PersistenceHelper.CURRENT_VERSION_OF_WF_BUNDLE);
+		appTxt.setText("Running application "+bundleName+" ["+oldV+"]");
 
 		loginConsole = new Logger(this.getActivity(),"INITIAL");
 		loginConsole.setOutputView(log);
@@ -149,9 +152,8 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 			Intent intent = new Intent();
 			intent.setAction("INITSTARTS");
 			this.getActivity().sendBroadcast(intent);
-			loginConsole.addRow("Loading Modules for ");
-			loginConsole.addYellowText(bundleName);
-			Log.d("vortex","Loading Modules for "+bundleName);
+			loginConsole.addRow("Loading In Memory Modules");
+			Log.d("vortex","Loading In Memory Modules");
 			myLoader.loadModules();
 		}
 	}
@@ -298,7 +300,6 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		Log.d("vortex","Arrives to loadsucc with ID: "+loaderId);
 		//If load successful, create database and import data into it. 
 		if (loaderId.equals("moduleLoader")) {
-			Log.d("vortex","getzzz: "+loaderId);
 			loginConsole.addRow("");
 			//			loginConsole.addGreenText("All modules loaded...preparing database");
 			loginConsole.draw();
@@ -309,9 +310,10 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 				Log.d("vortex","name "+m.getFileName());
 				Table t = (Table)m.getEssence();
 				myDb = new DbHelper(this.getActivity().getApplicationContext(),t, globalPh,ph,bundleName);
+				Configuration dbModules = new Configuration(Constants.getDBImportModules(globalPh, ph, server(), bundleName, debugConsole, myDb));
 				//Import historical data to database. 
-				ModuleLoader myDBLoader = new ModuleLoader("dbloader",new Configuration(Constants.getDBImportModule(globalPh,ph,server(),bundleName,debugConsole,myDb)
-						),loginConsole,globalPh,debugConsole,this);
+				ModuleLoader myDBLoader = new ModuleLoader("dbloader",dbModules,loginConsole,globalPh,debugConsole,this);
+				loginConsole.addRow("Loading Database Modules");			
 				myDBLoader.loadModules();
 
 			} 
@@ -347,6 +349,11 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 				Start.singleton.getDrawerMenu().clear();
 				gs.sendEvent(MenuActivity.INITDONE);
 				running = true;
+				String newV = ph.get(PersistenceHelper.CURRENT_VERSION_OF_WF_BUNDLE);
+				boolean isNew = !newV.equals(oldV);
+				if (isNew)
+					appTxt.setText("Running application "+bundleName+" --New Version! ["+newV+"]");
+
 				Start.singleton.changePage(wf,null);
 				Log.d("vortex","executing workflow main!");
 				gs.setModules(myModules);

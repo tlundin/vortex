@@ -162,7 +162,7 @@ public class HistoricalDataImport extends AsyncTask<GlobalState ,Integer,LoadRes
 
 					} catch (JSONException e) {
 						e.printStackTrace();
-						return new LoadResult(ErrorCode.parseError,null);
+						return new LoadResult(ErrorCode.ParseError,null);
 					}
 					this.publishProgress(i,jArray.length());
 					ph.put(PersistenceHelper.HIST_LOAD_COUNTER+vNo, i);
@@ -179,7 +179,7 @@ public class HistoricalDataImport extends AsyncTask<GlobalState ,Integer,LoadRes
 					}
 				}
 
-			} catch(Exception e) { e.printStackTrace();return new LoadResult(ErrorCode.parseError,null);}
+			} catch(Exception e) { e.printStackTrace();return new LoadResult(ErrorCode.ParseError,null);}
 
 
 		} 
@@ -264,13 +264,13 @@ public class HistoricalDataImport extends AsyncTask<GlobalState ,Integer,LoadRes
 				reader.close();
 			} catch (EOFException e) {
 				e.printStackTrace();
-				return new LoadResult(ErrorCode.ioError,null);
+				return new LoadResult(ErrorCode.IOError,null);
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 				return new LoadResult(ErrorCode.notFound,null);			
 			} catch (IOException e) {			
 				e.printStackTrace();
-				return new LoadResult(ErrorCode.ioError,null);
+				return new LoadResult(ErrorCode.IOError,null);
 			}
 			finally {
 				try {if (in!=null)in.close();}catch (Exception e){};

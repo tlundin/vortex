@@ -1222,13 +1222,13 @@ public class DbHelper extends SQLiteOpenHelper {
 
 		valuez.clear();
 		valuez.put(ac,VariableConfiguration.HISTORICAL_MARKER);		
-		if (!rID.equals(NULL))
+		if (rID!=null)
 			valuez.put(rc,rID);
-		if (!pID.equals(NULL))
+		if (pID!=null)
 			valuez.put(pc,pID);
-		if (!dID.equals(NULL))
+		if (dID!=null)
 			valuez.put(dc,dID);
-		if (!sID.equals(NULL))
+		if (sID!=null)
 			valuez.put(sc,sID);
 		//		values.put(getColumnName("linje"),lID);
 		//		values.put(getColumnName("abo"),aID);	

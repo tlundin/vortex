@@ -9,13 +9,13 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import android.os.AsyncTask;
+import android.util.JsonReader;
 import android.util.Log;
 import android.util.Xml;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.teraim.vortex.FileLoadedCb;
-import com.teraim.vortex.exceptions.SameOldException;
 import com.teraim.vortex.loadermodule.ConfigurationModule.Type;
 import com.teraim.vortex.loadermodule.LoadResult.ErrorCode;
 import com.teraim.vortex.log.LoggerI;
@@ -150,53 +150,48 @@ public abstract class Loader extends AsyncTask<ConfigurationModule ,Integer,Load
 		if (lr!=null)
 			return lr;
 		rowC=0;
-		LoadResult res;
-		while((res=m.parse(parser))==null)
+		while((lr=m.parse(parser))==null)
 			this.publishProgress(rowC++);
-		return res;
+		return lr;
 	}
 	
 	
 	protected LoadResult parseJSON(JSONConfigurationModule m) throws IOException, JSONException {
-		String[] myRows=null;
-		Integer noOfRows=rowC;
-		LoadResult res = null;
-		rowC=1;
-		LoadResult lr = m.prepare(m.rawData);
-		//exit if prepare returns.
+		JsonReader parser = new JsonReader(new StringReader(m.rawData));
+		LoadResult lr = m.prepare(parser);
 		if (lr!=null)
 			return lr;
-
-		if (m.rawData!=null) 
-			myRows = m.rawData.split("\\n");
-		else
-			return new LoadResult(m,ErrorCode.noData);
-		for (String row:myRows) {
-			loadR = m.parse(row,rowC);
-			if (rowC++%20==0)
-				this.publishProgress(rowC,noOfRows);
-			if (loadR!=null) {
-				Log.d("vortex","Returning JSON result: "+loadR.errCode);
-				res = loadR;
-				break;
-			}
-		}
-		if (res==null)
-			res = new LoadResult(m,ErrorCode.parsed);
-		this.publishProgress(rowC,noOfRows);
-		return res;
+		rowC=0;
+		while((lr=m.parse(parser))==null)
+			this.publishProgress(rowC++);
+		return lr;
 	}
 	
 
 	protected LoadResult freeze(ConfigurationModule m) throws IOException {
-		boolean hasEssence = m.freeze();
+		
+		//Multiple steps or only one to freeze?
+		if (m.freezeSteps>0) {
+			rowC=0;
+			while (rowC<m.freezeSteps) {
+			m.freeze(rowC++);
+			if (rowC%10==0)
+				this.publishProgress(rowC,m.freezeSteps);
+
+			}
+		} else 
+			m.freeze(-1);
+			
+		
 		if (m.version!=null)
 			m.setFrozenVersion(m.version);
-
-		if (hasEssence)
+		if (m.getEssence()!=null)
 			return new LoadResult(m,ErrorCode.frozen);
-		else
-			return new LoadResult(m,ErrorCode.nothingToFreeze);
+		else {
+			Log.d("vortex","in freez: Essence is "+m.getEssence());
+			return new LoadResult(m,ErrorCode.noData);
+		}
+			
 	}
 
 }

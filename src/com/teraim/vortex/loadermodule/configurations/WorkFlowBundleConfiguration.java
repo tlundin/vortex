@@ -90,7 +90,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				try {
 					float verf = Float.parseFloat(minVersion);
 					if (Constants.VORTEX_VERSION<verf)
-						return new LoadResult(this,ErrorCode.notSupported);
+						return new LoadResult(this,ErrorCode.Unsupported);
 
 				} catch (NumberFormatException e) {
 					o.addRow("");

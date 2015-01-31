@@ -79,7 +79,7 @@ public class GroupsConfiguration extends CSVConfigurationModule {
 			if (nameIndex ==-1 || groupIndex == -1) {
 				o.addRow("");
 				o.addRedText("Config file Header missing either name or functional group column. Load cannot proceed");
-				return new LoadResult(this,ErrorCode.parseError);
+				return new LoadResult(this,ErrorCode.ParseError);
 			}
 		} else {
 			//Split config file into parts according to functional group.
@@ -100,7 +100,7 @@ public class GroupsConfiguration extends CSVConfigurationModule {
 			} else {
 				o.addRow("");
 				o.addRedText("Impossible to split row: "+row);
-				return new LoadResult(this,ErrorCode.parseError);
+				return new LoadResult(this,ErrorCode.ParseError);
 			}
 		}
 		return null;

@@ -117,7 +117,7 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 		if (code == ErrorCode.newConfigVersionLoaded) {
 			//boolean ok= Tools.witeObjectToFile(ctx, myFlow, Constants.CONFIG_FILES_DIR+Constants.WF_FROZEN_FILE_ID);
 			if (false)
-				code = ErrorCode.ioError;
+				code = ErrorCode.IOError;
 			else {
 				o.addRow("Setting current version of workflow bundle to "+myVersion);
 				ph.put(PersistenceHelper.CURRENT_VERSION_OF_WF_BUNDLE,myVersion);
@@ -151,13 +151,13 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 			myFlow = readBundle(parser);
 		} catch (XmlPullParserException e) {
 			e.printStackTrace();
-			return ErrorCode.parseError;
+			return ErrorCode.ParseError;
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			return ErrorCode.notFound;			
 		} catch (IOException e) {			
 			e.printStackTrace();
-			return ErrorCode.ioError;
+			return ErrorCode.IOError;
 
 		} catch (SameOldException e) {
 			return ErrorCode.sameold;
@@ -177,7 +177,7 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 			return ErrorCode.newConfigVersionLoaded;
 		}
 		//This should never happen.
-		return ErrorCode.parseError;
+		return ErrorCode.ParseError;
 	}
 
 

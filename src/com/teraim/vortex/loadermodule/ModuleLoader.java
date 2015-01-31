@@ -51,9 +51,9 @@ public class ModuleLoader implements FileLoadedCb{
 	@Override
 	public void onUpdate(Integer ...args) {
 		if (args.length==1)
-			o.writeTicky(args[0].toString());
+			o.writeTicky(" "+args[0].toString());
 		else
-			o.writeTicky(args[0].toString()+"/"+args[1].toString());
+			o.writeTicky(" "+args[0].toString()+"/"+args[1].toString());
 
 	}
 
@@ -74,27 +74,33 @@ public class ModuleLoader implements FileLoadedCb{
 			switch (res.errCode) {
 			
 			case sameold:
-				if (thawModule(module)) {;
+				if (thawModule(module)) {
 					module.setLoaded();
 					o.addText(" No update");
-				} else 
-					o.addYellowText(" Fail..will retry");
+				} else { 
+					o.addYellowText(" fail..retrying..");
+					module.setFrozenVersion(null);
+					module.load(this);
+					o.draw();
+					return;
 					//failing thaw will lead to retry.
+				}
 				break;
 			case frozen:
 			case nothingToFreeze:
-			case noData:
 				module.setLoaded();
 				o.addGreenText(" New!");
 				break;
-			case notSupported:
-			case ioError:
-			case badURL:
-			case parseError:
+			case Unsupported:
+			case IOError:
+			case BadURL:
+			case ParseError:
+			case Aborted:
+			case noData:
 				if (module.isRequired()) {
 					o.addRedText(" !");o.addText(res.errCode.name());o.addRedText("!");
 				}
-				if (res.errCode==ErrorCode.notSupported) {
+				if (res.errCode==ErrorCode.Unsupported) {
 					o.addRow("The file contains instructions that this Vortex version is not able to run. Please upgrade.");
 				}
 				if (module.frozenFileExists()) {

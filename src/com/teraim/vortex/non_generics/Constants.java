@@ -27,7 +27,7 @@ import com.teraim.vortex.utils.PersistenceHelper;
 
 public class Constants {
 
-	public final static float VORTEX_VERSION = 0.993f;
+	public final static float VORTEX_VERSION = 0.994f;
 
 	
 	//String constants
@@ -42,7 +42,6 @@ public class Constants {
 	public static final String EXPORT_FILES_DIR = VORTEX_ROOT_DIR + "export/";
 	public static final String PIC_ROOT_DIR = VORTEX_ROOT_DIR + "pics/";
 	public static final String OLD_PIC_ROOT_DIR = VORTEX_ROOT_DIR + "old_pics/";
-	public static final String GIS_DATA_DIR = PIC_ROOT_DIR + "flygdata/";
 	
 	//Folders for backup on SD card.
 	public static final String EXT_BACKUP_DIR = VORTEX_ROOT_DIR + "Backup";
@@ -179,7 +178,6 @@ public class Constants {
 		
 		ret.add(new SpinnerConfiguration(globalPh,ph,server,bundle,debugConsole));
 		ret.add(new WorkFlowBundleConfiguration(globalPh,ph,server,bundle,debugConsole));
-		ret.add(new GisPolygonConfiguration(globalPh,ph,server,bundle,debugConsole));
 		ret.add(new GroupsConfiguration(globalPh,ph,server,bundle,debugConsole));		
 		//VariableConfiguration depends on the Groups Configuration.
 		ret.add(new VariablesConfiguration(globalPh,ph,server,bundle,debugConsole));
@@ -187,10 +185,14 @@ public class Constants {
 		return ret;
 	}
 
-	public static ConfigurationModule getDBImportModule(
+	public static List<ConfigurationModule> getDBImportModules(
 			PersistenceHelper globalPh, PersistenceHelper ph, String server,
-			String bundleName, LoggerI debugConsole,DbHelper db) {
-		 return new ImportDataConfiguration(globalPh,ph,server,bundleName,debugConsole,db);
+			String bundle, LoggerI debugConsole,DbHelper db) {
+		List<ConfigurationModule> ret = new ArrayList<ConfigurationModule>();
+		//Workflow xml. Named same as bundle.		
+		ret.add(new GisPolygonConfiguration(globalPh,ph,Constants.VORTEX_ROOT_DIR+bundle+"/flygdata/",debugConsole,db));
+		ret.add(new ImportDataConfiguration(globalPh,ph,server,bundle,debugConsole,db));
+		return ret;
 	}
 	
 

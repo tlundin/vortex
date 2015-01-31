@@ -61,15 +61,15 @@ public class WebLoader extends Loader {
 
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
-			return new LoadResult(module,ErrorCode.badURL);
+			return new LoadResult(module,ErrorCode.BadURL);
 
 		} catch (IOException e) {
-			return new LoadResult(module,ErrorCode.ioError);
+			return new LoadResult(module,ErrorCode.IOError);
 		} catch (XmlPullParserException e) {
-			return new LoadResult(module,ErrorCode.parseError);
+			return new LoadResult(module,ErrorCode.ParseError);
 		} catch (JSONException e) {
 			e.printStackTrace();
-			return new LoadResult(module,ErrorCode.parseError);
+			return new LoadResult(module,ErrorCode.ParseError);
 		}
 		finally {
 			try {if (in!=null)in.close();}catch (Exception e){};

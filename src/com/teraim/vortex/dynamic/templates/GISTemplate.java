@@ -29,6 +29,7 @@ import com.teraim.vortex.dynamic.workflow_realizations.WF_Container;
 import com.teraim.vortex.gis.GisImageView;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.Geomatte;
+import com.teraim.vortex.utils.PersistenceHelper;
 import com.teraim.vortex.utils.Tools;
 /**
  * 
@@ -48,6 +49,7 @@ public class GISTemplate extends Executor implements LocationListener {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
+		String gisDir = Constants.VORTEX_ROOT_DIR+gs.getPreferences().get(PersistenceHelper.BUNDLE_NAME)+"/flygdata/";
 		ctx = this.getActivity();
 		View v = inflater.inflate(R.layout.template_gis, container, false);	
 		my_root = (LinearLayout)v.findViewById(R.id.myRoot);
@@ -63,7 +65,7 @@ public class GISTemplate extends Executor implements LocationListener {
 			Log.d("vortex","No workflow found in oncreate default!!!!");
 			
 		String picName = "R207_3x3_feb_2014.jpg";
-		Bitmap bmp = Tools.getScaledImage(ctx, Constants.GIS_DATA_DIR+picName);
+		Bitmap bmp = Tools.getScaledImage(ctx,gisDir+picName);
 		gi.setImageBitmap(bmp);
 		if (bmp==null)
 			Log.e("vortex","blimp was null!!");

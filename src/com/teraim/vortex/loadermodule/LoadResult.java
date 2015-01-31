@@ -9,13 +9,13 @@ public class LoadResult {
 		loaded,
 		bothFilesLoaded,
 		notFound,
-		parseError,
-		ioError,
+		ParseError,
+		IOError,
 		sameold, 
 		whatever, 
 		configurationError, 
 		Aborted, 
-		LoadInBackground, newConfigVersionLoaded, badURL,frozen, parsed, noData, thawed, classNotFound, nothingToFreeze, notSupported
+		LoadInBackground, newConfigVersionLoaded, BadURL,frozen, parsed, noData, thawed, ClassNotFound, nothingToFreeze, Unsupported
 	}
 	
 	

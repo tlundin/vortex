@@ -34,10 +34,12 @@ public abstract class ConfigurationModule {
 	protected boolean IamLoaded=false,versionControl;
 
 	private Integer linesOfRawData;
-	private Configuration mModules;
 	protected Object essence;
 	private boolean notFound=false;
-	
+	//freezeSteps contains the number of steps required to freeze the object. Should be -1 if not set specifically by specialized classes.
+	protected int freezeSteps=-1;
+	//tells if this module is stored on disk or db.
+	protected boolean isDatabaseModule = false;
 	
 	public ConfigurationModule(PersistenceHelper gPh,PersistenceHelper ph, Type type, Source source, String urlOrPath,String fileName,String moduleName) {
 		this.source=source;
@@ -120,8 +122,8 @@ public abstract class ConfigurationModule {
 		return printedLabel;
 	}
 	
-	//Freeze this configuration.
-	public boolean freeze() throws IOException {
+	//Freeze this configuration. counter is used by some dependants.
+	public boolean freeze(int counter) throws IOException {
 		this.setEssence();
 		if (essence!=null) {
 			Tools.witeObjectToFile(essence, this.frozenPath);
@@ -132,15 +134,18 @@ public abstract class ConfigurationModule {
 	}
 	
 	public LoadResult thaw(){
+		//A database module is by default saved already.
+		if (isDatabaseModule)
+			return new LoadResult(this,ErrorCode.thawed);
 		try {
 			essence = Tools.readObjectFromFile(this.frozenPath);
 			if (essence==null)
 				Log.e("vortex","nä men va faaan!!");
 		} catch (IOException e) {
-			return new LoadResult(this,ErrorCode.ioError,"Failed to load frozen object");
+			return new LoadResult(this,ErrorCode.IOError,"Failed to load frozen object");
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
-			return new LoadResult(this,ErrorCode.classNotFound,"Failed to load frozen object");
+			return new LoadResult(this,ErrorCode.ClassNotFound,"Failed to load frozen object");
 		}
 		return new LoadResult(this,ErrorCode.thawed);
 		
@@ -157,8 +162,6 @@ public abstract class ConfigurationModule {
 	public boolean deleteFrozen() {
 		return new File(this.frozenPath).delete();
 	}
-
-
 	
 
 

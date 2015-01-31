@@ -119,7 +119,9 @@ import com.teraim.vortex.non_generics.Constants;
 		list(variable,0),
 		existence(variable,0),
 		auto_increment(variable,0),
-		math(function,-1),						
+		math(function,-1),
+		and(math,0),
+		or(math,0),
 		abs(math,0), 
 		acos(math,0), 
 		asin(math,0), 
@@ -429,7 +431,7 @@ import com.teraim.vortex.non_generics.Constants;
 					replaceThis+=args[i];
 				}
 				replaceThis+=")";
-				subst = subst.replace(replaceThis.toLowerCase(), funcEval);
+				subst = subst.replace(replaceThis.toLowerCase(), funcEval!=null?funcEval:"0");
 				Log.d("nils","Trying to substitute:["+replaceThis+"]. After Substitutionz: "+subst);
 
 			} else
@@ -536,6 +538,9 @@ import com.teraim.vortex.non_generics.Constants;
 		if (rows==null || rows.size()==0) {
 			gs.getLogger().addRow("");
 			gs.getLogger().addRedText("Filter returned emptylist in HASx construction. Filter: "+item.get());
+			gs.getLogger().addRow("");
+			gs.getLogger().addRedText("This is not good! A HASx function needs a list with something in. Check your rule!");
+			
 			return null;
 		}
 		float rowC=rows.size();

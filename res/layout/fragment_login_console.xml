@@ -40,12 +40,23 @@
         android:layout_height="wrap_content"
         android:layout_above="@+id/logger"
         android:layout_alignParentLeft="true"
-        android:layout_marginBottom="55dp"
+        android:layout_marginBottom="75dp"
         android:layout_marginLeft="10dp"
         android:textColor="@color/white"
         android:textSize="24sp"
         android:textStyle="bold" />
 
+        <TextView
+        android:id="@+id/appTxt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/logger"
+        android:layout_alignParentLeft="true"
+        android:layout_marginBottom="55dp"
+        android:layout_marginLeft="10dp"
+        android:textColor="@color/yellow"
+        android:textSize="20sp"
+        android:textStyle="bold" />
     <ImageView
         android:id="@+id/teraimlogo"
         android:layout_width="wrap_content"

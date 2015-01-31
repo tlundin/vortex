@@ -47,13 +47,13 @@ public class FileLoader extends Loader {
 		}  catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			return new LoadResult(module,ErrorCode.ioError);
+			return new LoadResult(module,ErrorCode.IOError);
 		} catch (XmlPullParserException e) {
 			e.printStackTrace();
-			return new LoadResult(module,ErrorCode.parseError);
+			return new LoadResult(module,ErrorCode.ParseError);
 		} catch (JSONException e) {
 			e.printStackTrace();
-			return new LoadResult(module,ErrorCode.parseError);
+			return new LoadResult(module,ErrorCode.ParseError);
 		}
 		finally {
 			try {if (reader!=null)reader.close();}catch (Exception e){};

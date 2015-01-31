@@ -4,6 +4,10 @@ import java.io.IOException;
 
 import org.json.JSONException;
 
+import android.util.JsonReader;
+import android.util.JsonToken;
+import android.util.Log;
+
 import com.teraim.vortex.utils.PersistenceHelper;
 
 public abstract class JSONConfigurationModule extends ConfigurationModule {
@@ -13,7 +17,19 @@ public abstract class JSONConfigurationModule extends ConfigurationModule {
 		super(gPh,ph, Type.json, source, urlOrPath, fileName, moduleName);
 	}
 
-	protected abstract LoadResult prepare(String json) throws IOException, JSONException;
-	public abstract LoadResult parse(String row, Integer currentRow) throws IOException, JSONException;
+	protected abstract LoadResult prepare(JsonReader reader) throws IOException, JSONException;
+	public abstract LoadResult parse(JsonReader reader) throws IOException, JSONException;
 	
+	protected String getAttribute(JsonReader reader) throws IOException {
+		String ret;
+		if (reader.peek() != JsonToken.NULL)
+			ret =  reader.nextString();
+		else { 
+			ret = null;
+			reader.nextNull();
+		}
+		//Log.d("vortex","Value: "+ret);
+		return ret;
+
+	}
 }
