@@ -27,7 +27,7 @@ import com.teraim.vortex.utils.PersistenceHelper;
 
 public class Constants {
 
-	public final static float VORTEX_VERSION = 0.994f;
+	public final static float VORTEX_VERSION = 0.996f;
 
 	
 	//String constants
@@ -81,10 +81,10 @@ public class Constants {
 	public static final String STATUS_AVSLUTAD_OK = "3";
 	public static final String STATUS_DISABLED = "4";
 	public static final int MAX_NILS_LINJER = 12;
-	public static final String NORR = "SYD";
-	public static final String SYD = "NORR";
-	public static final String OST = "VAST";
-	public static final String VAST = "OST";
+	public static final String NORR = "NORR";
+	public static final String SYD = "SYD";
+	public static final String OST = "OST";
+	public static final String VAST = "VAST";
 
 	public static final String NULL_VALUE = "NULL";
 

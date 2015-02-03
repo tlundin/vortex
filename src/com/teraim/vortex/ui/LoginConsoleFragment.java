@@ -1,7 +1,7 @@
 package com.teraim.vortex.ui;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.io.InputStream;
 import java.util.List;
 
 import android.app.AlertDialog;
@@ -11,13 +11,18 @@ import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.teraim.vortex.GlobalState;
@@ -65,6 +70,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		log = (TextView)view.findViewById(R.id.logger);
 		versionTxt = (TextView)view.findViewById(R.id.versionTxt);
 		licenseTxt = (TextView)view.findViewById(R.id.licenseTxt);
+		ImageView logo = (ImageView)view.findViewById(R.id.logo);
 		appTxt = (TextView)view.findViewById(R.id.appTxt);
 		Typeface type=Typeface.createFromAsset(getActivity().getAssets(),
 				"clacon.ttf");
@@ -84,7 +90,13 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		ph	 = new PersistenceHelper(this.getActivity().getSharedPreferences(globalPh.get(PersistenceHelper.BUNDLE_NAME), Context.MODE_PRIVATE));
 		oldV= ph.get(PersistenceHelper.CURRENT_VERSION_OF_WF_BUNDLE);
 		appTxt.setText("Running application "+bundleName+" ["+oldV+"]");
+		
+		Log.d("imgul",  server()+bundleName+"logo.png");
+		new DownloadImageTask((ImageView) view.findViewById(R.id.logo))
+        .execute(server()+bundleName.toLowerCase()+"/logo.png");
 
+		
+		
 		loginConsole = new Logger(this.getActivity(),"INITIAL");
 		loginConsole.setOutputView(log);
 		debugConsole = Start.singleton.getLogger();
@@ -372,7 +384,30 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 
 
 
+	private class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
+	    ImageView bmImage;
 
+	    public DownloadImageTask(ImageView bmImage) {
+	        this.bmImage = bmImage;
+	    }
+
+	    protected Bitmap doInBackground(String... urls) {
+	        String urldisplay = urls[0];
+	        Bitmap mIcon11 = null;
+	        try {
+	            InputStream in = new java.net.URL(urldisplay).openStream();
+	            mIcon11 = BitmapFactory.decodeStream(in);
+	        } catch (Exception e) {
+	            Log.e("Error", e.getMessage());
+	            e.printStackTrace();
+	        }
+	        return mIcon11;
+	    }
+
+	    protected void onPostExecute(Bitmap result) {
+	        bmImage.setImageBitmap(result);
+	    }
+	}
 
 
 

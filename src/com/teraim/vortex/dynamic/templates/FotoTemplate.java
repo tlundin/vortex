@@ -63,11 +63,7 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 	private HashMap<String, ImageButton> buttonM = new HashMap<String,ImageButton>();
 	private SweLocation cords;
 	private ToggleButton avstandB;
-	private TextView norrSken;
-	private TextView vastT;
-	private TextView ostT;
-	private TextView spT;
-	private TextView sydT;
+	private TextView sydT,vastT,ostT,spT,norrT;
 	
 	private Variable n,e;
 
@@ -107,12 +103,12 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 		ost= (ImageButton)v.findViewById(R.id.pic_ost);
 		vast = (ImageButton)v.findViewById(R.id.pic_vast);
 		sp= (ImageButton)v.findViewById(R.id.sp);
-		norrSken = (TextView)v.findViewById(R.id.norrSken);
-		
-		vastT= (TextView)v.findViewById(R.id.vastT);
-		ostT= (TextView)v.findViewById(R.id.ostT);
-		spT= (TextView)v.findViewById(R.id.spT);
-		sydT= (TextView)v.findViewById(R.id.sydT);
+		sydT = (TextView)v.findViewById(R.id.sydT);
+		vastT = (TextView)v.findViewById(R.id.vastT);
+		ostT = (TextView)v.findViewById(R.id.ostT);
+		spT = (TextView)v.findViewById(R.id.spT);
+		norrT = (TextView)v.findViewById(R.id.norrT);
+
 		buttonM.clear();
 		gpsT.setText("");
 		
@@ -189,16 +185,16 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 		int status = avstand?View.INVISIBLE:View.VISIBLE;
 		boolean luck = false;
 		if (avstand) {
-			norrSken.setText("AVSTÅNDSBILD");
-			luck = initPic(norr,"AVST");
+			sydT.setText("AVSTÅNDSBILD");
+			luck = initPic(syd,"AVST");
 		} else {
-			norrSken.setText("Mot syd");
-			luck = initPic(norr,Constants.NORR);
+			sydT.setText("Mot syd");
+			luck = initPic(syd,Constants.SYD);
 		}
 		if (!luck)
-			norr.setImageResource(R.drawable.case_no_pic);
+			syd.setImageResource(R.drawable.case_no_pic);
 		
-		syd.setVisibility(status);
+		norr.setVisibility(status);
 		ost.setVisibility(status);
 		vast.setVisibility(status);
 		sp.setVisibility(status);
@@ -210,7 +206,7 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 		vastT.setVisibility(status);
 		ostT.setVisibility(status);
 		spT.setVisibility(status);
-		sydT.setVisibility(status);
+		norrT.setVisibility(status);
 		gs.getPreferences().put(PersistenceHelper.AVSTAND_IS_PRESSED,avstand);
 	}
 	

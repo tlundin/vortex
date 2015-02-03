@@ -65,7 +65,6 @@
         android:layout_alignParentRight="true"
         android:layout_marginBottom="16dp"
         android:src="@drawable/teraim_small" />
-
     <TextView
         android:id="@+id/licenseTxt"
         android:layout_width="match_parent"
@@ -75,5 +74,14 @@
         android:layout_marginLeft="10dp"
         android:textColor="@color/white"
         android:textSize="12sp" />
+
+    <ImageView
+        android:id="@+id/logo"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="16dp"
+         />
 
 </RelativeLayout>

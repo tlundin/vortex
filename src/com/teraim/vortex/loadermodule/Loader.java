@@ -86,8 +86,6 @@ public abstract class Loader extends AsyncTask<ConfigurationModule ,Integer,Load
 				}
 			}
 		}
-		//If no version field, continue.
-
 		while ((line = reader.readLine()) != null)
 		{
 			sb.append(line + "\n");

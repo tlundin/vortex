@@ -5,7 +5,6 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -17,7 +16,11 @@ import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 
+import com.teraim.vortex.dynamic.types.PhotoMeta;
 import com.teraim.vortex.dynamic.types.Point;
+import com.teraim.vortex.loadermodule.configurations.GisPolygonConfiguration;
+import com.teraim.vortex.loadermodule.configurations.GisPolygonConfiguration.GisBlock;
+import com.teraim.vortex.loadermodule.configurations.GisPolygonConfiguration.SweRefCoordinate;
 import com.teraim.vortex.non_generics.Constants;
 
 public class GisImageView extends GestureImageView {
@@ -116,63 +119,56 @@ public class GisImageView extends GestureImageView {
 	private float fixedY;
 	private float cX;
 	private float cY;
-	GisImageData gisImage;
+	PhotoMeta gisImage;
 	//difference in % between ruta and image size.
 	private float rXRatio,rYRatio;
 	
 	
-	public class GisImageData {
-		
-		float width,height;
-		int sweRefN,sweRefE;
-		public GisImageData(float width, float height, int sweRefN, int sweRefE) {
-			super();
-			this.width = width;
-			this.height = height;
-			this.sweRefN = sweRefN;
-			this.sweRefE = sweRefE;
-		}
-		public float getWidth() {
-			return width;
-		}
-		public void setWidth(float width) {
-			this.width = width;
-		}
-		public float getHeight() {
-			return height;
-		}
-		public void setHeight(float height) {
-			this.height = height;
-		}
-		public int getSweRefN() {
-			return sweRefN;
-		}
-		public void setSweRefN(int sweRefN) {
-			this.sweRefN = sweRefN;
-		}
-		public int getSweRefE() {
-			return sweRefE;
-		}
-		public void setSweRefE(int sweRefE) {
-			this.sweRefE = sweRefE;
-		}
-		
-		
-	}
 	
-	public class GisPolygon {
-		
-		
-		
-	}
-
-	public void setGisData(GisImageData gd, Set<GisPolygon> gPolys) {
-
+	public void setGisData(PhotoMeta gd, String rutaId) {
+		GisPolygonConfiguration gp = GisPolygonConfiguration.getSingleton();
+		if (gp == null) {
+			Log.e("vortex","missing gis polygon blocks");
+			return;
+		}
+		List<GisBlock> mBlocks = gp.getBlocks(rutaId);
 		gisImage = gd;
 		//calculate ratio between grid and ruta size.
 		rXRatio = (Constants.RUTA_SIZE-gd.getWidth())/gd.getWidth();
 		rYRatio = (Constants.RUTA_SIZE-gd.getHeight())/gd.getHeight();
 		Log.d("vortex","Calling.... "+rXRatio+","+rYRatio);
+		
+		//diff between real size and pixel size.
+		float pXR = this.getWidth()/gd.getWidth();
+		float pYR = this.getHeight()/gd.getHeight();
+		
+		//Translate into a list of Path objects.
+		if (mBlocks!=null) {
+			for (GisBlock bl:mBlocks) {
+				List<List<SweRefCoordinate>> pl = bl.polygons;
+				for (List<SweRefCoordinate> sl:pl) {
+					Path mPath = new Path();
+					SweRefCoordinate swe;
+					Poly p=null;
+					for (int i=0;i<sl.size();i++) {
+						swe = sl.get(i);	
+						Log.d("vortex","Coord x: Pic Left:"+swe.E+","+gd.left);
+						float x = (swe.E-gd.left)*pXR;
+						float y = (swe.N-gd.top)*pYR;
+						if (i==0) 
+							p = new Poly(mPath,x,y);
+						else
+							mPath.lineTo(x, y);
+						Log.d("vortex","lägger till x,y "+x+","+y);
+					}
+					if (p!=null) {
+						p.save();
+						//myPaths.add(new Poly(mPath,x,y));
+					}
+				}
+			}
+		}
+	
 	}
 	
 	public void startPoly() {
@@ -312,9 +308,10 @@ public class GisImageView extends GestureImageView {
 		//Draw a square around edge of picture
 		float w =(this.getImageWidth()+this.getImageWidth()*rXRatio)/2.0f;
 		float h =(this.getImageHeight()+this.getImageHeight()*rXRatio)/2.0f;
-		Log.d("vortex","Drawing....");
 		canvas.drawRect(fCalcX(-w), fCalcY(-h), fCalcX(w), fCalcY(h), borderPaint);
 		
+		//Draw the polygons for all partaking blocks, if any.
+
 		//If person visible, draw a little figure at location.
 		
 		canvas.restore();

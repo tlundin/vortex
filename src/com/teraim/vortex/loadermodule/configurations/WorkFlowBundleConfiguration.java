@@ -52,7 +52,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 	private LoggerI o;
 	public WorkFlowBundleConfiguration(PersistenceHelper globalPh,PersistenceHelper ph,
 			String server, String bundle,LoggerI debugConsole) {
-		super(globalPh,ph, Type.xml, Source.internet, server+bundle.toLowerCase()+"/", bundle,"Workflow bundle       ");
+		super(globalPh,ph, Source.internet, server+bundle.toLowerCase()+"/", bundle,"Workflow bundle       ");
 		this.o=debugConsole;
 	}
 
@@ -118,7 +118,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				bundle.add(readWorkflow(parser));
 				return null;
 			} else {
-				skip(name,parser);
+				skip(name,parser,o);
 			}	
 		}
 		return new LoadResult(this,ErrorCode.parsed);
@@ -136,7 +136,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			if (name.equals("blocks")) {
 				wf.addBlocks(readBlocks(parser));
 			} else {
-				skip(name,parser);
+				skip(name,parser,o);
 			}
 		}
 
@@ -222,7 +222,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			else if (name.equals("block_create_var_value_source"))
 				blocks.add(readBlockCreateVarValueSource(parser));
 			else {			
-				skip(name,parser);
+				skip(name,parser,o);
 			}
 		}
 
@@ -244,7 +244,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				filter = readText("filter",parser);
 			} 
 			else
-				skip(name,parser);
+				skip(name,parser,o);
 
 		}
 		checkForNull("block_ID",id,"filter",filter);
@@ -308,7 +308,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				dataSource = readText("data_source",parser);
 			}			
 			else
-				skip(name,parser);
+				skip(name,parser,o);
 
 		}
 
@@ -340,7 +340,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			}
 
 			else
-				skip(name,parser);
+				skip(name,parser,o);
 
 		}
 		checkForNull("block_ID",id,"label",label,"container",container);
@@ -366,7 +366,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			} else if (name.equals("bck_color")) {
 				bgColor = readText("bck_color",parser);
 			} else
-				skip(name,parser);
+				skip(name,parser,o);
 
 		}
 		checkForNull("block_ID",id,"label",label,"text_color",textColor,"bck_color",bgColor);
@@ -394,7 +394,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			} else if (name.equals("bck_color")) {
 				bgColor = readText("bck_color",parser);
 			} else
-				skip(name,parser);
+				skip(name,parser,o);
 
 		}
 		checkForNull("block_ID",id,"target",target,"type",type);
@@ -420,7 +420,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			} else if (name.equals("execution_behavior")) {
 				executionBehavior = readText("execution_behavior",parser);
 			} else
-				skip(name,parser);
+				skip(name,parser,o);
 
 		}
 		checkForNull("block_ID",id,"target",target,"expression",expression,"execution_behavior",executionBehavior);
@@ -446,7 +446,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				nextBlockId = readText("next_block_ID",parser);
 			}
 			else		
-				skip(name,parser);
+				skip(name,parser,o);
 		}
 		checkForNull("block_ID",id,"next_block_id",nextBlockId);
 		return new JumpBlock(id,nextBlockId);
@@ -490,7 +490,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				elseBlockId = readText("else_block_ID",parser);
 			} 
 			else
-				skip(name,parser);
+				skip(name,parser,o);
 
 		}
 		checkForNull("block_ID",id,"expression",expr,"else_block_ID",elseBlockId);
@@ -536,7 +536,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				initialValue = readText("initial_value",parser);
 			}
 			else
-				skip(name,parser);
+				skip(name,parser,o);
 		}
 		checkForNull("block_ID",id,"name",namn,"target_list",targetList,"target_field",targetField,"format",format);
 		return new AddVariableToListEntry(id,namn,
@@ -572,7 +572,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				description = readText("description",parser);
 			}
 			else
-				skip(name,parser);
+				skip(name,parser,o);
 		}
 		checkForNull("block_ID",id,"name",namn,"target",target,"label",label,"description",description);
 		return new AddEntryToFieldListBlock(id,namn,target,label,description);
@@ -612,7 +612,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				initialValue = readText("initial_value",parser);
 			}
 			else
-				skip(name,parser);
+				skip(name,parser,o);
 		}
 		checkForNull("block_ID",id,"name",namn,"target",target,"format",format);
 		return new AddVariableToEntryFieldBlock(id,target,namn,isDisplayed,format,isVisible,showHistorical,initialValue);
@@ -653,7 +653,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			} else if (name.equals("uri_field")) {
 				uriField = readText("uri_field",parser);
 			} else
-				skip(name,parser);
+				skip(name,parser,o);
 
 		}
 		checkForNull("block_ID",id,"selection_field",selectionField,"key_field",keyField,"name",namn,"container_name",
@@ -695,7 +695,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				initialValue = readText("initial_value",parser);
 			}
 			else
-				skip(name,parser);
+				skip(name,parser,o);
 
 		}
 		checkForNull("block_ID",id,"target",target,"format",format,"name",variableSuffix);
@@ -733,7 +733,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				format = readText("format",parser);
 			}
 			else
-				skip(name,parser);
+				skip(name,parser,o);
 
 		}
 		checkForNull("label",label,"expression",formula,"block_ID",id,"name",namn,"container_name",containerId,"format",format);
@@ -772,7 +772,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				initialValue = readText("initial_value",parser);
 			}
 			else
-				skip(name,parser);
+				skip(name,parser,o);
 		}
 		checkForNull("block_ID",id,"name",namn,"container_name",containerId,"format",format);
 		return new CreateEntryFieldBlock(id,namn, containerId,isVisible,format,showHistorical,initialValue);
@@ -840,7 +840,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			}
 
 			else 
-				skip(name,parser);
+				skip(name,parser,o);
 
 		}
 		checkForNull("BLOCK_ID",id,"CONTAINER_NAME: ",containerName,"SELECTION_PATTERN",selectionPattern,"DISPLAY_FIELD",displayField,
@@ -910,7 +910,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			}
 
 			else
-				skip(name,parser);
+				skip(name,parser,o);
 
 		}
 		checkForNull("block_ID",id,"label",label,"container_name",containerName,"filter",filter,
@@ -972,7 +972,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 					o.addRow("IS_VISIBLE: "+isVisible);	
 				} 			
 				else
-					skip(name,parser);
+					skip(name,parser,o);
 
 
 			}
@@ -1033,7 +1033,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			else if (name.equals("status_variable"))
 				statusVariable = readText("status_variable",parser);
 			else
-				skip(name,parser);
+				skip(name,parser,o);
 		}
 		checkForNull("block_ID",id,"type",type,"name",myname,"label",label,"container_name",
 				containerName,"target",target);
@@ -1083,7 +1083,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 
 			}
 			else
-				skip(name,parser);
+				skip(name,parser,o);
 		}
 		if (workflowName == null)  {
 			o.addRow("");
@@ -1127,7 +1127,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 
 
 			} else 
-				skip(name,parser);
+				skip(name,parser,o);
 
 		}
 		checkForNull("block_ID",id,"layout",layout,"align",align,"label",label);
@@ -1157,7 +1157,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			} else if (name.equals("label")) {
 				label = readText("label",parser);					
 			} else
-				skip(name,parser);
+				skip(name,parser,o);
 		}
 		checkForNull("block_ID",id,"type",pageType,"label",label);
 		return new PageDefineBlock(id,"root", pageType,label);
@@ -1187,7 +1187,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			} else if (name.equals("type")) {
 				containerType = readText("type",parser);
 			} else
-				skip(name,parser);
+				skip(name,parser,o);
 		}
 		checkForNull("block_ID",id,"name",containerName,"container_type",containerType);
 		return new ContainerDefineBlock(id,containerName, containerType);
@@ -1221,7 +1221,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			} else if (name.equals("name")) {
 				myname = readText("name",parser);
 			} else 
-				skip(name,parser);
+				skip(name,parser,o);
 
 		}
 		checkForNull("block_ID",id,"name",myname,"target",target,"condition",condition,"action",action,"errorMsg",errorMsg);
@@ -1270,56 +1270,8 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 		}
 		return text;
 	}
-	// Read string from tag.
-	private static String readText(String tag,XmlPullParser parser) throws IOException, XmlPullParserException {
-		parser.require(XmlPullParser.START_TAG, null,tag);
-		String text = readText(parser);
-		parser.require(XmlPullParser.END_TAG, null,tag);
-		return text;
-	}
 
-	private static String[] readArray(String tag,XmlPullParser parser) throws IOException, XmlPullParserException {
-		parser.require(XmlPullParser.START_TAG, null,tag);
-		String temp = readText(parser);
-		String[] res = null;
-		if (temp!=null) 
-			res = temp.split(",");			 
 
-		parser.require(XmlPullParser.END_TAG, null,tag);
-		return res;
-	}
-
-	// Extract string values.
-	private static String readText(XmlPullParser parser) throws IOException, XmlPullParserException {
-		String result = "";
-		if (parser.next() == XmlPullParser.TEXT) {
-			result = parser.getText();
-			parser.nextTag();
-		}
-		return result;
-	}
-	//Skips entry...return one level up in recursion if end reached.
-	private void skip(String name,XmlPullParser parser) throws XmlPullParserException, IOException {
-		if (parser.getEventType() != XmlPullParser.START_TAG) {
-			o.addRow("");
-			o.addRedText("IllegalStateException while trying to read START_TAG");
-			throw new IllegalStateException();
-
-		}
-		o.addRow("");
-		o.addYellowText("Skipped TAG: ["+name+"]");
-		int depth = 1;
-		while (depth != 0) {
-			switch (parser.next()) {
-			case XmlPullParser.END_TAG:
-				depth--;
-				break;
-			case XmlPullParser.START_TAG:
-				depth++;
-				break;
-			}
-		}
-	}
 
 
 

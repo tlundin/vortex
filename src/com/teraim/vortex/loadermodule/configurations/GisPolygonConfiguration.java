@@ -2,7 +2,9 @@ package com.teraim.vortex.loadermodule.configurations;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.json.JSONException;
 
@@ -14,7 +16,6 @@ import com.teraim.vortex.loadermodule.JSONConfigurationModule;
 import com.teraim.vortex.loadermodule.LoadResult;
 import com.teraim.vortex.loadermodule.LoadResult.ErrorCode;
 import com.teraim.vortex.log.LoggerI;
-import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.DbHelper;
 import com.teraim.vortex.utils.PersistenceHelper;
 
@@ -22,14 +23,14 @@ public class GisPolygonConfiguration extends JSONConfigurationModule {
 	
 	private LoggerI o;
 	private DbHelper myDb;
-	
+	private static GisPolygonConfiguration singleton;
 
 	public GisPolygonConfiguration(PersistenceHelper globalPh,PersistenceHelper ph,String fileLocation, LoggerI debugConsole,DbHelper myDb) {
 		super(globalPh,ph, Source.file,fileLocation, "blockdef", "Gis Blocks            ");
 		this.o = debugConsole;
 		this.myDb = myDb;
-		isDatabaseModule=true;
-	
+		//isDatabaseModule=true;
+		this.singleton=this;
 	}
 
 	@Override
@@ -57,28 +58,30 @@ public class GisPolygonConfiguration extends JSONConfigurationModule {
 		return null;
 	}
 
-	private class SweRefCoordinate {
-		public String N,E,S;
+	public class SweRefCoordinate {
+		public float N,E,S;
 		
 	}
-	private class Block {
+	public class GisBlock {
 		public String area, blockId,
 		markslag,rutaId;
 		
 		public List<List<SweRefCoordinate>> polygons;
 	}
 	
-	List<Block> myBlocks = new ArrayList<Block>();
+	//Map between rutor and block
+	Map<String,List<GisBlock>> myBlocks = new HashMap<String,List<GisBlock>>();
 	
 	@Override
 	public LoadResult parse(JsonReader reader) throws IOException {
-		Block b = new Block();
+		GisBlock b = new GisBlock();
 		JsonToken tag = reader.peek();
 		if (tag.equals(JsonToken.END_ARRAY)) {
 			//end array means we are done.
 			this.setEssence();
 			reader.close();
-			freezeSteps=myBlocks.size();
+			o.addRedText("GIS Blocks parsed succesfully");
+			//freezeSteps=myBlocks.size();
 			return new LoadResult(this,ErrorCode.parsed);
 		}
 		else if (tag.equals(JsonToken.BEGIN_OBJECT)) {
@@ -99,7 +102,13 @@ public class GisPolygonConfiguration extends JSONConfigurationModule {
 				reader.skipValue();
 		}
 		reader.endObject();
-		myBlocks.add(b);
+		List<GisBlock> lb = myBlocks.get(b.rutaId);
+		if (lb==null) {
+			lb = new ArrayList<GisBlock>();
+			myBlocks.put(b.rutaId,lb);
+		}
+		lb.add(b);
+		
 		return null;
 		} else {
 			Log.e("vortex","Bad token in gis parser: "+tag.name());
@@ -128,9 +137,9 @@ public class GisPolygonConfiguration extends JSONConfigurationModule {
 			while (reader.hasNext()) {
 				sec = new SweRefCoordinate();
 				reader.beginArray();
-				sec.N = reader.nextString();
-				sec.E = reader.nextString();
-				sec.S = reader.nextString();
+				sec.E = Float.parseFloat(reader.nextString());
+				sec.N = Float.parseFloat(reader.nextString());
+				sec.S = Float.parseFloat(reader.nextString());
 				//Log.d("vortex","N E S "+sec.N+","+sec.E+","+sec.S);
 				reader.endArray();
 				poly.add(sec);
@@ -150,13 +159,16 @@ public class GisPolygonConfiguration extends JSONConfigurationModule {
 		essence = myBlocks;
 	}
 	
+	public List<GisBlock> getBlocks(String rutaId) {
+		return myBlocks.get(rutaId);
+	}
+	
 
 	@Override
 	public boolean freeze(int counter) throws IOException {
 		if (myBlocks == null)
 			return false;
 		//Insert variables into database
-		Block b = myBlocks.get(counter);
 		/*
 		{
 			for(ValuePair v:e.variables) {
@@ -166,8 +178,11 @@ public class GisPolygonConfiguration extends JSONConfigurationModule {
 		}
 		}
 		*/
-		Log.d("vortex","writing "+counter+" block");
 		return true;
+	}
+	
+	public static GisPolygonConfiguration getSingleton() {
+		return singleton;
 	}
 
 }

@@ -29,10 +29,12 @@ public class FileLoader extends Loader {
 		BufferedReader reader=null;
 		try {
 			reader = new BufferedReader(new FileReader(module.fullPath));
-
+		String version=null;
 		StringBuilder sb = new StringBuilder();		
-		String header = reader.readLine();
-		String version = getVersion(header);
+		if (module.hasSimpleVersion) {
+			String header = reader.readLine();
+			version = versionControl?getVersion(header):null;
+		}
 		ErrorCode ec = read(module,version,reader,sb);
 		LoadResult lr = new LoadResult(module,ec);
 		//setresult runs a parser before returning. Parser is depending on module type.

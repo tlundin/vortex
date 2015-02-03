@@ -81,10 +81,13 @@ public class GlobalState  {
 	private String myPartner="?";
 	private VarCache myVarCache;
 	private PersistenceHelper globalPh=null;
-	public static GlobalState getInstance(Context c) {
+	public static GlobalState getInstance(Context ctx) {
 		if (singleton == null) {			
 			//singleton = new GlobalState(c.getApplicationContext());
 			Log.e("vortex","Global state was lost...ajabaja");
+			//Try to reboot from frozen state.
+			//PersistenceHelper globalPh = new PersistenceHelper(ctx.getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_PRIVATE));
+			
 		}
 		return singleton;
 	}

@@ -357,6 +357,7 @@ import com.teraim.vortex.non_generics.Constants;
 						int i = 0;
 						while (c-->0 && it.hasNext()) 
 							args[i++] = it.next(); 
+						Log.d("vortex",resultToken+" had argument(s)"+args.toString());
 						ti = new TokenizedItem(unclassifiedToken,resultToken,args);
 					}
 
@@ -525,16 +526,25 @@ import com.teraim.vortex.non_generics.Constants;
 			return Constants.getWeekNumber();
 		}
 		//Check if variable has value
+		String[] args = item.getArguments();
+
 		if (item.getType()==TokenType.has) {
-			Variable v = gs.getVariableConfiguration().getVariableInstance(item.get());
+			if (args!=null) {
+			Variable v = gs.getVariableConfiguration().getVariableInstance(args[0]);
 			if (v==null||v.getValue()==null)
 				return "0";
 			return "1";
+			} else {
+				gs.getLogger().addRow("");
+				gs.getLogger().addRedText("HAS function is missing argument! ");
+				return "0";
+			}
+ 				
 		}
 		//Apply filter parameter <filter> on all variables in current table. Return those that match.
 		float failC=0;
 		//If any of the variables matching filter doesn't have a value, return 0. Otherwise 1.
-		List<List<String>> rows = al.getTable().getRowsContaining(VariableConfiguration.Col_Variable_Name, item.get());
+		List<List<String>> rows = al.getTable().getRowsContaining(VariableConfiguration.Col_Variable_Name, args[0]);
 		if (rows==null || rows.size()==0) {
 			gs.getLogger().addRow("");
 			gs.getLogger().addRedText("Filter returned emptylist in HASx construction. Filter: "+item.get());

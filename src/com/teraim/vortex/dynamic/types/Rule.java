@@ -37,7 +37,7 @@ public class Rule implements Serializable {
 		this.condition=condition;
 		this.errorMsg=errorMsg;
 		myType = Type.WARNING;
-		if (action!=null && action.equals("Error_severity"))
+		if (action!=null && action.equalsIgnoreCase("Error_severity"))
 			myType = Type.ERROR;
 
 	}

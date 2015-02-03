@@ -85,7 +85,6 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 
-		Log.d("nils","Getzzzz");
 		View v = inflater.inflate(R.layout.template_tag, container, false);	
 
 		final FrameLayout py = (FrameLayout)v.findViewById(R.id.circle);

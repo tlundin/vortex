@@ -39,7 +39,7 @@ public abstract class ConfigurationModule {
 	//freezeSteps contains the number of steps required to freeze the object. Should be -1 if not set specifically by specialized classes.
 	protected int freezeSteps=-1;
 	//tells if this module is stored on disk or db.
-	protected boolean isDatabaseModule = false;
+	protected boolean isDatabaseModule = false,hasSimpleVersion=true;
 	
 	public ConfigurationModule(PersistenceHelper gPh,PersistenceHelper ph, Type type, Source source, String urlOrPath,String fileName,String moduleName) {
 		this.source=source;

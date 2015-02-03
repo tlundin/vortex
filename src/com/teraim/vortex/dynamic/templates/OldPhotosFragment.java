@@ -115,10 +115,10 @@ public class OldPhotosFragment extends Fragment implements OnGesturePerformedLis
 
 
 	enum Type {
-		NORR,
 		SYD,
-		OST,
+		NORR,
 		VAST,
+		OST,
 		SMA
 	}
 
