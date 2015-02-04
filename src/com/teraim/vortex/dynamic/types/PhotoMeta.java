@@ -10,6 +10,6 @@ public class PhotoMeta implements Serializable {
 		return right-left;
 	}
 	public float getHeight() {
-		return bottom-top;
+		return top-bottom;
 	}
 }

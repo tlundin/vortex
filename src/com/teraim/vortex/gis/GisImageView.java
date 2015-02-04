@@ -110,15 +110,14 @@ public class GisImageView extends GestureImageView {
 		mPaint.setStyle(Paint.Style.STROKE);
 		mPaint.setStrokeJoin(Paint.Join.ROUND);
 		mPaint.setStrokeCap(Paint.Cap.ROUND);
-		mPaint.setStrokeWidth(10); 
+		mPaint.setStrokeWidth(1); 
 		return mPaint;
 	}
 
 	float fixScale;
 	private float fixedX;
 	private float fixedY;
-	private float cX;
-	private float cY;
+
 	PhotoMeta gisImage;
 	//difference in % between ruta and image size.
 	private float rXRatio,rYRatio;
@@ -131,16 +130,18 @@ public class GisImageView extends GestureImageView {
 			Log.e("vortex","missing gis polygon blocks");
 			return;
 		}
+		Log.d("vortex", "my height is "+this.getHeight());
+		float margin = (this.getHeight()-this.getImageHeight());
 		List<GisBlock> mBlocks = gp.getBlocks(rutaId);
 		gisImage = gd;
 		//calculate ratio between grid and ruta size.
-		rXRatio = (Constants.RUTA_SIZE-gd.getWidth())/gd.getWidth();
-		rYRatio = (Constants.RUTA_SIZE-gd.getHeight())/gd.getHeight();
 		Log.d("vortex","Calling.... "+rXRatio+","+rYRatio);
 		
 		//diff between real size and pixel size.
-		float pXR = this.getWidth()/gd.getWidth();
-		float pYR = this.getHeight()/gd.getHeight();
+		Log.d("vortex","w h of gis image. w h of image ("+gd.getWidth()+","+gd.getHeight()+") ("+this.getImageWidth()+","+this.getImageHeight()+")");
+		fixScale = scale * scaleAdjust;
+		float pXR = this.getImageWidth()/gd.getWidth()*fixScale;
+		float pYR = this.getImageHeight()/gd.getHeight()*fixScale;
 		
 		//Translate into a list of Path objects.
 		if (mBlocks!=null) {
@@ -152,19 +153,20 @@ public class GisImageView extends GestureImageView {
 					Poly p=null;
 					for (int i=0;i<sl.size();i++) {
 						swe = sl.get(i);	
-						Log.d("vortex","Coord x: Pic Left:"+swe.E+","+gd.left);
+//						Log.d("vortex","Coord E: Pic LEFT:"+swe.E+","+gd.left);
+//						Log.d("vortex","Coord N: Pic TOP:"+swe.N+","+gd.top);
+//						Log.d("vortex","PXR: "+pXR);
 						float x = (swe.E-gd.left)*pXR;
-						float y = (swe.N-gd.top)*pYR;
-						if (i==0) 
-							p = new Poly(mPath,x,y);
-						else
-							mPath.lineTo(x, y);
-						Log.d("vortex","lägger till x,y "+x+","+y);
+						float y = (gd.top-swe.N)*pYR+margin;
+						if (i==0) {
+							startPoly(x,y);
+						}
+						else {
+							this.addVertex(x, y);
+						//Log.d("vortex","lägger till x,y "+x+","+y);
+						}
 					}
-					if (p!=null) {
-						p.save();
-						//myPaths.add(new Poly(mPath,x,y));
-					}
+					this.savePoly();
 				}
 			}
 		}
@@ -172,15 +174,19 @@ public class GisImageView extends GestureImageView {
 	}
 	
 	public void startPoly() {
+		startPoly(polyVertexX,polyVertexY);
+	}
+	
+	private void startPoly(float px,float py) {
 		fixScale = scale * scaleAdjust;
 		Path mPath = new Path();
 		mPath.reset();
 		//Calculate the dots on the map
-		cX = calcX(polyVertexX);
-		cY = calcY(polyVertexY);
+		float cX = calcX(px);
+		float cY = calcY(py);
 		mPath.moveTo(cX, cY);		
-		mX = polyVertexX;
-		mY = polyVertexY;
+		mX = px;
+		mY = py;
 		Point p = new Point(cX,cY);
 		//myPoints = new ArrayList<Point>();
 		myPoints = new ArrayList<Point>();
@@ -219,24 +225,26 @@ public class GisImageView extends GestureImageView {
 		return null;
 	}
 
-
 	public void addVertex() {
-		float dx = Math.abs(polyVertexX - mX);
-		float dy = Math.abs(polyVertexY - mY);
+		addVertex(polyVertexX,polyVertexY);
+	}
+	public void addVertex(float px,float py) {
+		float dx = Math.abs(px - mX);
+		float dy = Math.abs(py - mY);
 		//if difference between two presses is small, discard it.
-		if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
-			cX = calcX(polyVertexX);
-			cY = calcY(polyVertexY);
+		//if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
+			float cX = calcX(px);
+			float cY = calcY(py);
 			//Save these for diff calculation.
-			mX = polyVertexX;
-			mY = polyVertexY;
+			mX = px;
+			mY = py;
 			myPaths.get(myPaths.size()-1).getPath().lineTo(cX, cY);
 			//mPath.quadTo(mX, mY, (polyVertexX + mX)/2, (polyVertexY + mY)/2);
 			Point p = new Point(cX,cY);
 			myPoints.add(p);
 			invalidate();
-		} else
-			Log.d("vortex"," failed on diff");
+		//} else
+		//	Log.d("vortex"," failed on diff");
 
 	}
 
@@ -306,9 +314,9 @@ public class GisImageView extends GestureImageView {
 		canvas.drawCircle((polyVertexX-fixedX)*1/fixScale,(polyVertexY-fixedY)*1/fixScale, 10, currCursorPaint);
 
 		//Draw a square around edge of picture
-		float w =(this.getImageWidth()+this.getImageWidth()*rXRatio)/2.0f;
-		float h =(this.getImageHeight()+this.getImageHeight()*rXRatio)/2.0f;
-		canvas.drawRect(fCalcX(-w), fCalcY(-h), fCalcX(w), fCalcY(h), borderPaint);
+		//float w =(this.getImageWidth()+this.getImageWidth()*rXRatio)/2.0f;
+		//float h =(this.getImageHeight()+this.getImageHeight()*rXRatio)/2.0f;
+		//canvas.drawRect(fCalcX(-w), fCalcY(-h), fCalcX(w), fCalcY(h), borderPaint);
 		
 		//Draw the polygons for all partaking blocks, if any.
 
@@ -371,6 +379,7 @@ public class GisImageView extends GestureImageView {
 		
 		public void save() {
 			isReady=true;
+			mPath.close();
 		}
 		
 		public boolean isComplete() {

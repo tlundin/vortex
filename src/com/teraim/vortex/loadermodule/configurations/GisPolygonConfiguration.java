@@ -31,6 +31,7 @@ public class GisPolygonConfiguration extends JSONConfigurationModule {
 		this.myDb = myDb;
 		//isDatabaseModule=true;
 		this.singleton=this;
+		this.hasSimpleVersion=false;
 	}
 
 	@Override
@@ -51,15 +52,10 @@ public class GisPolygonConfiguration extends JSONConfigurationModule {
 	}
 
 	
-	@Override
-	protected LoadResult prepare(JsonReader reader) throws IOException, JSONException {
-		//first should be an array.
-		reader.beginArray();
-		return null;
-	}
+
 
 	public class SweRefCoordinate {
-		public float N,E,S;
+		public float N,E;
 		
 	}
 	public class GisBlock {
@@ -71,6 +67,24 @@ public class GisPolygonConfiguration extends JSONConfigurationModule {
 	
 	//Map between rutor and block
 	Map<String,List<GisBlock>> myBlocks = new HashMap<String,List<GisBlock>>();
+	
+	
+	@Override
+	protected LoadResult prepare(JsonReader reader) throws IOException, JSONException {
+		//first should be an array.
+		reader.beginObject();
+		while (reader.hasNext()) {
+			String name = reader.nextName();
+			if (name.equals("features")) {
+				Log.d("vortex","Found beginning of data in GIS DATA!");
+				reader.beginArray();
+				return null;
+			} else
+				reader.skipValue();
+		}
+		return new LoadResult(this,ErrorCode.IOError);
+	}
+	
 	
 	@Override
 	public LoadResult parse(JsonReader reader) throws IOException {
@@ -86,6 +100,9 @@ public class GisPolygonConfiguration extends JSONConfigurationModule {
 		}
 		else if (tag.equals(JsonToken.BEGIN_OBJECT)) {
 		reader.beginObject();
+		String attr = reader.nextName();
+		Log.d("vortex","Attr "+attr);
+		reader.beginObject();
 		while (reader.hasNext()) {
 			String name = reader.nextName();
 			if (name.equals("Shape_area")) {
@@ -96,19 +113,24 @@ public class GisPolygonConfiguration extends JSONConfigurationModule {
 				b.markslag=this.getAttribute(reader);
 			}else if (name.equals("RUTA_ID")) {
 				b.rutaId=this.getAttribute(reader);
-			}else if (name.equals("json_geometry")) {
-				b.polygons=createCoordinates(reader);
 			} else
 				reader.skipValue();
 		}
+		//End post attributes
 		reader.endObject();
+		//geometry..
+		reader.nextName();
+		
+		b.polygons=createCoordinates(reader);
+		
 		List<GisBlock> lb = myBlocks.get(b.rutaId);
 		if (lb==null) {
 			lb = new ArrayList<GisBlock>();
 			myBlocks.put(b.rutaId,lb);
 		}
 		lb.add(b);
-		
+		//End pre attributes
+		reader.endObject();
 		return null;
 		} else {
 			Log.e("vortex","Bad token in gis parser: "+tag.name());
@@ -119,37 +141,40 @@ public class GisPolygonConfiguration extends JSONConfigurationModule {
 	
 	private List<List<SweRefCoordinate>> createCoordinates(JsonReader reader) throws IOException {
 		List<List<SweRefCoordinate>> ret = new ArrayList<List<SweRefCoordinate>>();
-		List<SweRefCoordinate> poly; 
+		List<SweRefCoordinate> poly;
+		//begin geometry
 		reader.beginObject();
-		//type
-		reader.nextName();
-		String type = getAttribute(reader);
-		if (!type.equals("Polygon"))
-			Log.e("vortex"," Not a polygon in GIS IMPORT: "+type);
-		String c = reader.nextName();
-		if (c.equals("coordinates")) {
+		//rings
+		String type = reader.nextName();
+		if (!type.equals("rings"))
+			Log.e("vortex"," Not a ring in GIS IMPORT: "+type);
+		
+		else {		
+			//Begin post ring
 			reader.beginArray();
 			SweRefCoordinate sec;
 			poly = new ArrayList<SweRefCoordinate>();
 			while (reader.peek() == JsonToken.BEGIN_ARRAY) {
-				//Log.d("vortex","new poly!");
+				Log.d("vortex","new poly!");
 				reader.beginArray();
+				
 			while (reader.hasNext()) {
 				sec = new SweRefCoordinate();
 				reader.beginArray();
 				sec.E = Float.parseFloat(reader.nextString());
+//				Log.d("vortex","E "+sec.E);
 				sec.N = Float.parseFloat(reader.nextString());
-				sec.S = Float.parseFloat(reader.nextString());
-				//Log.d("vortex","N E S "+sec.N+","+sec.E+","+sec.S);
+//				Log.d("vortex","N "+sec.N);
 				reader.endArray();
 				poly.add(sec);
 			}
 			ret.add(poly);
 			reader.endArray();
 			}
+			//End post ring
 			reader.endArray();
 		}
-			
+		//end geometry
 		reader.endObject();
 		return ret;
 	}
