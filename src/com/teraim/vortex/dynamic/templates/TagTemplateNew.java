@@ -68,7 +68,7 @@ public class TagTemplateNew extends Executor implements EventListener {
 	private Button sparaB,nyUtlaggB,calculateB;
 	private LinearLayout areaL;
 
-	private Button buttonNyp;
+	private Button buttonReset;
 
 
 
@@ -163,15 +163,17 @@ public class TagTemplateNew extends Executor implements EventListener {
 		gl.setEnabled(false);
 		gl.setVisibility(View.GONE);
 		calculateB.setVisibility(View.GONE);
-		buttonNyp = (Button)v.findViewById(R.id.add_punkt);
-		buttonNyp.setOnClickListener(new OnClickListener() {			
+		
+		buttonReset = (Button)v.findViewById(R.id.reset);
+		buttonReset.setOnClickListener(new OnClickListener() {			
 			@Override
 			public void onClick(View v) {
-				tagCreateView.addTagPoint();	
+				tagCreateView.reset();	
 			}
 
 
 		});
+		
 		calculateB.setOnClickListener(new OnClickListener() {			
 			@Override
 			public void onClick(View v) {
@@ -283,7 +285,6 @@ public class TagTemplateNew extends Executor implements EventListener {
 
 	@Override
 	public void onStart() {
-		tagCreateView.init();
 		super.onStart();
 	}
 

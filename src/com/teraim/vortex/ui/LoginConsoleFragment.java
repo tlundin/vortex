@@ -315,6 +315,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 			loginConsole.addRow("");
 			//			loginConsole.addGreenText("All modules loaded...preparing database");
 			loginConsole.draw();
+			
 			//Create or update database from Table object.
 			ConfigurationModule m = myModules.getModule(VariablesConfiguration.NAME);
 

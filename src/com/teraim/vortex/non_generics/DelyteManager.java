@@ -43,7 +43,8 @@ public class DelyteManager {
 	public static class Coord {
 		public float x;
 		public float y;	
-		public final int avst,rikt;
+		public  float avst,rikt;
+		private final static float r = 100;
 		public Coord(int avst,int rikt) {
 			int riktC = rikt-90;
 			if (riktC<0)
@@ -54,6 +55,23 @@ public class DelyteManager {
 			//
 			this.avst=avst;
 			this.rikt=rikt;
+		}
+		public Coord(float x,float y, float avst) {
+			this.x = x;
+			this.y = y;
+			this.avst = avst;
+			//avst = (int)Math.sqrt((x)*(x) + (y)*(y));
+			rikt = (float)Math.toDegrees(Math.atan2(y,x));
+			//rikt = rikt-90;
+			
+			Log.d("vortex","Avstånd: "+avst+" Rikt: "+rikt+" from X "+this.x+"Y "+this.y);
+		}
+		
+		public int getAvst() {
+			return (int)avst;
+		}
+		public int getRikt() {
+			return (int)avst;
 		}
 	}
 
@@ -156,7 +174,7 @@ public class DelyteManager {
 				Log.d("nils","Start: "+arc.start.rikt+" End: "+arc.end.rikt+ "Dist: "+dist);
 				arcMid =  (dist/2);
 				Log.d("nils"," Medeldistans "+arcMid);
-				nyR = arc.start.rikt+arcMid;
+				nyR = (int)(arc.start.rikt+arcMid);
 				Log.d("nils"," nyR "+nyR);
 				if (nyR>360)
 					nyR=nyR-360;
@@ -270,7 +288,7 @@ public class DelyteManager {
 		SortedSet<Segment> sortedArcs = new TreeSet<Segment>(new Comparator<Segment>(){
 			@Override
 			public int compare(Segment lhs, Segment rhs) {
-				return lhs.start.rikt-rhs.start.rikt;
+				return (int)(lhs.start.rikt-rhs.start.rikt);
 			}});
 		//Sort arcs. Save in set.
 		for(Delyta d:myDelytor)

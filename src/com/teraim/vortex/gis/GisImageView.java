@@ -15,13 +15,14 @@ import android.graphics.Rect;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.Display;
+import android.view.WindowManager;
 
 import com.teraim.vortex.dynamic.types.PhotoMeta;
 import com.teraim.vortex.dynamic.types.Point;
 import com.teraim.vortex.loadermodule.configurations.GisPolygonConfiguration;
 import com.teraim.vortex.loadermodule.configurations.GisPolygonConfiguration.GisBlock;
 import com.teraim.vortex.loadermodule.configurations.GisPolygonConfiguration.SweRefCoordinate;
-import com.teraim.vortex.non_generics.Constants;
 
 public class GisImageView extends GestureImageView {
 
@@ -37,23 +38,25 @@ public class GisImageView extends GestureImageView {
 	private boolean drawActive = false;
 	private int rNum =1;
 	private Paint borderPaint;
+	private Context ctx;
 
 	public GisImageView(Context context) {
 		super(context);
-		init();
+		init(context);
 	}
 
 	public GisImageView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
-		init();
+		init(context);
 	}
 
 	public GisImageView(Context context, AttributeSet attrs) {
 		super(context, attrs);
-		init();
+		init(context);
 	}
 
-	private void init() {
+	private void init(Context ctx) {
+		this.ctx=ctx;
 		//used for cursor blink.
 		calendar.setTime(new Date());
 
@@ -130,8 +133,18 @@ public class GisImageView extends GestureImageView {
 			Log.e("vortex","missing gis polygon blocks");
 			return;
 		}
-		Log.d("vortex", "my height is "+this.getHeight());
-		float margin = (this.getHeight()-this.getImageHeight());
+		WindowManager wm = (WindowManager) ctx.getSystemService(Context.WINDOW_SERVICE);
+		Display display = wm.getDefaultDisplay();
+		
+		android.graphics.Point size= new android.graphics.Point();
+		display.getSize(size);
+		int width = size.x;
+		int height = size.y;
+		
+		fixScale = scale * scaleAdjust;
+		Log.d("vortex", "my height is And height: "+this.getHeight()+","+height);
+		int dif = height - this.getHeight();
+		float margin = ((this.getHeight()-this.getImageHeight()))/2-dif/2;
 		List<GisBlock> mBlocks = gp.getBlocks(rutaId);
 		gisImage = gd;
 		//calculate ratio between grid and ruta size.
@@ -139,7 +152,7 @@ public class GisImageView extends GestureImageView {
 		
 		//diff between real size and pixel size.
 		Log.d("vortex","w h of gis image. w h of image ("+gd.getWidth()+","+gd.getHeight()+") ("+this.getImageWidth()+","+this.getImageHeight()+")");
-		fixScale = scale * scaleAdjust;
+	
 		float pXR = this.getImageWidth()/gd.getWidth()*fixScale;
 		float pYR = this.getImageHeight()/gd.getHeight()*fixScale;
 		

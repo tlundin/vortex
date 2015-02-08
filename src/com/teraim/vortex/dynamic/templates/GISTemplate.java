@@ -3,7 +3,9 @@ package com.teraim.vortex.dynamic.templates;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.location.Location;
@@ -81,54 +83,65 @@ public class GISTemplate extends Executor implements LocationListener {
 		loadImageMetaData(picName);
 		Bitmap bmp = Tools.getScaledImage(ctx,gisDir+picName);
 		gi.setImageBitmap(bmp);
-		if (bmp==null)
-			Log.e("vortex","blimp was null!!");
-		Log.d("nils","bmp w h"+bmp.getWidth()+" "+bmp.getHeight());
-		gi.setOnLongClickListener(new View.OnLongClickListener() {
+		if (bmp==null) {
+			new AlertDialog.Builder(this.getActivity()).setTitle("Missing picture")
+			.setMessage("Cannot start. Did not find background GIS image in GIS folder ")
+			.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					getFragmentManager().popBackStackImmediate();
+				}})
+				.setCancelable(false)
+				.setIcon(android.R.drawable.ic_dialog_alert)
+				.show();	
 
-			// Called when the user long-clicks on someView
-			public boolean onLongClick(View view) {
-				String target= gi.checkForTargets();
-				if (target!=null) {
-					executeWf(target);
-					return true;
-				}
-				else {	
-					if (drawActive)
-						gi.addVertex();
-					else {
-						drawActive = true;
-						gi.startPoly();
+		} else 	{		
+			Log.d("nils","bmp w h"+bmp.getWidth()+" "+bmp.getHeight());
+			gi.setOnLongClickListener(new View.OnLongClickListener() {
+
+				// Called when the user long-clicks on someView
+				public boolean onLongClick(View view) {
+					String target= gi.checkForTargets();
+					if (target!=null) {
+						executeWf(target);
+						return true;
 					}
+					else {	
+						if (drawActive)
+							gi.addVertex();
+						else {
+							drawActive = true;
+							gi.startPoly();
+						}
 
-					if (mActionMode != null) {
-						return false;
+						if (mActionMode != null) {
+							return false;
+						}
+
+						// Start the CAB using the ActionMode.Callback defined above
+						mActionMode = getActivity().startActionMode(mActionModeCallback);
+						view.setSelected(true);
+						return true;
 					}
-
-					// Start the CAB using the ActionMode.Callback defined above
-					mActionMode = getActivity().startActionMode(mActionModeCallback);
-					view.setSelected(true);
-					return true;
 				}
-			}
 
 
-		});
+			});
 
-		gi.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				String target= gi.checkForTargets();
-				if (target!=null) {
-					executeWf(target);
-				}				
-			}
-		});
+			gi.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					String target= gi.checkForTargets();
+					if (target!=null) {
+						executeWf(target);
+					}				
+				}
+			});
 
-		lm = (LocationManager)this.getActivity().getSystemService(Context.LOCATION_SERVICE);
+			lm = (LocationManager)this.getActivity().getSystemService(Context.LOCATION_SERVICE);
 
-
+		}
 		return v;
+
 	}
 
 
@@ -216,9 +229,11 @@ public class GISTemplate extends Executor implements LocationListener {
 
 	@Override
 	public void onPause() {
+		if (lm!=null) {
 		lm.removeUpdates(this);
 		if (mActionMode != null) {
 			mActionMode.finish();
+		}
 		}
 		super.onPause();
 	}
@@ -228,22 +243,25 @@ public class GISTemplate extends Executor implements LocationListener {
 
 	@Override
 	public void onStart() {
-		if (!lm.isProviderEnabled(LocationManager.GPS_PROVIDER))
-			startActivityForResult(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS), 0);
-
+		if (lm!=null) {
+			if (!lm.isProviderEnabled(LocationManager.GPS_PROVIDER))
+				startActivityForResult(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS), 0);
+		}
 		super.onStart();
 	}
 
 	@Override
 	public void onResume() {
-		lm.requestLocationUpdates(
+		if (lm!=null) {
+			lm.requestLocationUpdates(
+		
 				LocationManager.GPS_PROVIDER,
 				0,
 				1,
 				this);
 
 
-
+		}
 		super.onResume();
 	}
 

@@ -251,17 +251,17 @@ public class Delyta {
 		return max;
 	}
 
-	public static int pDist(int from, int to) {
+	public static int pDist(float from, float to) {
 		if (to <= from)
-			return from-to;
+			return (int)(from-to);
 		else
-			return from+360-to;
+			return (int)(from+360-to);
 	}
-	public static int rDist(int from, int to) {
+	public static int rDist(float from, float to) {
 		if (to >= from)
-			return to-from;
+			return (int)(to-from);
 		else
-			return to+360-from;
+			return (int)(to+360-from);
 	}
 
 	public List<Segment> getSegments() {
@@ -307,7 +307,7 @@ public class Delyta {
 	
 	//should be coordinates on the radius. with grad running 0..359. 
 	private void addArcCoords(List<Coord> areaC, Coord start, Coord end) {
-		int i = start.rikt;
+		int i = (int)start.rikt;
 		Log.d("nils","Stratos: "+start.rikt+" endos: "+end.rikt);
 		while (i!=end.rikt) {
 			i=(i+1)%360;					
