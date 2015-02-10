@@ -47,12 +47,13 @@ import com.teraim.vortex.non_generics.DelyteManager.Coord;
 import com.teraim.vortex.non_generics.NamedVariables;
 import com.teraim.vortex.ui.ProvytaView;
 import com.teraim.vortex.ui.TagCreateView;
+import com.teraim.vortex.ui.TagCreateView.TagListenerI;
 import com.teraim.vortex.utils.Tools;
 
 
 
 
-public class TagTemplateNew extends Executor implements EventListener {
+public class TagTemplateNew extends Executor implements EventListener, TagListenerI {
 
 
 	private static final int MAX_TÅG = 5,MAX_DELPUNKTER =6;
@@ -60,7 +61,7 @@ public class TagTemplateNew extends Executor implements EventListener {
 	private static final int COLS=MAX_TÅG+1,ROWS=MAX_DELPUNKTER+1;
 
 	//private GestureLibrary gestureLib;
-	private GridLayout gl;
+	//private GridLayout gl;
 	private TagCreateView tagCreateView;
 	private LayoutInflater inflater;
 	private DelyteManager dym;
@@ -92,13 +93,13 @@ public class TagTemplateNew extends Executor implements EventListener {
 		View v = inflater.inflate(R.layout.template_tag_ny, container, false);	
 
 		final FrameLayout py = (FrameLayout)v.findViewById(R.id.circle);
-		gl = (GridLayout)v.findViewById(R.id.gridLayout);
+		//gl = (GridLayout)v.findViewById(R.id.gridLayout);
 
 		areaL = (LinearLayout)v.findViewById(R.id.areaL);
 
 		dym = DelyteManager.getInstance();
 
-		tagCreateView = new TagCreateView(activity, null);		
+		tagCreateView = new TagCreateView(activity, null,this);		
 
 		py.addView(tagCreateView);
 
@@ -112,11 +113,11 @@ public class TagTemplateNew extends Executor implements EventListener {
 
 
 
-		drawEmptyTable();
+		//drawEmptyTable();
 
-		fillTable();
+		//fillTable();
 
-		tagCreateView.showDelytor(dym.getDelytor());
+		//tagCreateView.showDelytor(dym.getDelytor());
 
 
 
@@ -158,10 +159,11 @@ public class TagTemplateNew extends Executor implements EventListener {
 		calculateB.setEnabled(false);
 		nyUtlaggB = (Button)v.findViewById(R.id.rensa);
 		nyUtlaggB.setEnabled(gs.isMaster());
+		nyUtlaggB.setVisibility(View.GONE);
 		sparaB = (Button)v.findViewById(R.id.spara);
 		sparaB.setEnabled(false);
-		gl.setEnabled(false);
-		gl.setVisibility(View.GONE);
+		//gl.setEnabled(false);
+		//gl.setVisibility(View.GONE);
 		calculateB.setVisibility(View.GONE);
 		
 		buttonReset = (Button)v.findViewById(R.id.reset);
@@ -169,6 +171,8 @@ public class TagTemplateNew extends Executor implements EventListener {
 			@Override
 			public void onClick(View v) {
 				tagCreateView.reset();	
+				areaL.removeAllViews();
+				cTagc=1;
 			}
 
 
@@ -177,7 +181,7 @@ public class TagTemplateNew extends Executor implements EventListener {
 		calculateB.setOnClickListener(new OnClickListener() {			
 			@Override
 			public void onClick(View v) {
-				createDelytorFromTable();
+				//createDelytorFromTable();
 				dym.analyze();
 				TagTemplateNew.this.updateAreaField();
 				tagCreateView.showDelytor(dym.getDelytor());
@@ -337,7 +341,7 @@ public class TagTemplateNew extends Executor implements EventListener {
 	};
 
 
-
+	/*
 	private void drawEmptyTable() {
 		Log.d("nils","In drawEmptyTable");
 		gl.removeAllViews();
@@ -385,7 +389,7 @@ public class TagTemplateNew extends Executor implements EventListener {
 							return true;
 						}
 					});	
-					/*
+					
 					rikt.setOnKeyListener(new OnKeyListener() {
 						@Override
 						public boolean onKey(View v, int keyCode, KeyEvent event) {
@@ -400,7 +404,7 @@ public class TagTemplateNew extends Executor implements EventListener {
 							return false;
 						}
 					});
-					 */
+					 
 
 
 				}					
@@ -410,8 +414,8 @@ public class TagTemplateNew extends Executor implements EventListener {
 		gl.getChildAt(COLS+1).requestFocus();
 
 	}
-
-
+	*/
+/*
 	private void fillTable() {
 		Log.d("nils","In fillTable");
 		List<Segment> tag;
@@ -437,8 +441,8 @@ public class TagTemplateNew extends Executor implements EventListener {
 			}
 		}
 	}
-
-
+*/
+/*
 	private void setElement(LinearLayout ll,Coord c) {
 		EditText avst,rikt;
 		avst = ((EditText)(ll).findViewById(R.id.avst));
@@ -459,7 +463,7 @@ public class TagTemplateNew extends Executor implements EventListener {
 		int riktI = Integer.parseInt(riktS);
 		return new Coord(avstI,riktI);
 	}
-
+*/
 //	100|179|100|295|100|20|43|77|100|133
 /*
 	private void createDelytorFromTable() {
@@ -475,7 +479,7 @@ public class TagTemplateNew extends Executor implements EventListener {
 
 	}
 */	 
-
+/*
 	private void createDelytorFromTable() {
 		//Empty existing. 
 		dym.clear();
@@ -505,7 +509,7 @@ public class TagTemplateNew extends Executor implements EventListener {
 		}
 	}
 
-
+*/
 	/*
 private void drawTrains() {
 	List<Delyta> delytor=new ArrayList<Delyta>();
@@ -620,6 +624,35 @@ private void drawTrains() {
 			return false;
 		}
 		return true;
+	}
+
+	List<Segment> cTag;
+	int cTagc = 1;
+	private TextView cTagView,cTagHeaderView;
+	@Override
+	public void newTag(List<Segment> s) {
+		cTag = s;
+		LinearLayout ll = (LinearLayout)(this.inflater.inflate(R.layout.tag_display_element, null));
+		areaL.addView(ll);
+		cTagView=(TextView)ll.findViewById(R.id.tagBody);
+		cTagHeaderView=(TextView)ll.findViewById(R.id.tagHeader);
+		cTagHeaderView.setText("TÅG "+cTagc+" ");
+		cTagc++;
+	}
+
+	@Override
+	public void pointAdded() {
+		String txt = "[ ";
+		boolean first = true;
+		for (Segment s:cTag) {
+			if (first) {
+				txt += "("+s.start.getAvst()+","+((s.start.getRikt()+90)%360)+")";
+				first = false;
+			}
+			txt += "("+s.end.getAvst()+","+((s.end.getRikt()+90)%360)+")";
+		}
+		txt += " ]";
+		cTagView.setText(txt);
 	}
 
 

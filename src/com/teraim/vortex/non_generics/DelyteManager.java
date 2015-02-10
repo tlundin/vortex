@@ -61,18 +61,21 @@ public class DelyteManager {
 			this.y = y;
 			this.avst = avst;
 			//avst = (int)Math.sqrt((x)*(x) + (y)*(y));
-			rikt = (float)Math.toDegrees(Math.atan2(y,x));
-			//rikt = rikt-90;
-			
-			Log.d("vortex","Avstånd: "+avst+" Rikt: "+rikt+" from X "+this.x+"Y "+this.y);
+			rikt = Math.round((float)Math.toDegrees(Math.atan2(y,x)));
+			//always positive values please;
+			if (rikt<0)
+				rikt +=360;
+			//Log.d("vortex","Avstånd: "+avst+" Rikt: "+rikt+" from X "+this.x+"Y "+this.y);
 		}
 		
 		public int getAvst() {
-			return (int)avst;
+			return Math.round(avst);
 		}
 		public int getRikt() {
-			return (int)avst;
+			return Math.round(rikt);
 		}
+		
+
 	}
 
 
