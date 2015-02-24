@@ -48,8 +48,8 @@ import com.teraim.vortex.non_generics.Constants;
 
 	//Rather complex enum for all token types.
 
-	
-	
+
+
 	public class SubstiResult {
 		public String result;
 		public boolean IamAString;
@@ -57,8 +57,8 @@ import com.teraim.vortex.non_generics.Constants;
 			this.result = result;
 			IamAString = iamAString;
 		}
-		
-		
+
+
 	}
 	public class TokenizedItem {
 
@@ -112,6 +112,7 @@ import com.teraim.vortex.non_generics.Constants;
 		getCurrentMinute(function,0),
 		getCurrentSecond(function,0),
 		getCurrentWeekNumber(function,0),
+		sum(function,-1),
 		variable(null,-1),
 		text(variable,0),
 		numeric(variable,0),
@@ -119,25 +120,25 @@ import com.teraim.vortex.non_generics.Constants;
 		list(variable,0),
 		existence(variable,0),
 		auto_increment(variable,0),
-		math(function,-1),
-		and(math,0),
-		or(math,0),
-		abs(math,0), 
-		acos(math,0), 
-		asin(math,0), 
-		atan(math,0),  
-		ceil(math,0), 
-		cos(math,0), 
-		exp(math,0), 
-		floor(math,0), 
-		log(math,0), 
-		round(math,0), 
-		sin(math,0), 
-		sqrt(math,0),  
-		tan(math,0),
-		atan2(math,0),
-		max(math,0),
-		min(math,0),
+		math_primitives(function,-1),
+		and(math_primitives,0),
+		or(math_primitives,0),
+		abs(math_primitives,0), 
+		acos(math_primitives,0), 
+		asin(math_primitives,0), 
+		atan(math_primitives,0),  
+		ceil(math_primitives,0), 
+		cos(math_primitives,0), 
+		exp(math_primitives,0), 
+		floor(math_primitives,0), 
+		log(math_primitives,0), 
+		round(math_primitives,0), 
+		sin(math_primitives,0), 
+		sqrt(math_primitives,0),  
+		tan(math_primitives,0),
+		atan2(math_primitives,0),
+		max(math_primitives,0),
+		min(math_primitives,0),
 		unknown(null,-1), 
 		;
 		private TokenType parent = null;
@@ -221,13 +222,27 @@ import com.teraim.vortex.non_generics.Constants;
 
 	}
 
+	enum SimpleTokenType {
+		func,arg,var
+	}
 	//Breaks down a formula into identified tokens.
+	private class Token {
+		String token;
+		SimpleTokenType t;
+		public Token(String token, SimpleTokenType t) {
+			this.token = token;
+			this.t = t;
+		}
+
+
+	}
+
 
 	public List<TokenizedItem>findTokens(String formula,String mainVar) {		
 		if (formulaCache.get(formula)!=null)
 			return formulaCache.get(formula);
 		Log.d("vortex","parsing formula ["+formula+"]");
-		List<String> potVars = new ArrayList<String>();
+		List<Token> potVars = new ArrayList<Token>();
 		LoggerI o = gs.getLogger();
 		//Try parsing the formula.
 		String pattern = "<>=+-*/().0123456789,";
@@ -241,16 +256,20 @@ import com.teraim.vortex.non_generics.Constants;
 				char c = formula.charAt(i);  
 				//if function, collect parameters. 
 				if (parseFunctionParameters) {
-					if (Character.isWhitespace(c)||c==',') {
-						parseFunctionParameters = false;
-						in = false;
-						Log.d("nils","Adding functional argument: "+curToken);
-						potVars.add(curToken);
-						curToken = "";
+					//skip blanks.
+					if (Character.isWhitespace(c))
 						continue;
-					} else
-						//add if not right parantesis.
-						in = (c != ')');											
+					//next argument.
+					if (c==','|| c== ')') {						
+						Log.d("nils","Adding functional argument: "+curToken);
+						potVars.add(new Token(curToken,SimpleTokenType.arg));
+						curToken = "";
+						//parse until right paranthesis found.
+						parseFunctionParameters = (c != ')');	
+					} else {
+						curToken+=c;
+						continue;
+					}
 				} else {
 					if (!in) {
 						//assume its in & test
@@ -276,10 +295,11 @@ import com.teraim.vortex.non_generics.Constants;
 											+(c == inPattern.charAt(j)?inPattern.charAt(j):"<spc>")+"]");
 								//fail.
 								in = false;
-								System.out.println("Found variable: "+curToken);
-								potVars.add(curToken);								
-								//special case for HAS.
-								//								if (curVar.startsWith("has")) {
+								System.out.println("Found token: "+curToken);
+								if (parseFunctionParameters)
+									potVars.add(new Token(curToken,SimpleTokenType.func));
+								else
+									potVars.add(new Token(curToken,SimpleTokenType.var));								
 								curToken="";
 								break;
 							}
@@ -289,80 +309,111 @@ import com.teraim.vortex.non_generics.Constants;
 				if (in)
 					curToken += c;		    		    	
 			}
-			if (parseFunctionParameters)
-				Log.d("nils","Adding final has argument: "+curToken);
-
-
+			//add if remaining.
 			if (curToken.length()>0) 
-				potVars.add(curToken);
+				potVars.add(new Token(curToken,parseFunctionParameters?SimpleTokenType.arg:SimpleTokenType.var));
 			//Now all the tokens have been identified. 
 			//scan and match functions and variables to token
 			if (potVars.size()>0) {
 				myFormulaTokens = new ArrayList<TokenizedItem>();
-				Iterator<String> it = potVars.iterator();
-				String unclassifiedToken;
-				String[] args;
-				TokenizedItem ti;
-				TokenType resultToken;
+				Iterator<Token> it = potVars.iterator();
+				String tokenName=null;
+
+				List<String> args=null;
+				int argCount = 0;
+				SimpleTokenType tokenType;
+				Token cToken;
+				TokenType function=null;
+				boolean hasCardinality = true;
+
 				while (it.hasNext()) {
-					resultToken = null;
-					args = null;
-					unclassifiedToken = it.next();
-					ti=null;
-					Log.d("vortex","PotentialVar: "+unclassifiedToken+" Length: "+unclassifiedToken.length());
-					unclassifiedToken = unclassifiedToken.toLowerCase();
+					cToken = it.next();
+					tokenName = cToken.token.toLowerCase();
+					tokenType = cToken.t;
+					if (args!=null && tokenType != SimpleTokenType.arg) {
+						if (hasCardinality && argCount>0) {
+							Log.e("vortex","Too few arguments for function "+function+"!");
+							o.addRow("");
+							o.addRedText("Too few arguments for function "+function+"!");
+						} 
+						myFormulaTokens.add(new TokenizedItem(function.name(),function,args.toArray(new String[args.size()])));
+						args = null;
+					}
+					Log.d("vortex","Token: "+cToken.token+" Length: "+tokenName.length()+" Type: "+tokenType);
 
-					for (TokenType token:functions) {
-						if (unclassifiedToken.equalsIgnoreCase(token.name())) {
-							Log.d("vortex", "found Function match:" +token.name());
-							if (token.cardinality()==-1) {
-								Log.d("vortex","this is not a token...return null");
-
-							} else {
-								resultToken = token;
+					if (tokenType == SimpleTokenType.func) {
+						for (TokenType token:functions) {
+							if (tokenName.equalsIgnoreCase(token.name())) {
+								Log.d("vortex", "found Function match:" +token.name());
+								function = token;
 								break;
 							}
 						}
-					}
-					if (resultToken == null) {
-						for (TokenType token:math) {
-							if (unclassifiedToken.equalsIgnoreCase(token.name())) {
-								Log.d("vortex", "found Math match:" +token.name()); 
-								if (token.cardinality()==-1) {
-									Log.d("vortex","this is a parent token...return null");
-								} else {
-									resultToken = token;
+						if (function == null) {
+							for (TokenType token:math_primitives) {
+								if (tokenName.equalsIgnoreCase(token.name())) {
+									Log.d("vortex", "found math_primitives match:" +token.name()); 
+									function = token;
 									break ;
 								}
 							}
 						}
-						if (resultToken == null) {
-							Variable var = gs.getVariableConfiguration().getVariableInstance(unclassifiedToken);
-							if (var!=null) {
-								Log.d("vortex","Found variable match for "+unclassifiedToken+" in formula");
-								ti = new TokenizedItem(var);
-
-							} else {
-								Log.e("vortex","unrecognized token in formula: "+unclassifiedToken);
-								o.addRow("");
-								o.addRedText("unrecognized token in formula: "+unclassifiedToken);
-								continue;
-							}
+						if (function==null) {
+							Log.e("votex","failed to find any function matching "+tokenName+"!");
+						} else {
+							//if no arguments, add immediately to result.
+							if (function.cardinality==0)
+								myFormulaTokens.add(new TokenizedItem(function.name(),function));
 						}
 					}
-					if (ti==null) {
-						//if token has arguments, catch
-						int c = resultToken.cardinality();
-						args = new String[c];
-						int i = 0;
-						while (c-->0 && it.hasNext()) 
-							args[i++] = it.next(); 
-						Log.d("vortex",resultToken+" had argument(s)"+args.toString());
-						ti = new TokenizedItem(unclassifiedToken,resultToken,args);
+					else if (tokenType == SimpleTokenType.var) {
+						Variable var = gs.getVariableConfiguration().getVariableInstance(tokenName);
+						if (var!=null) {
+							Log.d("vortex","Found variable match for "+tokenName+" in formula");
+							myFormulaTokens.add(new TokenizedItem(var));
+
+						} else {
+							Log.e("vortex","unrecognized token in formula: "+tokenName);
+							o.addRow("");
+							o.addRedText("unrecognized token in formula: "+tokenName);
+							continue;
+						}
+					}
+					else if (tokenType == SimpleTokenType.arg) {
+						//is there a function to bind to?
+						if (function == null) {
+							Log.e("vortex","Found argument, but no function! Argument: "+tokenName);
+							o.addRow("");
+							o.addRedText("Found argument, but no function! Argument: "+tokenName);
+						} else {
+							if (args == null) {
+								Log.d("vortex","found first arg. will create list");
+								args = new ArrayList<String>();
+								argCount = function.cardinality();	
+								hasCardinality = argCount>=0;
+							}
+							args.add(tokenName);
+							Log.d("vortex",function+" had argument "+tokenName);
+							if (hasCardinality) {
+								argCount--;
+
+								if (argCount<0) {
+									Log.e("vortex","too many arguments for function "+function);
+								}
+							}
+
+						}
 					}
 
-					myFormulaTokens.add(ti);
-					//No match to token. This is either a variable or an error.
+				}
+				if (args!=null) {
+					if (hasCardinality && argCount>0) {
+						Log.e("vortex","Too few arguments for function "+function+"!");
+						o.addRow("");
+						o.addRedText("Too few arguments for function "+function+"!");
+					} 
+					Log.d("vortex","Added arguments for function: "+args.toString());
+					myFormulaTokens.add(new TokenizedItem(function.name(),function,args.toArray(new String[args.size()])));
 				}
 			}
 		}
@@ -378,7 +429,7 @@ import com.teraim.vortex.non_generics.Constants;
 
 
 	TokenType[] functions = TokenType.function.allChildren();
-	TokenType[] math = TokenType.math.allChildren();
+	TokenType[] math_primitives = TokenType.math_primitives.allChildren();
 	TokenType[] varTypes = TokenType.variable.allChildren();
 
 
@@ -408,6 +459,7 @@ import com.teraim.vortex.non_generics.Constants;
 	public SubstiResult substituteForValue(List<TokenizedItem> myTokens,String formula,boolean stringT) {
 		LoggerI o = gs.getLogger();
 		o.addRow("Before substitution: "+formula);
+		Log.d("vortex","in substituteforValue with formula "+formula+" and tokens "+printTokens(myTokens));
 		if (formula ==null)
 			return null;
 		//No tokens to substitute? Then formula is ok as is.
@@ -429,7 +481,8 @@ import com.teraim.vortex.non_generics.Constants;
 				for (int i=0;i<args.length;i++) {
 					if (i < (args.length-1))
 						replaceThis+=args[i]+",";
-					replaceThis+=args[i];
+					else
+						replaceThis+=args[i];
 				}
 				replaceThis+=")";
 				subst = subst.replace(replaceThis.toLowerCase(), funcEval!=null?funcEval:"0");
@@ -485,10 +538,24 @@ import com.teraim.vortex.non_generics.Constants;
 			o.addRow("At least one variable did not have a value after substitution.");
 			//return null;
 		}
-		
-		
+
+
 		o.addRow("After substitution: "+subst);
 		return new SubstiResult(subst,false);
+	}
+
+	private String printTokens(List<TokenizedItem> myTokens) {
+		String res = "";
+		for (TokenizedItem t:myTokens) {
+			String args="";
+			if (t.args!=null&&t.args.length>0) {
+				for (String arg:t.args) {
+					args+=arg+",";
+				}
+			}
+			res+= "\ntoken: "+t.get()+" type: "+t.getType()+" args: "+args;
+		}
+		return res;
 	}
 
 	private String evalFunc(TokenizedItem item) {
@@ -528,18 +595,65 @@ import com.teraim.vortex.non_generics.Constants;
 		//Check if variable has value
 		String[] args = item.getArguments();
 
+		if (item.getType()==TokenType.sum) {
+			float sum = 0;
+			if (args!=null) {
+				Log.d("vortex","Calculating sum!  ");
+				gs.getLogger().addRow("Calculating sum function...");
+				for (String arg:args) {
+					Log.d("vortex","arg: "+arg);
+					if (Tools.isNumeric(arg)) {
+						float argn = Float.parseFloat(arg);
+						Log.d("vortex","numeric argument: "+arg+" evaluates to "+argn);
+						sum+=argn;
+					} else {
+						Variable v = gs.getVariableConfiguration().getVariableInstance(arg);
+						if (v==null) {
+							gs.getLogger().addRow("");
+							gs.getLogger().addRedText("Function has variable that does not exist in current context: "+arg);							
+						} else {
+							if (v.getType()!=DataType.numeric) {
+								Log.e("vortex","Function sum has non numeric argument: "+arg);
+								gs.getLogger().addRow("");
+								gs.getLogger().addRedText("Function sum has non numeric argument: "+arg);
+
+							} else {
+								String val = v.getValue();
+								Log.d("vortex","Value: "+val);
+								if (val == null) {
+									Log.d("vortex","skipping null value");
+
+								} else
+									sum+=Float.parseFloat(val);
+							}
+						}
+					}
+				}
+				gs.getLogger().addRow("Sum evaluates to "+sum);
+				Log.d("vortex","Sum evaluates to "+sum);
+				//TODO: Remove Round when going to float from integer.
+				return Float.toString(Math.round(sum));
+			} else {
+				Log.e("vortex","sum function without arguments");
+				gs.getLogger().addRow("");
+				gs.getLogger().addRedText("Sum Function without arguments. Evaluates to 0");
+				return "0";
+			}
+
+		}
+
 		if (item.getType()==TokenType.has) {
 			if (args!=null) {
-			Variable v = gs.getVariableConfiguration().getVariableInstance(args[0]);
-			if (v==null||v.getValue()==null)
-				return "0";
-			return "1";
+				Variable v = gs.getVariableConfiguration().getVariableInstance(args[0]);
+				if (v==null||v.getValue()==null)
+					return "0";
+				return "1";
 			} else {
 				gs.getLogger().addRow("");
 				gs.getLogger().addRedText("HAS function is missing argument! ");
 				return "0";
 			}
- 				
+
 		}
 		//Apply filter parameter <filter> on all variables in current table. Return those that match.
 		float failC=0;
@@ -550,7 +664,7 @@ import com.teraim.vortex.non_generics.Constants;
 			gs.getLogger().addRedText("Filter returned emptylist in HASx construction. Filter: "+item.get());
 			gs.getLogger().addRow("");
 			gs.getLogger().addRedText("This is not good! A HASx function needs a list with something in. Check your rule!");
-			
+
 			return null;
 		}
 		float rowC=rows.size();

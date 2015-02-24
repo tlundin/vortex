@@ -225,7 +225,7 @@ public class ProvytaTemplate extends Executor implements EventListener,OnGesture
 			//TODO: CHANGE TO CORRECT GPS
 			@Override
 			public void onClick(View v) {
-				if (Start.singleton!=null && liv.getValue()!=null && pyv.getValue()!=null && !liv.equals(NONE_SELECTED)) {
+				if (Start.singleton!=null && liv.getValue()!=null && !liv.equals(NONE_SELECTED)) {
 					gs.setKeyHash(al.createLinjeKeyMap());
 					gs.sendEvent(MenuActivity.REDRAW);
 					Start.singleton.changePage(new LinjePortalTemplate(), "LinjePortal");
@@ -233,9 +233,9 @@ public class ProvytaTemplate extends Executor implements EventListener,OnGesture
 				else {
 					AlertDialog.Builder alert = new AlertDialog.Builder(v.getContext());
 					alert.setTitle("Information saknas!");
-					alert.setMessage("För att påbörja en linje måste du först ha valt en provyta och en linje!");					
+					alert.setMessage("Välj en linje först!");					
 					alert.setCancelable(false);
-					alert.setPositiveButton("Jag fattar!", new DialogInterface.OnClickListener() {
+					alert.setPositiveButton("okej!", new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int whichButton) {
 
 						}

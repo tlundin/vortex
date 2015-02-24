@@ -156,8 +156,13 @@ public class Variable implements Serializable {
 			return false;
 		if (!usingDefault && myValue != null && myValue.equals(value))
 				return false;
-	
+		if (this.iAmOutOfRange) {
+			Log.d("vortex","Out of range. Value not stored!");
+			return false;
+		}
+			
 		Log.e("nils","Var: "+this.getId()+" old Val: "+myValue+" new Val: "+value+" this var hash#"+this.hashCode());	
+		value = Tools.removeStartingZeroes(value);
 		myValue = value;		
 		//will change keyset as side effect if valueKey variable.
 		//reason for changing indirect is that old variable need to be erased. 

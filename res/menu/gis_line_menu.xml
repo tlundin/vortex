@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item  
+        android:id="@+id/one"  
+        android:title="Markväg-brukningsväg"/>  
+
+    <item  
+        android:id="@+id/two"  
+        android:title="Dike-rätat vatendrag"/>  
+
+    <item  
+        android:id="@+id/three"  
+        android:title="Vegetationsremsa"/>  
+
+        <item  
+        android:id="@+id/four"  
+        android:title="Stensubstrat-mur-vall"/>  
+    
+            <item  
+        android:id="@+id/five"  
+        android:title="Artrik vegetationstyp"/>  
+        
+                <item  
+        android:id="@+id/six"  
+        android:title="Bärande träd och buskar"/>  
+            
+</menu>    
+

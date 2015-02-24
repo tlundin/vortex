@@ -39,6 +39,7 @@ public class GisImageView extends GestureImageView {
 	private int rNum =1;
 	private Paint borderPaint;
 	private Context ctx;
+	private Paint polyPaint;
 
 	public GisImageView(Context context) {
 		super(context);
@@ -80,7 +81,13 @@ public class GisImageView extends GestureImageView {
 		borderPaint.setColor(Color.WHITE);
 		borderPaint.setStyle(Paint.Style.STROKE);
 		borderPaint.setStrokeWidth(3);
+
 		
+		polyPaint = new Paint();
+		polyPaint.setColor(Color.WHITE);
+		polyPaint.setStyle(Paint.Style.STROKE);
+		polyPaint.setStrokeWidth(1);
+
 		currCursorPaint = wCursorPaint;
 
 		myPoints = new ArrayList<Point>();
@@ -133,18 +140,8 @@ public class GisImageView extends GestureImageView {
 			Log.e("vortex","missing gis polygon blocks");
 			return;
 		}
-		WindowManager wm = (WindowManager) ctx.getSystemService(Context.WINDOW_SERVICE);
-		Display display = wm.getDefaultDisplay();
-		
-		android.graphics.Point size= new android.graphics.Point();
-		display.getSize(size);
-		int width = size.x;
-		int height = size.y;
-		
 		fixScale = scale * scaleAdjust;
-		Log.d("vortex", "my height is And height: "+this.getHeight()+","+height);
-		int dif = height - this.getHeight();
-		float margin = ((this.getHeight()-this.getImageHeight()))/2-dif/2;
+		float margin = 0;
 		List<GisBlock> mBlocks = gp.getBlocks(rutaId);
 		gisImage = gd;
 		//calculate ratio between grid and ruta size.
@@ -161,14 +158,9 @@ public class GisImageView extends GestureImageView {
 			for (GisBlock bl:mBlocks) {
 				List<List<SweRefCoordinate>> pl = bl.polygons;
 				for (List<SweRefCoordinate> sl:pl) {
-					Path mPath = new Path();
 					SweRefCoordinate swe;
-					Poly p=null;
 					for (int i=0;i<sl.size();i++) {
 						swe = sl.get(i);	
-//						Log.d("vortex","Coord E: Pic LEFT:"+swe.E+","+gd.left);
-//						Log.d("vortex","Coord N: Pic TOP:"+swe.N+","+gd.top);
-//						Log.d("vortex","PXR: "+pXR);
 						float x = (swe.E-gd.left)*pXR;
 						float y = (gd.top-swe.N)*pYR+margin;
 						if (i==0) {
@@ -264,6 +256,7 @@ public class GisImageView extends GestureImageView {
 
 	int colorCount = 0;
 	int[] myColors = {Color.BLUE,Color.YELLOW,Color.RED,Color.GREEN,Color.WHITE,Color.CYAN};
+	private boolean showLabels = true;
 	private int nextColor() {
 		colorCount++;
 		if (colorCount==myColors.length)
@@ -319,7 +312,8 @@ public class GisImageView extends GestureImageView {
 				if (p.isComplete()) {
 					
 					canvas.drawRect(p.getRect(), bCursorPaint);
-					canvas.drawText(p.getLabel(),p.labelX,p.labelY, txtPaint);
+					if (showLabels )
+						canvas.drawText(p.getLabel(),p.labelX,p.labelY, txtPaint);
 				}
 			}
 		}
@@ -368,7 +362,7 @@ public class GisImageView extends GestureImageView {
 			mPath = p;
 			labelX=lx;
 			labelY=ly;
-			myPaint = createNewPaint();
+			myPaint = polyPaint;
 			bounds = new Rect();
 			setLabel("Poly "+rNum++);
 

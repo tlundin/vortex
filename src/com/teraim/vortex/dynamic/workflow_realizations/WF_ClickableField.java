@@ -16,6 +16,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Handler;
 import android.text.InputFilter;
 import android.text.Selection;
 import android.text.SpannableString;
@@ -671,6 +672,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 	//@Override
 	public void refreshInputFields(){
 		DataType numType;
+		boolean firstSpinner = true;
 		Log.d("nils","In refreshinputfields");
 		Set<Entry<Variable, View>> vars = myVars.entrySet();
 		for(Entry<Variable, View>entry:vars) {
@@ -727,8 +729,28 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 
 				} else
 					if (numType==DataType.list) {
+						//this is the spinner.
+						final Spinner sp = (Spinner)v.findViewById(R.id.spinner);
+
+						//first spinner should be opened automatically.
+						if (firstSpinner) {
+							firstSpinner = false;
+							final Handler h = new Handler();
+					        new Thread(new Runnable() {
+					            public void run() {
+					                // DO NOT ATTEMPT TO DIRECTLY UPDATE THE UI HERE, IT WON'T WORK!
+					                // YOU MUST POST THE WORK TO THE UI THREAD'S HANDLER
+					                h.postDelayed(new Runnable() {
+					                    public void run() {
+					                        // Open the Spinner...
+					                        sp.performClick();
+					                    }
+					                }, 1000);
+					            }
+					        }).start();
+						}
+						
 						String[] opt = null;
-						Spinner sp = (Spinner)v.findViewById(R.id.spinner);
 						String tag = (String) sp.getTag();
 
 						String val[] = values.get(variable);

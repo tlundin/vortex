@@ -537,5 +537,11 @@ public class Tools {
 
 	}
 
+	public static String removeStartingZeroes(String value) {
+		if (value == null || value.length()<=1 || !value.startsWith("0"))
+			return value;
+		return removeStartingZeroes(value.substring(1));
+	}		
+
 
 }
