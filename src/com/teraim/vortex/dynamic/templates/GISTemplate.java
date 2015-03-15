@@ -62,6 +62,15 @@ public class GISTemplate extends Executor implements LocationListener {
 	private PersistenceHelper globalPh,ph;
 	private String myRuta;
 	private Button linjeB;
+	private Button pointB;
+	
+	private int selectedSubMenu =-1;
+	private enum DrawingMode {
+		point,
+		line,
+		polygon
+	}
+	private DrawingMode drawingMode = null;
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -77,7 +86,29 @@ public class GISTemplate extends Executor implements LocationListener {
 		myContext.addContainers(getContainers());
 		//gi.setI
 		linjeB = (Button) v.findViewById(R.id.button_linje);
+		pointB = (Button) v.findViewById(R.id.button_point);
 		
+		pointB.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //Creating the instance of PopupMenu
+                PopupMenu popup = new PopupMenu(GISTemplate.this.getActivity(), pointB);
+                //Inflating the Popup using xml file
+                popup.getMenuInflater()
+                    .inflate(R.menu.gis_point_menu, popup.getMenu());
+
+                //registering popup with OnMenuItemClickListener
+                popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    public boolean onMenuItemClick(MenuItem item) {
+                    	selectedSubMenu=item.getItemId();
+                    	drawingMode = DrawingMode.point;
+                        return true;
+                    }
+                });
+
+                popup.show(); //showing popup menu
+            }
+        }); //closing the setOnClickListener method
 		linjeB.setOnClickListener(new OnClickListener() {
 	            @Override
 	            public void onClick(View v) {
@@ -90,11 +121,8 @@ public class GISTemplate extends Executor implements LocationListener {
 	                //registering popup with OnMenuItemClickListener
 	                popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
 	                    public boolean onMenuItemClick(MenuItem item) {
-	                        Toast.makeText(
-	                        		GISTemplate.this.getActivity(),
-	                            "You Clicked : " + item.getTitle(),
-	                            Toast.LENGTH_SHORT
-	                        ).show();
+	                    	selectedSubMenu = item.getItemId();
+	                    	drawingMode = DrawingMode.line;
 	                        return true;
 	                    }
 	                });

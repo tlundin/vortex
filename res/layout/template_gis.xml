@@ -10,13 +10,13 @@
     <LinearLayout
         android:id="@+id/buttonrow"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
         android:orientation="horizontal" >
 
         <Button
-            android:id="@+id/button_dot"
+            android:id="@+id/button_point"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             android:text="Punkt"
             android:textColor="#FFFFFF" />
@@ -24,7 +24,7 @@
         <Button
             android:id="@+id/button_linje"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             android:text="Linje"
             android:textColor="#FFFFFF" />
@@ -32,7 +32,7 @@
         <Button
             android:id="@+id/button_poly"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             android:text="Polygon"
             android:textColor="#FFFFFF" />
@@ -40,7 +40,7 @@
         <Button
             android:id="@+id/button_circle"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             android:text="Cirkel"
             android:textColor="#FFFFFF" />
@@ -48,7 +48,7 @@
         <Button
             android:id="@+id/button_quad"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             android:text="Kvadrat"
             android:textColor="#FFFFFF" />

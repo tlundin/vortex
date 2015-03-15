@@ -94,7 +94,8 @@ public class GisPolygonConfiguration extends JSONConfigurationModule {
 			//end array means we are done.
 			this.setEssence();
 			reader.close();
-			o.addRedText("GIS Blocks parsed succesfully");
+			o.addRow("");
+			o.addText("GIS Blocks parsed succesfully");
 			//freezeSteps=myBlocks.size();
 			return new LoadResult(this,ErrorCode.parsed);
 		}

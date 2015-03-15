@@ -44,12 +44,18 @@ public class RoundChartBlock extends Block implements EventListener {
 			String startAngle, int height,int width, boolean displayValues, boolean percentage,
 			boolean isVisible,String dataSource) {
 		super();
+		float textSizeF = 10;
+		try {
+			textSizeF = Float.parseFloat(textSize);
+		} catch (NumberFormatException e) {
+			Log.d("vortex","error in format...default to 10");
+		}
 		this.blockId = id;
 		this.label = label;
 		this.container = container;
 		this.type = type;
 		this.axisTitle = axisTitle;
-		this.textSize = textSize==null?10:Float.parseFloat(textSize);
+		this.textSize = textSizeF;
 		this.margins = margins;
 		this.startAngle = startAngle;
 		this.displayValues = displayValues;
@@ -157,6 +163,7 @@ public class RoundChartBlock extends Block implements EventListener {
 
 	}
 
+	private final String[] cat = new String[] {"ab","ra","ka","da","bra","la"};
 	@Override
 	public void onEvent(Event e) {
 		if (e.getType()==Event.EventType.onAttach) {
@@ -170,7 +177,7 @@ public class RoundChartBlock extends Block implements EventListener {
 			distributionSeries.clear();
 			for (int i=0;i<d2.length;i++) {
 			int R = random.nextInt(100);			
-				distributionSeries.add((double)R);
+				distributionSeries.add(cat[i],(double)R);
 			}
 			pie.repaint();
 		}

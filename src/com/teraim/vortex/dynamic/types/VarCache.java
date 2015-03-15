@@ -66,7 +66,7 @@ public class VarCache {
 			//	Log.d("nils",s);
 		} else {
 			if (ret.size()==1 && ret.get(0).getKeyChain()==null) {
-				Log.d("nils","Found variable in Cache: "+varId+" Value: "+ret.get(0).getValue());
+				Log.d("nils","Found Global variable in Cache: "+varId+" Value: "+ret.get(0).getValue());
 				return ret.get(0);
 			}
 		}

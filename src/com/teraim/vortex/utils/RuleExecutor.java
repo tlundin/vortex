@@ -33,13 +33,15 @@ import com.teraim.vortex.non_generics.Constants;
 
 
 /**
- Parser for formulas.
+ 2nd layer Parser for formulas.
  Author Terje Lundin
-
+ Part of Vortex Core, Copyright Teraim.
  Parses formulas and, if ok, allows evaluation.
 
  */
-@SuppressLint("DefaultLocale") public class RuleExecutor {
+@SuppressLint("DefaultLocale") 
+
+public class RuleExecutor {
 
 	private GlobalState gs;
 	private Map<String,List<TokenizedItem>> formulaCache = new HashMap<String,List<TokenizedItem>>();
@@ -104,6 +106,7 @@ import com.teraim.vortex.non_generics.Constants;
 		hasMore(function,1),
 		hasSome(function,1),
 		hasMost(function,1),
+		hasSame(function,-1),
 		historical(function,1),
 		getCurrentYear(function,0),
 		getCurrentMonth(function,0),
@@ -113,6 +116,7 @@ import com.teraim.vortex.non_generics.Constants;
 		getCurrentSecond(function,0),
 		getCurrentWeekNumber(function,0),
 		sum(function,-1),
+		exist(function,2),
 		variable(null,-1),
 		text(variable,0),
 		numeric(variable,0),
@@ -288,14 +292,14 @@ import com.teraim.vortex.non_generics.Constants;
 
 							if (c == inPattern.charAt(j)||Character.isWhitespace(c)) {
 								if (c == '(') {
-									Log.d("nils","Found paranthesis. Parsing func parameter(s) next");
+									//Log.d("nils","Found paranthesis. Parsing func parameter(s) next");
 									parseFunctionParameters = true;									
-								} else 
-									System.out.println("found non-var char inside: ["
-											+(c == inPattern.charAt(j)?inPattern.charAt(j):"<spc>")+"]");
+								}// else 
+									//System.out.println("found non-var char inside: ["
+									//		+(c == inPattern.charAt(j)?inPattern.charAt(j):"<spc>")+"]");
 								//fail.
 								in = false;
-								System.out.println("Found token: "+curToken);
+								//System.out.println("Found token: "+curToken);
 								if (parseFunctionParameters)
 									potVars.add(new Token(curToken,SimpleTokenType.func));
 								else
@@ -339,7 +343,7 @@ import com.teraim.vortex.non_generics.Constants;
 						myFormulaTokens.add(new TokenizedItem(function.name(),function,args.toArray(new String[args.size()])));
 						args = null;
 					}
-					Log.d("vortex","Token: "+cToken.token+" Length: "+tokenName.length()+" Type: "+tokenType);
+					//Log.d("vortex","Token: "+cToken.token+" Length: "+tokenName.length()+" Type: "+tokenType);
 
 					if (tokenType == SimpleTokenType.func) {
 						for (TokenType token:functions) {
@@ -640,6 +644,81 @@ import com.teraim.vortex.non_generics.Constants;
 				return "0";
 			}
 
+		}
+		
+		if (item.getType()==TokenType.hasSame) {
+			Log.d("vortex","running hasSame function");
+			if(args==null || args.length<3) {
+				Log.e("vortex","no or too few arguments in hasSame");
+				gs.getLogger().addRow("");
+				gs.getLogger().addRedText("No or too few arguments in hasSame");
+			} else {
+				//Get all variables in Functional Group x.
+				List<List<String>> rows = al.getTable().getRowsContaining(VariableConfiguration.Col_Functional_Group, item.getArguments()[0]);
+				Log.d("vortex","found "+(rows.size()-1)+" variables in "+item.getArguments()[0]);
+				//Parse the expression. Find all references to Functional Group.
+				//Each argument need to either exist or not exist.
+						Map<String, String[]>values=new HashMap<String,String[]>();
+						for (List<String>row:rows) {
+							Log.d("vortex","Var name: "+al.getVarName(row));
+							for (int i = 1; i<args.length;i++) {
+								String[] varName = al.getVarName(row).split("_");
+								int size = varName.length;
+								if (size<3) {
+									gs.getLogger().addRow("");
+									gs.getLogger().addRedText("This variable has no Functional Group...cannot apply hasSame function. Variable id: "+varName);
+									Log.e("vortex","This is not a group variable...stopping.");
+									return null;
+								} else {
+									 
+									String name = varName[size-1];
+									String art = varName[size-2];
+									String group = varName[0];
+									Log.d("vortex","name: "+name+" art: "+art+" group: "+group+" args["+i+"]: "+args[i]);
+									if (name.equalsIgnoreCase(args[i])) {
+										Log.d("vortex","found varname. Adding "+art);
+									Variable v = al.getVariableInstance(al.getVarName(row));
+									String varde = null;
+									if (v == null) {
+										Log.d("vortex","var was null!");
+										
+									} else
+										varde = v.getValue();
+									String [] result;
+									if (values.get(art)==null) {
+										Log.d("vortex","empty..creating new val arr");
+										result = new String[args.length-1];
+										values.put(art, result);
+									} else 
+										result = values.get(art);
+									result[i-1]=varde;
+									break;
+									}
+								}
+							}
+							
+				
+						}
+						//now we should have an array containing all values for all variables.
+						Log.d("vortex","printing resulting map");
+						for (String key:values.keySet()) {
+							String vCompare = values.get(key)[0];
+							for (int i = 1;i<args.length-1;i++) {
+								String vz = values.get(key)[i];
+								if (vCompare==null && vz ==null ||vCompare!=null&&vz!=null)
+									continue;
+								else {
+									gs.getLogger().addRow("hasSame difference detected for "+key+". Stopping");
+									Log.e("vortex","Diffkey values for "+key+": "+(vCompare==null?"null":vCompare)+" "+(vz==null?"null":vz));
+									return "0";
+								}
+									
+							}
+						}
+						Log.d("vortex","all values same. Success for hasSame!");
+						return "1";
+
+			}
 		}
 
 		if (item.getType()==TokenType.has) {

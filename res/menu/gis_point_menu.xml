@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:id="@+id/point_alle"
+        android:title="Alléträd i allérad"/>
+    <item
+        android:id="@+id/point_trad"
+        android:title="Skyddsvärt träd (ej i allé)"/>
+    <item
+        android:id="@+id/point_markvag"
+        android:title="Obs.punkt markväg/brukningsväg"/>
+    <item
+        android:id="@+id/point_dike"
+        android:title="Obs.punkt dike/rätat vattendrag"/>
+    <item
+        android:id="@+id/point_vegetation"
+        android:title="Obs.punkt vegetationsremsa"/>
+    <item
+        android:id="@+id/point_stensubstrat"
+        android:title="Obs.punkt stensubstrat/mur/vall"/>
+
+</menu>
