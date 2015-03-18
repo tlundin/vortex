@@ -35,6 +35,7 @@ import com.teraim.vortex.dynamic.blocks.ButtonBlock;
 import com.teraim.vortex.dynamic.blocks.ConditionalContinuationBlock;
 import com.teraim.vortex.dynamic.blocks.ContainerDefineBlock;
 import com.teraim.vortex.dynamic.blocks.CreateEntryFieldBlock;
+import com.teraim.vortex.dynamic.blocks.CreateImageBlock;
 import com.teraim.vortex.dynamic.blocks.CreateSortWidgetBlock;
 import com.teraim.vortex.dynamic.blocks.DisplayValueBlock;
 import com.teraim.vortex.dynamic.blocks.JumpBlock;
@@ -306,7 +307,12 @@ public abstract class Executor extends Fragment {
 					JumpBlock bl = (JumpBlock)b;			
 					jump.put(bl.getBlockId(), bl.getJumpTo());
 				}
-
+				else if (b instanceof CreateImageBlock) {
+					o.addRow("");
+					o.addYellowText("CreateImageBlock found "+b.getBlockId());
+					CreateImageBlock bl = (CreateImageBlock)b;			
+					bl.create(myContext);
+				}
 				else if (b instanceof SetValueBlock) {
 					o.addRow("");
 					o.addYellowText("Running SetValueBlock "+b.getBlockId());

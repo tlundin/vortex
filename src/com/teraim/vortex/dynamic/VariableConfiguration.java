@@ -27,7 +27,7 @@ public class VariableConfiguration {
 	public static String Col_Variable_Label = "Variable Label";
 	public static String Col_Variable_Keys = "Key Chain";
 	public static String Type = "Type";
-	public static String Col_Functional_Group = "Skarmgrupp";
+	public static String Col_Functional_Group = "Group Name";
 	public static String Col_Variable_Scope = "Scope";
 	public static String Col_Variable_Limits = "Limits";
 	public static String Col_Variable_Dynamic_Limits = "D_Limits";
@@ -232,8 +232,8 @@ public class VariableConfiguration {
 		return res;
 	}
 
-	public String getBeskrivning(List<String> row) {
-		String b = myTable.getElement("Beskrivning", row);
+	public String getDescription(List<String> row) {
+		String b = myTable.getElement("Description", row);
 		if(b==null) 
 			b = this.getVariableDescription(row);
 

@@ -59,7 +59,7 @@ public class WF_List_UpdateOnSaveEvent extends WF_Static_List implements EventLi
 		//Log.d("nils","ADD EntryField with label "+entryLabel);
 		ef = entryFields.get(entryLabel);
 		if (ef==null) 	{	
-			WF_ClickableField_Selection entryF = new WF_ClickableField_Selection(entryLabel,al.getBeskrivning(r),myContext,"C_F_"+index++,true);
+			WF_ClickableField_Selection entryF = new WF_ClickableField_Selection(entryLabel,al.getDescription(r),myContext,"C_F_"+index++,true);
 			list.add(entryF);	
 			ef = new EntryField();
 			entryFields.put(entryLabel, ef);

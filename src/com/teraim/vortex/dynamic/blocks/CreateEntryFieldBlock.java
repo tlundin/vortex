@@ -74,8 +74,8 @@ public class CreateEntryFieldBlock extends Block {
 			o.addRedText("Current keyChain: ["+gs.getCurrentKeyHash()+"]");
 		} else	{	
 			WF_ClickableField_Selection myField = new WF_ClickableField_Selection_OnSave(v.getLabel(),
-					al.getBeskrivning(v.getBackingDataSet()),myContext,name,isVisible);
-			Log.d("nils", "In CreateEntryField.Description: "+al.getBeskrivning(v.getBackingDataSet()));
+					al.getDescription(v.getBackingDataSet()),myContext,name,isVisible);
+			Log.d("nils", "In CreateEntryField.Description: "+al.getDescription(v.getBackingDataSet()));
 			Log.d("nils","Backing data: "+v.getBackingDataSet().toString());
 			myField.addVariable(v, true,format,true,showHistorical);
 			myContext.addDrawable(v.getId(), myField);

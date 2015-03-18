@@ -116,7 +116,7 @@ public class RuleExecutor {
 		getCurrentSecond(function,0),
 		getCurrentWeekNumber(function,0),
 		sum(function,-1),
-		exist(function,2),
+//		exist(function,2),
 		variable(null,-1),
 		text(variable,0),
 		numeric(variable,0),
@@ -550,6 +550,8 @@ public class RuleExecutor {
 
 	private String printTokens(List<TokenizedItem> myTokens) {
 		String res = "";
+		if (myTokens==null)
+			return null;
 		for (TokenizedItem t:myTokens) {
 			String args="";
 			if (t.args!=null&&t.args.length>0) {

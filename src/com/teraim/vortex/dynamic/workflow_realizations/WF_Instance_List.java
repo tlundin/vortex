@@ -111,7 +111,7 @@ public class WF_Instance_List extends WF_Static_List implements EventListener,Ev
 							String entryInstanceLabel = al.getEntryLabel(var.getBackingDataSet())+" ["+index+"]";
 							WF_ClickableField_Selection ef = entryFields.get(entryInstanceLabel);
 							if (ef == null) {
-								ef = new WF_ClickableField_Selection(entryInstanceLabel,al.getBeskrivning(var.getBackingDataSet()),myContext,entryInstanceLabel,true);
+								ef = new WF_ClickableField_Selection(entryInstanceLabel,al.getDescription(var.getBackingDataSet()),myContext,entryInstanceLabel,true);
 								Log.d("nils","Added list entry for "+entryInstanceLabel);
 								//cache
 								entryFields.put(entryInstanceLabel, ef);	
@@ -188,7 +188,7 @@ public class WF_Instance_List extends WF_Static_List implements EventListener,Ev
 						//C_F_+index is the ID for the element.
 						//TODO: ID is a bit hacked here..
 
-						listRow = new WF_ClickableField_Selection(al.getEntryLabel(r),al.getBeskrivning(r),myContext,"C_F_"+index,true);
+						listRow = new WF_ClickableField_Selection(al.getEntryLabel(r),al.getDescription(r),myContext,"C_F_"+index,true);
 						list.add(listRow);	
 					} 
 					if (!al.getAction(r).equals("add")&&!al.getAction(r).equals("create"))

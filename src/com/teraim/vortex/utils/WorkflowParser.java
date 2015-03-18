@@ -33,6 +33,7 @@ import com.teraim.vortex.dynamic.blocks.ButtonBlock;
 import com.teraim.vortex.dynamic.blocks.ConditionalContinuationBlock;
 import com.teraim.vortex.dynamic.blocks.ContainerDefineBlock;
 import com.teraim.vortex.dynamic.blocks.CreateEntryFieldBlock;
+import com.teraim.vortex.dynamic.blocks.CreateImageBlock;
 import com.teraim.vortex.dynamic.blocks.CreateSortWidgetBlock;
 import com.teraim.vortex.dynamic.blocks.DisplayValueBlock;
 import com.teraim.vortex.dynamic.blocks.JumpBlock;
@@ -312,12 +313,50 @@ public class WorkflowParser extends AsyncTask<Context,Void,ErrorCode>{
 				blocks.add(readBlockCreateRoundChart(parser));
 			else if (name.equals("block_create_var_value_source"))
 				blocks.add(readBlockCreateVarValueSource(parser));
+			else if (name.equals("block_create_picture"))
+				blocks.add(readBlockCreatePicture(parser));
 			else {			
 				skip(name,parser);
 			}
 		}
 
 		return blocks;
+	}
+
+	
+	private Block readBlockCreatePicture(XmlPullParser parser) throws IOException, XmlPullParserException {
+		//		o.addRow("Parsing block: block_set_value...");
+		String id=null,nName=null,container=null,source=null,scale=null;
+		boolean isVisible=true;
+		
+		parser.require(XmlPullParser.START_TAG, null,"block_create_picture");
+		while (parser.next() != XmlPullParser.END_TAG) {
+			if (parser.getEventType() != XmlPullParser.START_TAG) {
+				continue;
+			}
+			String name= parser.getName();
+			if (name.equals("block_ID")) {
+				id = readText("block_ID",parser);
+			} else if (name.equals("name")) {
+				nName = readText("name",parser);
+			} else if (name.equals("name")) {
+				nName = readText("name",parser);
+			} else if (name.equals("container_name")) {
+				container = readText("container_name",parser);
+			} else if (name.equals("source")) {
+				source = readText("source",parser);
+			} else if (name.equals("scale")) {
+				scale = readText("scale",parser);
+			} else if (name.equals("is_displayed")) {
+				isVisible = readText("is_displayed",parser).equals("true");
+			} 
+			else
+				skip(name,parser);
+
+		}
+		checkForNull("block_ID",id,"name",nName,"container_name",container,"source",source,"scale",scale);
+		return new CreateImageBlock(id,nName,container,source,scale,isVisible);
+
 	}
 	
 	private Block readBlockCreateVarValueSource(XmlPullParser parser) throws IOException, XmlPullParserException {
