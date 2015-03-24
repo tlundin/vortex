@@ -239,7 +239,7 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 	public boolean freeze(int counter) throws IOException {
 		if (entries == null)
 			return false;
-		Log.d("vortex","Gets ti freeze in import");
+
 		//Insert variables into database
 		Entry e = entries.get(counter);
 		{

@@ -41,13 +41,13 @@
         android:id="@+id/avsluta"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Spara och gå ut" />
+        android:text="Save and exit" />
 
     <Button
         android:id="@+id/korrigera"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Fortsätt" />
+        android:text="Continue" />
     
 </LinearLayout>
 

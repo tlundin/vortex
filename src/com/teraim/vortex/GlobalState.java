@@ -101,13 +101,7 @@ public class GlobalState  {
 		this.globalPh=globalPh;		
 		this.ph=ph;		
 		this.db=myDb;		
-		if (globalPh.getB(PersistenceHelper.DEVELOPER_SWITCH))
-			log = debugConsole;
-		//removeLogger();
-		else {
-			Log.d("nils","LOGGER WAS REMOVED");
-			removeLogger();
-		}
+		this.log = debugConsole;
 		//Parser for rules
 		parser = new Parser(this);
 		//Artlista
@@ -413,14 +407,6 @@ public class GlobalState  {
 	}
 
 	int logID=1;
-	public void createLogger() {
-		//log = new FastLogger(this.getContext(),"CREATED "+logID++);
-		log = new Logger(this.getContext(),"CREATED "+logID++);
-	}
-
-	public void removeLogger() {
-		log = new DummyLogger();
-	}
 
 	private Map<String,String> myKeyHash;
 
@@ -651,6 +637,7 @@ public class GlobalState  {
 		Map<String, String> keyHash = null;
 		Map<String, Variable> rawHash = null;
 		LoggerI o = getLogger();
+		Log.d("noob","In evaluate Context!!");
 		if (cContext==null||cContext.isEmpty()) {
 			Log.d("nils","No context!!");
 			o.addRow("");

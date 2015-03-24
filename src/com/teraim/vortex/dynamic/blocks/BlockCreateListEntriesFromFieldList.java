@@ -20,10 +20,10 @@ import com.teraim.vortex.dynamic.workflow_realizations.WF_TimeOrder_Sorter;
 public class BlockCreateListEntriesFromFieldList extends Block {
 
 	private static Map <String,List<List<String>>> cacheMap=new HashMap <String,List<List<String>>>();
-	String id,type,containerId,selectionPattern,selectionField,keyField,variatorColumn;
+	private String id,type,containerId,selectionPattern,selectionField,variatorColumn;
 	boolean isVisible = true;
 	public BlockCreateListEntriesFromFieldList(String id,String namn, String type,
-			String containerId, String selectionPattern, String selectionField,String variatorColumn,String keyField) {
+			String containerId, String selectionPattern, String selectionField,String variatorColumn) {
 		super();
 		this.blockId=id;
 		this.id = namn;
@@ -31,7 +31,6 @@ public class BlockCreateListEntriesFromFieldList extends Block {
 		this.containerId = containerId;
 		this.selectionPattern = selectionPattern;
 		this.selectionField = selectionField;
-		this.keyField = keyField;
 		this.variatorColumn=variatorColumn;
 		
 

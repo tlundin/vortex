@@ -36,6 +36,7 @@ public class CreateImageBlock extends Block {
 		this.source=source;
 		this.scale = scale;
 		this.isVisible = isVisible;
+		Log.d("vortex","Create image block with source "+source);
 	}
 	
 	
@@ -43,7 +44,8 @@ public class CreateImageBlock extends Block {
 		ScaleType scaleT=ScaleType.FIT_XY;
 		ImageView img = new ImageView(myContext.getContext());
 		new DownloadImageTask(img)
-        .execute("http://java.sogeti.nl/JavaBlog/wp-content/uploads/2009/04/android_icon_256.png");
+        .execute(source);
+		Log.d("vortex","Source is "+source);
 		WF_Container myContainer = (WF_Container)myContext.getContainer(container);
 		if (scale!=null || scale.length()>0)
 			scaleT = ScaleType.valueOf(scale);

@@ -52,11 +52,10 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 	private final String License = "This sw uses 3rd party components that are under Apache 2.0 license.";
 	private LoggerI loginConsole,debugConsole;
 	private PersistenceHelper globalPh,ph;
-	private ModuleLoader myLoader;
+	private ModuleLoader myLoader=null,myDBLoader=null;
 	private String bundleName;
 	private Configuration myModules;
 	private DbHelper myDb;
-	private boolean running=false;
 	private TextView appTxt;
 	private String oldV = "";
 
@@ -137,11 +136,11 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		globalPh.put(PersistenceHelper.CURRENT_VERSION_OF_PROGRAM, Constants.VORTEX_VERSION);
 
 		//create module descriptors for all known configuration files.
+		Log.d("vortex","Creating Configuration and ModuleLoader");
 		myModules = new Configuration(Constants.getCurrentlyKnownModules(globalPh,ph,server(),bundleName,debugConsole));
 		myLoader = new ModuleLoader("moduleLoader",myModules,loginConsole,globalPh,debugConsole,this);
 
 
-		running = false;
 		return view;
 	}
 
@@ -167,6 +166,8 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 			loginConsole.addRow("Loading In Memory Modules");
 			Log.d("vortex","Loading In Memory Modules");
 			myLoader.loadModules();
+			loginConsole.draw();
+			Log.d("vortex","loginConsole object "+loginConsole);
 		}
 	}
 
@@ -189,6 +190,20 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 			}
 		 */
 
+		super.onStart();
+	}
+
+
+
+
+
+	@Override
+	public void onStop() {
+		if (myLoader!=null)
+			myLoader.stop();
+		if (myDBLoader!=null)
+			myDBLoader.stop();
+		Log.e("vortex","stop called on loaders!");
 		super.onStart();
 	}
 
@@ -267,7 +282,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		if (globalPh.get(PersistenceHelper.SERVER_URL).equals(PersistenceHelper.UNDEFINED))
 			globalPh.put(PersistenceHelper.SERVER_URL, "www.teraim.com");
 		if (globalPh.get(PersistenceHelper.BUNDLE_NAME).equals(PersistenceHelper.UNDEFINED))
-			globalPh.put(PersistenceHelper.BUNDLE_NAME, "Vortex");
+			globalPh.put(PersistenceHelper.BUNDLE_NAME, "Nils");
 		if (globalPh.get(PersistenceHelper.DEVELOPER_SWITCH).equals(PersistenceHelper.UNDEFINED))
 			globalPh.put(PersistenceHelper.DEVELOPER_SWITCH, false);
 		if (globalPh.get(PersistenceHelper.VERSION_CONTROL_SWITCH_OFF).equals(PersistenceHelper.UNDEFINED))
@@ -310,6 +325,9 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 	@Override
 	public void loadSuccess(String loaderId) {
 		Log.d("vortex","Arrives to loadsucc with ID: "+loaderId);
+		if (this.getActivity()==null) {
+			Log.e("vortex","No activity!");
+		}
 		//If load successful, create database and import data into it. 
 		if (loaderId.equals("moduleLoader")) {
 			loginConsole.addRow("");
@@ -325,7 +343,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 				myDb = new DbHelper(this.getActivity().getApplicationContext(),t, globalPh,ph,bundleName);
 				Configuration dbModules = new Configuration(Constants.getDBImportModules(globalPh, ph, server(), bundleName, debugConsole, myDb));
 				//Import historical data to database. 
-				ModuleLoader myDBLoader = new ModuleLoader("dbloader",dbModules,loginConsole,globalPh,debugConsole,this);
+				myDBLoader = new ModuleLoader("dbloader",dbModules,loginConsole,globalPh,debugConsole,this);
 				loginConsole.addRow("Loading Database Modules");			
 				myDBLoader.loadModules();
 
@@ -361,7 +379,6 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 				Start.singleton.getDrawerMenu().closeDrawer();
 				Start.singleton.getDrawerMenu().clear();
 				gs.sendEvent(MenuActivity.INITDONE);
-				running = true;
 				String newV = ph.get(PersistenceHelper.CURRENT_VERSION_OF_WF_BUNDLE);
 				boolean isNew = !newV.equals(oldV);
 				if (isNew)

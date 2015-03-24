@@ -22,6 +22,7 @@ public class SpinnerConfiguration extends CSVConfigurationModule {
 	private final static int noOfRequiredColumns=5;			
 	private final SpinnerDefinition sd=new SpinnerDefinition();
 	private LoggerI o;
+	private int c=0;
 
 	public SpinnerConfiguration(PersistenceHelper globalPh,PersistenceHelper ph, String server, String bundle, LoggerI debugConsole) {
 		super(globalPh, ph, Source.internet, server+bundle.toLowerCase()+"/", SpinnerConfiguration.NAME,"Spinner module        ");	 
@@ -45,10 +46,16 @@ public class SpinnerConfiguration extends CSVConfigurationModule {
 		return false;
 	}
 
+	private String curId=null;
+	private List<SpinnerElement>sl = null;
+
+
 	@Override
 	public LoadResult parse(String row, Integer currentRow) throws IOException {
-			List<SpinnerElement>sl = null;
-			String curId=null;
+			if (currentRow==1) {
+				Log.d("vortex","skip header: "+row);
+				return null;
+			}
 			//Split into lines.			
 			String[]  r = Tools.split(row);
 			if (r.length<noOfRequiredColumns) {
@@ -62,11 +69,18 @@ public class SpinnerConfiguration extends CSVConfigurationModule {
 			} else {
 				String id = r[0];
 				if (curId==null || !id.equals(curId)) {
+					if (c!=0) 
+						o.addRow("List had "+c+" members");
+					c=0;			
+					o.addRow("Adding new spinner list with ID "+curId);
 					sl = new ArrayList<SpinnerElement>();
 					sd.add(id, sl);
 					curId = id;
+		
 				}
+				Log.d("vortex","Added new spinner element. ID "+curId);
 				sl.add(sd.new SpinnerElement(r[1],r[2],r[3],r[4]));
+				c++;
 			}
 			//good!
 			return null;

@@ -474,7 +474,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 								hideOrShowViews(e.varMapping,SHOW);
 								spinner.setTag(R.string.u2,e.varMapping);
 								sDescr.setText(e.descr);
-								Log.e("nils","DESCR TEXT SET TO "+e.descr);
+								Log.d("nils","DESCR TEXT SET TO "+e.descr);
 							}
 						}
 					}
@@ -733,7 +733,8 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 						final Spinner sp = (Spinner)v.findViewById(R.id.spinner);
 
 						//first spinner should be opened automatically.
-						if (firstSpinner) {
+						if (firstSpinner && sp.isShown()) {
+							Log.d("vortex", "I end up here for spinner variable "+variable.getId());
 							firstSpinner = false;
 							final Handler h = new Handler();
 					        new Thread(new Runnable() {

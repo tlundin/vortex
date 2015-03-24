@@ -564,12 +564,15 @@ public abstract class Executor extends Fragment {
 			String id = blocks.get(i).getBlockId();
 			//			Log.d("nils","checking id: "+id);
 			if(id.equals(jNext)) {
-				Log.d("nils","found block to jump to!");
+				Log.d("vortex","Jumping to block "+jNext);
+				o.addRow("Jumping to block "+jNext);
 				return i;
 			}
 		}
 
 		Log.e("nils","Jump pointer to non-existing block. Faulty ID: "+jNext);
+		o.addRow("");
+		o.addRedText("Jump pointer to non-existing block. Faulty ID: "+jNext);
 		return blocks.size();
 	}
 

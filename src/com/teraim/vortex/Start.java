@@ -442,10 +442,18 @@ public class Start extends MenuActivity {
 		String label = wf.getLabel();
 		String template = wf.getTemplate();
 		//Set context.
+		Log.d("noob","Context ["+wf.getContext()+"]");
+		debugLogger.addRow("Context ["+wf.getContext()+"]");
 		CHash r = gs.evaluateContext(wf.getContext());
 		//if Ok err is null.
 		if (r.err==null) {
+			debugLogger.addRow("Context [");
+			debugLogger.addGreenText("OK");
+			debugLogger.addText("]");
+
 			gs.setRawHash(r.rawHash);
+			if (r.keyHash==null)
+				Log.e("noob","Keyhas still null even though it is OK");
 			gs.setKeyHash(r.keyHash);
 			//No template. This flow does not have a ui. Hand over to Executor.
 			Fragment fragmentToExecute;
@@ -464,7 +472,7 @@ public class Start extends MenuActivity {
 				Log.i("vortex", "Committing Empty transaction");
 				ft.commitAllowingStateLoss();
 				Log.i("vortex", "Committed transaction");
-			} else {
+			} else {				
 				fragmentToExecute = wf.createFragment(template);
 				fragmentToExecute.setArguments(args);
 				changePage(fragmentToExecute,label);

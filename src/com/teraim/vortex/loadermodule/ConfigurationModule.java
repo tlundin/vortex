@@ -86,8 +86,16 @@ public abstract class ConfigurationModule {
 		return IamLoaded||notFound;
 	}
 	
+	public void cancelLoader() {
+		if (mLoader!=null) {
+			Log.e("vortex","Canncelled mLoader!");
+			mLoader.cancel(true);
+			mLoader = null;
+		}
+	}
+	private Loader mLoader=null;
+	
 	public void load(FileLoadedCb moduleLoader) {
-		Loader mLoader;
 		if (source == Source.internet) 
 			mLoader = new WebLoader(null, null, moduleLoader,versionControl);
 		else 

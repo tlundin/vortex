@@ -211,7 +211,7 @@ public class VariableConfiguration {
 	public List<String> getCompleteVariableDefinition(String varName) {
 		return myTable.getRowFromKey(varName);
 	}
-
+	
 	public String getAction(List<String> row) {
 		return null;
 	}
@@ -453,6 +453,15 @@ public class VariableConfiguration {
 	public void addToCache(Variable v) {
 		Log.d("nils","In add to cache...will not be needed");
 		myCache.put(v.getId(), v);
+	}
+
+	public List<String> getCompleteVariableDefinitionNoCase(String varId) {
+		String newVarId = varId;
+		char u = Character.toUpperCase(varId.charAt(0));
+		newVarId = u+varId.substring(1, varId.length());
+		Log.d("vortex","missing variable "+varId+" Trying with: "+newVarId);
+		return getCompleteVariableDefinition(newVarId);
+	
 	}
 
 

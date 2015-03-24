@@ -116,7 +116,7 @@ public class RuleExecutor {
 		getCurrentSecond(function,0),
 		getCurrentWeekNumber(function,0),
 		sum(function,-1),
-//		exist(function,2),
+		//		exist(function,2),
 		variable(null,-1),
 		text(variable,0),
 		numeric(variable,0),
@@ -227,7 +227,7 @@ public class RuleExecutor {
 	}
 
 	enum SimpleTokenType {
-		func,arg,var
+		func,arg,var, eitherfuncorvar
 	}
 	//Breaks down a formula into identified tokens.
 	private class Token {
@@ -295,15 +295,15 @@ public class RuleExecutor {
 									//Log.d("nils","Found paranthesis. Parsing func parameter(s) next");
 									parseFunctionParameters = true;									
 								}// else 
-									//System.out.println("found non-var char inside: ["
-									//		+(c == inPattern.charAt(j)?inPattern.charAt(j):"<spc>")+"]");
+								//System.out.println("found non-var char inside: ["
+								//		+(c == inPattern.charAt(j)?inPattern.charAt(j):"<spc>")+"]");
 								//fail.
 								in = false;
 								//System.out.println("Found token: "+curToken);
 								if (parseFunctionParameters)
 									potVars.add(new Token(curToken,SimpleTokenType.func));
 								else
-									potVars.add(new Token(curToken,SimpleTokenType.var));								
+									potVars.add(new Token(curToken,SimpleTokenType.eitherfuncorvar));								
 								curToken="";
 								break;
 							}
@@ -345,32 +345,29 @@ public class RuleExecutor {
 					}
 					//Log.d("vortex","Token: "+cToken.token+" Length: "+tokenName.length()+" Type: "+tokenType);
 
-					if (tokenType == SimpleTokenType.func) {
-						for (TokenType token:functions) {
-							if (tokenName.equalsIgnoreCase(token.name())) {
-								Log.d("vortex", "found Function match:" +token.name());
-								function = token;
-								break;
-							}
-						}
-						if (function == null) {
-							for (TokenType token:math_primitives) {
-								if (tokenName.equalsIgnoreCase(token.name())) {
-									Log.d("vortex", "found math_primitives match:" +token.name()); 
-									function = token;
-									break ;
-								}
-							}
-						}
-						if (function==null) {
-							Log.e("votex","failed to find any function matching "+tokenName+"!");
-						} else {
-							//if no arguments, add immediately to result.
-							if (function.cardinality==0)
-								myFormulaTokens.add(new TokenizedItem(function.name(),function));
+					//if (tokenType == SimpleTokenType.func) {
+					for (TokenType token:functions) {
+						if (tokenName.equalsIgnoreCase(token.name())) {
+							Log.d("vortex", "found Function match:" +token.name());
+							function = token;
+							break;
 						}
 					}
-					else if (tokenType == SimpleTokenType.var) {
+					if (function == null) {
+						for (TokenType token:math_primitives) {
+							if (tokenName.equalsIgnoreCase(token.name())) {
+								Log.d("vortex", "found math_primitives match:" +token.name()); 
+								function = token;
+								break ;
+							}
+						}
+					}
+					if (function!=null && function.cardinality==0)
+						myFormulaTokens.add(new TokenizedItem(function.name(),function));
+
+					//}
+					//check for variable match.
+					if (tokenType != SimpleTokenType.func && function == null) {
 						Variable var = gs.getVariableConfiguration().getVariableInstance(tokenName);
 						if (var!=null) {
 							Log.d("vortex","Found variable match for "+tokenName+" in formula");
@@ -647,7 +644,7 @@ public class RuleExecutor {
 			}
 
 		}
-		
+
 		if (item.getType()==TokenType.hasSame) {
 			Log.d("vortex","running hasSame function");
 			if(args==null || args.length<3) {
@@ -660,65 +657,65 @@ public class RuleExecutor {
 				Log.d("vortex","found "+(rows.size()-1)+" variables in "+item.getArguments()[0]);
 				//Parse the expression. Find all references to Functional Group.
 				//Each argument need to either exist or not exist.
-						Map<String, String[]>values=new HashMap<String,String[]>();
-						for (List<String>row:rows) {
-							Log.d("vortex","Var name: "+al.getVarName(row));
-							for (int i = 1; i<args.length;i++) {
-								String[] varName = al.getVarName(row).split("_");
-								int size = varName.length;
-								if (size<3) {
-									gs.getLogger().addRow("");
-									gs.getLogger().addRedText("This variable has no Functional Group...cannot apply hasSame function. Variable id: "+varName);
-									Log.e("vortex","This is not a group variable...stopping.");
-									return null;
-								} else {
-									 
-									String name = varName[size-1];
-									String art = varName[size-2];
-									String group = varName[0];
-									Log.d("vortex","name: "+name+" art: "+art+" group: "+group+" args["+i+"]: "+args[i]);
-									if (name.equalsIgnoreCase(args[i])) {
-										Log.d("vortex","found varname. Adding "+art);
-									Variable v = al.getVariableInstance(al.getVarName(row));
-									String varde = null;
-									if (v == null) {
-										Log.d("vortex","var was null!");
-										
-									} else
-										varde = v.getValue();
-									String [] result;
-									if (values.get(art)==null) {
-										Log.d("vortex","empty..creating new val arr");
-										result = new String[args.length-1];
-										values.put(art, result);
-									} else 
-										result = values.get(art);
-									result[i-1]=varde;
-									break;
-									}
-								}
-							}
-							
-				
-						}
-						//now we should have an array containing all values for all variables.
-						Log.d("vortex","printing resulting map");
-						for (String key:values.keySet()) {
-							String vCompare = values.get(key)[0];
-							for (int i = 1;i<args.length-1;i++) {
-								String vz = values.get(key)[i];
-								if (vCompare==null && vz ==null ||vCompare!=null&&vz!=null)
-									continue;
-								else {
-									gs.getLogger().addRow("hasSame difference detected for "+key+". Stopping");
-									Log.e("vortex","Diffkey values for "+key+": "+(vCompare==null?"null":vCompare)+" "+(vz==null?"null":vz));
-									return "0";
-								}
-									
+				Map<String, String[]>values=new HashMap<String,String[]>();
+				for (List<String>row:rows) {
+					Log.d("vortex","Var name: "+al.getVarName(row));
+					for (int i = 1; i<args.length;i++) {
+						String[] varName = al.getVarName(row).split("_");
+						int size = varName.length;
+						if (size<3) {
+							gs.getLogger().addRow("");
+							gs.getLogger().addRedText("This variable has no Functional Group...cannot apply hasSame function. Variable id: "+varName);
+							Log.e("vortex","This is not a group variable...stopping.");
+							return null;
+						} else {
+
+							String name = varName[size-1];
+							String art = varName[size-2];
+							String group = varName[0];
+							Log.d("vortex","name: "+name+" art: "+art+" group: "+group+" args["+i+"]: "+args[i]);
+							if (name.equalsIgnoreCase(args[i])) {
+								Log.d("vortex","found varname. Adding "+art);
+								Variable v = al.getVariableInstance(al.getVarName(row));
+								String varde = null;
+								if (v == null) {
+									Log.d("vortex","var was null!");
+
+								} else
+									varde = v.getValue();
+								String [] result;
+								if (values.get(art)==null) {
+									Log.d("vortex","empty..creating new val arr");
+									result = new String[args.length-1];
+									values.put(art, result);
+								} else 
+									result = values.get(art);
+								result[i-1]=varde;
+								break;
 							}
 						}
-						Log.d("vortex","all values same. Success for hasSame!");
-						return "1";
+					}
+
+
+				}
+				//now we should have an array containing all values for all variables.
+				Log.d("vortex","printing resulting map");
+				for (String key:values.keySet()) {
+					String vCompare = values.get(key)[0];
+					for (int i = 1;i<args.length-1;i++) {
+						String vz = values.get(key)[i];
+						if (vCompare==null && vz ==null ||vCompare!=null&&vz!=null)
+							continue;
+						else {
+							gs.getLogger().addRow("hasSame difference detected for "+key+". Stopping");
+							Log.e("vortex","Diffkey values for "+key+": "+(vCompare==null?"null":vCompare)+" "+(vz==null?"null":vz));
+							return "0";
+						}
+
+					}
+				}
+				Log.d("vortex","all values same. Success for hasSame!");
+				return "1";
 
 			}
 		}

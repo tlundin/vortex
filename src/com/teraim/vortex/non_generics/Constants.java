@@ -27,7 +27,7 @@ import com.teraim.vortex.utils.PersistenceHelper;
 
 public class Constants {
 
-	public final static float VORTEX_VERSION = 1.04f;
+	public final static float VORTEX_VERSION = 1.054f;
 
 	
 	//String constants

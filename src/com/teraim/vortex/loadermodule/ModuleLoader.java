@@ -39,6 +39,7 @@ public class ModuleLoader implements FileLoadedCb{
 		if (myModules.hasNext()) {
 			module = myModules.next();
 			o.addRow(module.getLabel()+" :");
+			Log.d("vortex",module.getLabel()+" :");
 			module.load(this);
 		} else 
 			caller.loadSuccess(loaderId);
@@ -146,12 +147,21 @@ public class ModuleLoader implements FileLoadedCb{
 			//retry loading the file - don't set it loaded.
 				return false;
 		}
-		debug.addText("Module "+module.getFileName()+"was thawed");
+		debug.addRow("Module "+module.getFileName()+" was thawed.");
 		return true;
 	}
 
 	//TODO: REMOVE
 	public void onFileLoaded(ErrorCode errCode, String version) {}
+
+	public void stop() {
+		Log.e("vortex","In stop for "+loaderId);
+		List<ConfigurationModule> list = myModules.getAll();
+		for (ConfigurationModule module:list) {
+			Log.e("vortex","Cancelling loader process for "+module.getFileName());
+			module.cancelLoader();
+		}
+	}
 
 	
 }

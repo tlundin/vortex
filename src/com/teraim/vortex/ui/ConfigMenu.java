@@ -142,6 +142,7 @@ public class ConfigMenu extends PreferenceActivity {
 				}
 				
 			}
+			/*
 			else if (pref instanceof CheckBoxPreference) {
 				CheckBoxPreference cpref = (CheckBoxPreference)pref;
 				if (key.equals(PersistenceHelper.DEVELOPER_SWITCH))
@@ -154,7 +155,7 @@ public class ConfigMenu extends PreferenceActivity {
 						GlobalState.getInstance(getActivity()).removeLogger();
 					}
 				}
-
+*/
 		}
 
 	}

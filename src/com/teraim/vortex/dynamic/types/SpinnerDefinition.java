@@ -32,6 +32,7 @@ public class SpinnerDefinition implements Serializable {
 				for (String s:v) 
 					varMapping.add(s);
 			}
+			//Log.e("vortex","SPINNER val "+val+" OPT: "+opt+" VARS "+vars+" DESC "+descr);
 		}
 	}
 	

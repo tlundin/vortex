@@ -186,7 +186,7 @@ public abstract class Loader extends AsyncTask<ConfigurationModule ,Integer,Load
 		if (m.getEssence()!=null)
 			return new LoadResult(m,ErrorCode.frozen);
 		else {
-			Log.d("vortex","in freez: Essence is "+m.getEssence());
+			//Log.d("vortex","in freez: Essence is "+m.getEssence());
 			return new LoadResult(m,ErrorCode.noData);
 		}
 			

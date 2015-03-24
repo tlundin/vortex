@@ -2,7 +2,9 @@ package com.teraim.vortex.loadermodule.configurations;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -21,6 +23,7 @@ import com.teraim.vortex.dynamic.blocks.ButtonBlock;
 import com.teraim.vortex.dynamic.blocks.ConditionalContinuationBlock;
 import com.teraim.vortex.dynamic.blocks.ContainerDefineBlock;
 import com.teraim.vortex.dynamic.blocks.CreateEntryFieldBlock;
+import com.teraim.vortex.dynamic.blocks.CreateImageBlock;
 import com.teraim.vortex.dynamic.blocks.CreateSortWidgetBlock;
 import com.teraim.vortex.dynamic.blocks.DisplayValueBlock;
 import com.teraim.vortex.dynamic.blocks.JumpBlock;
@@ -37,10 +40,8 @@ import com.teraim.vortex.dynamic.types.Workflow;
 import com.teraim.vortex.dynamic.types.Workflow.Unit;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Not_ClickableField_SumAndCountOfVariables;
 import com.teraim.vortex.loadermodule.LoadResult;
-import com.teraim.vortex.loadermodule.XMLConfigurationModule;
-import com.teraim.vortex.loadermodule.ConfigurationModule.Source;
-import com.teraim.vortex.loadermodule.ConfigurationModule.Type;
 import com.teraim.vortex.loadermodule.LoadResult.ErrorCode;
+import com.teraim.vortex.loadermodule.XMLConfigurationModule;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.PersistenceHelper;
@@ -221,12 +222,61 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				blocks.add(readBlockCreateRoundChart(parser));
 			else if (name.equals("block_create_var_value_source"))
 				blocks.add(readBlockCreateVarValueSource(parser));
+			else if (name.equals("block_create_picture"))
+				blocks.add(readBlockCreatePicture(parser));
+
 			else {			
 				skip(name,parser,o);
 			}
 		}
-
+		//Check that no block has the same ID
+		Set tempSet = new HashSet<String>();
+		for (Block b:blocks)  {
+			 if (!tempSet.add(b.getBlockId())) {
+	                o.addRow("");
+	                o.addRedText("Duplicate Block ID "+b.getBlockId()+" This is potentially serious");
+	                return blocks;
+	            }
+		}
+		o.addRow("");
+		o.addGreenText("No duplicate block IDs");
 		return blocks;
+	}
+
+	private Block readBlockCreatePicture(XmlPullParser parser) throws IOException, XmlPullParserException {
+		o.addRow("Parsing block: block_create_picture...");
+		String id=null,nName=null,container=null,source=null,scale=null;
+		boolean isVisible=true;
+
+		parser.require(XmlPullParser.START_TAG, null,"block_create_picture");
+		Log.d("vortex","In block create picture!!");
+		while (parser.next() != XmlPullParser.END_TAG) {
+			if (parser.getEventType() != XmlPullParser.START_TAG) {
+				continue;
+			}
+			String name= parser.getName();
+			if (name.equals("block_ID")) {
+				id = readText("block_ID",parser);
+			} else if (name.equals("name")) {
+				nName = readText("name",parser);
+			} else if (name.equals("name")) {
+				nName = readText("name",parser);
+			} else if (name.equals("container_name")) {
+				container = readText("container_name",parser);
+			} else if (name.equals("source")) {
+				source = readText("source",parser);
+			} else if (name.equals("scale")) {
+				scale = readText("scale",parser);
+			} else if (name.equals("is_displayed")) {
+				isVisible = readText("is_displayed",parser).equals("true");
+			} 
+			else
+				skip(name,parser);
+
+		}
+		checkForNull("block_ID",id,"name",nName,"container_name",container,"source",source,"scale",scale);
+		return new CreateImageBlock(id,nName,container,source,scale,isVisible);
+
 	}
 
 	private Block readBlockCreateVarValueSource(XmlPullParser parser) throws IOException, XmlPullParserException {
@@ -619,7 +669,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 	}
 	private Block readBlockCreateListEntriesFromFieldList(XmlPullParser parser) throws IOException, XmlPullParserException {
 		//o.addRow("Parsing block: block_create_list_entries_from_field_list...");
-		String namn=null, keyField = null, type=null,containerId=null,selectionField=null,selectionPattern=null,id=null;
+		String namn=null, type=null,containerId=null,selectionField=null,selectionPattern=null,id=null;
 		String labelField=null,descriptionField=null,typeField=null,uriField=null,variatorColumn=null;
 		parser.require(XmlPullParser.START_TAG, null,"block_create_list_entries_from_field_list");
 		while (parser.next() != XmlPullParser.END_TAG) {
@@ -636,9 +686,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				selectionField = readText("selection_field",parser);
 			} else if (name.equals("selection_pattern")) {
 				selectionPattern = readText("selection_pattern",parser);
-			} else if (name.equals("key_field")) {
-				keyField = readText("key_field",parser);
-			} else if (name.equals("name")) {
+			}  else if (name.equals("name")) {
 				namn = readText("name",parser);
 			} else if (name.equals("container_name")) {
 				containerId = readText("container_name",parser);
@@ -656,11 +704,11 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				skip(name,parser,o);
 
 		}
-		checkForNull("block_ID",id,"selection_field",selectionField,"key_field",keyField,"name",namn,"container_name",
+		checkForNull("block_ID",id,"selection_field",selectionField,"name",namn,"container_name",
 				containerId,"label_field",labelField,"description_field",descriptionField,"type_field",typeField,
-				"uri_field",uriField,"variator",variatorColumn);
+				"uri_field",uriField);
 		return new BlockCreateListEntriesFromFieldList(id,namn, type,
-				containerId,selectionPattern,selectionField,variatorColumn,keyField);
+				containerId,selectionPattern,selectionField,variatorColumn);
 	}
 
 
@@ -843,8 +891,8 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				skip(name,parser,o);
 
 		}
-		checkForNull("BLOCK_ID",id,"CONTAINER_NAME: ",containerName,"SELECTION_PATTERN",selectionPattern,"DISPLAY_FIELD",displayField,
-				"SELECTION_FIELD",selectionField,"TARGET"+target,"TYPE",type,
+		checkForNull("BLOCK_ID",id,"CONTAINER_NAME: ",containerName,"DISPLAY_FIELD",displayField,
+				"TARGET"+target,"TYPE",type,
 				"NAME",namn);
 		return new CreateSortWidgetBlock(id,namn,type, containerName,target,selectionField,displayField,selectionPattern,isVisible);
 	}
@@ -1155,7 +1203,8 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			} else if (name.equals("type")) {
 				pageType = readText("type",parser);				
 			} else if (name.equals("label")) {
-				label = readText("label",parser);					
+				label = readText("label",parser);
+				o.addRow("Parsing workflow "+label);
 			} else
 				skip(name,parser,o);
 		}
@@ -1239,7 +1288,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				continue;
 			} else if (par==null) {
 				o.addRow("");
-				o.addRedText("Parameter "+lab+" was NULL");
+				o.addYellowText("Parameter "+lab+" was NULL");
 				nulls=true;
 			}
 		}/*

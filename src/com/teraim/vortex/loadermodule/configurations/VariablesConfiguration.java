@@ -102,7 +102,6 @@ public class VariablesConfiguration extends CSVConfigurationModule {
 			scanHeader=false;
 
 		} else {
-			Log.d("vortex","Gets to parse variable");
 			List<List<String>> elems;
 
 
