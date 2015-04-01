@@ -423,7 +423,7 @@ public class GlobalState  {
 	public void  setKeyHash(Map<String,String> h) { 	
 		artLista.destroyCache();
 		myKeyHash=h;
-		Log.d("vortex","SetKeyHash was called with "+h);
+		Log.d("vortex","SetKeyHash was called with "+h+" on this "+this.toString());
 	}
 
 	public void setRawHash(Map<String,Variable> h) {

@@ -27,7 +27,7 @@ import com.teraim.vortex.utils.PersistenceHelper;
 
 public class Constants {
 
-	public final static float VORTEX_VERSION = 1.054f;
+	public final static float VORTEX_VERSION = 1.057f;
 
 	
 	//String constants
@@ -54,8 +54,6 @@ public class Constants {
 
 	public static final String SYNC_ID = "SYNX";
 
-	public static final String CurrentYear = "2014";
-	
 	//NILS uid
 	public static final UUID RED_UID = UUID.fromString("58500d27-6fd9-47c9-bf6b-d0969ce78bb3");
 	public static final UUID BLUE_UID = UUID.fromString("ce8ec829-30e3-469b-886e-6cf8f1168e98");

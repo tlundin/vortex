@@ -218,7 +218,7 @@ public class SimpleRutaTemplate extends Executor implements OnGesturePerformedLi
 				final Variable currentRuta = gs.getVariableConfiguration().getVariableInstance(NamedVariables.CURRENT_RUTA);
 				final Integer rl = rutor.get(position);
 				final String pi = rl.toString();
-				final Map<String,String>rKeyChain = Tools.createKeyMap("år",Constants.CurrentYear,"ruta",pi);
+				final Map<String,String>rKeyChain = Tools.createKeyMap("år",Constants.getYear(),"ruta",pi);
 				rutaKlar = al.getVariableUsingKey(rKeyChain, NamedVariables.RUTA_KLAR_ANVÄNDARE);
 				String rutaKS = rutaKlar.getValue();
 				final boolean rutaK = rutaKS!=null&&rutaKS.equals("1");
@@ -369,8 +369,8 @@ public class SimpleRutaTemplate extends Executor implements OnGesturePerformedLi
 		Report jRep = gs.getDb().export(al.createRutaKeyMap(),Exporter.getInstance(this.getActivity(),"JSON"),exportFileName);
 		String msg, btnText;
 		if (jRep.er == ExportReport.OK) {
-			msg = "Filen har sparats. "+jRep.noOfVars+" variabler exporterade";
-			btnText = "Ok, vad bra!";
+			msg = "Export OK.\nFilnamn: "+exportFileName+"\n"+jRep.noOfVars+" variabler exporterade";
+			btnText = "Ok";
 		} else {
 			msg = "Exporten fungerade inte. Orsak: "+jRep.er.name();
 			btnText = "Ok";

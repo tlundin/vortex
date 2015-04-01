@@ -535,7 +535,7 @@ public class DelyteManager {
 		Variable v;Map<String,String> keys;
 		Set<String>rawTags = new HashSet<String>();
 		for (int delyteID=1;delyteID<=MAX_DELYTEID;delyteID++) {
-			keys= Tools.createKeyMap(VariableConfiguration.KEY_YEAR,Constants.CurrentYear+"","ruta",ruta,"provyta",provyta,"delyta",delyteID+"");
+			keys= Tools.createKeyMap(VariableConfiguration.KEY_YEAR,Constants.getYear()+"","ruta",ruta,"provyta",provyta,"delyta",delyteID+"");
 			gs.setKeyHash(keys);
 			v = al.getVariableInstance(NamedVariables.DELNINGSTAG);
 			Log.d("nils","Found tåg under delyteID "+delyteID+" :"+v.getValue());
@@ -547,7 +547,7 @@ public class DelyteManager {
 			hasUnsaved = true;
 			Log.d("nils","No current values får tåg. Trying historical");
 			for (int delyteID=1;delyteID<=MAX_DELYTEID;delyteID++) {
-				keys= Tools.createKeyMap(VariableConfiguration.KEY_YEAR,Constants.CurrentYear+"","ruta",ruta,"provyta",provyta,"delyta",delyteID+"");
+				keys= Tools.createKeyMap(VariableConfiguration.KEY_YEAR,Constants.getYear()+"","ruta",ruta,"provyta",provyta,"delyta",delyteID+"");
 				gs.setKeyHash(keys);
 				v = al.getVariableInstance(NamedVariables.DELNINGSTAG);
 				String rawTag = v.getHistoricalValue();

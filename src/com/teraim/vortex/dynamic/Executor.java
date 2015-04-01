@@ -108,6 +108,7 @@ public abstract class Executor extends Fragment {
 		Log.d("nils","GETS TO ONCREATE EXECUTOR");
 		activity = this.getActivity();
 		gs = GlobalState.getInstance((Context)activity);
+		Log.d("vortex","gs: "+gs.toString()+" currentKeyHash: "+gs.getCurrentKeyHash());
 		myContext = new WF_Context((Context)activity,this,R.id.content_frame);
 		al = gs.getVariableConfiguration();
 		o = gs.getLogger();

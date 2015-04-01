@@ -23,7 +23,7 @@ public class InputFilterListValues implements TextFilter {
 
     @Override
     public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
-       Log.d("nils","SOURC: "+source.toString()+" DEST: "+dest.toString());
+      // Log.d("nils","SOURC: "+source.toString()+" DEST: "+dest.toString());
        String newVal = dest.toString().substring(0, dstart) + dest.toString().substring(dend, dest.toString().length());
        // Add the new string in
        newVal = newVal.substring(0, dstart) + source.toString() + newVal.substring(dstart, newVal.length());

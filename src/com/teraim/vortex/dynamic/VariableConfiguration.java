@@ -455,14 +455,7 @@ public class VariableConfiguration {
 		myCache.put(v.getId(), v);
 	}
 
-	public List<String> getCompleteVariableDefinitionNoCase(String varId) {
-		String newVarId = varId;
-		char u = Character.toUpperCase(varId.charAt(0));
-		newVarId = u+varId.substring(1, varId.length());
-		Log.d("vortex","missing variable "+varId+" Trying with: "+newVarId);
-		return getCompleteVariableDefinition(newVarId);
-	
-	}
+
 
 
 

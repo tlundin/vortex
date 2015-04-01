@@ -125,7 +125,12 @@ public class DbHelper extends SQLiteOpenHelper {
 
 	}
 
-
+	public void closeDatabaseBeforeExit() {
+		if (db!=null) {
+			db.close();
+			Log.d("vortex","database is closed!");
+		}
+	}
 
 	public void init(ArrayList<String> keyParts) {
 
@@ -274,6 +279,8 @@ public class DbHelper extends SQLiteOpenHelper {
 		if (exporter == null)
 			return new Report(ExportReport.EXPORTFORMAT_UNKNOWN);
 		Log.d("nils","Started export");
+		Log.d("vortex","context: "+context.toString());
+		Log.d("vortex","filename: "+exportFileName);
 		String selection = null;
 		String[] selArgs = null;
 		if (context!=null) {
@@ -288,11 +295,13 @@ public class DbHelper extends SQLiteOpenHelper {
 					Log.e("nils","Could not find column mapping to columnHeader "+key);
 					return new Report(ExportReport.COLUMN_DOES_NOT_EXIST);
 				}
-				selection += col+(i<(selArgs.length-1)?"= ? AND":"");			
+				selection += col+(i<(selArgs.length-1)?"=? AND ":"=?");			
 				selArgs[i++]=context.get(key);
 			}
 		}
 		//Select.
+		Log.d("vortex","selection is "+selection);
+		Log.d("vortex","Args is "+selArgs);
 		Cursor c = db.query(TABLE_VARIABLES,null,selection,
 				selArgs,null,null,null,null);	
 		if (c!=null) {
@@ -1117,7 +1126,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		Log.d("nils","In eraseDelytor with rutaCol = "+rCol+" and pyCol = "+pyCol+" and dyCol "+dyCol);
 		//delete all rows and send sync message.
 		int affRows = db.delete(DbHelper.TABLE_VARIABLES, 
-				yCol+"=? AND "+ rCol+"=? AND "+pyCol+"=? and "+dyCol+" NOT NULL", new String[] {Constants.CurrentYear, currentRuta,currentProvyta});
+				yCol+"=? AND "+ rCol+"=? AND "+pyCol+"=? and "+dyCol+" NOT NULL", new String[] {Constants.getYear(), currentRuta,currentProvyta});
 		Log.d("nils","eraseDelytor affected "+affRows+" rows");
 		if (synk&&affRows>0) {
 			Log.d("nils","Adding sync message");
@@ -1151,7 +1160,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		String pyCol = keyColM.get("provyta");
 		Log.d("nils","In eraseProvyta with rutaCol = "+rCol+" and pyCol = "+pyCol);
 		int affRows = db.delete(DbHelper.TABLE_VARIABLES, 
-				yCol+"=? AND "+rCol+"=? AND "+pyCol+"=?", new String[] {Constants.CurrentYear,currentRuta,currentProvyta});
+				yCol+"=? AND "+rCol+"=? AND "+pyCol+"=?", new String[] {Constants.getYear(),currentRuta,currentProvyta});
 		Log.d("nils","eraseProvyta affected "+affRows+" rows");
 		if (synk&&affRows>0) {
 			Log.d("nils","Adding sync message");
@@ -1165,7 +1174,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		String rCol = keyColM.get("ruta");
 		String pyCol = keyColM.get("provyta");
 		int affRows = db.delete(DbHelper.TABLE_VARIABLES, 
-				yCol+"=? AND "+rCol+"=? AND "+pyCol+"=? AND var = 'Delyta'", new String[] {Constants.CurrentYear,currentRuta,currentProvyta});
+				yCol+"=? AND "+rCol+"=? AND "+pyCol+"=? AND var = 'Delyta'", new String[] {Constants.getYear(),currentRuta,currentProvyta});
 		Log.d("nils","Affected rows in eraseSmaProvyDelytaAssoc: "+affRows);
 	}
 

@@ -72,19 +72,15 @@ public class VarCache {
 		}
 		List<String> row = gs.getVariableConfiguration().getCompleteVariableDefinition(varId);
 		if (row==null) {
-			Log.e("nils","Variabel definition missing for "+varId+"..trying noncase sensitive method..");
-			row = gs.getVariableConfiguration().getCompleteVariableDefinitionNoCase(varId);
-			if (row == null) {
-				Log.e("vortex","STILL NULL!!!");
-			
+			Log.e("nils","Variable definition missing for "+varId);
 			o.addRow("");
 			o.addYellowText("Variabel definition missing for "+varId);
 			if (newA)
 				cache.remove(ret);
 			return null;
-			}
-
 		}
+
+		
 		//Find the variable with specified key from cache.
 		Map<String, String> instKey;
 		try {
@@ -169,7 +165,7 @@ public class VarCache {
 			Log.d("nils","Current context: "+cMap.toString());
 			Log.d("nils","Key values:"+cMap.entrySet().toString());
 		}
-		Log.e("nils","Keys in chain:"+keyChain);
+		Log.d("nils","Keys in chain:"+keyChain);
 
 		String[] keys = keyChain.split("\\|");
 		Map<String, String> vMap = new HashMap<String,String>();

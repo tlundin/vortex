@@ -393,8 +393,8 @@ public class RuleExecutor {
 								argCount = function.cardinality();	
 								hasCardinality = argCount>=0;
 							}
-							args.add(tokenName);
-							Log.d("vortex",function+" had argument "+tokenName);
+							args.add(cToken.token);
+							Log.d("vortex",function+" had argument "+cToken.token);
 							if (hasCardinality) {
 								argCount--;
 
@@ -470,7 +470,7 @@ public class RuleExecutor {
 		TokenType type;
 		Variable st;
 		for (TokenizedItem item:myTokens) {
-
+			
 			type = item.getType();
 			//check if function
 			if (type.parent == TokenType.function) {
@@ -533,13 +533,6 @@ public class RuleExecutor {
 			o.addRow("After substitution: "+strRes);
 			return new SubstiResult(strRes,true);
 		}
-		int firstNull = subst.indexOf("null");
-		if (firstNull!=-1) {
-			Log.d("nils","First null at "+firstNull);			
-			o.addRow("At least one variable did not have a value after substitution.");
-			//return null;
-		}
-
 
 		o.addRow("After substitution: "+subst);
 		return new SubstiResult(subst,false);

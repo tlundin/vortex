@@ -108,19 +108,19 @@ public class ConfigMenu extends PreferenceActivity {
 				EditTextPreference etp = (EditTextPreference) pref;
 				pref.setSummary(etp.getText());
 				if (key.equals(PersistenceHelper.BUNDLE_NAME)) {
-					//Try to restart the app.
-					/*Activity context = this.getActivity();
-					Intent mStartActivity = new Intent(context, Start.class);
-					int mPendingIntentId = 123456;
-					PendingIntent mPendingIntent = PendingIntent.getActivity(context, mPendingIntentId,    mStartActivity, PendingIntent.FLAG_CANCEL_CURRENT);
-					AlarmManager mgr = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
-					mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, mPendingIntent);
-					System.exit(0);
-					*/
 					GlobalState gs = GlobalState.getInstance(null);
 					if (gs != null) {
-						gs.getDrawerMenu().closeDrawer();
-						gs = null;				
+						//if a state exists, restart the app.
+						//Close database.
+						
+						Activity context = this.getActivity();
+						Intent mStartActivity = new Intent(context, Start.class);
+						int mPendingIntentId = 123456;
+						PendingIntent mPendingIntent = PendingIntent.getActivity(context, mPendingIntentId,    mStartActivity, PendingIntent.FLAG_CANCEL_CURRENT);
+						AlarmManager mgr = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
+						mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, mPendingIntent);
+						System.exit(0);
+						
 					}
 				}
 

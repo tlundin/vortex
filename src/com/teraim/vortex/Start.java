@@ -529,7 +529,7 @@ public class Start extends MenuActivity {
 			Log.d("nils","Trying to cancel histT");
 			histT.cancel(true);
 		}
-
+		GlobalState.getInstance(this).getDb().closeDatabaseBeforeExit();
 		super.onDestroy();
 	}
 

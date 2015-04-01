@@ -88,7 +88,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		
 		ph	 = new PersistenceHelper(this.getActivity().getSharedPreferences(globalPh.get(PersistenceHelper.BUNDLE_NAME), Context.MODE_PRIVATE));
 		oldV= ph.get(PersistenceHelper.CURRENT_VERSION_OF_WF_BUNDLE);
-		appTxt.setText("Running application "+bundleName+" ["+oldV+"]");
+		//appTxt.setText("Running application "+bundleName+" ["+oldV+"]");
 		
 		Log.d("imgul",  server()+bundleName+"logo.png");
 		new DownloadImageTask((ImageView) view.findViewById(R.id.logo))
@@ -380,10 +380,10 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 				Start.singleton.getDrawerMenu().clear();
 				gs.sendEvent(MenuActivity.INITDONE);
 				String newV = ph.get(PersistenceHelper.CURRENT_VERSION_OF_WF_BUNDLE);
-				boolean isNew = !newV.equals(oldV);
-				if (isNew)
+				if (!newV.equals(oldV))
 					appTxt.setText("Running application "+bundleName+" --New Version! ["+newV+"]");
-
+				else
+					appTxt.setText("Running application "+bundleName+" ["+newV+"]");
 				Start.singleton.changePage(wf,null);
 				Log.d("vortex","executing workflow main!");
 				gs.setModules(myModules);

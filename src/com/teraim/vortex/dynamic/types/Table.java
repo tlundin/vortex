@@ -122,22 +122,22 @@ public class Table implements Serializable {
 	}
 
 	public List<List<String>> getRowsContaining(String columnName, String pattern) {
-		//Log.d("nils","Trying to find rows matching column "+columnName+" and pattern "+pattern);
+		Log.d("nils","Trying to find rows matching column "+columnName+" and pattern "+pattern);
 	
 		List<List<String>> ret = null;
 		List<String> column = colTable.get(columnName);
 		if(column!=null && pattern!=null) {
 			pattern.trim();
 			for(int i = 0;i<column.size();i++) {
-				//Log.d("nils","i: "+i+" col: "+column.get(i));
+				Log.d("nils","i: "+i+" col: "+column.get(i));
 				if (column.get(i).equals(pattern)||column.get(i).matches(pattern)) {
 					if (ret == null)
 						ret = new ArrayList<List<String>>();
 					ret.add(rowTable.get(i));
 				}
 			}
-//			if (ret!=null)
-//				Log.d("nils","Returning "+ret.size()+" rows in getRows(Table)");
+			if (ret!=null)
+				Log.d("nils","Returning "+ret.size()+" rows in getRows(Table)");
 		} 
 		return ret;
 	}

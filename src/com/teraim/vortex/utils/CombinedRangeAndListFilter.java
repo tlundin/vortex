@@ -50,20 +50,18 @@ public class CombinedRangeAndListFilter implements TextFilter {
 		int c=0;
 		//Set if default filter triggers.
 		mVar.setOutOfRange(false);
-		Log.d("nils","Blipp");
 		for (TextFilter filter:myFilters) {
-			Log.d("nils","checking filter "+c+" hasdefault: "+hasDefault);
+//			Log.d("nils","checking filter "+c+" hasdefault: "+hasDefault);
 			if (filter.filter(source, start, end,dest, dstart, dend)==null){
 				if (hasDefault && c==0) {
-					Log.d("nils","Default triggered!");
+//					Log.d("nils","Default triggered!");
 					mVar.setOutOfRange(true);
 				} else {
-					Log.d("nils","Other filter triggered.");
+//					Log.d("nils","Other filter triggered.");
 				}
 				return null;
 			} else
-				Log.d("nils","Filter did not trigger");
-			Log.d("nils","inloop");
+//				Log.d("nils","Filter did not trigger");
 			c++;
 		}
 		//If no filter ok - disallow.

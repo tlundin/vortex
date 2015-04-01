@@ -62,7 +62,7 @@ public class ImageHandler {
 			for (int i=0;i<paddingSize;i++)
 				pyID = "0"+pyID;		
 			Log.d("nils"," PADDINGSIZE: "+paddingSize+" pyWITHZ: "+pyID);
-			return "R"+rutID+"_"+pyID+"_"+nameWithNum+"_"+(isHistorical?"2009":Constants.CurrentYear)+".JPG";
+			return "R"+rutID+"_"+pyID+"_"+nameWithNum+"_"+(isHistorical?(Integer.parseInt(Constants.getYear())-5):Constants.getYear())+".JPG";
 		}
 		return null;
 	}
