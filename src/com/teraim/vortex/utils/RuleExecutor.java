@@ -44,7 +44,7 @@ import com.teraim.vortex.non_generics.Constants;
 public class RuleExecutor {
 
 	private GlobalState gs;
-	private Map<String,List<TokenizedItem>> formulaCache = new HashMap<String,List<TokenizedItem>>();
+	private static Map<String,List<TokenizedItem>> formulaCache = new HashMap<String,List<TokenizedItem>>();
 	static RuleExecutor singleton=null;
 	private VariableConfiguration al;
 
@@ -77,7 +77,7 @@ public class RuleExecutor {
 		public TokenizedItem(Variable v) {
 			this.myType=TokenType.variable;
 			this.var = v;
-			this.original=v.getLabel();			
+			this.original=v.getId();			
 		}
 
 		//This is the string we found. 
@@ -190,9 +190,10 @@ public class RuleExecutor {
 	}
 
 	public static RuleExecutor getInstance(Context ctx) {
-		if (singleton==null) 
+		if (singleton==null) {
+			Log.e("vortex","CREATED NEW RULE EXECUTOR");
 			singleton = new RuleExecutor(ctx);
-
+		}
 		return singleton;
 
 	}
@@ -243,9 +244,13 @@ public class RuleExecutor {
 
 
 	public List<TokenizedItem>findTokens(String formula,String mainVar) {		
-		if (formulaCache.get(formula)!=null)
-			return formulaCache.get(formula);
-		Log.d("vortex","parsing formula ["+formula+"]");
+		Log.d("vortex","In findTokens for formula "+formula);
+		List<TokenizedItem> cached = formulaCache.get(formula);
+		if (cached !=null) {
+			Log.d("vortex","FormulaCache returned "+ printTokens(cached) );
+			return cached;
+		}
+		Log.d("vortex","No cached formula. parsing ["+formula+"]");
 		List<Token> potVars = new ArrayList<Token>();
 		LoggerI o = gs.getLogger();
 		//Try parsing the formula.
@@ -470,7 +475,7 @@ public class RuleExecutor {
 		TokenType type;
 		Variable st;
 		for (TokenizedItem item:myTokens) {
-			
+
 			type = item.getType();
 			//check if function
 			if (type.parent == TokenType.function) {
@@ -726,6 +731,7 @@ public class RuleExecutor {
 			}
 
 		}
+		Log.d("vortex","HASx function");
 		//Apply filter parameter <filter> on all variables in current table. Return those that match.
 		float failC=0;
 		//If any of the variables matching filter doesn't have a value, return 0. Otherwise 1.
@@ -827,6 +833,10 @@ public class RuleExecutor {
 		return myTxt;
 	}
 
+	public void destroyCache() {
+		Log.d("vortex","destroying formulacache");
+		formulaCache.clear();
+	}
 
 	/*
 	public Boolean evaluate(String rule) {

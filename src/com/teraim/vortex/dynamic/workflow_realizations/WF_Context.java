@@ -34,8 +34,8 @@ public class WF_Context {
 	//ID for the container containing the template itself
 	private final int rootContainerId;
 	private String statusVariable=null;
-	
-	
+
+
 
 	public WF_Context(Context ctx,Executor e,int rootContainerId) {
 		this.ctx=ctx;
@@ -51,7 +51,7 @@ public class WF_Context {
 	public Activity getActivity() {
 		return (Activity)ctx;
 	}
-	
+
 	public List<WF_Static_List> getLists() {
 		return lists;
 	}
@@ -97,11 +97,11 @@ public class WF_Context {
 	public void addList(WF_Static_List l) {
 		lists.add(l);
 	}
-	
+
 	public void addDrawable(String key,Drawable d) {	
 		drawables.put(key,d);
 	}
-	
+
 	public Drawable getDrawable(String name) {
 		return drawables.get(name);
 	}
@@ -127,14 +127,14 @@ public class WF_Context {
 	public boolean hasContainers() {
 		return containers!=null && !containers.isEmpty();
 	}
-	
+
 	public void resetState() {
 		emptyContainers();
 		if (lists.size()!=0) 
 			lists.clear();
-			drawables.clear();
-			eventBroker.removeAllListeners();
-			rules.clear();
+		drawables.clear();
+		eventBroker.removeAllListeners();
+		rules.clear();
 		
 
 	}
@@ -142,15 +142,15 @@ public class WF_Context {
 	public void emptyContainers() {
 		if (containers!=null)
 			for (Container c:containers) 
-					c.removeAll();
+				c.removeAll();
 	}
-	
-	
+
+
 	public void emptyContainer(Container c) {
 		c.removeAll();
 	}
-	
-	
+
+
 	//draws all containers traversing the tree.
 	public void drawRecursively(Container c) {
 		if (c==null) {
@@ -164,7 +164,7 @@ public class WF_Context {
 			drawRecursively(child);
 		this.registerEvent(new WF_Event_OnAttach("Context"));
 	}
-	
+
 	private List<Container> getChildren(Container key) {
 		List<Container>ret = new ArrayList<Container>();
 		if (key!=null) {
@@ -188,7 +188,7 @@ public class WF_Context {
 
 	public void addEventListener(EventListener el,
 			EventType et) {
-		
+
 		eventBroker.registerEventListener(et, el);
 	}
 
@@ -208,7 +208,7 @@ public class WF_Context {
 			containers.clear();
 		}
 	}
-	
+
 	public void addRule(String key, Rule r) {
 		Set<Rule> l = rules.get(key);
 		if (l==null) {
@@ -217,17 +217,17 @@ public class WF_Context {
 		}
 		l.add(r);
 	}
-	
+
 	public Set<Rule> getRules(String key) {
 		if (rules != null)
 			return rules.get(key);
 		return null;
 	}
-	
+
 	public void setStatusVariable(String statusVar) {
 		statusVariable = statusVar;
 	}
-	
+
 	public String getStatusVariable() {
 		return statusVariable;
 	}

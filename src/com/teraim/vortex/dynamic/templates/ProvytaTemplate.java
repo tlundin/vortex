@@ -166,7 +166,7 @@ public class ProvytaTemplate extends Executor implements EventListener,OnGesture
 
 
 		WF_DisplayValueField rSel = new WF_DisplayValueField("whatevar", "Current_Ruta",myContext, null, 
-				"Vald Ruta", true,null);
+				"Vald Ruta", true,null,null,null);
 
 		LinearLayout provytorRemainingView = (LinearLayout)inflater.inflate(R.layout.display_value_textview, null);		
 		TextView h = (TextView)provytorRemainingView.findViewById(R.id.header);

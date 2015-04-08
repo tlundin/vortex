@@ -754,7 +754,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 	private DisplayValueBlock readBlockCreateDisplayField(XmlPullParser parser)throws IOException, XmlPullParserException {
 		//o.addRow("Parsing block: block_create_display_field...");
 		boolean isVisible = true;
-		String namn=null, formula = null, label=null,containerId=null,format = null,id=null;
+		String namn=null, formula = null, label=null,containerId=null,format = null,id=null,textColor=null,bgColor=null;
 		Unit unit=null;	
 		parser.require(XmlPullParser.START_TAG, null,"block_create_display_field");
 		while (parser.next() != XmlPullParser.END_TAG) {
@@ -779,14 +779,17 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				isVisible = !readText("is_visible",parser).equals("false");
 			} else if (name.equals("format")) {
 				format = readText("format",parser);
-			}
-			else
+			} else if (name.equals("text_color")) {
+				textColor = readText("text_color",parser);
+			} else if (name.equals("bck_color")) {
+				bgColor = readText("bck_color",parser);
+			} else
 				skip(name,parser,o);
 
 		}
 		checkForNull("label",label,"expression",formula,"block_ID",id,"name",namn,"container_name",containerId,"format",format);
 		return new DisplayValueBlock(id,namn, label,unit,
-				formula,containerId,isVisible,format);
+				formula,containerId,isVisible,format,textColor,bgColor);
 	}
 
 
@@ -904,10 +907,11 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 	 * @throws IOException
 	 * @throws XmlPullParserException
 	 */
+	
 	private AddSumOrCountBlock readBlockAddSelectionOrSum(XmlPullParser parser,boolean isCount) throws IOException, XmlPullParserException {
 		String containerName=null,label=null,postLabel = null,filter=null,target=null,result=null,format=null,id=null;
 		WF_Not_ClickableField_SumAndCountOfVariables.Type type;
-
+		String bgColor=null,textColor=null;
 		boolean isVisible = true;
 
 		if (isCount)
@@ -955,15 +959,18 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			else if (name.equals("format")) {
 				format = readText("format",parser);
 
+			} else if (name.equals("text_color")) {
+				textColor = readText("text_color",parser);
+			} else if (name.equals("bck_color")) {
+				bgColor = readText("bck_color",parser);
 			}
-
 			else
 				skip(name,parser,o);
 
 		}
 		checkForNull("block_ID",id,"label",label,"container_name",containerName,"filter",filter,
 				"target",target,"result",result,"format",format,"unit",postLabel);
-		return new AddSumOrCountBlock(id,containerName,label,postLabel,filter,target,type,result,isVisible,format);
+		return new AddSumOrCountBlock(id,containerName,label,postLabel,filter,target,type,result,isVisible,format,textColor,bgColor);
 	}	
 
 

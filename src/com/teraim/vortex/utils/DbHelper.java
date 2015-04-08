@@ -1,5 +1,10 @@
 package com.teraim.vortex.utils;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -50,7 +55,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
 	private static final int NO_OF_KEYS = 10;
 	private static final String SYNC_SPLIT_SYMBOL = "_$_";
-	private final SQLiteDatabase db;
+	private SQLiteDatabase db;
 	private PersistenceHelper globalPh=null,ph=null;
 
 	private final Map<String,String> keyColM = new HashMap<String,String>();
@@ -128,7 +133,7 @@ public class DbHelper extends SQLiteOpenHelper {
 	public void closeDatabaseBeforeExit() {
 		if (db!=null) {
 			db.close();
-			Log.d("vortex","database is closed!");
+			Log.e("vortex","database is closed!");
 		}
 	}
 
@@ -249,7 +254,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		this.onCreate(db);
 	}
 
-
+/*
 	public void exportAllData() {
 		Cursor c = db.query(TABLE_VARIABLES,null,
 				null,null,null,null,null,null);
@@ -267,11 +272,11 @@ public class DbHelper extends SQLiteOpenHelper {
 				author = c.getString(c.getColumnIndex("author"));
 				for (int i=0;i<L.length;i++)
 					L[i]=c.getString(c.getColumnIndex("L"+(i+1)));	
-
+				
 			}
 		}
 	}
-
+*/
 
 	//Export a specific context with a specific Exporter.
 	public Report export(Map<String,String> context, Exporter exporter, String exportFileName) {
@@ -311,12 +316,15 @@ public class DbHelper extends SQLiteOpenHelper {
 			if (r!=null&&r.noOfVars>0) {
 				if (Tools.writeToFile(Constants.EXPORT_FILES_DIR+exportFileName+"."+exporter.getType(),r.result)) {
 					Log.d("nils","Exported file succesfully");
+					c.close();
 					return r;
 				} else {
 					Log.e("nils","Export of file failed");
+						c.close();
 						return new Report(ExportReport.FILE_WRITE_ERROR);
 				}
 			} else 
+				c.close();
 				return new Report(ExportReport.NO_DATA);
 		} else {
 			Log.e("nils","NO Variables found in db for context "+context);
@@ -346,27 +354,57 @@ public class DbHelper extends SQLiteOpenHelper {
 
 
 	public void printAllVariables() {
-
+		String fileName = Constants.VORTEX_ROOT_DIR+
+				globalPh.get(PersistenceHelper.BUNDLE_NAME)+"/config/dbdump.txt";
+		File file = new File(fileName);
+		Log.d("vortex","file created at: "+fileName);		
+		PrintWriter writer=null;
+		try {
+			boolean cre = file.createNewFile();
+			if (!cre)
+				Log.d("vortex","file was already there");
+			writer = new PrintWriter(file, "UTF-8");
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		Cursor c = db.query(TABLE_VARIABLES,null,
 				null,null,null,null,null,null);
 		if (c!=null) {
+			String header = "";
 			Log.d("nils","Variables found in db:");
+			for (int i = 1;i<=DbHelper.NO_OF_KEYS;i++)
+				header+=colKeyM.get("L"+i)+"|";
+			header +="variable|value";
+			Log.d("vortex",header);
+			writer.println(header);
+			String row;
 			while (c.moveToNext()) {
-				Log.d("nils","VAR:"+c.getString(c.getColumnIndex("var"))+
-						"VALUE:"+c.getString(c.getColumnIndex("value"))+
-						"L1:"+c.getString(c.getColumnIndex("L1"))+
-						"L2:"+c.getString(c.getColumnIndex("L2"))+
-						"L3:"+	c.getString(c.getColumnIndex("L3"))+
-						"L4:"+	c.getString(c.getColumnIndex("L4"))+
-						"L5:"+	c.getString(c.getColumnIndex("L5"))+
-						"L6:"+	c.getString(c.getColumnIndex("L6"))+
-						"L7:"+	c.getString(c.getColumnIndex("L7"))+
-						"L8:"+	c.getString(c.getColumnIndex("L8"))+
-						"L9:"+	c.getString(c.getColumnIndex("L9"))+
-						"L10:"+	c.getString(c.getColumnIndex("L10")));
+				row=
+						c.getString(c.getColumnIndex("L1"))+"|"+
+								c.getString(c.getColumnIndex("L2"))+"|"+
+								c.getString(c.getColumnIndex("L3"))+"|"+
+								c.getString(c.getColumnIndex("L4"))+"|"+
+								c.getString(c.getColumnIndex("L5"))+"|"+
+								c.getString(c.getColumnIndex("L6"))+"|"+
+								c.getString(c.getColumnIndex("L7"))+"|"+
+								c.getString(c.getColumnIndex("L8"))+"|"+
+								c.getString(c.getColumnIndex("L9"))+"|"+
+								c.getString(c.getColumnIndex("L10"))+"|"+
+								c.getString(c.getColumnIndex("var"))+"|"+
+								c.getString(c.getColumnIndex("value"));
+				writer.println(row);
 			}
 		}
+		
 		c.close();
+		writer.close();
 	}
 
 
@@ -567,6 +605,7 @@ public class DbHelper extends SQLiteOpenHelper {
 			} while (c.moveToNext());
 			//if (ret.size()==0)
 			//	Log.d("nils","Found no values in GetValues");
+			c.close();
 			return ret;
 		} 
 		String su="[";
@@ -583,23 +622,27 @@ public class DbHelper extends SQLiteOpenHelper {
 				s.selection,s.selectionArgs,null,null,null,null);
 		List<String> ret = null;
 		if (c != null && c.moveToFirst()) {
-
 			ret = new ArrayList<String>();
 			do {
 				ret.add(c.getString(0));
 			} while (c.moveToNext());
-			c.close();
 
 		}
+		if (c!=null)
+			c.close();
 		return ret;
 	}
 
 
 
 	public String getValue(String name, Selection s,String[] valueCol) {
-		//Log.d("nils","In getvalue with name "+name+" and selection "+s.selection+" and selectionargs "+print(s.selectionArgs));
 		//Get cached selectionArgs if exist.
 		//this.printAllVariables();
+		if (!db.isOpen()) {
+			Log.e("vortex","Database was gone!!! Creating new");
+			Log.d("nils","In getvalue with name "+name+" and selection "+s.selection+" and selectionargs "+print(s.selectionArgs));
+			db = this.getWritableDatabase();
+		}
 		Cursor c = db.query(TABLE_VARIABLES,valueCol,
 				s.selection,s.selectionArgs,null,null,null,null);
 		if (c != null && c.moveToFirst()) {
@@ -630,7 +673,8 @@ public class DbHelper extends SQLiteOpenHelper {
 			Log.d("nils"," Key: ("+k[i]+") "+colKeyM.get(k[i])+" = "+s.selectionArgs[i]);
 		}	
 		 */
-		c.close();
+		if (c!=null)
+			c.close();
 		return null;
 
 	}
@@ -649,7 +693,8 @@ public class DbHelper extends SQLiteOpenHelper {
 			return value;
 		} 
 		//Log.d("nils","Did NOT find value in db for "+name);
-		c.close();
+		if (c!=null)
+			c.close();
 		return -1;
 	}
 
@@ -786,6 +831,8 @@ public class DbHelper extends SQLiteOpenHelper {
 		} else 
 			Log.d("nils","no sync needed...no new audit data");
 		//mySyncEntries = ret;	
+		if (c!=null)
+			c.close();
 		return sa;
 	}
 
@@ -1091,8 +1138,10 @@ public class DbHelper extends SQLiteOpenHelper {
 
 	public void syncDone(long timeStamp) {
 		String lastS = ph.get(PersistenceHelper.TIME_OF_LAST_SYNC);
-		long l = Long.parseLong(lastS);
-		if (timeStamp > l) 
+		if (lastS==null||lastS.equals(PersistenceHelper.UNDEFINED))
+			lastS= "0";
+		long lastTimeStamp = Long.parseLong(lastS);
+		if (timeStamp > lastTimeStamp) 
 			ph.put(PersistenceHelper.TIME_OF_LAST_SYNC, Long.toString(timeStamp));
 		else 
 			Log.e("nils","The timestamp of this sync message is LESS than the current timestamp");
@@ -1102,17 +1151,18 @@ public class DbHelper extends SQLiteOpenHelper {
 
 
 	public int getNumberOfUnsyncedEntries() {
+		int ret = 0;
 		String timestamp = ph.get(PersistenceHelper.TIME_OF_LAST_SYNC);
 		if (timestamp==null||timestamp.equals(PersistenceHelper.UNDEFINED))
 			timestamp = "0";
 		Log.d("nils","Time of last sync is "+timestamp+" in getNumberOfUnsyncedEntries (dbHelper)");
 		Cursor c = db.query(TABLE_AUDIT,null,
 				"timestamp > ?",new String[] {timestamp},null,null,"timestamp asc",null);
-		if (c != null && c.getCount()>0) {
-			return c.getCount();
-		}
-		else 
-			return 0;
+		if (c != null && c.getCount()>0) 
+			ret = c.getCount();
+		if (c!=null)
+			c.close();
+		return ret;
 
 	}
 
@@ -1278,10 +1328,11 @@ public class DbHelper extends SQLiteOpenHelper {
 					ret = new HashSet<Map<String,String>>();
 				ret.add(varKeyChain);
 			} while (c.moveToNext());
-			c.close();
+			
 
 		}
-
+		if (c!=null)
+			c.close();
 		return ret;
 	}
 
@@ -1303,13 +1354,14 @@ public class DbHelper extends SQLiteOpenHelper {
 		Cursor c = db.rawQuery(query, selArgs);
 		Log.d("nils","Got "+c.getCount()+" results. PrefetchValue."+namePrefix+" with key: "+keyChain.toString());
 		Map<String,String> ret = new HashMap<String,String>();
-		if (c.moveToFirst() ) {
+		if (c!=null && c.moveToFirst() ) {
 			do {
 				ret.put(c.getString(0),c.getString(1));
 			} while (c.moveToNext());
 
 		}
-		c.close();
+		if (c!=null)
+			c.close();
 		return ret;
 
 	}
@@ -1332,7 +1384,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		Cursor c = db.rawQuery(query, selArgs);
 		Log.d("nils","In prefetchValues. Got "+c.getCount()+" results. PrefetchValues "+namePrefix+" with key "+keyChain.toString());
 		Map<String, Map<String,String>> ret = new HashMap<String, Map<String,String>>();
-		if (c.moveToFirst() ) {
+		if (c!=null && c.moveToFirst() ) {
 			do {
 				String varId = c.getString(0);
 				if (varId!=null) {
@@ -1347,7 +1399,8 @@ public class DbHelper extends SQLiteOpenHelper {
 			} while (c.moveToNext());
 
 		}
-		c.close();
+		if (c!=null)
+			c.close();
 		return ret;
 
 	}

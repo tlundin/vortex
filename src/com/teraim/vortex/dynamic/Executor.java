@@ -19,8 +19,12 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
 import com.teraim.vortex.GlobalState;
+import com.teraim.vortex.GlobalState.CHash;
 import com.teraim.vortex.R;
 import com.teraim.vortex.bluetooth.BluetoothConnectionService;
 import com.teraim.vortex.dynamic.blocks.AddEntryToFieldListBlock;
@@ -100,6 +104,8 @@ public abstract class Executor extends Fragment {
 
 	protected VariableConfiguration al;
 
+	private CHash myHash;
+
 	
 
 	@Override
@@ -107,14 +113,15 @@ public abstract class Executor extends Fragment {
 		super.onCreate(savedInstanceState);
 		Log.d("nils","GETS TO ONCREATE EXECUTOR");
 		activity = this.getActivity();
-		gs = GlobalState.getInstance((Context)activity);
-		Log.d("vortex","gs: "+gs.toString()+" currentKeyHash: "+gs.getCurrentKeyHash());
+		gs = GlobalState.getInstance(null);
 		myContext = new WF_Context((Context)activity,this,R.id.content_frame);
-		al = gs.getVariableConfiguration();
 		o = gs.getLogger();
 		wf = getFlow();
+		al = gs.getVariableConfiguration();
+
+
 		
-		gs.setCurrentContext(myContext);
+		
 		
 		ifi = new IntentFilter();
 		ifi.addAction(BluetoothConnectionService.SYNK_DATA_RECEIVED);
@@ -147,10 +154,12 @@ public abstract class Executor extends Fragment {
 
 	@Override
 	public void onResume() {
+		Log.d("vortex","in Executor onResume");
 		activity.registerReceiver(brr, ifi);
 		super.onResume();
 	}
 
+	
 	@Override
 	public void onPause()
 	{
@@ -167,8 +176,11 @@ public abstract class Executor extends Fragment {
 		//Find out the name of the workflow to execute.
 		Bundle b = this.getArguments();
 		if (b!=null) {
-			myContext.setStatusVariable(b.getString("status_variable"));
 			String name = b.getString("workflow_name");
+			myHash = (CHash)b.getSerializable("keyhash");
+			
+			myContext.setStatusVariable(b.getString("status_variable"));
+
 			if (name!=null && name.length()>0) 
 				wf = gs.getWorkflow(name);
 
@@ -192,9 +204,17 @@ public abstract class Executor extends Fragment {
 	 */
 	protected void run() {
 		try {
+			Log.d("vortex"," currentKeyHash before: "+gs.getCurrentKeyHash());
+
+			gs.setCurrentContext(myContext);		
+			gs.setKeyHash(myHash.keyHash);
+			gs.setRawHash(myHash.rawHash);
+			Log.d("vortex"," currentKeyHash after: "+gs.getCurrentKeyHash());
+
 			visiVars = new HashSet<Variable>();
 			//LinearLayout my_root = (LinearLayout) findViewById(R.id.myRoot);		
 			List<Block>blocks = wf.getCopyOfBlocks();
+
 			boolean notDone = true;
 			int blockP = 0;
 			Set<Variable>blockVars;
@@ -318,6 +338,7 @@ public abstract class Executor extends Fragment {
 					o.addRow("");
 					o.addYellowText("Running SetValueBlock "+b.getBlockId());
 					final SetValueBlock bl = (SetValueBlock)b;
+					o.addRow("Formula: "+bl.getFormula());
 					final List<TokenizedItem> tokens = RuleExecutor.getInstance(gs.getContext()).findTokens(bl.getFormula(),null);
 					if (bl.getBehavior()!=ExecutionBehavior.constant) {
 						EventListener tiva = new EventListener() {
@@ -373,15 +394,16 @@ public abstract class Executor extends Fragment {
 					}
 					//Evaluate
 					Variable v = al.getVariableInstance(bl.getMyVariable());
-					String eval = bl.evaluate(gs,bl.getFormula(),tokens,v.getType()==DataType.text);
-					if (eval==null) {
-						o.addRow("");
-						o.addRow("Execution stopped on SetValueBlock "+bl.getBlockId()+". Expression "+bl.getFormula()+"evaluates to null");
-						//jump.put(bl.getBlockId(), Executor.STOP_ID);
-						notDone = false;
-					} else 
-						o.addRow("SetValueBlock "+bl.getBlockId()+" eval result: "+eval);					
 					if (v!=null) {
+						String eval = bl.evaluate(gs,bl.getFormula(),tokens,v.getType()==DataType.text);
+						if (eval==null) {
+							o.addRow("");
+							o.addRow("Execution stopped on SetValueBlock "+bl.getBlockId()+". Expression "+bl.getFormula()+"evaluates to null");
+							//jump.put(bl.getBlockId(), Executor.STOP_ID);
+							notDone = false;
+						} else 
+							o.addRow("SetValueBlock "+bl.getBlockId()+" eval result: "+eval);					
+
 						String val = v.getValue();
 						if ((val == null && eval == null)||
 								(val != null && eval != null && val.equals(eval))) {
@@ -421,7 +443,6 @@ public abstract class Executor extends Fragment {
 									new Handler().postDelayed(new Runnable() {
 										public void run() {
 											myContext.resetState();
-
 											Set<Variable> previouslyVisibleVars = visiVars;
 											Executor.this.run();
 											for (Variable v:previouslyVisibleVars) {

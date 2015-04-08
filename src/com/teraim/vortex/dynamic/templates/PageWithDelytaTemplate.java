@@ -56,8 +56,8 @@ public class PageWithDelytaTemplate extends Executor {
 		DelyteManager dym = DelyteManager.getInstance();
 		if (dym==null)
 			dym = DelyteManager.create(gs,Integer.parseInt(al.getCurrentProvyta()));
-		Marker man = new Marker(BitmapFactory.decodeResource(getResources(),R.drawable.icon_man));
-		ProvytaView pyv = new ProvytaView(activity, null, man,Constants.isAbo(dym.getPyID()));		
+		//Marker man = new Marker(BitmapFactory.decodeResource(getResources(),R.drawable.icon_man));
+		ProvytaView pyv = new ProvytaView(activity, null, null,Constants.isAbo(dym.getPyID()));		
 		
 		if (wf!=null) {
 			run();

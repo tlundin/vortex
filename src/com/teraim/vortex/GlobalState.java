@@ -1,9 +1,7 @@
 package com.teraim.vortex;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.io.Serializable;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
@@ -12,7 +10,6 @@ import java.util.TreeMap;
 
 import android.content.Context;
 import android.content.Intent;
-import android.database.sqlite.SQLiteException;
 import android.util.Log;
 
 import com.teraim.vortex.bluetooth.BluetoothConnectionService;
@@ -23,7 +20,6 @@ import com.teraim.vortex.bluetooth.SyncEntry;
 import com.teraim.vortex.bluetooth.SyncEntryHeader;
 import com.teraim.vortex.bluetooth.SyncMessage;
 import com.teraim.vortex.dynamic.VariableConfiguration;
-import com.teraim.vortex.dynamic.blocks.StartBlock;
 import com.teraim.vortex.dynamic.types.SpinnerDefinition;
 import com.teraim.vortex.dynamic.types.Table;
 import com.teraim.vortex.dynamic.types.VarCache;
@@ -33,18 +29,13 @@ import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
 import com.teraim.vortex.expr.Aritmetic;
 import com.teraim.vortex.expr.Parser;
 import com.teraim.vortex.loadermodule.Configuration;
-import com.teraim.vortex.log.DummyLogger;
-import com.teraim.vortex.log.FastLogger;
-import com.teraim.vortex.log.Logger;
 import com.teraim.vortex.log.LoggerI;
-import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.non_generics.StatusHandler;
 import com.teraim.vortex.ui.DrawerMenu;
 import com.teraim.vortex.ui.MenuActivity;
 import com.teraim.vortex.utils.DbHelper;
 import com.teraim.vortex.utils.PersistenceHelper;
-import com.teraim.vortex.utils.Tools;
-import com.teraim.vortex.utils.DbHelper.Selection;
+import com.teraim.vortex.utils.RuleExecutor;
 
 
 /**
@@ -415,13 +406,15 @@ public class GlobalState  {
 
 
 	public Map<String,String> getCurrentKeyHash() {
+		
 		Log.d("vortex","getCurrentKeyHash returned "+myKeyHash);
-		return myKeyHash;
+		return myKeyHash==null?null:new HashMap<String,String>(myKeyHash);
 	}
 
 
 	public void  setKeyHash(Map<String,String> h) { 	
 		artLista.destroyCache();
+		RuleExecutor.getInstance(getContext()).destroyCache();
 		myKeyHash=h;
 		Log.d("vortex","SetKeyHash was called with "+h+" on this "+this.toString());
 	}
@@ -451,8 +444,8 @@ public class GlobalState  {
 
 	public boolean isMaster() {
 		String m;
-		if ((m = ph.get(PersistenceHelper.DEVICE_COLOR_KEY)).equals(PersistenceHelper.UNDEFINED)) {
-			ph.put(PersistenceHelper.DEVICE_COLOR_KEY, "Master");
+		if ((m = globalPh.get(PersistenceHelper.DEVICE_COLOR_KEY)).equals(PersistenceHelper.UNDEFINED)) {
+			globalPh.put(PersistenceHelper.DEVICE_COLOR_KEY, "Master");
 			return true;
 		}
 		else
@@ -497,9 +490,9 @@ public class GlobalState  {
 
 
 	public ErrorCode checkSyncPreconditions() {
-		if (this.isMaster()&&ph.get(PersistenceHelper.LAG_ID_KEY).equals(PersistenceHelper.UNDEFINED))
+		if (this.isMaster()&&globalPh.get(PersistenceHelper.LAG_ID_KEY).equals(PersistenceHelper.UNDEFINED))
 			return ErrorCode.missing_lag_id;
-		else if (ph.get(PersistenceHelper.USER_ID_KEY).equals(PersistenceHelper.UNDEFINED))
+		else if (globalPh.get(PersistenceHelper.USER_ID_KEY).equals(PersistenceHelper.UNDEFINED))
 			return ErrorCode.missing_user_id;
 		else if (myHandler ==null)
 			return ErrorCode.no_handler_available;
@@ -616,7 +609,12 @@ public class GlobalState  {
 
 	//Change current context (side effect) to the context given in the workflow startblock.
 	//If no context can be built (missing variable values), return error. Otherwise, return null.
-	public class CHash {
+	public class CHash implements Serializable {
+	
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -6300633169769731018L;
 		public CHash(Map<String, String> keyHash, Map<String, Variable> rawHash) {
 			this.keyHash = keyHash;
 			this.rawHash = rawHash;

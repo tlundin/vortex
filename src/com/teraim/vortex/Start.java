@@ -451,15 +451,14 @@ public class Start extends MenuActivity {
 			debugLogger.addGreenText("OK");
 			debugLogger.addText("]");
 
-			gs.setRawHash(r.rawHash);
-			if (r.keyHash==null)
-				Log.e("noob","Keyhas still null even though it is OK");
-			gs.setKeyHash(r.keyHash);
+			//gs.setRawHash(r.rawHash);
+			//gs.setKeyHash(r.keyHash);
 			//No template. This flow does not have a ui. Hand over to Executor.
 			Fragment fragmentToExecute;
 			Bundle args = new Bundle();
 			args.putString("workflow_name", wf.getName());
 			args.putString("status_variable", statusVar);
+			args.putSerializable("keyhash", r);
 			if (template==null) {
 				fragmentToExecute = wf.createFragment("EmptyTemplate");
 				fragmentToExecute.setArguments(args);

@@ -83,7 +83,7 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 		fieldListPanel = (LinearLayout)v.findViewById(R.id.fieldList);
 	
 		WF_DisplayValueField rSel = new WF_DisplayValueField("whatevar", "Current_Ruta",myContext, null, 
-				"Vald Ruta", true,null);
+				"Vald Ruta", true,null,null,null);
 		
 		
 		final String currPy = al.getCurrentProvyta();

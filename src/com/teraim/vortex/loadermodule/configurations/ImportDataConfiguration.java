@@ -19,7 +19,6 @@ import com.teraim.vortex.loadermodule.LoadResult.ErrorCode;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.utils.DbHelper;
 import com.teraim.vortex.utils.PersistenceHelper;
-import com.teraim.vortex.utils.Tools;
 
 public class ImportDataConfiguration extends JSONConfigurationModule {
 
@@ -142,7 +141,7 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 	private List<Entry> entries = new ArrayList<Entry>();
 	
 	private LoadResult readVariables(JsonReader reader) throws IOException {
-		String varName = null;
+		String varName = null, value = null;
 		vars = new ArrayList<ValuePair>();
 		int c=0;
 		while (reader.hasNext()) {
@@ -150,11 +149,16 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 			String name = reader.nextName();
 			if (name.equals("name")) {
 				varName = getAttribute(reader);
+				Log.d("vortex","name: "+varName);
 			} else
 				return new LoadResult(this,ErrorCode.ParseError);
 			name = reader.nextName();
-			if (name.equals("value")) 
-				vars.add(new ValuePair(varName,getAttribute(reader)));
+			if (name.equals("value")) {
+				value = getAttribute(reader);
+				Log.d("vortex","value: "+value);
+				vars.add(new ValuePair(varName,value));
+				
+			}
 			else
 				return new LoadResult(this,ErrorCode.ParseError);
 			c++;

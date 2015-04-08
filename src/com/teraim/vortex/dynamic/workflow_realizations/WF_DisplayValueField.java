@@ -2,8 +2,10 @@ package com.teraim.vortex.dynamic.workflow_realizations;
 
 import java.util.List;
 
+import android.graphics.Color;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.teraim.vortex.GlobalState;
@@ -26,9 +28,15 @@ public class WF_DisplayValueField extends WF_Widget implements EventListener {
 	RuleExecutor ruleExecutor;
 
 	public WF_DisplayValueField(String id, String formula,WF_Context ctx, Unit unit, 
-			String label, boolean isVisible,String format) {
+			String label, boolean isVisible,String format,String bgColor, String textColor) {
 		super(id, LayoutInflater.from(ctx.getContext()).inflate(R.layout.display_value_textview,null), isVisible,ctx);
-		((TextView)getWidget().findViewById(R.id.header)).setText(label);
+		TextView header = (TextView)getWidget().findViewById(R.id.header);
+		LinearLayout bg = (LinearLayout)getWidget().findViewById(R.id.background);
+		header.setText(label);
+		if (bgColor!=null)
+			bg.setBackgroundColor(Color.parseColor(bgColor));
+		if (textColor!=null)
+			header.setTextColor(Color.parseColor(textColor));
 		gs = GlobalState.getInstance(ctx.getContext());
 		ruleExecutor = RuleExecutor.getInstance(gs.getContext());
 		o = gs.getLogger();
@@ -42,6 +50,8 @@ public class WF_DisplayValueField extends WF_Widget implements EventListener {
 			o.addRow("");
 			o.addRedText("Parsing of formula for DisplayValueBlock failed. Formula: "+formula);
 		}
+		
+		
 		this.onEvent(new WF_Event_OnSave("display_value_field"));
 	}
 

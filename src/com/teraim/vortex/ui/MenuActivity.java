@@ -381,6 +381,13 @@ public class MenuActivity extends Activity {
 					});
 				}
 			});
+			Button print = (Button)dialog.findViewById(R.id.printdb);
+			print.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					gs.getDb().printAllVariables();
+				}
+			});
 
 			break;
 		case 3:

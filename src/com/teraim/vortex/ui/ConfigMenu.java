@@ -20,6 +20,7 @@ import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
 import com.teraim.vortex.Start;
 import com.teraim.vortex.bluetooth.BluetoothConnectionService;
+import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.PersistenceHelper;
 
 public class ConfigMenu extends PreferenceActivity {
@@ -39,13 +40,13 @@ public class ConfigMenu extends PreferenceActivity {
 		@Override
 		public void onCreate(Bundle savedInstanceState) {
 			super.onCreate(savedInstanceState);
-			this.getPreferenceManager().setSharedPreferencesName("GlobalPrefs");
+			this.getPreferenceManager().setSharedPreferencesName(Constants.GLOBAL_PREFS);
 			// Load the preferences from an XML resource
 			addPreferencesFromResource(R.xml.myprefs);
 			//Set default values for the prefs.
 //			getPreferenceScreen().getSharedPreferences()
 //			.registerOnSharedPreferenceChangeListener(this);
-			this.getActivity().getSharedPreferences("GlobalPrefs", Context.MODE_PRIVATE)
+			this.getActivity().getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_PRIVATE)
 			.registerOnSharedPreferenceChangeListener(this);
 		
 			EditTextPreference epref = (EditTextPreference) findPreference(PersistenceHelper.LAG_ID_KEY);
@@ -111,8 +112,7 @@ public class ConfigMenu extends PreferenceActivity {
 					GlobalState gs = GlobalState.getInstance(null);
 					if (gs != null) {
 						//if a state exists, restart the app.
-						//Close database.
-						
+						Log.d("vortex","restarting...bundle name now "+gs.getGlobalPreferences().get(PersistenceHelper.BUNDLE_NAME));
 						Activity context = this.getActivity();
 						Intent mStartActivity = new Intent(context, Start.class);
 						int mPendingIntentId = 123456;

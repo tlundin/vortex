@@ -18,17 +18,17 @@ import com.teraim.vortex.dynamic.workflow_realizations.WF_Column_Name_Filter.Fil
 
 
 public class WF_SorterWidget extends WF_Widget {
-	
+
 	private final String[] alfabet = {
 			"*","ABC","DEF","GHI","JKL",
 			"MN","OPQ","RS","T","UV",
 			"WXYZ","Å","Ä","Ö"};
 
 
-	
+
 	WF_Filter existing;
 	WF_Static_List targetList;
-	
+
 	public WF_SorterWidget(String name,WF_Context ctx, String type, final WF_Static_List targetList,final String selectionField, final String displayField,String selectionPattern,boolean isVisible) {
 		super(name,new LinearLayout(ctx.getContext()),isVisible,ctx);
 		LinearLayout buttonPanel;
@@ -37,10 +37,10 @@ public class WF_SorterWidget extends WF_Widget {
 		buttonPanel = (LinearLayout) getWidget();
 		buttonPanel.setOrientation(LinearLayout.VERTICAL);
 		buttonPanel.setLayoutParams(lp);
-		
+
 
 		this.targetList=targetList;
-		
+
 		if (type.equals("alphanumeric")) {
 			final OnClickListener cl = new OnClickListener(){
 				@Override
@@ -50,7 +50,7 @@ public class WF_SorterWidget extends WF_Widget {
 					//This shall apply a new Alpha filter on target.
 					//First, remove any existing alpha filter.
 					targetList.removeFilter(existing);
-					
+
 					//Wildcard? Do not add any filter.
 					if(!ch.equals("*")) {							
 						//Use ch string as unique id.
@@ -69,7 +69,7 @@ public class WF_SorterWidget extends WF_Widget {
 				b.setOnClickListener(cl);
 				buttonPanel.addView(b);
 			}
-			
+
 		} else if (type.equals("column")) {
 			final OnClickListener dl = new OnClickListener() {
 				@Override
@@ -79,10 +79,10 @@ public class WF_SorterWidget extends WF_Widget {
 					//This shall apply a new Alpha filter on target.
 					//First, remove any existing alpha filter.
 					targetList.removeFilter(existing);
-						existing = new WF_Column_Name_Filter(ch,ch,displayField,FilterType.exact);
-						//existing = new WF_Column_Name_Filter(ch,ch,Col_Art)
+					existing = new WF_Column_Name_Filter(ch,ch,displayField,FilterType.exact);
+					//existing = new WF_Column_Name_Filter(ch,ch,Col_Art)
 					targetList.addFilter(existing);
-					
+
 					//running the filters will trigger redraw.
 					targetList.draw();
 				}
@@ -92,36 +92,41 @@ public class WF_SorterWidget extends WF_Widget {
 			VariableConfiguration al = GlobalState.getInstance(ctx.getContext()).getVariableConfiguration();
 			Table t = al.getTable();
 			List<List<String>> rows = t.getRowsContaining(selectionField,selectionPattern);
-			Log.d("nils","SORTERWIDGET: GETROWS RETURNED "+rows.size()+" FOR SELFIELD "+selectionField+" AND SELP: "+selectionPattern);
-			int cIndex = t.getColumnIndex(displayField);
-			if (cIndex != -1) {
-				Set<String> txts = new HashSet<String>();
-				Button b;
-				for(List<String>row:rows)
-					txts.add(row.get(cIndex));
-				for (String txt:txts)				
-					if (txt !=null && txt.trim().length()>0) {
-						b = new Button(ctx.getContext());
-						b.setLayoutParams(lp);
-						b.setText(txt);
-						b.setOnClickListener(dl);
-						buttonPanel.addView(b);				
-						Log.d("nils","Added button "+txt+" length "+txt.length());
-					}
-				
-				
-			} else{
+			if (rows!=null) {
+				Log.d("nils","SORTERWIDGET: GETROWS RETURNED "+rows.size()+" FOR SELFIELD "+selectionField+" AND SELP: "+selectionPattern);
+
+				int cIndex = t.getColumnIndex(displayField);
+				if (cIndex != -1) {
+					Set<String> txts = new HashSet<String>();
+					Button b;
+					for(List<String>row:rows)
+						txts.add(row.get(cIndex));
+					for (String txt:txts)				
+						if (txt !=null && txt.trim().length()>0) {
+							b = new Button(ctx.getContext());
+							b.setLayoutParams(lp);
+							b.setText(txt);
+							b.setOnClickListener(dl);
+							buttonPanel.addView(b);				
+							Log.d("nils","Added button "+txt+" length "+txt.length());
+						}
+
+
+				} else{
+					o.addRow("");
+					o.addRedText("Found no rows for selection: "+selectionField+" and pattern"+selectionPattern+" in WF_SorterWidget. Check your xml for block_create_sort_widget");
+				}
+			} else {
 				o.addRow("");
 				o.addRedText("Could not find column <display_field>: "+displayField+" in WF_SorterWidget. Check your xml for block_create_sort_widget");
 			}
-			
 		}
 		else 
 			Log.e("parser","Sorry, unknown filtering type");
-			
-			
+
+
 	}
-	
+
 	private void removeExistingFilter() {
 		if (existing!=null) {
 			targetList.removeFilter(existing);
@@ -140,6 +145,6 @@ public class WF_SorterWidget extends WF_Widget {
 		removeExistingFilter();
 	}
 
-	
+
 
 }

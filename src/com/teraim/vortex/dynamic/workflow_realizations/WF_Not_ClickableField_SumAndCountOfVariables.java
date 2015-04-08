@@ -2,9 +2,11 @@ package com.teraim.vortex.dynamic.workflow_realizations;
 
 import java.util.Set;
 
+import android.graphics.Color;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
@@ -30,13 +32,20 @@ WF_Not_ClickableField implements EventListener {
 	Type myType;
 
 	public WF_Not_ClickableField_SumAndCountOfVariables(String header,String descriptionT, WF_Context myContext, 
-			 String myTarget, String pattern,Type sumOrCount,boolean isVisible) {
+			 String myTarget, String pattern,Type sumOrCount,boolean isVisible, String textColor, String bgColor) {
 		super(header, descriptionT, myContext, LayoutInflater.from(myContext.getContext()).inflate(R.layout.selection_field_normal_colored,null),isVisible);
 		this.myContext=myContext;
 		o = GlobalState.getInstance(myContext.getContext()).getLogger();
 		targetList = myContext.getList(myTarget);
 		myType = sumOrCount;
 		myPattern = pattern;
+
+		TextView text = (TextView)getWidget().findViewById(R.id.editfieldtext);
+		LinearLayout bg = (LinearLayout)getWidget().findViewById(R.id.background);
+		if (bgColor!=null)
+			bg.setBackgroundColor(Color.parseColor(bgColor));
+		if (textColor!=null)
+			text.setTextColor(Color.parseColor(textColor));
 
 		if (targetList == null) {
 			o.addRow("");

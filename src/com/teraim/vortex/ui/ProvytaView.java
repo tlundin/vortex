@@ -92,7 +92,7 @@ public class ProvytaView extends View {
 
 		//user = new MovingMarker(BitmapFactory.decodeResource(context.getResources(),
 		//		R.drawable.gps_pil));
-		this.focusMarker=focusMarker;
+		//this.focusMarker=focusMarker;
 
 	}
 

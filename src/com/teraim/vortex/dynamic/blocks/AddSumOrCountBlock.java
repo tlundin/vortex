@@ -19,7 +19,7 @@ public  class AddSumOrCountBlock extends Block {
 	 * 
 	 */
 	private static final long serialVersionUID = -4139158043307360229L;
-	String containerId, label, postLabel,myPattern, target,result;
+	String containerId, label, postLabel,myPattern, target,result,textColor,bgColor;
 	WF_Not_ClickableField_SumAndCountOfVariables.Type type;
 	String format;
 	boolean isVisible = true;
@@ -27,7 +27,7 @@ public  class AddSumOrCountBlock extends Block {
 	public AddSumOrCountBlock(String id,String containerId, String label,String postLabel,
 			String filter, String target,
 			WF_Not_ClickableField_SumAndCountOfVariables.Type sumOrCount,String result,
-			boolean isVisible, String format) {
+			boolean isVisible, String format, String textColor, String bgColor) {
 		this.containerId=containerId;
 		this.label=label;
 		this.myPattern=filter; //.trim();
@@ -38,6 +38,8 @@ public  class AddSumOrCountBlock extends Block {
 		this.isVisible = isVisible;
 		this.format = format;
 		this.blockId=id;
+		this.textColor=textColor;
+		this.bgColor=bgColor;
 		
 	}
 	
@@ -51,7 +53,8 @@ public  class AddSumOrCountBlock extends Block {
 		WF_Not_ClickableField_SumAndCountOfVariables field = new WF_Not_ClickableField_SumAndCountOfVariables(
 				label,"", myContext, 
 				target, myPattern,
-				type,isVisible);
+				type,isVisible,
+				textColor,bgColor);
 		
 		if (result == null) {
 			o.addRow("");

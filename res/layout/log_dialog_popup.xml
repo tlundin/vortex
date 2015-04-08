@@ -48,6 +48,14 @@
             android:layout_weight="1"
             android:textColor="@color/white" />
        <Button
+            android:id="@+id/printdb"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Print database"
+            android:layout_weight="1"
+            android:textColor="@color/white" />
+       
+       <Button
             android:id="@+id/log_close"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
