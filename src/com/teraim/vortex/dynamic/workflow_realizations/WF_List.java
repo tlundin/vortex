@@ -37,7 +37,7 @@ public abstract class WF_List extends WF_Widget implements Sortable,Filterable {
 		myWidget.setOrientation(LinearLayout.VERTICAL);
 		myWidget.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 		myContext = ctx;
-		gs = GlobalState.getInstance(ctx.getContext());
+		gs = GlobalState.getInstance();
 		al = gs.getVariableConfiguration();
 	}
 	

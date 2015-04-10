@@ -8,12 +8,12 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
-import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
+import android.support.v4.app.FragmentManager;
 import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
@@ -109,17 +109,26 @@ public class ConfigMenu extends PreferenceActivity {
 				EditTextPreference etp = (EditTextPreference) pref;
 				pref.setSummary(etp.getText());
 				if (key.equals(PersistenceHelper.BUNDLE_NAME)) {
-					GlobalState gs = GlobalState.getInstance(null);
+					GlobalState gs = GlobalState.getInstance();
 					if (gs != null) {
 						//if a state exists, restart the app.
 						Log.d("vortex","restarting...bundle name now "+gs.getGlobalPreferences().get(PersistenceHelper.BUNDLE_NAME));
 						Activity context = this.getActivity();
-						Intent mStartActivity = new Intent(context, Start.class);
+						android.app.FragmentManager fm = context.getFragmentManager();
+						for(int i = 0; i < fm.getBackStackEntryCount(); ++i) {    
+						    fm.popBackStack();
+						}
+						Intent intent = new Intent(context, Start.class);
+						intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+						startActivity(intent);
+						context.finish();
+						/*
 						int mPendingIntentId = 123456;
 						PendingIntent mPendingIntent = PendingIntent.getActivity(context, mPendingIntentId,    mStartActivity, PendingIntent.FLAG_CANCEL_CURRENT);
 						AlarmManager mgr = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
 						mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, mPendingIntent);
 						System.exit(0);
+						*/
 						
 					}
 				}
@@ -137,7 +146,7 @@ public class ConfigMenu extends PreferenceActivity {
 						Log.d("nils","Changed to CLIENT");
 					Intent intent = new Intent(this.getActivity().getBaseContext(),BluetoothConnectionService.class);
 					this.getActivity().stopService(intent);
-					GlobalState.getInstance(this.getActivity()).resetHandler();
+					GlobalState.getInstance().resetHandler();
 					
 				}
 				

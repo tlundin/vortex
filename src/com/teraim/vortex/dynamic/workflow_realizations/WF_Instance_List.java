@@ -49,7 +49,7 @@ public class WF_Instance_List extends WF_Static_List implements EventListener,Ev
 		myKeyHash = new HashMap<String,String>(gs.getCurrentKeyHash());
 		myKeyHash.remove(variatorColumn);
 		ctx.addEventListener(this, EventType.onSave);
-		o = GlobalState.getInstance(ctx.getContext()).getLogger();
+		o = GlobalState.getInstance().getLogger();
 		this.variatorColumn=variatorColumn;
 		Log.d("nils","INSTANCE LIST CREATED. ROWS: "+rows.size());
 	}

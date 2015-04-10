@@ -1,6 +1,5 @@
 package com.teraim.vortex;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +19,7 @@ import com.teraim.vortex.bluetooth.SyncEntry;
 import com.teraim.vortex.bluetooth.SyncEntryHeader;
 import com.teraim.vortex.bluetooth.SyncMessage;
 import com.teraim.vortex.dynamic.VariableConfiguration;
+import com.teraim.vortex.dynamic.types.CHash;
 import com.teraim.vortex.dynamic.types.SpinnerDefinition;
 import com.teraim.vortex.dynamic.types.Table;
 import com.teraim.vortex.dynamic.types.VarCache;
@@ -36,6 +36,7 @@ import com.teraim.vortex.ui.MenuActivity;
 import com.teraim.vortex.utils.DbHelper;
 import com.teraim.vortex.utils.PersistenceHelper;
 import com.teraim.vortex.utils.RuleExecutor;
+import com.teraim.vortex.utils.Tools;
 
 
 /**
@@ -72,19 +73,27 @@ public class GlobalState  {
 	private String myPartner="?";
 	private VarCache myVarCache;
 	private PersistenceHelper globalPh=null;
-	public static GlobalState getInstance(Context ctx) {
+	public static GlobalState getInstance() {
 		if (singleton == null) {			
 			//singleton = new GlobalState(c.getApplicationContext());
 			Log.e("vortex","Global state was lost...ajabaja");
-			//Try to reboot from frozen state.
-			//PersistenceHelper globalPh = new PersistenceHelper(ctx.getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_PRIVATE));
-			
+						
 		}
 		return singleton;
 	}
+	
+	public static GlobalState createInstance(Context applicationContext, PersistenceHelper globalPh,
+			PersistenceHelper ph, LoggerI debugConsole, DbHelper myDb,
+			List<Workflow> workflows,Table t,SpinnerDefinition sd) {
+		singleton = null;
+		return new GlobalState(applicationContext,  globalPh,
+				 ph, debugConsole,  myDb,
+				workflows, t, sd);
+		
+	}
 
 	//private GlobalState(Context ctx)  {
-	public GlobalState(Context applicationContext, PersistenceHelper globalPh,
+	private GlobalState(Context applicationContext, PersistenceHelper globalPh,
 			PersistenceHelper ph, LoggerI debugConsole, DbHelper myDb,
 			List<Workflow> workflows,Table t,SpinnerDefinition sd) {
 
@@ -407,8 +416,8 @@ public class GlobalState  {
 
 	public Map<String,String> getCurrentKeyHash() {
 		
-		Log.d("vortex","getCurrentKeyHash returned "+myKeyHash);
-		return myKeyHash==null?null:new HashMap<String,String>(myKeyHash);
+		Log.d("vortex",this.toString()+" getCurrentKeyHash returned "+myKeyHash);
+		return myKeyHash==null?null:myKeyHash;
 	}
 
 
@@ -609,31 +618,13 @@ public class GlobalState  {
 
 	//Change current context (side effect) to the context given in the workflow startblock.
 	//If no context can be built (missing variable values), return error. Otherwise, return null.
-	public class CHash implements Serializable {
 	
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = -6300633169769731018L;
-		public CHash(Map<String, String> keyHash, Map<String, Variable> rawHash) {
-			this.keyHash = keyHash;
-			this.rawHash = rawHash;
-		}
-		public CHash(String err) {
-			this.err=err;
-		}
-		public String err = null;
-		public Map<String, String> keyHash;
-		public Map<String, Variable> rawHash;
-
-		
-	}
 	
 	public CHash evaluateContext(String cContext) {
 		boolean contextError=false;
 		String err = "undefined error";
-		Map<String, String> keyHash = null;
-		Map<String, Variable> rawHash = null;
+		HashMap<String, String> keyHash = null;
+		HashMap<String, Variable> rawHash = null;
 		LoggerI o = getLogger();
 		Log.d("noob","In evaluate Context!!");
 		if (cContext==null||cContext.isEmpty()) {
@@ -707,7 +698,7 @@ public class GlobalState  {
 											Log.d("nils","Added "+arg+","+varVal+" to current context");
 											v.setKeyChainVariable(arg);
 											//update status menu
-											sendEvent(MenuActivity.REDRAW);
+											
 										}
 
 									}

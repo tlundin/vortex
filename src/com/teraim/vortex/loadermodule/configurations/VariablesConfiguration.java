@@ -129,7 +129,7 @@ public class VariablesConfiguration extends CSVConfigurationModule {
 					if (elems==null) {
 						//If the variable has a group,add it 
 						//Log.d("nils","Group "+pGroup+" in line#"+rowC+" does not exist in config file. Will use name: "+varPatternName);								
-						String name = pGroup.trim()+"_"+varPatternName.trim();
+						String name = pGroup.trim()+Constants.VariableSeparator+varPatternName.trim();
 						o.addRow("Generated variable(2): ["+name+"]");
 						trr.set(pNameIndex, name);
 						myTable.addRow(trr);
@@ -142,7 +142,7 @@ public class VariablesConfiguration extends CSVConfigurationModule {
 								o.addRow("");
 								o.addRedText("varPatternNamepart evaluates to null at line#"+currentRow+" in varpattern file");
 							} else {
-								String fullVarName = pGroup.trim()+"_"+(cFileNamePart!=null?cFileNamePart.trim()+"_":"")+varPatternName.trim();
+								String fullVarName = pGroup.trim()+Constants.VariableSeparator+(cFileNamePart!=null?cFileNamePart.trim()+Constants.VariableSeparator:"")+varPatternName.trim();
 								//Remove duplicate elements from Config File row.
 								//Make a copy.
 								List<String>elemCopy = new ArrayList<String>(elem);

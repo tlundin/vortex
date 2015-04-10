@@ -29,7 +29,7 @@ public class MenuHeaderBlock extends Block {
 	public void create(WF_Context myContext) {
 		Log.d("vortex","In create menuheader");
 		
-		GlobalState gs = GlobalState.getInstance(myContext.getContext());
+		GlobalState gs = GlobalState.getInstance();
 		
 		gs.getDrawerMenu().addHeader(label,bgColor,textColor);
 		

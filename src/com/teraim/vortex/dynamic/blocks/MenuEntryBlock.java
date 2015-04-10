@@ -30,7 +30,7 @@ public class MenuEntryBlock extends Block {
 	public void create(WF_Context myContext) {
 		Log.d("vortex","In create menuentry");
 		
-		GlobalState gs = GlobalState.getInstance(myContext.getContext());
+		GlobalState gs = GlobalState.getInstance();
 		Workflow wf = gs.getWorkflow(target);
 		if (wf == null)
 			gs.getLogger().addRedText("Workflow "+target+" not found!!");

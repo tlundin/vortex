@@ -27,7 +27,7 @@ public class AddEntryToFieldListBlock extends Block {
 	
 	
 	public void create(WF_Context myContext) {
-		o = GlobalState.getInstance(myContext.getContext()).getLogger();
+		o = GlobalState.getInstance().getLogger();
 		WF_Static_List myList = myContext.getList(target);
 
 		if (myList==null) {

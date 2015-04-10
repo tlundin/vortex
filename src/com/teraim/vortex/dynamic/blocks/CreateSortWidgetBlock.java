@@ -51,7 +51,7 @@ public class CreateSortWidgetBlock extends Block {
 
 	public void create(WF_Context ctx) {
 
-		o = GlobalState.getInstance(ctx.getContext()).getLogger();
+		o = GlobalState.getInstance().getLogger();
 		//Identify targetList. If no list, no game.
 		Container myContainer = ctx.getContainer(containerId);
 		if (myContainer == null)  {

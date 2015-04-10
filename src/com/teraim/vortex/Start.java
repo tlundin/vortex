@@ -18,8 +18,8 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MenuItem;
 
-import com.teraim.vortex.GlobalState.CHash;
 import com.teraim.vortex.dynamic.templates.LinjePortalTemplate;
+import com.teraim.vortex.dynamic.types.CHash;
 import com.teraim.vortex.dynamic.types.Workflow;
 import com.teraim.vortex.loadermodule.LoadResult;
 import com.teraim.vortex.log.Logger;
@@ -438,7 +438,7 @@ public class Start extends MenuActivity {
 
 	//execute workflow.
 	public void changePage(Workflow wf, String statusVar) {
-		GlobalState gs = GlobalState.getInstance(this);
+		GlobalState gs = GlobalState.getInstance();
 		String label = wf.getLabel();
 		String template = wf.getTemplate();
 		//Set context.
@@ -458,7 +458,7 @@ public class Start extends MenuActivity {
 			Bundle args = new Bundle();
 			args.putString("workflow_name", wf.getName());
 			args.putString("status_variable", statusVar);
-			args.putSerializable("keyhash", r);
+			
 			if (template==null) {
 				fragmentToExecute = wf.createFragment("EmptyTemplate");
 				fragmentToExecute.setArguments(args);
@@ -528,7 +528,7 @@ public class Start extends MenuActivity {
 			Log.d("nils","Trying to cancel histT");
 			histT.cancel(true);
 		}
-		GlobalState.getInstance(this).getDb().closeDatabaseBeforeExit();
+		GlobalState.getInstance().getDb().closeDatabaseBeforeExit();
 		super.onDestroy();
 	}
 

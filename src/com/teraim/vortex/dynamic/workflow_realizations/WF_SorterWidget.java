@@ -32,7 +32,7 @@ public class WF_SorterWidget extends WF_Widget {
 	public WF_SorterWidget(String name,WF_Context ctx, String type, final WF_Static_List targetList,final String selectionField, final String displayField,String selectionPattern,boolean isVisible) {
 		super(name,new LinearLayout(ctx.getContext()),isVisible,ctx);
 		LinearLayout buttonPanel;
-		o = GlobalState.getInstance(ctx.getActivity()).getLogger();
+		o = GlobalState.getInstance().getLogger();
 		LayoutParams lp = new LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.WRAP_CONTENT);
 		buttonPanel = (LinearLayout) getWidget();
 		buttonPanel.setOrientation(LinearLayout.VERTICAL);
@@ -89,7 +89,7 @@ public class WF_SorterWidget extends WF_Widget {
 			};
 			//Generate buttons from artlista. 
 			//Pick fields that are of type Familj
-			VariableConfiguration al = GlobalState.getInstance(ctx.getContext()).getVariableConfiguration();
+			VariableConfiguration al = GlobalState.getInstance().getVariableConfiguration();
 			Table t = al.getTable();
 			List<List<String>> rows = t.getRowsContaining(selectionField,selectionPattern);
 			if (rows!=null) {
@@ -114,11 +114,12 @@ public class WF_SorterWidget extends WF_Widget {
 
 				} else{
 					o.addRow("");
-					o.addRedText("Found no rows for selection: "+selectionField+" and pattern"+selectionPattern+" in WF_SorterWidget. Check your xml for block_create_sort_widget");
+					o.addRedText("Could not find column <display_field>: "+displayField+" in WF_SorterWidget. Check your xml for block_create_sort_widget");
+					
 				}
 			} else {
 				o.addRow("");
-				o.addRedText("Could not find column <display_field>: "+displayField+" in WF_SorterWidget. Check your xml for block_create_sort_widget");
+				o.addRedText("Found no rows for selection: ["+selectionField+"] and pattern ["+selectionPattern+"] in WF_SorterWidget. Check your xml for block_create_sort_widget");
 			}
 		}
 		else 

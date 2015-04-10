@@ -40,9 +40,9 @@ public class BlockCreateListEntriesFromFieldList extends Block {
 
 
 	public void create(WF_Context myContext) {
-		o = GlobalState.getInstance(myContext.getContext()).getLogger();
+		o = GlobalState.getInstance().getLogger();
 		WF_Static_List myList; 
-		VariableConfiguration al = GlobalState.getInstance(myContext.getContext()).getVariableConfiguration();
+		VariableConfiguration al = GlobalState.getInstance().getVariableConfiguration();
 		List<List<String>>rows = cacheMap==null?null:cacheMap.get(selectionField+selectionPattern);
 		if (rows==null)
 			rows  = al.getTable().getRowsContaining(selectionField, selectionPattern);

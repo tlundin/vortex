@@ -42,7 +42,7 @@ public class OldPhotosFragment extends Fragment implements OnGesturePerformedLis
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 
-		gs = GlobalState.getInstance(getActivity());
+		gs = GlobalState.getInstance();
 		Log.d("nils","in onCreateView of old photos");
 		v = inflater.inflate(R.layout.template_foto_right, container, false);	
 

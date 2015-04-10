@@ -38,7 +38,7 @@ public class DisplayValueBlock extends Block implements EventGenerator {
 	}
 
 	public void create(final WF_Context myContext) {
-		gs = GlobalState.getInstance(myContext.getContext());
+		gs = GlobalState.getInstance();
 		o=gs.getLogger();
 		Container myContainer = myContext.getContainer(containerId);
 		if (myContainer != null) {

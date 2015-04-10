@@ -68,6 +68,7 @@ public class MenuActivity extends Activity {
 		brr = new BroadcastReceiver() {
 			boolean inSameSame=false;
 			private int currentBlockCount;
+			boolean inVersionMismatch=false;
 			@Override
 			public void onReceive(Context ctx, Intent intent) {
 				Log.d("nils", "received "+intent.getAction()+" in MenuActivity BroadcastReceiver");
@@ -105,8 +106,8 @@ public class MenuActivity extends Activity {
 					if (!inSameSame) {
 						inSameSame=true;
 						new AlertDialog.Builder(MenuActivity.this)
-						.setTitle("Båda samma")
-						.setMessage("Båda dosorna är konfigurerade likadant. En måste byta till mästare/slav under skiftnyckels-menyn.") 
+						.setTitle("Configuration error")
+						.setMessage("Devices are slave-slave or master-master. Must be master-slave! Please reconfigure 'Device type' for one of them in the configuration menu.") 
 						.setIcon(android.R.drawable.ic_dialog_alert)
 						.setCancelable(false)
 						.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
@@ -140,14 +141,31 @@ public class MenuActivity extends Activity {
 					initdone=false;
 				else if (intent.getAction().equals(BluetoothConnectionService.SYNK_BLOCK_UI)) {
 					currentBlockCount = 0;
-					x.setMessage("Skriver in data: 0");
+					x.setMessage("Writing data: 0");
 					x.show();
 				}
 				else if (intent.getAction().equals(BluetoothConnectionService.SYNK_UNBLOCK_UI)) 
 					x.cancel();
 				else if (intent.getAction().equals(BluetoothConnectionService.PING_FROM_UPDATE)) {
 					currentBlockCount+=10;
-					x.setMessage("Skriver in data: "+currentBlockCount);
+					x.setMessage("Writing data: "+currentBlockCount);
+				} else if (intent.getAction().equals(BluetoothConnectionService.VERSION_MISMATCH)) {
+					if (!inSameSame && !inVersionMismatch) {
+						inVersionMismatch=true;
+						new AlertDialog.Builder(MenuActivity.this)
+						.setTitle("Varning")
+						.setMessage("You are running different versions of the application or the engine. This can lead to serious problems!!!. Check log for details.") 
+						.setIcon(android.R.drawable.ic_dialog_alert)
+						.setCancelable(false)
+						.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog, int which)  {
+								inVersionMismatch = false;
+							}
+
+						})
+						.show();
+					}
 				}
 					
 				btInitDone();
@@ -170,6 +188,7 @@ public class MenuActivity extends Activity {
 		filter.addAction(BluetoothConnectionService.SYNK_BLOCK_UI);
 		filter.addAction(BluetoothConnectionService.SYNK_UNBLOCK_UI);
 		filter.addAction(BluetoothConnectionService.PING_FROM_UPDATE);
+		filter.addAction(BluetoothConnectionService.VERSION_MISMATCH);
 		filter.addAction(INITDONE);		
 		filter.addAction(INITSTARTS);	
 		filter.addAction(REDRAW);
@@ -241,7 +260,7 @@ public class MenuActivity extends Activity {
 		Log.d("NILS","Refreshing status row ");
 		mnu[2].setTitle("LOG");
 		mnu[2].setVisible(true);
-		gs = GlobalState.getInstance(this);
+		gs = GlobalState.getInstance();
 
 		if (gs==null || !initdone) {
 			Log.d("nils","no status before init is done");

@@ -37,7 +37,6 @@ import android.widget.Spinner;
 import android.widget.TableLayout.LayoutParams;
 import android.widget.TextView;
 
-import com.teraim.vortex.GlobalState.CHash;
 import com.teraim.vortex.R;
 import com.teraim.vortex.Start;
 import com.teraim.vortex.bluetooth.EnvelopedMessage;
@@ -45,6 +44,7 @@ import com.teraim.vortex.bluetooth.LinjeDone;
 import com.teraim.vortex.bluetooth.LinjeStarted;
 import com.teraim.vortex.dynamic.Executor;
 import com.teraim.vortex.dynamic.VariableConfiguration;
+import com.teraim.vortex.dynamic.types.CHash;
 import com.teraim.vortex.dynamic.types.ColumnDescriptor;
 import com.teraim.vortex.dynamic.types.SweLocation;
 import com.teraim.vortex.dynamic.types.Variable;

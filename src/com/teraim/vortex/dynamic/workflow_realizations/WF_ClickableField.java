@@ -208,7 +208,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 	public  WF_ClickableField(final String label,final String descriptionT, WF_Context context,String id, View view,boolean isVisible) {
 		super(label,descriptionT,context,view,isVisible);	
 		//Log.e("nils ","Creating WF_ClickableField: "+label+" "+id);
-		gs = GlobalState.getInstance(context.getContext());
+		gs = GlobalState.getInstance();
 		ruleExecutor = RuleExecutor.getInstance(gs.getContext());
 		sd = gs.getSpinnerDefinitions();
 		al = gs.getVariableConfiguration();

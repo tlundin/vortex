@@ -109,7 +109,7 @@ public class Variable implements Serializable {
 //			Log.d("nils","done:     "+System.currentTimeMillis()+" var: "+this.getId());
 			//refreshRuleState();
 		}
-		//Log.d("nils","Getvalue returns "+myValue+" for "+this.getId());
+		Log.d("nils","Getvalue returns "+myValue+" for "+this.getId());
 		return myValue;
 	}
 

@@ -43,10 +43,10 @@ import com.teraim.vortex.non_generics.Constants;
 
 public class RuleExecutor {
 
-	private GlobalState gs;
+	
 	private static Map<String,List<TokenizedItem>> formulaCache = new HashMap<String,List<TokenizedItem>>();
-	static RuleExecutor singleton=null;
-	private VariableConfiguration al;
+	private static RuleExecutor singleton=null;
+	
 
 	//Rather complex enum for all token types.
 
@@ -184,15 +184,13 @@ public class RuleExecutor {
 
 
 
-	private RuleExecutor(Context ctx) {
-		gs = GlobalState.getInstance(ctx);
-		al = gs.getVariableConfiguration();
-	}
+	
 
 	public static RuleExecutor getInstance(Context ctx) {
 		if (singleton==null) {
 			Log.e("vortex","CREATED NEW RULE EXECUTOR");
-			singleton = new RuleExecutor(ctx);
+			singleton = new RuleExecutor();
+			
 		}
 		return singleton;
 
@@ -208,7 +206,7 @@ public class RuleExecutor {
 		Variable v;
 		for (String dVarId:dependants) {
 			Log.d("nils","refreshing rule state for "+dVarId);
-			v = al.getVariableInstance(dVarId);
+			v = GlobalState.getInstance().getVariableConfiguration().getVariableInstance(dVarId);
 			v.refreshRuleState();
 			Log.d("nils","Indirectly refreshed "+v.getId());
 		}
@@ -252,7 +250,7 @@ public class RuleExecutor {
 		}
 		Log.d("vortex","No cached formula. parsing ["+formula+"]");
 		List<Token> potVars = new ArrayList<Token>();
-		LoggerI o = gs.getLogger();
+		LoggerI o = GlobalState.getInstance().getLogger();
 		//Try parsing the formula.
 		String pattern = "<>=+-*/().0123456789,";
 		String inPattern = "<>=+-*/(),";
@@ -261,6 +259,7 @@ public class RuleExecutor {
 		List<TokenizedItem> myFormulaTokens =null;
 
 		if (formula !=null) {
+			Log.d("vortex","formula not null!");
 			for (int i = 0; i < formula.length(); i++){
 				char c = formula.charAt(i);  
 				//if function, collect parameters. 
@@ -304,11 +303,15 @@ public class RuleExecutor {
 								//		+(c == inPattern.charAt(j)?inPattern.charAt(j):"<spc>")+"]");
 								//fail.
 								in = false;
-								//System.out.println("Found token: "+curToken);
-								if (parseFunctionParameters)
+								System.out.println("Found token: "+curToken);
+								if (parseFunctionParameters) {
+									Log.d("vortex","This is a function");
 									potVars.add(new Token(curToken,SimpleTokenType.func));
-								else
+								}
+								else {
+									Log.d("vortex","This is a function or variable");
 									potVars.add(new Token(curToken,SimpleTokenType.eitherfuncorvar));								
+								}
 								curToken="";
 								break;
 							}
@@ -320,7 +323,8 @@ public class RuleExecutor {
 			}
 			//add if remaining.
 			if (curToken.length()>0) 
-				potVars.add(new Token(curToken,parseFunctionParameters?SimpleTokenType.arg:SimpleTokenType.var));
+				potVars.add(new Token(curToken,parseFunctionParameters?SimpleTokenType.arg:SimpleTokenType.eitherfuncorvar));
+
 			//Now all the tokens have been identified. 
 			//scan and match functions and variables to token
 			if (potVars.size()>0) {
@@ -339,53 +343,58 @@ public class RuleExecutor {
 					cToken = it.next();
 					tokenName = cToken.token.toLowerCase();
 					tokenType = cToken.t;
-					if (args!=null && tokenType != SimpleTokenType.arg) {
-						if (hasCardinality && argCount>0) {
-							Log.e("vortex","Too few arguments for function "+function+"!");
-							o.addRow("");
-							o.addRedText("Too few arguments for function "+function+"!");
-						} 
-						myFormulaTokens.add(new TokenizedItem(function.name(),function,args.toArray(new String[args.size()])));
-						args = null;
-					}
+					 
+						
+					
 					//Log.d("vortex","Token: "+cToken.token+" Length: "+tokenName.length()+" Type: "+tokenType);
 
-					//if (tokenType == SimpleTokenType.func) {
-					for (TokenType token:functions) {
-						if (tokenName.equalsIgnoreCase(token.name())) {
-							Log.d("vortex", "found Function match:" +token.name());
-							function = token;
-							break;
+					if (tokenType != SimpleTokenType.arg) {
+						
+						if (args!=null) {
+							if (hasCardinality && argCount>0) {
+								Log.e("vortex","Too few arguments for function "+function+"!");
+								o.addRow("");
+								o.addRedText("Too few arguments for function "+function+"!");
+							} 
+							myFormulaTokens.add(new TokenizedItem(function.name(),function,args.toArray(new String[args.size()])));
+							args = null;
 						}
-					}
-					if (function == null) {
-						for (TokenType token:math_primitives) {
+						//not argument...if function set, reset to null
+						function = null;
+						for (TokenType token:functions) {
 							if (tokenName.equalsIgnoreCase(token.name())) {
-								Log.d("vortex", "found math_primitives match:" +token.name()); 
+								Log.d("vortex", "found Function match:" +token.name());
 								function = token;
-								break ;
+								break;
+							}
+						}
+						if (function == null) {
+							for (TokenType token:math_primitives) {
+								if (tokenName.equalsIgnoreCase(token.name())) {
+									Log.d("vortex", "found math_primitives match:" +token.name()); 
+									function = token;
+									break ;
+								}
+							}
+						}
+
+						//}
+						//check for variable match if no function match,
+						if (tokenType == SimpleTokenType.eitherfuncorvar && function == null) {
+							Variable var = GlobalState.getInstance().getVariableConfiguration().getVariableInstance(tokenName);
+							if (var!=null) {
+								Log.d("vortex","Found variable match for "+tokenName+" in formula");
+								myFormulaTokens.add(new TokenizedItem(var));
+
+							} else {
+								Log.e("vortex","unrecognized token in formula: "+tokenName);
+								o.addRow("");
+								o.addRedText("unrecognized token in formula: "+tokenName);
+								continue;
 							}
 						}
 					}
-					if (function!=null && function.cardinality==0)
-						myFormulaTokens.add(new TokenizedItem(function.name(),function));
-
-					//}
-					//check for variable match.
-					if (tokenType != SimpleTokenType.func && function == null) {
-						Variable var = gs.getVariableConfiguration().getVariableInstance(tokenName);
-						if (var!=null) {
-							Log.d("vortex","Found variable match for "+tokenName+" in formula");
-							myFormulaTokens.add(new TokenizedItem(var));
-
-						} else {
-							Log.e("vortex","unrecognized token in formula: "+tokenName);
-							o.addRow("");
-							o.addRedText("unrecognized token in formula: "+tokenName);
-							continue;
-						}
-					}
-					else if (tokenType == SimpleTokenType.arg) {
+					else  {
 						//is there a function to bind to?
 						if (function == null) {
 							Log.e("vortex","Found argument, but no function! Argument: "+tokenName);
@@ -410,6 +419,9 @@ public class RuleExecutor {
 
 						}
 					}
+					if (function!=null && function.cardinality==0)
+						myFormulaTokens.add(new TokenizedItem(function.name(),function));
+
 
 				}
 				if (args!=null) {
@@ -422,7 +434,8 @@ public class RuleExecutor {
 					myFormulaTokens.add(new TokenizedItem(function.name(),function,args.toArray(new String[args.size()])));
 				}
 			}
-		}
+		} else 
+			Log.e("vortex","formula was null!!");
 		if (myFormulaTokens == null) {
 			Log.d("vortex","Found no variables in formula "+formula+". Variables starts with a..zA..z");
 			o.addRow("Found no variables in formula "+formula+". Variables starts with a..zA..z");
@@ -463,7 +476,7 @@ public class RuleExecutor {
 	}
 
 	public SubstiResult substituteForValue(List<TokenizedItem> myTokens,String formula,boolean stringT) {
-		LoggerI o = gs.getLogger();
+		LoggerI o = GlobalState.getInstance().getLogger();
 		o.addRow("Before substitution: "+formula);
 		Log.d("vortex","in substituteforValue with formula "+formula+" and tokens "+printTokens(myTokens));
 		if (formula ==null)
@@ -563,7 +576,7 @@ public class RuleExecutor {
 		String value;	
 		//Check if this is historical(x) function.
 		if (item.getType()==TokenType.historical) {
-			Variable var = gs.getVariableCache().getVariable(item.get());
+			Variable var = GlobalState.getInstance().getVariableCache().getVariable(item.get());
 			if (var != null) {
 				value = var.getHistoricalValue();
 				Log.d("nils","Found historical value "+value+" for variable "+item.get());
@@ -595,7 +608,8 @@ public class RuleExecutor {
 		}
 		//Check if variable has value
 		String[] args = item.getArguments();
-
+		GlobalState gs = GlobalState.getInstance();
+		VariableConfiguration al = gs.getVariableConfiguration();
 		if (item.getType()==TokenType.sum) {
 			float sum = 0;
 			if (args!=null) {
@@ -659,7 +673,7 @@ public class RuleExecutor {
 				for (List<String>row:rows) {
 					Log.d("vortex","Var name: "+al.getVarName(row));
 					for (int i = 1; i<args.length;i++) {
-						String[] varName = al.getVarName(row).split("_");
+						String[] varName = al.getVarName(row).split(Constants.VariableSeparator);
 						int size = varName.length;
 						if (size<3) {
 							gs.getLogger().addRow("");
@@ -765,7 +779,7 @@ public class RuleExecutor {
 		}
 		if (failC == rowC && item.getType()==TokenType.hasSome) {
 			gs.getLogger().addRow("");
-			gs.getLogger().addYellowText("hasSome filter failed. No variables with values found for filter "+item.getType());
+			gs.getLogger().addYellowText("hasSome filter failed. No variables with values found for "+((item.getArguments()!=null&&item.getArguments().length>0)?item.getArguments()[0]:""));
 			return "0";						
 		} 
 		if (item.getType()==TokenType.hasAll) {
@@ -786,9 +800,9 @@ public class RuleExecutor {
 	public String parseExpression(String formula, String subst) {
 		if (subst==null)
 			return null;
-		Parser p = gs.getParser();
+		Parser p = GlobalState.getInstance().getParser();
 		Expr exp=null;
-		LoggerI o = gs.getLogger();
+		LoggerI o = GlobalState.getInstance().getLogger();
 
 		try {
 			exp = p.parse(subst);
@@ -822,7 +836,7 @@ public class RuleExecutor {
 			if (!res) {
 				Log.d("nils","I get here with string "+rule);
 				SpannableString s = new SpannableString(rule);
-				s.setSpan(new TextAppearanceSpan(gs.getContext(), R.style.RedStyle),0,s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+				s.setSpan(new TextAppearanceSpan(GlobalState.getInstance().getContext(), R.style.RedStyle),0,s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 				myTxt = TextUtils.concat(myTxt, s);	 
 			}
 			else

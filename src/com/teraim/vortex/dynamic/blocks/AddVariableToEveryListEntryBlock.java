@@ -41,7 +41,7 @@ public class AddVariableToEveryListEntryBlock extends Block {
 	public Set<Variable> create(WF_Context myContext) {
 
 		final WF_Static_List l = myContext.getList(target);
-		o = GlobalState.getInstance(myContext.getContext()).getLogger();
+		o = GlobalState.getInstance().getLogger();
 		if (l==null) {
 			o.addRow("");
 			o.addRedText("Couldn't find list with ID "+target+" in AddVariableToEveryListEntryBlock");

@@ -308,6 +308,17 @@ public class Tools {
 	 * File Data Parsers.
 	 */
 
+	public static Map<String,String> createKeyMapCopy(Map<String,String> orig) {
+		Map<String,String> ret = new HashMap<String,String>();
+		for (String k:orig.keySet()) {
+			String v = orig.get(k);
+			if (k != null && v!=null && ! v.equals("null"))
+				ret.put(k,v);
+		}
+		return ret;
+	};
+	
+	
 	public static Map<String,String> createKeyMap(String ...parameters) {
 
 		if ((parameters.length & 1) != 0 ) {

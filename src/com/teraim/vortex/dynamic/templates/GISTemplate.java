@@ -79,8 +79,8 @@ public class GISTemplate extends Executor implements LocationListener {
 		View v = inflater.inflate(R.layout.template_gis, container, false);	
 		my_root = (LinearLayout)v.findViewById(R.id.myRoot);
 		gi = (GisImageView)my_root.findViewById(R.id.gis_image);
-		globalPh = GlobalState.getInstance(ctx).getGlobalPreferences();
-		ph = GlobalState.getInstance(ctx).getPreferences();
+		globalPh = GlobalState.getInstance().getGlobalPreferences();
+		ph = GlobalState.getInstance().getPreferences();
 		gisDir = Constants.VORTEX_ROOT_DIR+globalPh.get(PersistenceHelper.BUNDLE_NAME)+"/flygdata/";
 		myRuta = "207";//GlobalState.getInstance(ctx).getVariableConfiguration().getCurrentRuta();
 		myContext.addContainers(getContainers());

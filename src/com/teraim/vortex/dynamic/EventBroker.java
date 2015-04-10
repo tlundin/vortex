@@ -23,7 +23,7 @@ public class EventBroker {
 
 
 	public EventBroker(Context ctx) {
-		gs = GlobalState.getInstance(ctx);
+		gs = GlobalState.getInstance();
 	}
 
 	public void registerEventListener(EventType et,EventListener el) {

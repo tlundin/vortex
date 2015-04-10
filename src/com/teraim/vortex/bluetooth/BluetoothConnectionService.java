@@ -68,6 +68,7 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 	public static final String SYNK_BLOCK_UI = "com.teraim.vortex.synk_block_ui";
 	public static final String SYNK_UNBLOCK_UI = "com.teraim.vortex.synk_unblock_ui";
 	public static final String PING_FROM_UPDATE = "com.teraim.vortex.ping_from_update";
+	public static final String VERSION_MISMATCH = "com.teraim.vortex.version_mismatch";
 
 
 
@@ -117,7 +118,7 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 	@Override
 	public void onCreate() {
 		
-		gs = GlobalState.getInstance(this);		
+		gs = GlobalState.getInstance();		
 		o = gs.getLogger();
 		Log.d("NILS","Service on create");
 		o.addRow("BlueTooth service starting up");
@@ -213,9 +214,12 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 		//Send a ping to see if we can connect straight away.
 		Log.d("NILS","Sending ping");
 		String myName, myLag;
+		String bundleVersion,softwareVersion;
 		myName = gs.getGlobalPreferences().get(PersistenceHelper.USER_ID_KEY);
 		myLag = gs.getGlobalPreferences().get(PersistenceHelper.LAG_ID_KEY);
-		send(gs.isMaster()?new MasterPing(myName,myLag):new SlavePing(myName,myLag));
+		bundleVersion = gs.getPreferences().get(PersistenceHelper.CURRENT_VERSION_OF_WF_BUNDLE);
+		softwareVersion = Float.toString(gs.getGlobalPreferences().getF(PersistenceHelper.CURRENT_VERSION_OF_PROGRAM));
+		send(gs.isMaster()?new MasterPing(myName,myLag,bundleVersion,softwareVersion):new SlavePing(myName,myLag,bundleVersion,softwareVersion));
 	}
 
 

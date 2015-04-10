@@ -359,8 +359,8 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 			Table t = (Table)(myModules.getModule(VariablesConfiguration.NAME).getEssence());
 			SpinnerDefinition sd = (SpinnerDefinition)(myModules.getModule(SpinnerConfiguration.NAME).getEssence());
 
-			GlobalState gs = new GlobalState(this.getActivity().getApplicationContext(),
-					globalPh,ph,debugConsole,myDb, workflows, t,sd);
+			GlobalState gs = 
+			GlobalState.createInstance(this.getActivity().getApplicationContext(),globalPh,ph,debugConsole,myDb, workflows, t,sd);
 
 			//drawermenu
 			gs.setDrawerMenu(Start.singleton.getDrawerMenu());

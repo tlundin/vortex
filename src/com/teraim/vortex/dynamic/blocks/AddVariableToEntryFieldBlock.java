@@ -31,7 +31,7 @@ public class AddVariableToEntryFieldBlock extends Block {
 	}
 	
 	public Variable create(WF_Context myContext) {
-		gs = GlobalState.getInstance(myContext.getContext());
+		gs = GlobalState.getInstance();
 		o = gs.getLogger();
 		VariableConfiguration al = gs.getVariableConfiguration();
 

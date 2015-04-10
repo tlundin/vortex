@@ -20,7 +20,7 @@ public class WF_SimpleCounter extends WF_Not_ClickableField {
 		super(label, descriptionT, myContext, 
 				LayoutInflater.from(myContext.getContext()).inflate(R.layout.selection_field_normal,null), isVisible);
 
-		gs = GlobalState.getInstance(myContext.getContext());
+		gs = GlobalState.getInstance();
 		myTarget = gs.getVariableConfiguration().getVariableInstance(targetId);
 		if (myTarget == null) {
 			o.addRow("");

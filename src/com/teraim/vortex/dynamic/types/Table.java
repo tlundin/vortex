@@ -129,7 +129,7 @@ public class Table implements Serializable {
 		if(column!=null && pattern!=null) {
 			pattern.trim();
 			for(int i = 0;i<column.size();i++) {
-				Log.d("nils","i: "+i+" col: "+column.get(i));
+				//Log.d("nils","i: "+i+" col: "+column.get(i));
 				if (column.get(i).equals(pattern)||column.get(i).matches(pattern)) {
 					if (ret == null)
 						ret = new ArrayList<List<String>>();

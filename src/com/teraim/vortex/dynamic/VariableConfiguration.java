@@ -1,11 +1,11 @@
 package com.teraim.vortex.dynamic;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,8 +21,12 @@ import com.teraim.vortex.non_generics.NamedVariables;
 import com.teraim.vortex.utils.Tools;
 
 
-public class VariableConfiguration {
+public class VariableConfiguration implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 942330642338510319L;
 	public static String Col_Variable_Name = "Variable Name";
 	public static String Col_Variable_Label = "Variable Label";
 	public static String Col_Variable_Keys = "Key Chain";
@@ -157,10 +161,12 @@ public class VariableConfiguration {
 
 	public String getKeyChain(List<String> row) {
 		//Check for null or empty
-		if (row==null)
+		if (row==null) {
+			Log.d("vortex","row was null in getKeyChain");
 			return null;
-		else 
-			Log.d("vortex","Row is "+row+" length_: "+row.size()+" fromname "+fromNameToColumn);
+		}
+		//else 
+		//	Log.d("vortex","Row is "+row+" length_: "+row.size()+" fromname "+fromNameToColumn);
 		Pattern pattern = Pattern.compile("\\s");
 		Matcher matcher = pattern.matcher(row.get(0));
 		if(matcher.find()) {

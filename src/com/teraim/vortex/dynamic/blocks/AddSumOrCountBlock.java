@@ -46,8 +46,8 @@ public  class AddSumOrCountBlock extends Block {
 	//TODO: CHECK ON POSTLABEL
 	
 	public void create(WF_Context myContext) {
-		o = GlobalState.getInstance(myContext.getContext()).getLogger();
-		al = GlobalState.getInstance(myContext.getContext()).getVariableConfiguration();
+		o = GlobalState.getInstance().getLogger();
+		al = GlobalState.getInstance().getVariableConfiguration();
 
 		Container myContainer = myContext.getContainer(containerId);
 		WF_Not_ClickableField_SumAndCountOfVariables field = new WF_Not_ClickableField_SumAndCountOfVariables(

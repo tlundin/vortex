@@ -69,7 +69,7 @@ public class RoundChartBlock extends Block implements EventListener {
 	}
 
 	public void create(WF_Context myContext) {
-		o = GlobalState.getInstance(myContext.getContext()).getLogger();
+		o = GlobalState.getInstance().getLogger();
 		WF_Container myContainer = (WF_Container)myContext.getContainer("root");
 		//		WF_Container myPieContainer = (WF_Container)myContext.getContainer("pie");
 

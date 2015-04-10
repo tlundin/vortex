@@ -49,7 +49,7 @@ public abstract class Exporter {
 		return null;
 	}
 	protected Exporter(Context ctx) {
-		this.gs=GlobalState.getInstance(ctx);
+		this.gs=GlobalState.getInstance();
 		al = gs.getVariableConfiguration();
 		ph = gs.getPreferences();
 		globalPh = gs.getGlobalPreferences();

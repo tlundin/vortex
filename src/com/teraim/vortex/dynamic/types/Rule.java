@@ -57,7 +57,7 @@ public class Rule implements Serializable {
 
 	//Execute Rule. Target will be colored accordingly.
 	public boolean execute() throws SyntaxException {
-		GlobalState gs = GlobalState.getInstance(ctx);
+		GlobalState gs = GlobalState.getInstance();
 
 		if (!initDone)
 			init(gs);

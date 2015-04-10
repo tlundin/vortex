@@ -24,8 +24,8 @@ import android.widget.ToggleButton;
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
 import com.teraim.vortex.Start;
-import com.teraim.vortex.GlobalState.CHash;
 import com.teraim.vortex.dynamic.VariableConfiguration;
+import com.teraim.vortex.dynamic.types.CHash;
 import com.teraim.vortex.dynamic.types.Rule;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.types.Workflow;
@@ -133,7 +133,7 @@ public  class ButtonBlock extends Block {
 		Log.d("nils","In CREATE for BUTTON "+getText());
 		Container myContainer = myContext.getContainer(containerId);
 		final Context ctx = myContext.getContext();
-		gs = GlobalState.getInstance(ctx);
+		gs = GlobalState.getInstance();
 		o=gs.getLogger();
 
 		if (extraActionOnClick==null) {

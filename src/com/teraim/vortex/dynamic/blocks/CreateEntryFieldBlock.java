@@ -60,7 +60,7 @@ public class CreateEntryFieldBlock extends Block {
 
 
 	public Variable create(WF_Context myContext) {
-		gs = GlobalState.getInstance(myContext.getContext());
+		gs = GlobalState.getInstance();
 		Container myContainer = myContext.getContainer(containerId);
 		o = gs.getLogger();
 		VariableConfiguration al = gs.getVariableConfiguration();

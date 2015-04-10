@@ -21,7 +21,7 @@ import com.teraim.vortex.utils.Tools;
 
 public class WF_DisplayValueField extends WF_Widget implements EventListener {
 
-	private String formula,format;
+	private String formula,label;
 	protected GlobalState gs;
 	protected Unit unit;
 	private List<TokenizedItem> myTokens;
@@ -33,11 +33,12 @@ public class WF_DisplayValueField extends WF_Widget implements EventListener {
 		TextView header = (TextView)getWidget().findViewById(R.id.header);
 		LinearLayout bg = (LinearLayout)getWidget().findViewById(R.id.background);
 		header.setText(label);
+		this.label=label;
 		if (bgColor!=null)
 			bg.setBackgroundColor(Color.parseColor(bgColor));
 		if (textColor!=null)
 			header.setTextColor(Color.parseColor(textColor));
-		gs = GlobalState.getInstance(ctx.getContext());
+		gs = GlobalState.getInstance();
 		ruleExecutor = RuleExecutor.getInstance(gs.getContext());
 		o = gs.getLogger();
 		this.formula = formula;
@@ -80,7 +81,7 @@ public class WF_DisplayValueField extends WF_Widget implements EventListener {
 			strRes = sr.result;
 
 		o.addRow("");
-		o.addText("Text in DisplayField "+this.getId()+" is [");o.addGreenText(strRes); o.addText("]");
+		o.addText("Text in DisplayField "+label+" is [");o.addGreenText(strRes); o.addText("]");
 		((TextView)this.getWidget().findViewById(R.id.outputValueField)).setText(strRes);
 		((TextView)this.getWidget().findViewById(R.id.outputUnitField)).setText(Tools.getPrintedUnit(unit));
 	}

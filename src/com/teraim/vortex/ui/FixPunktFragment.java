@@ -51,7 +51,7 @@ public class FixPunktFragment extends Fragment implements OnGesturePerformedList
 	final int png[] = new int[] {R.drawable.fixpunkt,R.drawable.fixpunkt,R.drawable.fixpunkt,R.drawable.fixpunkt};
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-		gs = GlobalState.getInstance(getActivity());
+		gs = GlobalState.getInstance();
 		VariableConfiguration al = gs.getVariableConfiguration();
 		Log.d("nils","in onCreateView of fixpunkt_fragment");
 		View v = inflater.inflate(R.layout.template_fixpunkt_right, container, false);	

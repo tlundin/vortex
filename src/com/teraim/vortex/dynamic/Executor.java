@@ -19,12 +19,8 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
 
 import com.teraim.vortex.GlobalState;
-import com.teraim.vortex.GlobalState.CHash;
 import com.teraim.vortex.R;
 import com.teraim.vortex.bluetooth.BluetoothConnectionService;
 import com.teraim.vortex.dynamic.blocks.AddEntryToFieldListBlock;
@@ -50,6 +46,7 @@ import com.teraim.vortex.dynamic.blocks.SetValueBlock;
 import com.teraim.vortex.dynamic.blocks.SetValueBlock.ExecutionBehavior;
 import com.teraim.vortex.dynamic.blocks.TextFieldBlock;
 import com.teraim.vortex.dynamic.blocks.VarValueSourceBlock;
+import com.teraim.vortex.dynamic.types.CHash;
 import com.teraim.vortex.dynamic.types.Rule;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.types.Variable.DataType;
@@ -66,6 +63,7 @@ import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnSave;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Static_List;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
+import com.teraim.vortex.ui.MenuActivity;
 import com.teraim.vortex.utils.RuleExecutor;
 import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 
@@ -113,7 +111,7 @@ public abstract class Executor extends Fragment {
 		super.onCreate(savedInstanceState);
 		Log.d("nils","GETS TO ONCREATE EXECUTOR");
 		activity = this.getActivity();
-		gs = GlobalState.getInstance(null);
+		gs = GlobalState.getInstance();
 		myContext = new WF_Context((Context)activity,this,R.id.content_frame);
 		o = gs.getLogger();
 		wf = getFlow();
@@ -156,6 +154,7 @@ public abstract class Executor extends Fragment {
 	public void onResume() {
 		Log.d("vortex","in Executor onResume");
 		activity.registerReceiver(brr, ifi);
+		gs = GlobalState.getInstance();
 		super.onResume();
 	}
 
@@ -177,7 +176,6 @@ public abstract class Executor extends Fragment {
 		Bundle b = this.getArguments();
 		if (b!=null) {
 			String name = b.getString("workflow_name");
-			myHash = (CHash)b.getSerializable("keyhash");
 			
 			myContext.setStatusVariable(b.getString("status_variable"));
 
@@ -192,7 +190,7 @@ public abstract class Executor extends Fragment {
 				o.addRow("");
 				o.addRow("");
 				o.addRow("*******EXECUTING: "+name);
-
+				myHash = gs.evaluateContext(wf.getContext());
 			}
 		}
 		return wf;
@@ -209,6 +207,7 @@ public abstract class Executor extends Fragment {
 			gs.setCurrentContext(myContext);		
 			gs.setKeyHash(myHash.keyHash);
 			gs.setRawHash(myHash.rawHash);
+			gs.sendEvent(MenuActivity.REDRAW);
 			Log.d("vortex"," currentKeyHash after: "+gs.getCurrentKeyHash());
 
 			visiVars = new HashSet<Variable>();
@@ -335,9 +334,9 @@ public abstract class Executor extends Fragment {
 					bl.create(myContext);
 				}
 				else if (b instanceof SetValueBlock) {
-					o.addRow("");
-					o.addYellowText("Running SetValueBlock "+b.getBlockId());
 					final SetValueBlock bl = (SetValueBlock)b;
+					o.addRow("");
+					o.addYellowText("Running SetValueBlock "+b.getBlockId()+"for variable "+bl.getMyVariable());
 					o.addRow("Formula: "+bl.getFormula());
 					final List<TokenizedItem> tokens = RuleExecutor.getInstance(gs.getContext()).findTokens(bl.getFormula(),null);
 					if (bl.getBehavior()!=ExecutionBehavior.constant) {
@@ -346,8 +345,9 @@ public abstract class Executor extends Fragment {
 							public void onEvent(Event e) {
 								if (!e.getProvider().equals(bl.getBlockId())) {
 									Variable v = al.getVariableInstance(bl.getMyVariable());
-									String	eval = bl.evaluate(gs,bl.getFormula(),tokens,v.getType()== DataType.text);
+
 									if (v!=null) {
+										String	eval = bl.evaluate(gs,bl.getFormula(),tokens,v.getType()== DataType.text);
 										String val = v.getValue();
 										o.addRow("Value: "+val+" Eval: "+eval);
 										if (!(eval == null && val == null)) {
@@ -384,7 +384,11 @@ public abstract class Executor extends Fragment {
 												}
 											}
 										}
+									} else {
+										Log.e("vortex","variable null in SetValueBlock");
+										o.addRow("Setvalueblock variable "+bl.getMyVariable()+" not found or missing columns");
 									}
+										
 								} else
 									o.addRow("Discarded onSave Event from myself in SetValueBlock "+bl.getBlockId());
 							}

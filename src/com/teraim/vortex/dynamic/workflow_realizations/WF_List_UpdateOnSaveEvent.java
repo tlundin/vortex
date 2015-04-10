@@ -43,7 +43,7 @@ public class WF_List_UpdateOnSaveEvent extends WF_Static_List implements EventLi
 		Log.d("nils","SkarmGrupp: "+namePrefix);
 		varValueMap = gs.getDb().preFetchValue(gs.getCurrentKeyHash(), namePrefix);
 		ctx.addEventListener(this, EventType.onSave);
-		o = GlobalState.getInstance(ctx.getContext()).getLogger();
+		o = GlobalState.getInstance().getLogger();
 
 		for (List<String>r:rows) 
 			addEntryField(r);
@@ -170,7 +170,7 @@ public class WF_List_UpdateOnSaveEvent extends WF_Static_List implements EventLi
 			return null;
 		}
 
-		String vName = targetField+"_"+varNameSuffix;
+		String vName = targetField+Constants.VariableSeparator+varNameSuffix;
 		Variable v = al.getVariableInstance(vName,initialValue);
 		if (v==null) {
 			Log.e("nils","Didnt find variable "+vName+" in AddVariableToList");
