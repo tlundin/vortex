@@ -32,7 +32,7 @@ public class BlockCreateListEntriesFromFieldList extends Block {
 		this.selectionPattern = selectionPattern;
 		this.selectionField = selectionField;
 		this.variatorColumn=variatorColumn;
-		
+
 
 	}
 
@@ -42,57 +42,60 @@ public class BlockCreateListEntriesFromFieldList extends Block {
 	public void create(WF_Context myContext) {
 		o = GlobalState.getInstance().getLogger();
 		WF_Static_List myList; 
-		VariableConfiguration al = GlobalState.getInstance().getVariableConfiguration();
-		List<List<String>>rows = cacheMap==null?null:cacheMap.get(selectionField+selectionPattern);
-		if (rows==null)
-			rows  = al.getTable().getRowsContaining(selectionField, selectionPattern);
-		if (rows==null||rows.size()==0) {
-			Log.d("nils","no cached value found in BlockCreateEntries");
-			o.addRow("");
-			o.addRedText("Selectionfield: "+selectionField+" selectionPattern: "+selectionPattern+" returns zero rows! List cannot be created");
-		} else {		
-			cacheMap.put(selectionField+selectionPattern, rows);
-			Log.d("nils","Number of rows in CreateEntrieFromList "+rows.size());
-			//prefetch values from db.
-			if (type.equals("selected_values_list")) {
-				o.addRow("This is a selected values type list. Adding Time Order sorter.");
-				myList =  new WF_List_UpdateOnSaveEvent(id,myContext,rows,isVisible);
-				myList.addSorter(new WF_TimeOrder_Sorter());	
-				o.addRow("Adding Filter Type: only instantiated");
-				myList.addFilter(new WF_OnlyWithValue_Filter());
-			}
-			else { 
-				if (type.equals("selection_list")) {
-					o.addRow("This is a selection list. Adding Alphanumeric sorter.");
-					myList = new WF_List_UpdateOnSaveEvent(id,myContext,rows,isVisible);
-					myList.addSorter(new WF_Alphanumeric_Sorter());
-				} 
-				if (type.equals("instance_list")) {
-					o.addRow("instance selection list. Time sorter.");
-					myList = new WF_Instance_List(id,myContext,rows,variatorColumn,isVisible);
+
+		Container myContainer = myContext.getContainer(containerId);
+		if (myContainer !=null) {
+			Log.d("vortex","in create for createlistentries "+id);
+			VariableConfiguration al = GlobalState.getInstance().getVariableConfiguration();
+			List<List<String>>rows = cacheMap==null?null:cacheMap.get(selectionField+selectionPattern);
+			if (rows==null)
+				rows  = al.getTable().getRowsContaining(selectionField, selectionPattern);
+			if (rows==null||rows.size()==0) {
+				Log.d("nils","no cached value found in BlockCreateEntries");
+				o.addRow("");
+				o.addRedText("Selectionfield: "+selectionField+" selectionPattern: "+selectionPattern+" returns zero rows! List cannot be created");
+			} else {		
+				cacheMap.put(selectionField+selectionPattern, rows);
+				Log.d("nils","Number of rows in CreateEntrieFromList "+rows.size());
+				//prefetch values from db.
+				if (type.equals("selected_values_list")) {
+					o.addRow("This is a selected values type list. Adding Time Order sorter.");
+					myList =  new WF_List_UpdateOnSaveEvent(id,myContext,rows,isVisible);
 					myList.addSorter(new WF_TimeOrder_Sorter());	
-				} else
-				{
-					//TODO: Find other solution
-					myList = new WF_List_UpdateOnSaveEvent(id,myContext,rows,isVisible);
-					myList.addSorter(new WF_Alphanumeric_Sorter());
+					o.addRow("Adding Filter Type: only instantiated");
+					myList.addFilter(new WF_OnlyWithValue_Filter());
 				}
-			}
+				else { 
+					if (type.equals("selection_list")) {
+						o.addRow("This is a selection list. Adding Alphanumeric sorter.");
+						myList = new WF_List_UpdateOnSaveEvent(id,myContext,rows,isVisible);
+						myList.addSorter(new WF_Alphanumeric_Sorter());
+					} 
+					if (type.equals("instance_list")) {
+						o.addRow("instance selection list. Time sorter.");
+						myList = new WF_Instance_List(id,myContext,rows,variatorColumn,isVisible);
+						myList.addSorter(new WF_TimeOrder_Sorter());	
+					} else
+					{
+						//TODO: Find other solution
+						myList = new WF_List_UpdateOnSaveEvent(id,myContext,rows,isVisible);
+						myList.addSorter(new WF_Alphanumeric_Sorter());
+					}
+				}
 
 
-			//myList.createEntriesFromRows(rows);
-			//myList.draw();
+				//myList.createEntriesFromRows(rows);
+				//myList.draw();
 
-			Container myContainer = myContext.getContainer(containerId);
-			if (myContainer !=null) {
 				myContainer.add(myList);
 				myContext.addList(myList);		
-				Log.d("nils","QQQ ADDED LIST "+myList.getId());
-			} else {
-				o.addRow("");
-				o.addRedText("Failed to add listEntriesblock - could not find the container "+containerId);
+				
 			}
-
+		}  else {
+			o.addRow("");
+			o.addRedText("Failed to add list entries block with id "+blockId+" - missing container "+containerId);
 		}
+
 	}
 }
+

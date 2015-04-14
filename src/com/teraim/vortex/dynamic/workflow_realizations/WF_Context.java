@@ -112,8 +112,8 @@ public class WF_Context {
 			return null;
 		//Log.d("nils","GetContainer. looking for container "+id);
 		if (id==null || id.length()==0) {
-			Log.d("nils","Container: null. Defaulting to root.");
-			id = "root";
+			Log.e("nils","Container null!!");		
+			return null;
 		}
 		for (WF_Container c:containers) {
 			String myId =c.getId();				

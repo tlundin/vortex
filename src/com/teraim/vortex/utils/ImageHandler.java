@@ -2,6 +2,7 @@ package com.teraim.vortex.utils;
 
 import java.io.File;
 
+import android.R;
 import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.DialogInterface;
@@ -62,7 +63,7 @@ public class ImageHandler {
 			for (int i=0;i<paddingSize;i++)
 				pyID = "0"+pyID;		
 			Log.d("nils"," PADDINGSIZE: "+paddingSize+" pyWITHZ: "+pyID);
-			return "R"+rutID+"_"+pyID+"_"+nameWithNum+"_"+(isHistorical?(Integer.parseInt(Constants.getYear())-5):Constants.getYear())+".JPG";
+			return "R"+rutID+"_"+pyID+"_"+nameWithNum+"_"+(isHistorical?(Constants.getHistoricalPictureYear()):Constants.getYear())+".JPG";
 		}
 		return null;
 	}
@@ -133,10 +134,14 @@ public class ImageHandler {
 			return false;
 		}
 	}
+	
+	public boolean deleteImage(final String name) {
+		String fileName = createFileName(name,false);
+		File file = new File(Constants.PIC_ROOT_DIR, fileName);
+		return file.delete();
+	}
 
 	public void addListener(ImageButton b, final String name) {
-		// TODO Auto-generated method stub
-
 
 		b.setOnClickListener(new OnClickListener()
 		{

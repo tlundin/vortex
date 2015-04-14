@@ -351,8 +351,9 @@ public class Tools {
 		ConnectivityManager connectivityManager 
 		= (ConnectivityManager) ctx.getSystemService(Context.CONNECTIVITY_SERVICE);
 		NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-		return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+		return activeNetworkInfo != null && activeNetworkInfo.isConnectedOrConnecting();
 	}
+	
 
 	public static boolean isNumeric(String str)
 	{	

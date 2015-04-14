@@ -39,7 +39,7 @@ public class VariablesConfiguration extends CSVConfigurationModule {
 	public VariablesConfiguration(PersistenceHelper globalPh,PersistenceHelper ph, String server, String bundle, LoggerI debugConsole) {
 		super(globalPh,ph, Source.internet, server+bundle.toLowerCase()+"/",VariablesConfiguration.NAME,"Variables module      ");	 
 		this.o = debugConsole;
-
+		o.addRow("Parsing Variables.csv file");
 
 	}
 
@@ -72,7 +72,8 @@ public class VariablesConfiguration extends CSVConfigurationModule {
 
 		//check if there is a groups configuration.
 		if ((gc=GroupsConfiguration.getSingleton()) == null) {
-			groupsFileHeaderS = null;
+			//TODO: Find a way to do this better.
+			groupsFileHeaderS = Constants.defaultGroupHeader;
 			groups = new HashMap<String, List<List<String>>>();
 
 		} else {
@@ -91,6 +92,7 @@ public class VariablesConfiguration extends CSVConfigurationModule {
 
 
 		if (scanHeader && row!=null) {
+			Log.d("vortex","header is: "+row);
 			String[] varPatternHeaderS = row.split(",");
 			//Remove duplicte group column and varname. 
 			Collections.addAll(cheaderL,groupsFileHeaderS); 

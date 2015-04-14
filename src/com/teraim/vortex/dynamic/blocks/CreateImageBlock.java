@@ -12,6 +12,7 @@ import android.util.Log;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 
+import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Container;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Widget;
@@ -22,6 +23,10 @@ import com.teraim.vortex.dynamic.workflow_realizations.WF_Widget;
  */
 public class CreateImageBlock extends Block {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5781622495945524716L;
 	private String name;
 	private String container;
 	private String source;
@@ -41,18 +46,23 @@ public class CreateImageBlock extends Block {
 	
 	
 	public void create(WF_Context myContext) {
+		o = GlobalState.getInstance().getLogger();
+		WF_Container myContainer = (WF_Container)myContext.getContainer(container);
+		if (myContainer != null) {
 		ScaleType scaleT=ScaleType.FIT_XY;
 		ImageView img = new ImageView(myContext.getContext());
 		new DownloadImageTask(img)
         .execute(source);
 		Log.d("vortex","Source is "+source);
-		WF_Container myContainer = (WF_Container)myContext.getContainer(container);
 		if (scale!=null || scale.length()>0)
 			scaleT = ScaleType.valueOf(scale);
 		img.setScaleType(scaleT);
 		WF_Widget myWidget= new WF_Widget(blockId,img,isVisible,myContext);	
 		myContainer.add(myWidget);
-		
+		} else {
+			o.addRow("");
+			o.addRedText("Failed to add image with block id "+blockId+" - missing container "+container);
+		}
 	}
 	
 

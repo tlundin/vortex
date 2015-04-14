@@ -63,34 +63,42 @@ public class CreateEntryFieldBlock extends Block {
 		gs = GlobalState.getInstance();
 		Container myContainer = myContext.getContainer(containerId);
 		o = gs.getLogger();
-		VariableConfiguration al = gs.getVariableConfiguration();
-		Log.d("nils","NAME: "+name);
-		Variable v = al.getVariableInstance(name,initialValue);
-		if (v == null) {
-			o.addRow("");
-			o.addRedText("Variable "+name+" referenced in block_create_entry_field not found.");
-			Log.d("nils","Variable "+name+" referenced in block_create_entry_field not found.");
-			
-			o.addRedText("Current keyChain: ["+gs.getCurrentKeyHash()+"]");
-		} else	{	
-			WF_ClickableField_Selection myField = new WF_ClickableField_Selection_OnSave(v.getLabel(),
-					al.getDescription(v.getBackingDataSet()),myContext,name,isVisible);
-			Log.d("nils", "In CreateEntryField.Description: "+al.getDescription(v.getBackingDataSet()));
-			Log.d("nils","Backing data: "+v.getBackingDataSet().toString());
-			myField.addVariable(v, true,format,true,showHistorical);
-			myContext.addDrawable(v.getId(), myField);
-			if(myContainer !=null) {
+		if(myContainer !=null) {
+			VariableConfiguration al = gs.getVariableConfiguration();
+			Log.d("nils","NAME: "+name);
+			Variable v = al.getVariableInstance(name,initialValue);
+			if (v == null) {
+				o.addRow("");
+				o.addRedText("Variable "+name+" referenced in block_create_entry_field not found.");
+				Log.d("nils","Variable "+name+" referenced in block_create_entry_field not found.");
+
+				o.addRedText("Current keyChain: ["+gs.getCurrentKeyHash()+"]");
+			} else	{	
+				WF_ClickableField_Selection myField = new WF_ClickableField_Selection_OnSave(v.getLabel(),
+						al.getDescription(v.getBackingDataSet()),myContext,name,isVisible);
+				Log.d("nils", "In CreateEntryField. Description: "+al.getDescription(v.getBackingDataSet()));
+				Log.d("nils","Backing data: "+v.getBackingDataSet().toString());
+				myField.addVariable(v, true,format,true,showHistorical);
+				myContext.addDrawable(v.getId(), myField);
+
+				Log.d("vortex","Adding Entryfield "+v.getId()+" to container "+containerId);
+				o.addRow("Adding Entryfield "+v.getId()+" to container "+containerId);
 				myContainer.add(myField);
-//				myField.refreshInputFields();	
+				//				myField.refreshInputFields();	
 				myField.refresh();
+
 			}
 
+			return v;
+		} else {
+			Log.e("vortex","Container null! Cannot add entryfield!");
+			o.addRow("");
+			o.addRedText("Adding Entryfield for "+name+" failed. Container not configured");
+			return null;
 		}
-
-		return v;
 	}
 
-	
+
 
 
 }

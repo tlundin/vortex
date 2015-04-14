@@ -19,6 +19,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.teraim.vortex.GlobalState;
@@ -45,7 +46,8 @@ public class OldPhotosFragment extends Fragment implements OnGesturePerformedLis
 		gs = GlobalState.getInstance();
 		Log.d("nils","in onCreateView of old photos");
 		v = inflater.inflate(R.layout.template_foto_right, container, false);	
-
+		TextView header = (TextView)v.findViewById(R.id.header);
+		header.setText("Historiska foton härifrån ("+Constants.getHistoricalPictureYear()+")");
 		GestureOverlayView gestureOverlayView = (GestureOverlayView)v.findViewById(R.id.gesture_overlay);
 		gestureOverlayView.setGestureVisible(false);
 		gestureOverlayView.addOnGesturePerformedListener(this);

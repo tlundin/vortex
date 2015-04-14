@@ -77,6 +77,7 @@ WF_Not_ClickableField implements EventListener {
 	}
 
 	public void matchAndRecalculateMe() {
+		String variablesWithNoValue = "[";
 		Long sum=Long.valueOf(0);
 		for (Listable l:targetList.getList()) {
 			Set<Variable> vars = l.getAssociatedVariables();
@@ -100,6 +101,8 @@ WF_Not_ClickableField implements EventListener {
 									}
 								}
 							}
+						} else {
+							variablesWithNoValue += v.getId()+",";
 						}
 					} 
 						
@@ -111,11 +114,13 @@ WF_Not_ClickableField implements EventListener {
 			}
 		}
 		if (sum==0) {
+			variablesWithNoValue+="]";
 			o.addRow("");
-			o.addYellowText("Sum zero. Potential pattern match problem in Count/Add Block with pattern ["+myPattern+"]");
+			o.addYellowText("Sum zero in Count/Add Block. No value found for:");
+			o.addRow(variablesWithNoValue);
 		} else {
 			o.addRow("");
-			o.addGreenText("Found match in Count/Add Block with pattern ["+myPattern+"]");
+			o.addGreenText("Found match(es) in Count/Add Block with pattern ["+myPattern+"]");
 		}
 
 		if (myVar !=null)

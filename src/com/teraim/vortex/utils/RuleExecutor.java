@@ -43,10 +43,10 @@ import com.teraim.vortex.non_generics.Constants;
 
 public class RuleExecutor {
 
-	
+
 	private static Map<String,List<TokenizedItem>> formulaCache = new HashMap<String,List<TokenizedItem>>();
 	private static RuleExecutor singleton=null;
-	
+
 
 	//Rather complex enum for all token types.
 
@@ -184,13 +184,13 @@ public class RuleExecutor {
 
 
 
-	
+
 
 	public static RuleExecutor getInstance(Context ctx) {
 		if (singleton==null) {
 			Log.e("vortex","CREATED NEW RULE EXECUTOR");
 			singleton = new RuleExecutor();
-			
+
 		}
 		return singleton;
 
@@ -259,7 +259,6 @@ public class RuleExecutor {
 		List<TokenizedItem> myFormulaTokens =null;
 
 		if (formula !=null) {
-			Log.d("vortex","formula not null!");
 			for (int i = 0; i < formula.length(); i++){
 				char c = formula.charAt(i);  
 				//if function, collect parameters. 
@@ -268,10 +267,12 @@ public class RuleExecutor {
 					if (Character.isWhitespace(c))
 						continue;
 					//next argument.
-					if (c==','|| c== ')') {						
-						Log.d("nils","Adding functional argument: "+curToken);
-						potVars.add(new Token(curToken,SimpleTokenType.arg));
-						curToken = "";
+					if (c==','|| c== ')') {	
+						if (curToken.length()>0) {
+							Log.d("nils","Adding functional argument: "+curToken);
+							potVars.add(new Token(curToken,SimpleTokenType.arg));
+							curToken = "";
+						}
 						//parse until right paranthesis found.
 						parseFunctionParameters = (c != ')');	
 					} else {
@@ -343,13 +344,13 @@ public class RuleExecutor {
 					cToken = it.next();
 					tokenName = cToken.token.toLowerCase();
 					tokenType = cToken.t;
-					 
-						
-					
+
+
+
 					//Log.d("vortex","Token: "+cToken.token+" Length: "+tokenName.length()+" Type: "+tokenType);
 
 					if (tokenType != SimpleTokenType.arg) {
-						
+
 						if (args!=null) {
 							if (hasCardinality && argCount>0) {
 								Log.e("vortex","Too few arguments for function "+function+"!");
@@ -438,7 +439,6 @@ public class RuleExecutor {
 			Log.e("vortex","formula was null!!");
 		if (myFormulaTokens == null) {
 			Log.d("vortex","Found no variables in formula "+formula+". Variables starts with a..zA..z");
-			o.addRow("Found no variables in formula "+formula+". Variables starts with a..zA..z");
 		} else
 			formulaCache.put(formula, myFormulaTokens);
 		return myFormulaTokens;

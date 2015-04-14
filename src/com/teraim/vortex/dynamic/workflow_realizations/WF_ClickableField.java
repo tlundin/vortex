@@ -733,23 +733,22 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 						final Spinner sp = (Spinner)v.findViewById(R.id.spinner);
 
 						//first spinner should be opened automatically.
-						if (firstSpinner && sp.isShown()) {
+						
+						//if (firstSpinner && sp.isShown()) {
 							Log.d("vortex", "I end up here for spinner variable "+variable.getId());
 							firstSpinner = false;
 							final Handler h = new Handler();
 					        new Thread(new Runnable() {
-					            public void run() {
-					                // DO NOT ATTEMPT TO DIRECTLY UPDATE THE UI HERE, IT WON'T WORK!
-					                // YOU MUST POST THE WORK TO THE UI THREAD'S HANDLER
+					            public void run() {					               
 					                h.postDelayed(new Runnable() {
 					                    public void run() {
 					                        // Open the Spinner...
 					                        sp.performClick();
 					                    }
-					                }, 1000);
+					                }, 100);
 					            }
 					        }).start();
-						}
+						//}
 						
 						String[] opt = null;
 						String tag = (String) sp.getTag();

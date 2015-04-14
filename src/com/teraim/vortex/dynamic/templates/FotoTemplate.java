@@ -3,11 +3,15 @@ package com.teraim.vortex.dynamic.templates;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.FragmentTransaction;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.gesture.Gesture;
 import android.gesture.GestureLibraries;
@@ -15,17 +19,28 @@ import android.gesture.GestureLibrary;
 import android.gesture.GestureOverlayView;
 import android.gesture.GestureOverlayView.OnGesturePerformedListener;
 import android.gesture.Prediction;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.LocationProvider;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ActionMode;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.View.OnLongClickListener;
+import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -35,6 +50,8 @@ import com.teraim.vortex.dynamic.Executor;
 import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.types.SweLocation;
 import com.teraim.vortex.dynamic.types.Variable;
+import com.teraim.vortex.dynamic.types.Variable.DataType;
+import com.teraim.vortex.dynamic.workflow_realizations.WF_ClickableField;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Container;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnSave;
 import com.teraim.vortex.non_generics.Constants;
@@ -42,6 +59,7 @@ import com.teraim.vortex.non_generics.NamedVariables;
 import com.teraim.vortex.utils.Geomatte;
 import com.teraim.vortex.utils.ImageHandler;
 import com.teraim.vortex.utils.PersistenceHelper;
+import com.teraim.vortex.utils.Tools;
 
 
 public class FotoTemplate extends Executor implements OnGesturePerformedListener, LocationListener {
@@ -64,10 +82,66 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 	private SweLocation cords;
 	private ToggleButton avstandB;
 	private TextView sydT,vastT,ostT,spT,norrT;
+	private ActionMode mActionMode;
 	
 	private Variable n,e;
 
 	private View v;
+	
+	private String selectedPictureName="";
+	private ImageButton selectedPicture=null;
+	
+	private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
+
+		// Called when the action mode is created; startActionMode() was called
+		@Override
+		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+			// Inflate a menu resource providing context menu items
+			MenuInflater inflater = mode.getMenuInflater();
+			inflater.inflate(R.menu.foto_deletemenu, menu);
+			return true;
+		}
+
+		// Called each time the action mode is shown. Always called after onCreateActionMode, but
+		// may be called multiple times if the mode is invalidated.
+		@Override
+		public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+			return false; // Return false if nothing is done
+		}
+
+		// Called when the user selects a contextual menu item
+		@Override
+		public boolean onActionItemClicked(final ActionMode mode, MenuItem item) {
+			
+			switch (item.getItemId()) {
+			    
+			case R.id.menu_delete:
+				boolean result = imgHandler.deleteImage(selectedPictureName);
+				
+				if (result) {
+					Log.d("vortex","delete success!");
+					selectedPicture.setImageResource(R.drawable.case_no_pic);
+					}
+				else
+					Log.e("vortex","failed to delete "+selectedPictureName);
+				mode.finish(); // Action picked, so close the CAB
+				return true;
+			
+			default:
+				return false;
+			}
+		}
+
+		// Called when the user exits the action mode
+		@Override
+		public void onDestroyActionMode(ActionMode mode) {
+			mActionMode = null;				
+		}
+	};
+	
+	
+	
+	
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
@@ -75,7 +149,7 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 		Log.d("nils","in onCreateView of foto template");
 		
 		v = inflater.inflate(R.layout.template_foto, container, false);	
-
+		
 		//		myLayouts.add(new WF_Container("Field_List_panel_1", (LinearLayout)v.findViewById(R.id.fieldList), root));
 		//		myLayouts.add(new WF_Container("Aggregation_panel_3", (LinearLayout)v.findViewById(R.id.aggregates), root));
 		//		myLayouts.add(new WF_Container("Description_panel_1", (FrameLayout)v.findViewById(R.id.Description), root));
@@ -108,7 +182,7 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 		ostT = (TextView)v.findViewById(R.id.ostT);
 		spT = (TextView)v.findViewById(R.id.spT);
 		norrT = (TextView)v.findViewById(R.id.norrT);
-
+		
 		buttonM.clear();
 		gpsT.setText("");
 		
@@ -174,6 +248,9 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 		Toast.makeText(this.activity,"<<<< Svep åt vänster för historiska bilder!", Toast.LENGTH_SHORT).show();
 		
 		
+		
+			
+		
 		return v;
 
 	}
@@ -216,6 +293,17 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 		buttonM.put(name, b);
 		ret = imgHandler.drawButton(b,name,2,false);
 		imgHandler.addListener(b,name);
+		b.setLongClickable(true);
+		b.setOnLongClickListener(new OnLongClickListener() {
+			
+			@Override
+			public boolean onLongClick(View v) {
+				selectedPictureName = name;
+				selectedPicture = b;
+				mActionMode = ((Activity)myContext.getContext()).startActionMode(mActionModeCallback);
+				return true;
+			}
+		});
 		return ret;
 	}
 

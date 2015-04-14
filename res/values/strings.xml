@@ -15,5 +15,7 @@
 	<string name="local_service_started">Blåtandtjänst startad</string>
 	
 	<string name="u1">u1</string>
-	<string name="u2">u2</string>			
+	<string name="u2">u2</string>	
+	<string name="yes">ja</string>
+	<string name="no">nej</string>		
 </resources>

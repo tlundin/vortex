@@ -27,7 +27,7 @@ import com.teraim.vortex.utils.PersistenceHelper;
 
 public class Constants {
 
-	public final static float VORTEX_VERSION = 1.064f;
+	public final static float VORTEX_VERSION = 1.069f;
 
 	
 	//String constants
@@ -50,6 +50,9 @@ public class Constants {
 	public static String UNDEFINED = "undefined";
 
 	public static String Color_Pressed="#4682B4";
+
+
+	public static String[] defaultGroupHeader=new String[] {"Label,Description,Group Name,Variable Name,Internet link,P_Familj,P_Class"};
 
 
 	public static final String SYNC_ID = "SYNX";
@@ -170,7 +173,7 @@ public class Constants {
 	public final static int VAR_PATTERN_ROW_LENGTH = 11;
 
 
-	public static final String VariableSeparator = "_";
+	public static final String VariableSeparator = ":";
 
 
 	public static List<ConfigurationModule> getCurrentlyKnownModules(PersistenceHelper globalPh,PersistenceHelper ph,String server, String bundle, LoggerI debugConsole) {
@@ -194,6 +197,12 @@ public class Constants {
 		ret.add(new GisPolygonConfiguration(globalPh,ph,Constants.VORTEX_ROOT_DIR+bundle+"/flygdata/",debugConsole,db));
 		ret.add(new ImportDataConfiguration(globalPh,ph,server,bundle,debugConsole,db));
 		return ret;
+	}
+
+	
+	//Historical picture year is currently five years minus current year.
+	public static int getHistoricalPictureYear() {
+		return Calendar.getInstance().get(Calendar.YEAR)-5;
 	}
 	
 

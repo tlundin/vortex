@@ -605,12 +605,12 @@ public class DelyteManager {
 			for (String s:tagElems) {
 				Log.d("nils","tagElem: "+s);
 			}
-			int avst=-1,rikt=-1;
+			float avstf=-1,riktf=-1;
 			List<Coord> tagCoordinateList = new ArrayList<Coord>();
 			for (int j=0;j<tagElems.length-1;j+=2) {
-				avst =Integer.parseInt(tagElems[j]);
-				rikt =Integer.parseInt(tagElems[j+1]);
-				tagCoordinateList.add(new Coord(avst,rikt));
+				avstf =Float.parseFloat(tagElems[j]);
+				riktf =Float.parseFloat(tagElems[j+1]);
+				tagCoordinateList.add(new Coord((int)avstf,(int)riktf));
 
 			}
 			Delyta delyta = new Delyta(this);

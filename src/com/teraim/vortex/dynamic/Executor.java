@@ -227,12 +227,11 @@ public abstract class Executor extends Fragment {
 					String id = (((ContainerDefineBlock) b).getContainerName());
 					if (id!=null) {
 						if (myContext.getContainer(id)!=null) {
-							o.addRow("");
-							o.addGreenText("found hardcoded templatecontainer for "+id);
+							o.addRow("found template container for "+id);
 						}
 						else {
 							o.addRow("");
-							o.addRedText("Could not find container "+id+" in template! Will default to root");
+							o.addRedText("Could not find container "+id+" in template!");
 						}
 
 					}
@@ -349,12 +348,13 @@ public abstract class Executor extends Fragment {
 									if (v!=null) {
 										String	eval = bl.evaluate(gs,bl.getFormula(),tokens,v.getType()== DataType.text);
 										String val = v.getValue();
-										o.addRow("Value: "+val+" Eval: "+eval);
+										o.addRow("Variable: "+v.getId()+" Current val: "+val+" New val: "+eval);
 										if (!(eval == null && val == null)) {
 											if (eval == null && val != null || val == null && eval != null || !val.equals(eval)) {
 												v.setValue(eval);
 												o.addRow("");
 												o.addYellowText("Value has changed to or from null in setvalueblock OnSave for block "+bl.getBlockId());
+												o.addRow("");
 												o.addYellowText("BEHAVIOR: "+bl.getBehavior());
 												if (bl.getBehavior()==ExecutionBehavior.update_flow) {
 													Log.d("nils","Variable has sideEffects...re-executing flow");
@@ -454,7 +454,7 @@ public abstract class Executor extends Fragment {
 												boolean found = false;
 												for(Variable x:visiVars) {									
 													found = x.getId().equals(v.getId());
-													if (found)
+													if (found) 
 														break;
 												}
 

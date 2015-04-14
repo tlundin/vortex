@@ -46,10 +46,9 @@ public class DisplayValueBlock extends Block implements EventGenerator {
 		WF_DisplayValueField vf = new WF_DisplayValueField(namn,formula,myContext,unit,label,isVisible,format, bgColor, textColor);
 		myContainer.add(vf);
 		vf.onEvent(new WF_Event_OnSave(null));
-		} else {
-			Log.d("nils","ContainerID: "+containerId);
+		}  else {
 			o.addRow("");
-			o.addRedText("Could not find container for DisplayValueBlcok with name (container): "+containerId+" (block): "+namn);
+			o.addRedText("Failed to add display value block with id "+blockId+" - missing container "+containerId);
 		}
 			
 	}

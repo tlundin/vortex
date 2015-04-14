@@ -72,21 +72,20 @@ public class RoundChartBlock extends Block implements EventListener {
 		o = GlobalState.getInstance().getLogger();
 		WF_Container myContainer = (WF_Container)myContext.getContainer("root");
 		//		WF_Container myPieContainer = (WF_Container)myContext.getContainer("pie");
-
-		//check strings
-		if (startAngle ==null||startAngle.isEmpty())
-			startAngle = "0";
-		pie = createPie(myContext.getContext());
-
-		//View mX = LayoutInflater.from(myContext.getContext()).inflate(R.layout.chart_wrapper,myContainer.getViewGroup());
-		//LinearLayout mChart = (LinearLayout)mX.findViewById(R.id.myChart);
 		if (myContainer !=null) {
+			if (startAngle ==null||startAngle.isEmpty())
+				startAngle = "0";
+			pie = createPie(myContext.getContext());
+
+			//View mX = LayoutInflater.from(myContext.getContext()).inflate(R.layout.chart_wrapper,myContainer.getViewGroup());
+			//LinearLayout mChart = (LinearLayout)mX.findViewById(R.id.myChart);
+
 			myWidget = new WF_Widget(blockId,pie,isVisible,myContext);	
 			myContainer.add(myWidget);
 			Button b = new Button(myContext.getContext());
 			b.setText("Generate some data");
 			b.setOnClickListener(new OnClickListener() {
-				
+
 				@Override
 				public void onClick(View v) {
 					RoundChartBlock.this.onEvent(new WF_Event_OnSave("me"));
@@ -95,9 +94,10 @@ public class RoundChartBlock extends Block implements EventListener {
 			myContainer.add(new WF_Widget("tst",b,isVisible,myContext));
 			Log.d("nils","Added pie chart "+myWidget.getId()+" to container "+myContainer.getId());
 			myContext.addEventListener(this, EventType.onAttach);
-		} else {
+
+		}  else {
 			o.addRow("");
-			o.addRedText("Failed to add listEntriesblock - could not find the container "+container);
+			o.addRedText("Failed to add round chart block with id "+blockId+" - missing container "+myContainer);
 		}
 
 	}
@@ -114,7 +114,7 @@ public class RoundChartBlock extends Block implements EventListener {
 
 		// Pie Chart Section Value
 		double[] distribution = { 3.9, 12.9, 55.8, 1.9, 23.7, 1.8 } ;
-		
+
 
 		// Color of each Pie Chart Sections
 		int[] colors = { Color.BLUE, Color.MAGENTA, Color.GREEN, Color.CYAN, Color.RED,
@@ -176,7 +176,7 @@ public class RoundChartBlock extends Block implements EventListener {
 			int[] d2 = new int[6];
 			distributionSeries.clear();
 			for (int i=0;i<d2.length;i++) {
-			int R = random.nextInt(100);			
+				int R = random.nextInt(100);			
 				distributionSeries.add(cat[i],(double)R);
 			}
 			pie.repaint();

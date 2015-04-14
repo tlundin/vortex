@@ -31,7 +31,7 @@ public class GroupsConfiguration extends CSVConfigurationModule {
 		super(globalPh,ph, Source.internet,server+bundle.toLowerCase()+"/", "Groups", "Group module          ");
 		o = debugConsole;
 		singleton = null;
-		
+		o.addRow("Parsing Groups.csv file");
 	}
 
 	public static GroupsConfiguration getSingleton() {
@@ -55,7 +55,12 @@ public class GroupsConfiguration extends CSVConfigurationModule {
 	@Override
 	public LoadResult parse(String row, Integer currentRow) throws IOException {
 		Log.d("vortex","group parsing "+row);
-
+		//if no header, abort.
+		if (scanHeader && row == null) {
+			o.addRow("");
+			o.addRedText("Header missing. Load cannot proceed");
+			return new LoadResult(this,ErrorCode.ParseError);
+		}
 		//Scan header.
 		if (scanHeader && row!=null) {
 			Log.d("vortex","Header for groups is "+row);
@@ -78,13 +83,15 @@ public class GroupsConfiguration extends CSVConfigurationModule {
 
 			if (nameIndex ==-1 || groupIndex == -1) {
 				o.addRow("");
-				o.addRedText("Config file Header missing either name or functional group column. Load cannot proceed");
+				o.addRedText("Header missing either name or functional group column. Load cannot proceed");
+				o.addRow("Header:");
+				o.addRow(row);
 				return new LoadResult(this,ErrorCode.ParseError);
 			}
 		} else {
 			//Split config file into parts according to functional group.
 			String[] r = Tools.split(row);
-			if (r!=null) {
+			if (r!=null && r.length>groupIndex) {
 				for(int i=0;i<r.length;i++) {
 					if (r[i]!=null)
 						r[i] = r[i].replace("\"", "");
@@ -99,7 +106,9 @@ public class GroupsConfiguration extends CSVConfigurationModule {
 				elem.add(Arrays.asList(r));
 			} else {
 				o.addRow("");
-				o.addRedText("Impossible to split row: "+row);
+				o.addRedText("Impossible to split row #"+currentRow);
+				o.addRow("ROW that I cannot parse:");
+				o.addRow(row);
 				return new LoadResult(this,ErrorCode.ParseError);
 			}
 		}

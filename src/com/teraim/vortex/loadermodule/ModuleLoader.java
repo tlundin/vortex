@@ -2,12 +2,14 @@ package com.teraim.vortex.loadermodule;
 
 import java.util.List;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.teraim.vortex.FileLoadedCb;
 import com.teraim.vortex.loadermodule.LoadResult.ErrorCode;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.utils.PersistenceHelper;
+import com.teraim.vortex.utils.Tools;
 
 public class ModuleLoader implements FileLoadedCb{
 	private Configuration myModules;
@@ -15,6 +17,7 @@ public class ModuleLoader implements FileLoadedCb{
 	private PersistenceHelper globalPh;
 	private ModuleLoaderListener caller;
 	private String loaderId;
+	private Context ctx;
 
 	public interface ModuleLoaderListener {
 		
@@ -23,13 +26,14 @@ public class ModuleLoader implements FileLoadedCb{
 	
 	
 	
-	public ModuleLoader(String loaderId, Configuration currentlyKnownModules, LoggerI o, PersistenceHelper glPh, LoggerI debugConsole,ModuleLoaderListener caller) {
+	public ModuleLoader(String loaderId, Configuration currentlyKnownModules, LoggerI o, PersistenceHelper glPh, LoggerI debugConsole,ModuleLoaderListener caller,Context ctx) {
 		myModules = currentlyKnownModules;
 		this.o=o;
 		this.debug=debugConsole;
 		globalPh = glPh;
 		this.caller = caller;
 		this.loaderId=loaderId;
+		this.ctx=ctx;
 	}
 
 	public void loadModules() {
@@ -98,41 +102,49 @@ public class ModuleLoader implements FileLoadedCb{
 			case ParseError:
 			case Aborted:
 			case noData:
-				if (module.isRequired()) {
+				if (module.isRequired()&&!module.frozenFileExists()) {
 					o.addRedText(" !");o.addText(res.errCode.name());o.addRedText("!");
+					o.addRow("Upstart aborted..Unable to load mandatory file.");
+					printError(res.errCode);
+					o.draw();
+					return;
+				} else {
+					if (res.errCode!=ErrorCode.IOError)
+						o.addYellowText(" "+res.errCode.name());
 				}
-				if (res.errCode==ErrorCode.Unsupported) {
-					o.addRow("The file contains instructions that this Vortex version is not able to run. Please upgrade.");
-				}
+				printError(res.errCode);
 				if (module.frozenFileExists()) {
 					if (thawModule(module)) {
 						o.addRow("");o.addYellowText("Current version will be used.");
-					} else {
-						if (module.isRequired()) {
-							o.addRow("Upstart aborted..could neither load file from Net or Disk");
-							o.draw();
-							return;
-						}
-					}
+					} 
 				} else 
-					if (module.isRequired()) {
-						o.addRow("Upstart aborted..could neither load file from Net or Disk");
-						o.draw();
-						return;
-					} else {
-						o.addText(" Not loaded");
-						module.setNotFound();
-					}
+					module.setNotFound();
+					
 				break;
 			default:
 				o.addText("?: "+res.errCode.name());
 				break;
-			}
-				
+			}				
 			o.draw();
 			loadModules();
 		}
 
+	}
+
+	private void printError(ErrorCode errCode) {
+		if (errCode==ErrorCode.IOError) {
+			if (!Tools.isNetworkAvailable(ctx)) 
+				o.addRow("No network");
+			else
+				o.addRow("File not found");
+		} else if (errCode==ErrorCode.Unsupported) {
+			o.addRow("The file contains instructions that this Vortex version is not able to run. Please upgrade.");
+		} else if (errCode==ErrorCode.ParseError) {
+			o.addRow("");
+			o.addPurpleText("The file contains an error. Please check log for details");
+		}
+
+		
 	}
 
 	private boolean thawModule(ConfigurationModule module) {

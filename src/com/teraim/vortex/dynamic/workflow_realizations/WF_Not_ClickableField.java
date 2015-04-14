@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import android.graphics.Color;
+import android.renderscript.Element.DataType;
 import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -50,16 +51,16 @@ public abstract class WF_Not_ClickableField extends WF_ListEntry {
 		public LinearLayout view;
 		public String format;
 	}
-	
+
 	public class OutSpin extends OutC {
 		public String[] opt,val;
-		
+
 		public OutSpin(LinearLayout ll, String[] opt, String[] val) {
 			this.view = ll;
 			this.opt=opt;
 			this.val=val;
 		}
-		
+
 	}
 
 
@@ -110,38 +111,52 @@ public abstract class WF_Not_ClickableField extends WF_ListEntry {
 		TextView o = (TextView)ll.findViewById(R.id.outputValueField);
 		TextView u = (TextView)ll.findViewById(R.id.outputUnitField);			
 		String value = variable.getValue();
-		
+
 		//Log.d("nils","In refreshoutputfield for variable "+varId.getId()+" with value "+varId.getValue());
-		
+
 		if (value!=null&&!value.isEmpty()) {
 			CombinedRangeAndListFilter filter = variable.getLimitFilter();
 			if (filter!=null)
 				filter.testRun();
-			
+
 			if (variable.hasBrokenRules()||variable.hasValueOutOfRange()) {
 				Log.d("nils","VARID: "+variable.getId()+" hasBroken: "+variable.hasBrokenRules()+" hasoutofRange: "+variable.hasValueOutOfRange());
 				o.setTextColor(Color.RED);	
 			}
 			else {
 				if (variable.isUsingDefault()) {
-					Log.d("nils","Variable "+variable.getId()+" is YELLOW");
+					Log.d("nils","Variable "+variable.getId()+" is purple");
 					o.setTextColor(myContext.getContext().getResources().getColor(R.color.purple));
 				} else
 					o.setTextColor(Color.BLACK);
 			}
 			String outS="";
-			if (outC instanceof OutSpin) {
-				outS = value;
-				OutSpin os = ((OutSpin)outC);
-				if (os.opt!=null && os.val!=null)						
-					for (int i=0;i<os.val.length;i++)
-						if (os.val[i].equals(value)) {
-							outS = os.opt[i];
-							break;
-						}
-			} else
-				outS = getFormattedText(variable,value,outC.format);
-				o.setText(outS);	
+
+			if (variable.getType() != Variable.DataType.bool) {
+
+				if (outC instanceof OutSpin) {
+					outS = value;
+					OutSpin os = ((OutSpin)outC);
+					if (os.opt!=null && os.val!=null)						
+						for (int i=0;i<os.val.length;i++)
+							if (os.val[i].equals(value)) {
+								outS = os.opt[i];
+								break;
+							}
+				} else
+					outS = getFormattedText(variable,value,outC.format);
+			} 
+			//boolean..use yes or no.
+			else {
+				if (variable.getValue()!=null&&variable.getValue().length()>0) {
+					if(variable.getValue().equals("0"))
+						outS=myContext.getContext().getString(R.string.no);
+						else if (variable.getValue().equals("1"))
+							outS=myContext.getContext().getString(R.string.yes);
+					Log.e("vortex","VARIABELVÄRDE: "+variable.getValue());
+				}
+			}
+			o.setText(outS);	
 			u.setText(variable.getPrintedUnit());				
 		}
 		else {
@@ -149,7 +164,7 @@ public abstract class WF_Not_ClickableField extends WF_ListEntry {
 			u.setText("");
 		}	
 	}
-	
+
 	@Override
 	public void refresh() {
 		//Log.d("nils","refreshoutput called on "+myHeader);
@@ -161,7 +176,7 @@ public abstract class WF_Not_ClickableField extends WF_ListEntry {
 		}	
 	}
 
-	
+
 
 	public String getFormattedText(Variable varId, String value, String format) {
 		int lf=0,rf=0;

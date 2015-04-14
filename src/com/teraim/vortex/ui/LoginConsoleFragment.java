@@ -138,7 +138,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		//create module descriptors for all known configuration files.
 		Log.d("vortex","Creating Configuration and ModuleLoader");
 		myModules = new Configuration(Constants.getCurrentlyKnownModules(globalPh,ph,server(),bundleName,debugConsole));
-		myLoader = new ModuleLoader("moduleLoader",myModules,loginConsole,globalPh,debugConsole,this);
+		myLoader = new ModuleLoader("moduleLoader",myModules,loginConsole,globalPh,debugConsole,this,this.getActivity());
 
 
 		return view;
@@ -343,7 +343,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 				myDb = new DbHelper(this.getActivity().getApplicationContext(),t, globalPh,ph,bundleName);
 				Configuration dbModules = new Configuration(Constants.getDBImportModules(globalPh, ph, server(), bundleName, debugConsole, myDb));
 				//Import historical data to database. 
-				myDBLoader = new ModuleLoader("dbloader",dbModules,loginConsole,globalPh,debugConsole,this);
+				myDBLoader = new ModuleLoader("dbloader",dbModules,loginConsole,globalPh,debugConsole,this,this.getActivity());
 				loginConsole.addRow("Loading Database Modules");			
 				myDBLoader.loadModules();
 

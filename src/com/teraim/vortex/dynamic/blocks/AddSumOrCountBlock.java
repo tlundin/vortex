@@ -40,45 +40,51 @@ public  class AddSumOrCountBlock extends Block {
 		this.blockId=id;
 		this.textColor=textColor;
 		this.bgColor=bgColor;
-		
+
 	}
-	
+
 	//TODO: CHECK ON POSTLABEL
-	
+
 	public void create(WF_Context myContext) {
 		o = GlobalState.getInstance().getLogger();
 		al = GlobalState.getInstance().getVariableConfiguration();
 
 		Container myContainer = myContext.getContainer(containerId);
-		WF_Not_ClickableField_SumAndCountOfVariables field = new WF_Not_ClickableField_SumAndCountOfVariables(
-				label,"", myContext, 
-				target, myPattern,
-				type,isVisible,
-				textColor,bgColor);
-		
-		if (result == null) {
-			o.addRow("");
-			o.addRedText("Error in XML: block_add_sum_of_selected_variables_display is missing a result parameter for:"+label);
-		} else {
-			Variable v = al.getVariableInstance(result);
-			if (v==null) {
+		if (myContainer!=null) {
+			WF_Not_ClickableField_SumAndCountOfVariables field = new WF_Not_ClickableField_SumAndCountOfVariables(
+					label,"", myContext, 
+					target, myPattern,
+					type,isVisible,
+					textColor,bgColor);
+
+			if (result == null) {
 				o.addRow("");
-				o.addRedText("Error in block_add_sum_of_selected_variables_display: missing variable for result parameter: "+result);
-			} else 
-				field.addVariable(v, true,format,true);			
-		}
-		/*
-		
+				o.addRedText("Error in XML: block_add_sum_of_selected_variables_display is missing a result parameter for:"+label);
+			} else {
+				Variable v = al.getVariableInstance(result);
+				if (v==null) {
+					o.addRow("");
+					o.addRedText("Error in block_add_sum_of_selected_variables_display: missing variable for result parameter: "+result);
+				} else 
+					field.addVariable(v, true,format,true);			
+			}
+			/*
+
 		if (type==WF_Not_ClickableField_SumAndCountOfVariables.Type.count)
 			field.addVariable(label, "AntalArter", Unit.nd, Variable.DataType.numeric, Variable.StorageType.delyta, true);
 		else
 			field.addVariable(label, "SumTackning", Unit.percentage, Variable.DataType.numeric, Variable.StorageType.delyta, true);
-		*/
+			 */
+
+
+			field.matchAndRecalculateMe();
+			field.refresh();
+			myContainer.add(field);
+		} else {
+			o.addRow("");
+			o.addRedText("Cannot add block_add_sum_of_selected_variables_display: missing container");
 			
-		
-		field.matchAndRecalculateMe();
-		field.refresh();
-		myContainer.add(field);
+		}
 	}
 
 

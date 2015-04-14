@@ -26,12 +26,12 @@ public class TextFieldBlock extends Block {
 		o = GlobalState.getInstance().getLogger();
 		//Identify targetList. If no list, no game.
 		Container myContainer = ctx.getContainer(containerId);
-		if (myContainer == null)  {
-			o.addRow("");
-			o.addRedText("Warning: No container defined or found for component TextFieldBlock: "+containerId);
-		} else {
+		if (myContainer != null)  {
 			myContainer.add(new WF_TextBlockWidget(ctx,label,blockId,isVisible));
 			o.addRow("Added new TextField with ID"+blockId);
+		} else {
+			o.addRow("");
+			o.addRedText("Failed to add text field block with id "+blockId+" - missing container "+myContainer);
 		}
 		
 	}	

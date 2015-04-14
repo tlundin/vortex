@@ -54,11 +54,8 @@ public class CreateSortWidgetBlock extends Block {
 		o = GlobalState.getInstance().getLogger();
 		//Identify targetList. If no list, no game.
 		Container myContainer = ctx.getContainer(containerId);
-		if (myContainer == null)  {
-			o.addRow("");
-			o.addRedText("Warning: No container defined for component ListSortingBlock: "+containerId);
-		}
-		
+		if (myContainer != null)  {
+				
 		//Log.d("nils","Sort target is "+target);
 		targetList = ctx.getFilterable(target);
 		if (targetList == null) {
@@ -70,6 +67,11 @@ public class CreateSortWidgetBlock extends Block {
 			o.addRow("Adding new SorterWidget of type "+type);
 			myContainer.add(new WF_SorterWidget(name,ctx,type,((WF_Static_List)targetList),selF,dispF,selP,isVisible));
 			//myContainer.add(new WF_Widget(buttonPanel));
+		}
+		
+		} else {
+			o.addRow("");
+			o.addRedText("Failed to add sortwidget block with id "+blockId+" - missing container "+containerId);
 		}
 
 	}
