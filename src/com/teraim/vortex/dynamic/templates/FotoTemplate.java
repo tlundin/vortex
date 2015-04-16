@@ -3,12 +3,11 @@ package com.teraim.vortex.dynamic.templates;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -19,12 +18,7 @@ import android.gesture.GestureLibrary;
 import android.gesture.GestureOverlayView;
 import android.gesture.GestureOverlayView.OnGesturePerformedListener;
 import android.gesture.Prediction;
-import android.graphics.Color;
-import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
-import android.location.LocationProvider;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.ActionMode;
@@ -33,16 +27,13 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.View.OnLongClickListener;
-import android.widget.EditText;
+import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
-import android.widget.RadioGroup;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
-import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.teraim.vortex.R;
@@ -50,39 +41,33 @@ import com.teraim.vortex.dynamic.Executor;
 import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.types.SweLocation;
 import com.teraim.vortex.dynamic.types.Variable;
-import com.teraim.vortex.dynamic.types.Variable.DataType;
-import com.teraim.vortex.dynamic.workflow_realizations.WF_ClickableField;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Container;
-import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnSave;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.non_generics.NamedVariables;
-import com.teraim.vortex.utils.Geomatte;
 import com.teraim.vortex.utils.ImageHandler;
 import com.teraim.vortex.utils.PersistenceHelper;
-import com.teraim.vortex.utils.Tools;
 
 
-public class FotoTemplate extends Executor implements OnGesturePerformedListener, LocationListener {
+public class FotoTemplate extends Executor implements OnGesturePerformedListener {
 
 	List<WF_Container> myLayouts;
 	
 	private GestureLibrary gestureLib;
-	private ToggleButton gpsB;
-	private TextView gpsT,GPS_X,GPS_Y;
+	//private ToggleButton gpsB;
+	//private TextView gpsT,GPS_X,GPS_Y;
 	private boolean fixed = false;
-	private TextView GPS_Acc;
 	private ImageButton norr;
 	private ImageButton syd;
 	private ImageButton ost;
 	private ImageButton vast;
 	private ImageButton sp;
+	private Button oldpicsButton;
 	private ImageHandler imgHandler;
 	private LocationManager lm;
 	private HashMap<String, ImageButton> buttonM = new HashMap<String,ImageButton>();
 	private SweLocation cords;
 	private ToggleButton avstandB;
 	private TextView sydT,vastT,ostT,spT,norrT;
-	private ActionMode mActionMode;
 	
 	private Variable n,e;
 
@@ -113,10 +98,11 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 		@Override
 		public boolean onActionItemClicked(final ActionMode mode, MenuItem item) {
 			
+			boolean result;
 			switch (item.getItemId()) {
 			    
 			case R.id.menu_delete:
-				boolean result = imgHandler.deleteImage(selectedPictureName);
+				result = imgHandler.deleteImage(selectedPictureName);
 				
 				if (result) {
 					Log.d("vortex","delete success!");
@@ -126,7 +112,23 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 					Log.e("vortex","failed to delete "+selectedPictureName);
 				mode.finish(); // Action picked, so close the CAB
 				return true;
-			
+			case R.id.menu_se_stor:
+				ImageButton b = new ImageButton(getActivity());
+				result = imgHandler.drawButton(b, selectedPictureName, 1,false);
+				if (result) {
+
+					AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+					builder.setView(b);
+					builder.setPositiveButton("Tack", new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int id) {
+
+						}
+					});
+					builder.show();
+				}
+				return true;
+				
+				
 			default:
 				return false;
 			}
@@ -135,9 +137,11 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 		// Called when the user exits the action mode
 		@Override
 		public void onDestroyActionMode(ActionMode mode) {
-			mActionMode = null;				
+			//mActionMode = null;				
 		}
 	};
+
+	private ImageView compass;
 	
 	
 	
@@ -167,11 +171,12 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 		
 			
 		avstandB = (ToggleButton)v.findViewById(R.id.avstandB);
-		gpsB = (ToggleButton)v.findViewById(R.id.gpsBtn);
-		gpsT = (TextView)v.findViewById(R.id.gpsText);
-		GPS_X = (TextView)v.findViewById(R.id.GPS_X);
-		GPS_Y = (TextView)v.findViewById(R.id.GPS_Y);
-		GPS_Acc = (TextView)v.findViewById(R.id.Accuracy);
+		//gpsB = (ToggleButton)v.findViewById(R.id.gpsBtn);
+		//if (gpsB == null)
+		//	Log.e("vortex","OUCCGHHH!!");
+		//gpsT = (TextView)v.findViewById(R.id.gpsText);
+		//GPS_X = (TextView)v.findViewById(R.id.GPS_X);
+		//GPS_Y = (TextView)v.findViewById(R.id.GPS_Y);
 		norr = (ImageButton)v.findViewById(R.id.pic_norr);
 		syd = (ImageButton)v.findViewById(R.id.pic_soder);
 		ost= (ImageButton)v.findViewById(R.id.pic_ost);
@@ -182,25 +187,30 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 		ostT = (TextView)v.findViewById(R.id.ostT);
 		spT = (TextView)v.findViewById(R.id.spT);
 		norrT = (TextView)v.findViewById(R.id.norrT);
+		compass = (ImageView)v.findViewById(R.id.compass);
+		oldpicsButton = (Button)v.findViewById(R.id.oldpics_button);
 		
 		buttonM.clear();
-		gpsT.setText("");
+		//gpsT.setText("");
 		
 		//Init pic handler
 		imgHandler = new ImageHandler(gs,this);		
 		//Init geoupdate
 		lm = (LocationManager)this.getActivity().getSystemService(Context.LOCATION_SERVICE);
 		//Create buttons.
-		initPic(norr,Constants.NORR);
-		initPic(syd,Constants.SYD);
-		initPic(ost,Constants.OST);
-		initPic(vast,Constants.VAST);
-		initPic(sp,"SMA");
+		
+		if (initPic(norr,Constants.NORR)||
+		initPic(syd,Constants.SYD)||
+		initPic(ost,Constants.OST)||
+		initPic(vast,Constants.VAST)||
+		initPic(sp,"SMA")) {
+			avstandB.setVisibility(Button.INVISIBLE);
+			Log.e("vortex","found at least one picture in init");
+		}
 		File folder = new File(Constants.PIC_ROOT_DIR);
-		if(!folder.mkdirs())
-			Log.e("NILS","Failed to create pic root folder");
+		folder.mkdirs();
 
-		gpsB.setOnClickListener(new View.OnClickListener() {
+		/*gpsB.setOnClickListener(new View.OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
@@ -212,20 +222,43 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 				
 			}
 		});
-
+*/
 		avstandB.setOnClickListener(new View.OnClickListener() {
 			
 			@Override
 			public void onClick(View v) {
 				toggleAvstand(avstandB.isChecked());
-				
+				if (!gs.getPreferences().getB(PersistenceHelper.AVSTAND_WARNING_SHOWN)) {
+					new AlertDialog.Builder(FotoTemplate.this.getActivity())
+					.setTitle("Varning")
+					.setMessage("Du ska ta antingen en avståndsbild eller så fyra vanliga bilder. Inte både och!") 
+					.setIcon(android.R.drawable.ic_dialog_alert)
+					.setCancelable(false)
+					.setNeutralButton("Jag fattar",new Dialog.OnClickListener() {				
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							gs.getPreferences().put(PersistenceHelper.AVSTAND_WARNING_SHOWN,true);
+						}
+					} )
+					.show();
+				}
+					
 			}
 		});
+		
+		oldpicsButton.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				turnPage();
+			}
+		});
+		
 		gs.setKeyHash(al.createProvytaKeyMap());
 
 		n = al.getVariableInstance(NamedVariables.CentrumGPSNS);
 		e = al.getVariableInstance(NamedVariables.CentrumGPSEW);
-		
+		/*
 		if (e.getValue()!=null &&n.getValue()!=null) {
 			GPS_X.setText(e.getValue()+"");
 			GPS_Y.setText(n.getValue()+"");
@@ -235,7 +268,7 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 			fixed = false;
 			gpsB.setChecked(false);
 		}
-		
+		*/
 		
 		
 		if (gs.getPreferences().getB(PersistenceHelper.AVSTAND_IS_PRESSED)) {
@@ -245,7 +278,7 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 		
 		VariableConfiguration al = gs.getVariableConfiguration();
 		
-		Toast.makeText(this.activity,"<<<< Svep åt vänster för historiska bilder!", Toast.LENGTH_SHORT).show();
+		//Toast.makeText(this.activity,"<<<< Svep åt vänster för historiska bilder!", Toast.LENGTH_SHORT).show();
 		
 		
 		
@@ -262,7 +295,7 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 		int status = avstand?View.INVISIBLE:View.VISIBLE;
 		boolean luck = false;
 		if (avstand) {
-			sydT.setText("AVSTÅNDSBILD");
+			sydT.setText("Avståndsbild");
 			luck = initPic(syd,"AVST");
 		} else {
 			sydT.setText("Mot syd");
@@ -275,15 +308,15 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 		ost.setVisibility(status);
 		vast.setVisibility(status);
 		sp.setVisibility(status);
-		gpsB.setVisibility(status);
-		gpsT.setVisibility(status);
-		GPS_X.setVisibility(status);
-		GPS_Y.setVisibility(status);
-		GPS_Acc.setVisibility(status);
+		//gpsB.setVisibility(status);
+		//gpsT.setVisibility(status);
+		//GPS_X.setVisibility(status);
+		//GPS_Y.setVisibility(status);
 		vastT.setVisibility(status);
 		ostT.setVisibility(status);
 		spT.setVisibility(status);
 		norrT.setVisibility(status);
+		compass.setVisibility(status);
 		gs.getPreferences().put(PersistenceHelper.AVSTAND_IS_PRESSED,avstand);
 	}
 	
@@ -300,14 +333,14 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 			public boolean onLongClick(View v) {
 				selectedPictureName = name;
 				selectedPicture = b;
-				mActionMode = ((Activity)myContext.getContext()).startActionMode(mActionModeCallback);
+				((Activity)myContext.getContext()).startActionMode(mActionModeCallback);
 				return true;
 			}
 		});
 		return ret;
 	}
 
-	@Override
+	/*@Override
 	public void onPause() {
 		super.onPause();
 		lm.removeUpdates(this);
@@ -325,7 +358,7 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 				this);
 
 	}
-
+*/
 
 
 
@@ -352,6 +385,7 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 					ImageButton b = buttonM.get(currSaving);
 					imgHandler.drawButton(b,currSaving,2,false);
 					Log.d("Strand","Drew button!");
+					
 				} else
 					Log.e("Strand","Did not find pic with name "+currSaving+" in onActRes in TakePic Activity");
 			} else {
@@ -384,11 +418,7 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 			if (prediction.score > .5) {
 				Log.d("nils","MATCH!!");
 				if (prediction.name.equals("left")) {
-					final FragmentTransaction ft = getActivity().getFragmentManager().beginTransaction(); 
-					OldPhotosFragment gs = new OldPhotosFragment();  			
-					ft.replace(R.id.content_frame, gs);
-					ft.addToBackStack(null);
-					ft.commit(); 
+					turnPage();
 				} 
 
 			}
@@ -396,6 +426,15 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 	}
 
 
+	private void turnPage() {
+		final FragmentTransaction ft = getActivity().getFragmentManager().beginTransaction(); 
+		OldPhotosFragment gs = new OldPhotosFragment();  			
+		ft.replace(R.id.content_frame, gs);
+		ft.addToBackStack(null);
+		ft.commit(); 
+	}
+
+/*
 	@Override
 	public void onLocationChanged(Location location) {
 		//If no startpunkt set, update button
@@ -404,7 +443,6 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 			gpsB.setVisibility(View.VISIBLE);
 			GPS_X.setText(cords.east+"");
 			GPS_Y.setText(cords.north+"");
-			GPS_Acc.setText(location.getAccuracy()+"");
 			//gpsB.setText("Sätt startpunkt\n(N: "+cords[0]+" \nÖ: "+cords[1]+")");
 		} 
 	}
@@ -449,7 +487,7 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 			return false;
 		}
 	}
-
+*/
 
 
 }

@@ -153,9 +153,9 @@ public class ImageHandler {
 				String fileName = createFileName(name,false);
 
 				//String fileName = "R00al.getCurrentRuta()
-				Toast.makeText(c.getActivity(),
-						"pic" + name + " selected",
-						Toast.LENGTH_SHORT).show();
+				//Toast.makeText(c.getActivity(),
+				//		"pic" + name + " selected",
+				//		Toast.LENGTH_SHORT).show();
 
 				Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 

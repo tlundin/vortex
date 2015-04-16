@@ -45,7 +45,7 @@ public class NamedVariables {
 	public static final String NO_OF_AVSLUTADE = "noOfAvslutade";
 	public static final String DELNINGSTAG = "Delningstag";
 	public static final String RUTA_KLAR_ANVÄNDARE = "RutaKlarAvAnvandare";
-
+	public static final String FOTO_KOMMENTAR = "FotoKommentar";
 	
 	//FLÖDEN SOM OMNÄMNS
 	public static final String WF_FIXPUNKTER = "wf_fixpunkter";
@@ -55,6 +55,8 @@ public class NamedVariables {
 	public static final String WF_SMAPROV_INMATNING_ABO_YTTRE = "wf_ÄBO_småprovyta_yttre";
 	public static final String WF_SMAPROV_INMATNING_ABO_INRE = "wf_ÄBO_småprovyta_inre";
 	public static final String WF_DELYTE_INMATNING_ABO = "wf_ÄBO_delyta";
+
+	
 
 
 

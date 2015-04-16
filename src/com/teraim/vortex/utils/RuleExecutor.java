@@ -33,11 +33,10 @@ import com.teraim.vortex.non_generics.Constants;
 
 
 /**
- 2nd layer Parser for formulas.
- Author Terje Lundin
- Part of Vortex Core, Copyright Teraim.
- Parses formulas and, if ok, allows evaluation.
+ 2nd layer Tokenizer and Parser for complex expressions.
+ Copyright 2015 Teraim
 
+ Use and modification subject to permission 
  */
 @SuppressLint("DefaultLocale") 
 

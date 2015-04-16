@@ -7,12 +7,12 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.List;
 
 import org.json.JSONException;
 import org.xmlpull.v1.XmlPullParserException;
 
 import android.os.Build;
+import android.util.Log;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -43,18 +43,23 @@ public class WebLoader extends Loader {
 			StringBuilder sb = new StringBuilder();
 			
 			String header = reader.readLine();
+			//If the file is not readable or reachable, header is null.
+			if (header==null) {
+				Log.e("vortex","cannot read data..exiting");
+				return new LoadResult(module,ErrorCode.IOError);
+			}
 			//from this point, equal code independent of source. Implemented in parent.
 			ErrorCode ec = read(module,getVersion(header),reader,sb);
 			
 			
 			//setresult runs a parser before returning. Parser is depending on module type.
-			LoadResult lr;
+			LoadResult loadResult;
 			if (ec==ErrorCode.loaded) {
-				lr = parse(module);
-				if (lr.errCode==ErrorCode.parsed)
+				loadResult = parse(module);
+				if (loadResult.errCode==ErrorCode.parsed)
 					return freeze(module);
 				else
-					return lr;
+					return loadResult;
 			}
 			else
 				return new LoadResult(module,ec);

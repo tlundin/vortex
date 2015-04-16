@@ -54,7 +54,7 @@ import com.teraim.vortex.utils.PersistenceHelper;
 
 public class ProvytaNivaTemplate extends Executor implements EventListener, OnGesturePerformedListener {
 
-	
+
 	private List<WF_Container> myLayouts;
 	private View v;
 	private DelyteManager dym;
@@ -69,7 +69,7 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 	private StatusHandler statusHandler;
 	private boolean isAbo;
 	private ButtonBlock spillning;
-	
+
 	@Override
 	public View onCreateView(final LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
@@ -79,13 +79,13 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 		myContext.addContainers(getContainers());
 		ViewGroup aggregatePanel = (LinearLayout)v.findViewById(R.id.aggregates);
 		ViewGroup provytaViewPanel = (FrameLayout)v.findViewById(R.id.Description);
-		
+
 		fieldListPanel = (LinearLayout)v.findViewById(R.id.fieldList);
-	
+
 		WF_DisplayValueField rSel = new WF_DisplayValueField("whatevar", "Current_Ruta",myContext, null, 
 				"Vald Ruta", true,null,null,null);
-		
-		
+
+
 		final String currPy = al.getCurrentProvyta();
 		final String currRuta = al.getCurrentRuta();
 		dym = DelyteManager.getInstance();
@@ -98,13 +98,13 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 		statusHandler = gs.getStatusHandler();
 
 		isAbo = Constants.isAbo(dym.getPyID());
-		
+
 		smayteKnappar = new ButtonBlock[isAbo?9:3];
-	
+
 		LinearLayout delytorRemainingView = (LinearLayout)inflater.inflate(R.layout.display_value_textview, null);		
 		LinearLayout smaRemainingView = (LinearLayout)inflater.inflate(R.layout.display_value_textview, null);		
 		LinearLayout synkadMedView = (LinearLayout)inflater.inflate(R.layout.display_value_textview, null);		
-		
+
 		TextView h = (TextView)delytorRemainingView.findViewById(R.id.header);
 		h.setText("Delytor gjorda");
 		h = (TextView)smaRemainingView.findViewById(R.id.header);
@@ -119,35 +119,35 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 		smaOutputValueField.setText("");
 		partnerOutputValueField.setText("");
 
-		
+
 		aggregatePanel.addView(rSel.getWidget());
 		aggregatePanel.addView(delytorRemainingView);
 		aggregatePanel.addView(smaRemainingView);
 		aggregatePanel.addView(synkadMedView);
-		
+
 		Marker man = new Marker(BitmapFactory.decodeResource(getResources(),R.drawable.icon_man));
 
 		pyv = new ProvytaView(activity, null, man,Constants.isAbo(dym.getPyID()));		
 
 		provytaViewPanel.addView(pyv);
-			
-	    GestureOverlayView gestureOverlayView = (GestureOverlayView)v.findViewById(R.id.gesture_overlay);
-	     
-	    gestureOverlayView.setGestureVisible(false);
-	    gestureOverlayView.addOnGesturePerformedListener(this);
-	    gestureLib = GestureLibraries.fromRawResource(this.getActivity(), R.raw.gestures);
-	    if (!gestureLib.load()) {      	
-	    	        Log.i("nils", "Load gesture libraries failed.");  
-	    	    }  
-	
-		
-		
+
+		GestureOverlayView gestureOverlayView = (GestureOverlayView)v.findViewById(R.id.gesture_overlay);
+
+		gestureOverlayView.setGestureVisible(false);
+		gestureOverlayView.addOnGesturePerformedListener(this);
+		gestureLib = GestureLibraries.fromRawResource(this.getActivity(), R.raw.gestures);
+		if (!gestureLib.load()) {      	
+			Log.i("nils", "Load gesture libraries failed.");  
+		}  
+
+
+
 		myContext.addEventListener(this, EventType.onSave);
-		
+
 		taBild = (Button)inflater.inflate(R.layout.button_normal, null);
 		taBild.setText("Foto och mittpunkt");
 		taBild.setOnClickListener(new OnClickListener() {
-			
+
 			@Override
 			public void onClick(View v) {
 				final FragmentTransaction ft = myContext.getActivity().getFragmentManager().beginTransaction(); 
@@ -158,9 +158,9 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 		});
 
 		fixPunkter = new ButtonBlock("_","Fixpunkter","Start_Workflow", "fixpunktbutton","Field_List_panel_1",NamedVariables.WF_FIXPUNKTER,"action", "status_fixpunkter",true,null,null);
-		
+
 		spillning = new ButtonBlock("_s","Spillning","Start_Workflow", "spillningbutton","Field_List_panel_1",NamedVariables.WF_SPILLNING,"action","status_spillning",true,null,null);
-	
+
 		for (int i=0; i<DelyteManager.MAX_DELYTEID;i++) {
 			final int I = i;
 			Map<String,String> buttonContext = al.createProvytaKeyMap();
@@ -168,16 +168,16 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 			delyteKnappar[i]=new ButtonBlock("DelBl"+i,"Delyta "+i,"Start_Workflow", "Delyta "+i,"Field_List_panel_1",
 					(isAbo?NamedVariables.WF_DELYTE_INMATNING_ABO:NamedVariables.WF_DELYTE_INMATNING),"action","status_delyta",true,
 					new OnclickExtra() {						
-						@Override
-						public void onClick() {
-							al.getVariableInstance(NamedVariables.CURRENT_DELYTA).setValue(I+"");
-							Delyta dy = dym.getDelyta(I);
-							dym.setSelected(dy);
-							Log.d("nils","Selected delyta set to "+dy.getId()+"");						
-							gs.sendEvent(MenuActivity.REDRAW);
-						} },buttonContext,-1);
+				@Override
+				public void onClick() {
+					al.getVariableInstance(NamedVariables.CURRENT_DELYTA).setValue(I+"");
+					Delyta dy = dym.getDelyta(I);
+					dym.setSelected(dy);
+					Log.d("nils","Selected delyta set to "+dy.getId()+"");						
+					gs.sendEvent(MenuActivity.REDRAW);
+				} },buttonContext,-1);
 		}
-		
+
 		for (int i=0; i<(isAbo?9:3);i++) {
 			int j=i+1;
 			final String I = j+"";
@@ -197,8 +197,8 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 				label = "Småprovyta ";
 				wf = NamedVariables.WF_SMAPROV_INMATNING;
 			}
-			
-			
+
+
 			smayteKnappar[i]=new ButtonBlock("SmaBl"+j,label+j,"Start_Workflow", "Småprovyta "+j,"Field_List_panel_1",
 					wf,"action","status_smaprovyta",true,
 					new OnclickExtra() {						
@@ -208,44 +208,63 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 					al.getVariableInstance(NamedVariables.CURRENT_SMAPROVYTA).setValue(I);
 				} },buttonContext,-1);
 		}
-		
-		
-		//Varna om provytecentrum flyttat.
+
+
+		//Varna om provytecentrum flyttat eller saknas.
 		Variable pyMarkTypV = al.getVariableUsingKey(al.createProvytaKeyMap(),"ProvytacentrumMarkeringstyp");
 		String pyMarkTyp = pyMarkTypV.getHistoricalValue();
 		Log.d("nils","ProvytacentrumMarkeringstyp: "+pyMarkTyp);
-		Log.d("nils","FlyttatCentrumVarning"+currRuta+"_"+currPy+" equals "+gs.getPreferences().get("FlyttatCentrumVarning"+currRuta+"_"+currPy));
-		if (pyMarkTyp!=null && pyMarkTyp.equals("2")&&gs.getPreferences().get("FlyttatCentrumVarning"+currRuta+"_"+currPy).equals(PersistenceHelper.UNDEFINED)) {
-			//String avst = al.getVariableValue(pyKeyMap,"ProfilAvstand");
-			//String rikt = al.getVariableValue(pyKeyMap,"ProfilRiktning");
-			AlertDialog.Builder alert = new AlertDialog.Builder(v.getContext());
-			alert.setTitle("Varning");
-			alert.setMessage("Den här provytan har flyttat centrum!");					
-			alert.setCancelable(false);
-			alert.setPositiveButton("Okej", new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int whichButton) {
-					gs.getPreferences().put("FlyttatCentrumVarning"+currRuta+"_"+currPy,"Marked");
+		//Log.d("nils","FlyttatCentrumVarning"+currRuta+"_"+currPy+" equals "+gs.getPreferences().get("FlyttatCentrumVarning"+currRuta+"_"+currPy));
+		if (pyMarkTyp!=null) { 
+			if (pyMarkTyp.equals("2")&&gs.getPreferences().get("FlyttatCentrumVarning"+currRuta+"_"+currPy).equals(PersistenceHelper.UNDEFINED)) {
+				//String avst = al.getVariableValue(pyKeyMap,"ProfilAvstand");
+				//String rikt = al.getVariableValue(pyKeyMap,"ProfilRiktning");
+				AlertDialog.Builder alert = new AlertDialog.Builder(v.getContext());
+				alert.setTitle("Varning");
+				alert.setMessage("Den här provytan har flyttat centrum!");					
+				alert.setCancelable(false);
+				alert.setPositiveButton("Okej", new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int whichButton) {
+						gs.getPreferences().put("FlyttatCentrumVarning"+currRuta+"_"+currPy,"Marked");
+					}
+
+
+				});			
+				alert.show();
+			} else {
+				if (pyMarkTyp.equals("3")&&gs.getPreferences().get("IngenProfilVarning"+currRuta+"_"+currPy).equals(PersistenceHelper.UNDEFINED)) {
+					//String avst = al.getVariableValue(pyKeyMap,"ProfilAvstand");
+					//String rikt = al.getVariableValue(pyKeyMap,"ProfilRiktning");
+					AlertDialog.Builder alert = new AlertDialog.Builder(v.getContext());
+					alert.setTitle("Varning");
+					alert.setMessage("Den här provytan saknar profil!");					
+					alert.setCancelable(false);
+					alert.setPositiveButton("Okej", new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int whichButton) {
+							gs.getPreferences().put("IngenProfilVarning"+currRuta+"_"+currPy,"Marked");
+						}
+
+
+					});			
+					alert.show();
+
 				}
 
-
-			});			
-			alert.show();
-			
-			
+			}
 		}
-		
-		
+
+
 		//Rita sidan
 		refresh();
-		
+
 		Toast.makeText(this.getActivity(),"<<<<<< Svep åt vänster för Tågdelnings-sidan!", Toast.LENGTH_SHORT).show();
-		
+
 		return v;
 
 	}
-	
-	
-	
+
+
+
 	private void refresh() {
 		Container myC = myContext.getContainer("Field_List_panel_1");
 		statusHandler.setStatusProvyta();
@@ -258,46 +277,46 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 		partnerOutputValueField.setText(gs.getMyPartner());
 		if (dym.isObsolete())
 			dym.init();
-			
+
 		pyv.showDelytor(dym.getDelytor(),false);
 
-		
+
 		fieldListPanel.addView(taBild);
-		
+
 		fixPunkter.create(myContext);
 		if (!isAbo)
 			spillning.create(myContext);
-		
+
 		Set<Integer> dys = new TreeSet<Integer>();
 		//gs.setKeyHash(al.createDelytaKeyMap());
 		Map<String, String> map;
-		
+
 		for (final Delyta d:dym.getDelytor())
 			dys.add(d.getId());
 		for (Integer id:dys) {	
-				map = al.createProvytaKeyMap();
-				map.put("delyta", id+"");
-				gs.setKeyHash(map);
-				delyteKnappar[id].create(myContext);	
-				dys.add(id);			
+			map = al.createProvytaKeyMap();
+			map.put("delyta", id+"");
+			gs.setKeyHash(map);
+			delyteKnappar[id].create(myContext);	
+			dys.add(id);			
 		}
-			
+
 		for (int i=0;i<(isAbo?9:3);i++) {
 			map = al.createProvytaKeyMap();
 			map.put("smaprovyta", i+"");
 			gs.setKeyHash(map);
 			smayteKnappar[i].create(myContext);
 		}
-			
+
 		gs.setKeyHash(al.createProvytaKeyMap());
 		myContext.drawRecursively(myC);
-		
-		
+
+
 	}
 
 
-	
-	
+
+
 	@Override
 	protected List<WF_Container> getContainers() {
 		myLayouts = new ArrayList<WF_Container>();
@@ -316,7 +335,7 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 	@Override
 	public void execute(String function, String target) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 
@@ -329,35 +348,35 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 	}
 
 
-	
+
 	@Override
 	public void onGesturePerformed(GestureOverlayView overlay, Gesture gesture) {
-	    Log.d("nils","Number of gestures available: "+gestureLib.getGestureEntries().size());
-	    ArrayList<Prediction> predictions = gestureLib.recognize(gesture);
-	    Log.d("nils","Number of predictions: "+predictions.size());
-	    for (Prediction prediction : predictions) {
-	      if (prediction.score > .5) {
-	  		Log.d("nils","MATCH!!");
-	  		if (prediction.name.equals("left")) {  			
-	  			final FragmentTransaction ft = getActivity().getFragmentManager().beginTransaction(); 
-	  			Fragment gs = new TagTemplate();  			
-	  			ft.replace(R.id.content_frame, gs);
-	  			ft.addToBackStack(null);
-	  			ft.commit(); 
-	  		} 
-	      }
-	    }		
+		Log.d("nils","Number of gestures available: "+gestureLib.getGestureEntries().size());
+		ArrayList<Prediction> predictions = gestureLib.recognize(gesture);
+		Log.d("nils","Number of predictions: "+predictions.size());
+		for (Prediction prediction : predictions) {
+			if (prediction.score > .5) {
+				Log.d("nils","MATCH!!");
+				if (prediction.name.equals("left")) {  			
+					final FragmentTransaction ft = getActivity().getFragmentManager().beginTransaction(); 
+					Fragment gs = new TagTemplate();  			
+					ft.replace(R.id.content_frame, gs);
+					ft.addToBackStack(null);
+					ft.commit(); 
+				} 
+			}
+		}		
 	}
 
 
 
 
 
-	
 
 
 
-	
+
+
 
 
 }

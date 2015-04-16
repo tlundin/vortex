@@ -27,7 +27,7 @@ import com.teraim.vortex.utils.PersistenceHelper;
 
 public class Constants {
 
-	public final static float VORTEX_VERSION = 1.069f;
+	public final static float VORTEX_VERSION = 1.070f;
 
 	
 	//String constants
@@ -174,6 +174,9 @@ public class Constants {
 
 
 	public static final String VariableSeparator = ":";
+
+
+	
 
 
 	public static List<ConfigurationModule> getCurrentlyKnownModules(PersistenceHelper globalPh,PersistenceHelper ph,String server, String bundle, LoggerI debugConsole) {

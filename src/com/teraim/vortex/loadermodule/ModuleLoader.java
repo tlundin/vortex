@@ -141,7 +141,7 @@ public class ModuleLoader implements FileLoadedCb{
 			o.addRow("The file contains instructions that this Vortex version is not able to run. Please upgrade.");
 		} else if (errCode==ErrorCode.ParseError) {
 			o.addRow("");
-			o.addPurpleText("The file contains an error. Please check log for details");
+			o.addRedText("The file contains an error. Please check log for details");
 		}
 
 		

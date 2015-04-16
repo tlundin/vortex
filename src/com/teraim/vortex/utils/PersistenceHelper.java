@@ -41,6 +41,7 @@ public class PersistenceHelper {
 	public static final String NO_OF_RUTOR = "antalrutor";
 	public static final String CHANGE_BUNDLE = "change_bundle";
 	public static final String HIST_LOAD_COUNTER = "hist_counter";
+	public static final String AVSTAND_WARNING_SHOWN = "Avstand_warning_was_shown";
 
 
 	SharedPreferences sp;

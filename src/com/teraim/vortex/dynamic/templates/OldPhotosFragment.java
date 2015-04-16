@@ -4,7 +4,9 @@ import java.io.File;
 import java.util.ArrayList;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.Fragment;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.gesture.Gesture;
 import android.gesture.GestureLibraries;
@@ -13,18 +15,23 @@ import android.gesture.GestureOverlayView;
 import android.gesture.GestureOverlayView.OnGesturePerformedListener;
 import android.gesture.Prediction;
 import android.os.Bundle;
+import android.text.Editable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
+import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.non_generics.Constants;
+import com.teraim.vortex.non_generics.NamedVariables;
 import com.teraim.vortex.utils.ImageHandler;
 
 public class OldPhotosFragment extends Fragment implements OnGesturePerformedListener {
@@ -66,7 +73,83 @@ public class OldPhotosFragment extends Fragment implements OnGesturePerformedLis
 		vast.setOnClickListener(ruby(Type.VAST));	
 		sp= (ImageButton)v.findViewById(R.id.pic_sp);
 		sp.setOnClickListener(ruby(Type.SMA));	
+		
+		Button bildFelB = (Button)v.findViewById(R.id.felibild);
+		
+		bildFelB.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				final Variable fotoKommentar = gs.getVariableConfiguration().getVariableUsingKey(gs.getVariableConfiguration().createProvytaKeyMap(), NamedVariables.FOTO_KOMMENTAR);				
+				final Context ctx = OldPhotosFragment.this.getActivity();
+				// get prompts.xml view
+				LayoutInflater li = LayoutInflater.from(ctx);
+				View promptsView = li.inflate(R.layout.picture_issue, null);
+ 
+				AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
+						ctx);
+ 
+				// set prompts.xml to alertdialog builder
+				alertDialogBuilder.setView(promptsView);
+ 
+				final EditText userInput = (EditText) promptsView
+						.findViewById(R.id.felibildE);
+			
+				if (fotoKommentar!=null) {
+					String currentComment = fotoKommentar.getValue();
+					if (currentComment!=null)
+						userInput.setText(currentComment);
+					alertDialogBuilder
+					.setCancelable(false)
+					.setPositiveButton("Spara",
+					  new DialogInterface.OnClickListener() {
+					    public void onClick(DialogInterface dialog,int id) {
+						Editable input = userInput.getText();
+						if (input != null && input.length()!=0) {
+							//Save this into a variable.
+							
+							fotoKommentar.setValue(input.toString());
+							Log.e("vortex","Fotokommentar satt till: "+input);
+							Toast.makeText(ctx, "Din kommentar har sparats och kommer skickas till Umeå", Toast.LENGTH_SHORT).show();
+						}
+							
+						
+					    }
+					  })
+					.setNegativeButton("Cancel",
+					  new DialogInterface.OnClickListener() {
+					    public void onClick(DialogInterface dialog,int id) {
+						dialog.cancel();
+					    }
+					  });
 
+				// create alert dialog
+				AlertDialog alertDialog = alertDialogBuilder.create();
+
+				// show it
+				alertDialog.show();
+					
+				} else {
+					gs.getLogger().addRow("");
+					gs.getLogger().addRedText("The Variable FotoKommentar is missing from Variables.csv!!! Fotokommentarer will not be saved!!");
+					new AlertDialog.Builder(ctx)
+					.setTitle("Konfigureringsfel")
+					.setMessage("Fotokommentar saknas i variabellistan. Programmet kan inte spara din kommentar") 
+					.setIcon(android.R.drawable.ic_dialog_alert)
+					.setCancelable(false)
+					.setNeutralButton("Ok",new Dialog.OnClickListener() {				
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							// TODO Auto-generated method stub
+
+						}
+					} )
+					.show();
+				}
+				
+			}
+		});
+		
 		imgHandler = new ImageHandler(gs,this);	
 
 		File folder = new File(Constants.OLD_PIC_ROOT_DIR);

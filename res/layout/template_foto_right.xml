@@ -146,5 +146,14 @@
             android:text="Mot norr"
             android:textAppearance="?android:attr/textAppearanceLarge" />
 
+        <Button
+            android:id="@+id/felibild"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="35dp"
+            android:text="Är en bild dålig eller fel? Rapportera det här" />
+
 </RelativeLayout>
 </android.gesture.GestureOverlayView>

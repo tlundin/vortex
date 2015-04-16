@@ -15,6 +15,7 @@ import com.teraim.vortex.dynamic.types.Table;
 import com.teraim.vortex.dynamic.types.Table.ErrCode;
 import com.teraim.vortex.loadermodule.CSVConfigurationModule;
 import com.teraim.vortex.loadermodule.LoadResult;
+import com.teraim.vortex.loadermodule.LoadResult.ErrorCode;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.PersistenceHelper;
@@ -92,8 +93,13 @@ public class VariablesConfiguration extends CSVConfigurationModule {
 
 
 		if (scanHeader && row!=null) {
-			Log.d("vortex","header is: "+row);
+			Log.d("vortex","header is: "+row);			
 			String[] varPatternHeaderS = row.split(",");
+			if (varPatternHeaderS==null||varPatternHeaderS.length<Constants.VAR_PATTERN_ROW_LENGTH) {
+				o.addRow("");
+				o.addRedText("Header corrupt in Variables.csv: "+varPatternHeaderS);
+				return new LoadResult(this,ErrorCode.ParseError,"Corrupt header");
+			}
 			//Remove duplicte group column and varname. 
 			Collections.addAll(cheaderL,groupsFileHeaderS); 
 			cheaderL.remove(VariableConfiguration.Col_Functional_Group);
@@ -111,7 +117,7 @@ public class VariablesConfiguration extends CSVConfigurationModule {
 
 			if (r==null || r.length<Constants.VAR_PATTERN_ROW_LENGTH) {
 				o.addRow("");
-				o.addRedText("found null or too short row at "+currentRow+" in config file");
+				o.addRedText("found null or too short row at "+currentRow+" in config file..skipping");
 			} else {	
 				for(int i=0;i<r.length;i++) {
 					if (r[i]!=null)
@@ -161,16 +167,18 @@ public class VariablesConfiguration extends CSVConfigurationModule {
 									case keyError:
 										o.addRow("");
 										o.addRedText("KEY ERROR!");
+										break;
 									case tooFewColumns:
 										o.addRow("");
 										o.addRedText("TOO FEW COLUMNS!");
-
+										return new LoadResult(this,ErrorCode.ParseError);
 									case tooManyColumns:
 										o.addRow("");
 										o.addRedText("TOO MANY COLUMNS!");
 										o.addRedText("row not inserted. Something wrong at line "+currentRow);
 										break;
 									}
+									
 								}
 							}
 						}

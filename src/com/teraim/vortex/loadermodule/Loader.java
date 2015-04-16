@@ -125,12 +125,13 @@ public abstract class Loader extends AsyncTask<ConfigurationModule ,Integer,Load
 			return new LoadResult(m,ErrorCode.noData);
 		for (String row:myRows) {
 			loadR = m.parse(row,rowC);
-			if (rowC++%20==0)
-				this.publishProgress(rowC,noOfRows);
 			if (loadR!=null) {
 				res = loadR;
 				break;
 			}
+			if (rowC++%20==0)
+				this.publishProgress(rowC,noOfRows);
+			
 		}
 		if (res==null)
 			res = new LoadResult(m,ErrorCode.parsed);
