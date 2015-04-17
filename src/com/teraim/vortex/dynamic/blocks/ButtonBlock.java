@@ -153,7 +153,7 @@ public  class ButtonBlock extends Block {
 					VariableConfiguration al = gs.getVariableConfiguration();
 					Variable statusVariable = al.getVariableUsingKey(buttonContext,statusVar);
 					if (statusVariable!=null) {
-						Log.e("nils","STATUSVAR: "+statusVariable.getId()+" key: "+statusVariable.getKeyChain()+ "Value: "+statusVariable.getValue());
+						Log.d("nils","STATUSVAR: "+statusVariable.getId()+" key: "+statusVariable.getKeyChain()+ "Value: "+statusVariable.getValue());
 						String valS = statusVariable.getValue();
 						Integer val=null;
 						if (valS == null)
@@ -184,6 +184,7 @@ public  class ButtonBlock extends Block {
 					} else {
 						o.addRow("");
 						o.addRedText("Statusvariable ["+statusVar+"], buttonblock "+blockId+" does not exist. Will use normal button");
+						Log.e("vortex","Statusvariable ["+statusVar+"], buttonblock "+blockId+" does not exist. Will use normal button");
 					}
 				}
 

@@ -26,7 +26,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="50dp"
+        android:layout_marginTop="80dp"
         android:text="Mot syd"
         android:textAppearance="?android:attr/textAppearanceLarge" />
     
@@ -130,7 +130,7 @@
         android:layout_alignBaseline="@+id/sydsken"
         android:layout_alignBottom="@+id/sydsken"
         android:layout_alignParentRight="true"
-        android:text="SMÅPROVYTA"
+        android:text="Småprovyta"
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
         
@@ -152,7 +152,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
-            android:layout_marginBottom="35dp"
+            android:layout_marginBottom="20dp"
             android:text="Är en bild dålig eller fel? Rapportera det här" />
 
 </RelativeLayout>

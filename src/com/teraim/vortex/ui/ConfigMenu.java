@@ -110,27 +110,13 @@ public class ConfigMenu extends PreferenceActivity {
 				pref.setSummary(etp.getText());
 				if (key.equals(PersistenceHelper.BUNDLE_NAME)) {
 					GlobalState gs = GlobalState.getInstance();
-					if (gs != null) {
+					if (gs != null) 
 						//if a state exists, restart the app.
-						Log.d("vortex","restarting...bundle name now "+gs.getGlobalPreferences().get(PersistenceHelper.BUNDLE_NAME));
-						Activity context = this.getActivity();
-						android.app.FragmentManager fm = context.getFragmentManager();
-						for(int i = 0; i < fm.getBackStackEntryCount(); ++i) {    
-						    fm.popBackStack();
-						}
-						Intent intent = new Intent(context, Start.class);
-						intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-						startActivity(intent);
-						context.finish();
-						/*
-						int mPendingIntentId = 123456;
-						PendingIntent mPendingIntent = PendingIntent.getActivity(context, mPendingIntentId,    mStartActivity, PendingIntent.FLAG_CANCEL_CURRENT);
-						AlarmManager mgr = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
-						mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, mPendingIntent);
-						System.exit(0);
-						*/
+						restart();
 						
-					}
+					
+						
+					
 				}
 
 					
@@ -142,11 +128,14 @@ public class ConfigMenu extends PreferenceActivity {
 					if (letp.getValue().equals("Master")) 
 						Log.d("nils","Changed to MASTER");
 						
-					else 
+					else if (letp.getValue().equals("Client")) 
 						Log.d("nils","Changed to CLIENT");
-					Intent intent = new Intent(this.getActivity().getBaseContext(),BluetoothConnectionService.class);
-					this.getActivity().stopService(intent);
-					GlobalState.getInstance().resetHandler();
+					else if (letp.getValue().equals("Solo")) {
+						//Turn off sync if on
+						this.getActivity().getSharedPreferences(Constants.GLOBAL_PREFS,Context.MODE_PRIVATE).edit().putBoolean(PersistenceHelper.SYNC_FEATURE,false).apply();
+						Log.d("nils","Changed to SOLO");
+					}
+					restart();
 					
 				}
 				
@@ -166,6 +155,21 @@ public class ConfigMenu extends PreferenceActivity {
 				}
 */
 		}
+
+
+
+
+		private void restart() {
+			Log.d("vortex","restarting...");
+			Activity context = this.getActivity();
+			android.app.FragmentManager fm = context.getFragmentManager();
+			for(int i = 0; i < fm.getBackStackEntryCount(); ++i) {    
+			    fm.popBackStack();
+			}
+			Intent intent = new Intent(context, Start.class);
+			intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+			startActivity(intent);
+			context.finish();		}
 
 	}
 

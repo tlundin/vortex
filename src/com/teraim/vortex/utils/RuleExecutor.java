@@ -1,14 +1,11 @@
 package com.teraim.vortex.utils;
 
-import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import android.annotation.SuppressLint;
@@ -22,6 +19,7 @@ import android.util.Log;
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
 import com.teraim.vortex.dynamic.VariableConfiguration;
+import com.teraim.vortex.dynamic.types.Delyta;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.types.Variable.DataType;
 import com.teraim.vortex.expr.Expr;
@@ -29,6 +27,7 @@ import com.teraim.vortex.expr.Parser;
 import com.teraim.vortex.expr.SyntaxException;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
+import com.teraim.vortex.non_generics.DelyteManager;
 
 
 
@@ -115,7 +114,7 @@ public class RuleExecutor {
 		getCurrentSecond(function,0),
 		getCurrentWeekNumber(function,0),
 		sum(function,-1),
-		//		exist(function,2),
+		getDelytaArea(function,1),
 		variable(null,-1),
 		text(variable,0),
 		numeric(variable,0),
@@ -654,6 +653,30 @@ public class RuleExecutor {
 				return "0";
 			}
 
+		}
+		
+		if (item.getType()==TokenType.getDelytaArea) {
+			Log.d("vortex","running getDelytaArea function");
+			DelyteManager dym = DelyteManager.getInstance();
+			if (dym==null) {
+				gs.getLogger().addRow("");
+				gs.getLogger().addRedText("Cannot calculate delyta area...no provyta selected");
+				return null;
+			}
+			if (args==null||args.length!=1) {
+				Log.e("vortex","no or too few arguments in hasSame");
+				gs.getLogger().addRow("");
+				gs.getLogger().addRedText("No or too few arguments in hasSame");
+				return null;
+			}
+			Delyta dy = dym.getDelyta(Integer.parseInt(args[0]));
+			if (dy==null) {
+				Log.e("vortex","delyta null in getdelytaarea");
+				gs.getLogger().addRow("");
+				gs.getLogger().addRedText("Delyta "+args[0]+" does not exist (in function getDelytaArea)");
+				return null;
+			}
+			return Float.toString(dy.getArea());
 		}
 
 		if (item.getType()==TokenType.hasSame) {

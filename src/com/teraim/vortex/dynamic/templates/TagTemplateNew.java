@@ -158,7 +158,7 @@ public class TagTemplateNew extends Executor implements EventListener, TagListen
 		calculateB = (Button)v.findViewById(R.id.redraw);
 		calculateB.setEnabled(false);
 		nyUtlaggB = (Button)v.findViewById(R.id.rensa);
-		nyUtlaggB.setEnabled(gs.isMaster());
+		nyUtlaggB.setEnabled(gs.isMaster()||gs.isSolo());
 		nyUtlaggB.setVisibility(View.GONE);
 		sparaB = (Button)v.findViewById(R.id.spara);
 		sparaB.setEnabled(false);

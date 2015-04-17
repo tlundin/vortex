@@ -173,10 +173,9 @@ public class SimpleRutaTemplate extends Executor implements OnGesturePerformedLi
 			}
 		});
 
-		if (gs.isMaster()) {
+		if (gs.isMaster()||gs.isSolo()) {
 			aggregatePanel.addView(exportB);
-			createInvTypSelection();
-			
+			createInvTypSelection();			
 		}
 
 		GestureOverlayView gestureOverlayView = (GestureOverlayView)v.findViewById(R.id.gesture_overlay);

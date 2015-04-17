@@ -3,6 +3,7 @@
 <string-array name="deviceTypes">
     <item>Master</item>
     <item>Client</item>
+    <item>Solo</item>
 </string-array> 
 <string-array name="menu">
     <item>Description</item>

@@ -1,20 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.gesture.GestureOverlayView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/gesture_overlay"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent" >
 
-    <RelativeLayout
+
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/root"
         android:layout_width="match_parent"
         android:layout_height="match_parent" >
 
+         <Switch
+             android:id="@+id/avstandB"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:layout_above="@+id/spT"
+             android:layout_alignParentTop="true"
+             android:layout_centerHorizontal="true"
+             android:layout_marginTop="10dp"
+             android:text="Avståndsbild"
+             android:textAppearance="?android:attr/textAppearanceLarge"
+             android:textOff="AV"
+             android:textOn="PÅ" />
+                
         <TextView
             android:id="@+id/sydT"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="50dp"
+            android:layout_marginTop="80dp"
             android:text="Mot syd"
             android:textAppearance="?android:attr/textAppearanceLarge" />
 
@@ -62,19 +72,7 @@
             android:scaleType="fitXY"
             android:src="@drawable/case_no_pic" />
 	
-     	
-	
-        <ToggleButton
-            android:id="@+id/avstandB"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-     		android:layout_centerHorizontal="true"
-            android:layout_marginBottom="60dp"
-            android:onClick="setStartPoint"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:textOff="Ta avståndsbild istället"
-            android:textOn="Ta normala bilder" />
+
         
           <Button
             android:id="@+id/oldpics_button"
@@ -82,9 +80,9 @@
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
-            android:layout_marginBottom="10dp"
+            android:layout_marginBottom="20dp"
             android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Bilder från förr" />
+            android:text="Bilder från tidigare säsong" />
         
 
         <TextView
@@ -153,5 +151,3 @@
 
       
     </RelativeLayout>
-
-</android.gesture.GestureOverlayView>

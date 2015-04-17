@@ -48,6 +48,7 @@ public class NamedVariables {
 	public static final String FOTO_KOMMENTAR = "FotoKommentar";
 	
 	//FLÖDEN SOM OMNÄMNS
+	public static final String WF_FOTO = "wf_foto";
 	public static final String WF_FIXPUNKTER = "wf_fixpunkter";
 	public static final String WF_SPILLNING = "wf_spillning";
 	public static final String WF_DELYTE_INMATNING = "wf_delyte_inmatningar";

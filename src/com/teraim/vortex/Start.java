@@ -442,11 +442,12 @@ public class Start extends MenuActivity {
 		String label = wf.getLabel();
 		String template = wf.getTemplate();
 		//Set context.
+		Log.e("vortex","change page called with wf "+wf.getName());
 		Log.d("noob","Context ["+wf.getContext()+"]");
 		debugLogger.addRow("Context ["+wf.getContext()+"]");
-		CHash r = gs.evaluateContext(wf.getContext());
+		CHash cHash = gs.evaluateContext(wf.getContext());
 		//if Ok err is null.
-		if (r.err==null) {
+		if (cHash.err==null) {
 			debugLogger.addRow("Context [");
 			debugLogger.addGreenText("OK");
 			debugLogger.addText("]");
@@ -478,7 +479,7 @@ public class Start extends MenuActivity {
 			}
 			//show error message.
 		} else 
-			showErrorMsg(r.err, wf);
+			showErrorMsg(cHash.err, wf);
 	}
 	public void changePage(Fragment newPage, String label) {
 		FragmentManager fragmentManager = getFragmentManager();

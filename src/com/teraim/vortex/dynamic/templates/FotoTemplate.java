@@ -12,12 +12,7 @@ import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.gesture.Gesture;
-import android.gesture.GestureLibraries;
 import android.gesture.GestureLibrary;
-import android.gesture.GestureOverlayView;
-import android.gesture.GestureOverlayView.OnGesturePerformedListener;
-import android.gesture.Prediction;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -30,11 +25,13 @@ import android.view.View;
 import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.ToggleButton;
 
 import com.teraim.vortex.R;
 import com.teraim.vortex.dynamic.Executor;
@@ -48,7 +45,7 @@ import com.teraim.vortex.utils.ImageHandler;
 import com.teraim.vortex.utils.PersistenceHelper;
 
 
-public class FotoTemplate extends Executor implements OnGesturePerformedListener {
+public class FotoTemplate extends Executor {
 
 	List<WF_Container> myLayouts;
 	
@@ -66,7 +63,7 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 	private LocationManager lm;
 	private HashMap<String, ImageButton> buttonM = new HashMap<String,ImageButton>();
 	private SweLocation cords;
-	private ToggleButton avstandB;
+	private Switch avstandB;
 	private TextView sydT,vastT,ostT,spT,norrT;
 	
 	private Variable n,e;
@@ -159,7 +156,7 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 		//		myLayouts.add(new WF_Container("Description_panel_1", (FrameLayout)v.findViewById(R.id.Description), root));
 		myContext.addContainers(getContainers());
 
-
+/*
 		//Gestures
 		GestureOverlayView gestureOverlayView = (GestureOverlayView)v.findViewById(R.id.gesture_overlay);
 		gestureOverlayView.setGestureVisible(false);
@@ -168,9 +165,9 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 		if (!gestureLib.load()) {      	
 			Log.i("nils", "Load gesture libraries failed.");  
 		}  
-		
+*/		
 			
-		avstandB = (ToggleButton)v.findViewById(R.id.avstandB);
+		avstandB = (Switch)v.findViewById(R.id.avstandB);
 		//gpsB = (ToggleButton)v.findViewById(R.id.gpsBtn);
 		//if (gpsB == null)
 		//	Log.e("vortex","OUCCGHHH!!");
@@ -207,6 +204,7 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 			avstandB.setVisibility(Button.INVISIBLE);
 			Log.e("vortex","found at least one picture in init");
 		}
+		
 		File folder = new File(Constants.PIC_ROOT_DIR);
 		folder.mkdirs();
 
@@ -223,12 +221,12 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 			}
 		});
 */
-		avstandB.setOnClickListener(new View.OnClickListener() {
+		avstandB.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			
 			@Override
-			public void onClick(View v) {
-				toggleAvstand(avstandB.isChecked());
-				if (!gs.getPreferences().getB(PersistenceHelper.AVSTAND_WARNING_SHOWN)) {
+			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked){
+				toggleAvstand(isChecked);
+				if (isChecked && !gs.getPreferences().getB(PersistenceHelper.AVSTAND_WARNING_SHOWN)) {
 					new AlertDialog.Builder(FotoTemplate.this.getActivity())
 					.setTitle("Varning")
 					.setMessage("Du ska ta antingen en avståndsbild eller så fyra vanliga bilder. Inte både och!") 
@@ -280,9 +278,11 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 		
 		//Toast.makeText(this.activity,"<<<< Svep åt vänster för historiska bilder!", Toast.LENGTH_SHORT).show();
 		
-		
-		
-			
+		/*
+		if (wf!=null) {
+			run();
+		}
+			*/
 		
 		return v;
 
@@ -409,7 +409,7 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 
 	}
 
-
+/*
 
 	@Override
 	public void onGesturePerformed(GestureOverlayView overlay, Gesture gesture) {
@@ -424,7 +424,7 @@ public class FotoTemplate extends Executor implements OnGesturePerformedListener
 			}
 		}		
 	}
-
+*/
 
 	private void turnPage() {
 		final FragmentTransaction ft = getActivity().getFragmentManager().beginTransaction(); 

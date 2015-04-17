@@ -83,11 +83,13 @@ public class WF_List_UpdateOnSaveEvent extends WF_Static_List implements EventLi
 
 			boolean success=false;
 			for (String varID:ef.varIDs) {
+				//Log.d("vortex",varID);
 				if (varID.endsWith(varSuffix)) {
 					mapmap.put(varID,ef);
 					success=true;
 					break;
 				}
+				
 			}
 			if (!success) {
 				//This variable is either wrong or global.
@@ -97,7 +99,9 @@ public class WF_List_UpdateOnSaveEvent extends WF_Static_List implements EventLi
 				else {
 					o.addRow("");
 					o.addRedText("Variable with suffix "+varSuffix+" was not found when creating list "+this.getId());
-					o.addRedText("Current context: ["+gs.getCurrentKeyHash().toString()+"]");
+					o.addRow("context: ["+gs.getCurrentKeyHash().toString()+"]");
+					String namePrefix = al.getFunctionalGroup(myRows.get(0));
+					o.addRow("Group: "+namePrefix);
 				}
 			}
 		}

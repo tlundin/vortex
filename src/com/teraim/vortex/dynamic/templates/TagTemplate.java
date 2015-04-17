@@ -154,7 +154,7 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 		calculateB = (Button)v.findViewById(R.id.redraw);
 		calculateB.setEnabled(false);
 		nyUtlaggB = (Button)v.findViewById(R.id.rensa);
-		nyUtlaggB.setEnabled(gs.isMaster());
+		nyUtlaggB.setEnabled(gs.isMaster()||gs.isSolo());
 		sparaB = (Button)v.findViewById(R.id.spara);
 		sparaB.setEnabled(false);
 		gl.setEnabled(false);

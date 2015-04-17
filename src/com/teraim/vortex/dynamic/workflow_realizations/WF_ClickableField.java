@@ -78,7 +78,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 	private Drawable originalBackground;
 	protected View longClickedRow;
 	protected boolean iAmOpen=false;
-
+	private Spinner firstSpinner = null;
 
 
 	@Override
@@ -213,6 +213,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 		sd = gs.getSpinnerDefinitions();
 		al = gs.getVariableConfiguration();
 		o = gs.getLogger();
+		firstSpinner=null;
 		//SpannableString content = new SpannableString(headerT);
 		//content.setSpan(new UnderlineSpan(), 0, content.length(), 0);
 		inputContainer = new LinearLayout(context.getContext());
@@ -302,19 +303,33 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 				//lp.height = 600;
 
 				d.show();
+				
+				
 				}
 				//d.getWindow().setAttributes(lp);
 				
 				
-				}		
+				}
+
+			//first spinner should be opened automatically.
+			private void openFirstSpinner() {
+				 
+				if (firstSpinner!=null ) {
+					firstSpinner.performClick(); 
+					
+				}
+			}		
 		});	
 		
 	}
 
+	
+	
+	
 	//@Override
 	public void addVariable(final Variable var, boolean displayOut,String format,boolean isVisible,boolean showHistorical) {
 
-
+		
 		String varLabel = var.getLabel();
 		String varId = var.getId();
 		String hist = null;
@@ -368,6 +383,8 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 			spinner.setAdapter(adapter);
 			inputContainer.addView(sl);			
 			myVars.put(var,sl);
+			if (firstSpinner==null)
+				firstSpinner = spinner;
 
 			sHeader.setText(varLabel+(hist!=null?" ("+hist+")":""));			
 			String listValues = al.getTable().getElement("List Values", var.getBackingDataSet());
@@ -671,8 +688,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 
 	//@Override
 	public void refreshInputFields(){
-		DataType numType;
-		boolean firstSpinner = true;
+		DataType numType;		
 		Log.d("nils","In refreshinputfields");
 		Set<Entry<Variable, View>> vars = myVars.entrySet();
 		for(Entry<Variable, View>entry:vars) {
@@ -732,23 +748,23 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 						//this is the spinner.
 						final Spinner sp = (Spinner)v.findViewById(R.id.spinner);
 
-						//first spinner should be opened automatically.
-						
-						//if (firstSpinner && sp.isShown()) {
-							Log.d("vortex", "I end up here for spinner variable "+variable.getId());
-							firstSpinner = false;
-							final Handler h = new Handler();
-					        new Thread(new Runnable() {
-					            public void run() {					               
-					                h.postDelayed(new Runnable() {
+						final Handler h = new Handler();
+						if (firstSpinner!=null ) 
+							new Thread(new Runnable() {
+					            public void run() {
+					                // DO NOT ATTEMPT TO DIRECTLY UPDATE THE UI HERE, IT WON'T WORK!
+					                // YOU MUST POST THE WORK TO THE UI THREAD'S HANDLER
+					            	h.postDelayed(new Runnable() {
 					                    public void run() {
 					                        // Open the Spinner...
-					                        sp.performClick();
+					                    	if (firstSpinner.isShown())
+					                    		firstSpinner.performClick(); 
 					                    }
 					                }, 100);
 					            }
 					        }).start();
-						//}
+							
+						
 						
 						String[] opt = null;
 						String tag = (String) sp.getTag();

@@ -461,18 +461,26 @@ public class GlobalState  {
 			return m.equals("Master");
 
 	}
+	
+	public boolean isSolo() {
+		return globalPh.get(PersistenceHelper.DEVICE_COLOR_KEY).equals("Solo");
+	}
+	
+	public boolean isSlave() {
+		return globalPh.get(PersistenceHelper.DEVICE_COLOR_KEY).equals("Client");
+	}
 
 	public MessageHandler getHandler() {
 		if (myHandler==null)
 			myHandler = getNewMessageHandler(isMaster());
 		return myHandler;
 	}
-
+/*
 	public void resetHandler() {
 		myHandler = getNewMessageHandler(isMaster());
 		getHandler();
 	}
-
+*/
 	private MessageHandler getNewMessageHandler(boolean master) {
 		if (master)
 			return new MasterMessageHandler(this);
@@ -728,6 +736,8 @@ public class GlobalState  {
 	public void flushModules() {
 		myModules.flush();
 	}
+
+	
 
 
 }

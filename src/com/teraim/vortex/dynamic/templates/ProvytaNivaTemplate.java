@@ -63,10 +63,11 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 	private GestureLibrary gestureLib;
 	private ViewGroup fieldListPanel;
 	private ButtonBlock fixPunkter;
-	private Button taBild;
+	private ButtonBlock taBild;
 	private ButtonBlock[] delyteKnappar = new ButtonBlock[DelyteManager.MAX_DELYTEID];
 	private ButtonBlock[] smayteKnappar;
 	private StatusHandler statusHandler;
+	private Button tagSidaB;
 	private boolean isAbo;
 	private ButtonBlock spillning;
 
@@ -143,20 +144,27 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 
 
 		myContext.addEventListener(this, EventType.onSave);
-
-		taBild = (Button)inflater.inflate(R.layout.button_normal, null);
-		taBild.setText("Foto och mittpunkt");
-		taBild.setOnClickListener(new OnClickListener() {
-
+		
+		tagSidaB = new Button(this.getActivity());
+		
+		tagSidaB.setText("Rita delytor");
+		
+		tagSidaB.setTextSize(30);
+		
+		tagSidaB.setOnClickListener(new OnClickListener() {
+			
 			@Override
 			public void onClick(View v) {
-				final FragmentTransaction ft = myContext.getActivity().getFragmentManager().beginTransaction(); 
-				ft.replace(myContext.getRootContainer(), new FotoTemplate());
+				final FragmentTransaction ft = getActivity().getFragmentManager().beginTransaction(); 
+				Fragment gs = new TagTemplate();  			
+				ft.replace(R.id.content_frame, gs);
 				ft.addToBackStack(null);
 				ft.commit(); 
 			}
 		});
-
+		
+		taBild = new ButtonBlock("_tabild","Foto och mittpunkt","Start_Workflow", "fotobutton","Field_List_panel_1",NamedVariables.WF_FOTO,"action", "status_foto",true,null,null);
+		
 		fixPunkter = new ButtonBlock("_","Fixpunkter","Start_Workflow", "fixpunktbutton","Field_List_panel_1",NamedVariables.WF_FIXPUNKTER,"action", "status_fixpunkter",true,null,null);
 
 		spillning = new ButtonBlock("_s","Spillning","Start_Workflow", "spillningbutton","Field_List_panel_1",NamedVariables.WF_SPILLNING,"action","status_spillning",true,null,null);
@@ -280,9 +288,13 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 
 		pyv.showDelytor(dym.getDelytor(),false);
 
-
-		fieldListPanel.addView(taBild);
-
+		
+		//If master, show Tågsida. 
+		//If solo or slave, show photo.
+		if (gs.isSolo()||gs.isSlave())
+			taBild.create(myContext);
+		if (gs.isSolo()||gs.isMaster())
+			fieldListPanel.addView(tagSidaB);
 		fixPunkter.create(myContext);
 		if (!isAbo)
 			spillning.create(myContext);
@@ -308,7 +320,8 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 			smayteKnappar[i].create(myContext);
 		}
 
-		gs.setKeyHash(al.createProvytaKeyMap());
+		gs.setKeyHash(al.createProvytaKeyMap());		
+		
 		myContext.drawRecursively(myC);
 
 
