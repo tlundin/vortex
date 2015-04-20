@@ -3,8 +3,10 @@ package com.teraim.vortex.dynamic.templates;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -162,7 +164,7 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 
 			Log.d("nils","STRATUM: "+stratum);
 			//			status = Active.INITIAL;
-			stopB.setText("AVSLUTA");
+			stopB.setText("KLAR");
 
 			startB.setText("STARTA");
 			fieldListB.setVisibility(View.INVISIBLE);
@@ -250,7 +252,7 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 
 					AlertDialog.Builder alert = new AlertDialog.Builder(v.getContext());
 					alert.setTitle("Stopp!");
-					alert.setMessage("Vill du säkert avsluta?");					
+					alert.setMessage("Vill du säkert avsluta och klarmarkera?");					
 					alert.setCancelable(false);
 					alert.setPositiveButton("Ja", new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int whichButton) {
@@ -403,7 +405,10 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 				params.height = LayoutParams.WRAP_CONTENT;
 				b.setLayoutParams(params);
 				b.setTextSize(TypedValue.COMPLEX_UNIT_SP, 30);
-				b.setText(linjeObjLabel);
+				if (linjeObjLabel.equals(NamedVariables.RENSTIG))
+					b.setText("Liten fjällstig");
+				else
+					b.setText(linjeObjLabel);
 				b.setOnClickListener(new OnClickListener() {			
 					@Override
 					public void onClick(View v) {
@@ -429,7 +434,7 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 		}
 		mHandler = new Handler();
 		startRepeatingTask();
-		
+
 		return v;
 
 	}
@@ -586,7 +591,7 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 	private void openInterVallPopup(String linjeObjLabel) {	 
 		meterEd = (EditText)numTmp.findViewById(R.id.edit);
 		meterEd.setFilters(new InputFilter[]{ new InputFilterMinMax("0", "200")});
-		openInterVallPopup(Linjetyp.PUNKT,linjeObjLabel);
+		openInterVallPopup(Linjetyp.PUNKT,linjeObjLabel,null);
 	}
 
 
@@ -600,149 +605,248 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 		if (end!=-1)
 			meterEnEd.setText(end+"");
 		meterEnEd.setFilters(new InputFilter[]{ new InputFilterMinMax("1", "200")});		
-		openInterVallPopup(Linjetyp.INTERVALL,"Avgränsning");
+		openInterVallPopup(Linjetyp.INTERVALL,"Avgränsning",intervallL);
 	}
 
-	private void openInterVallPopup(final Linjetyp typ,final String linjeObjLabel) {
-		ViewGroup myView;
-		if (typ==Linjetyp.PUNKT)
-			myView = numTmp;
-		else
-			myView = intervallL;
+	Dialog complexD=null;
+	
+	private void openInterVallPopup(final Linjetyp typ,final String linjeObjLabel, ViewGroup myView) {
+		complexD = null;
+		boolean skipToEnd=false;
+
+		AlertDialog.Builder alert = new AlertDialog.Builder(this.getActivity());
+		
+		
+		
+		alert.setMessage("Ange metertal för linjeobjekt");
+		//If punkt, determine what kind of view to present. If existing objects, show selection.
+		if (typ==Linjetyp.PUNKT && myView==null) {
+			Set<Map<String, String>> existingLinjeObjects = getExistingObjects(linjeObjLabel);
+			if (existingLinjeObjects!=null) {
+				Log.d("vortex","Got this back: "+existingLinjeObjects.toString());
+				Iterator<Map<String,String>> it = existingLinjeObjects.iterator();
+				//Create a button array with a button for each meter.
+				List<Button> buttonArray = new ArrayList<Button>();
+				while (it.hasNext()) {
+					Map<String,String> currentObj = it.next();
+					final String meterV = currentObj.get("meter");
+					Button b = new Button(this.getActivity());
+					b.setText(meterV+" meter");
+					b.setOnClickListener(new OnClickListener() {
+
+						@Override
+						public void onClick(View v) {
+							if (complexD==null)
+								Log.e("vortex","complexD null..should not happen");
+							else
+								complexD.dismiss();
+							jumpToWorkFlow(meterV, null,linjeObjLabel,typ);
+						}
+					});
+					buttonArray.add(b);
+				}
+				//Skapa en knapp för fallet nytt objekt.
+				Button b = new Button(this.getActivity());
+				b.setText("Skapa nytt objekt på annat metertal");
+				b.setOnClickListener(new OnClickListener() {					
+					@Override
+					public void onClick(View v) {
+						complexD.dismiss();
+						openInterVallPopup(typ,linjeObjLabel,numTmp);
+					}
+				});
+				buttonArray.add(b);
+				myView = new LinearLayout(this.getActivity());
+				((LinearLayout)myView).setOrientation(LinearLayout.VERTICAL);
+				for (Button bb:buttonArray) {
+					myView.addView(bb);
+				}
+				alert.setMessage("Välj existerande objekt eller skapa nytt:");
+				skipToEnd=true;
+
+
+			} else {
+				Log.d("vortex","Did not find any existing objects of type "+linjeObjLabel);
+				myView = numTmp;	
+			}
+
+		}
+
 		if (((ViewGroup)myView.getParent())!=null)
 			((ViewGroup)myView.getParent()).removeView(myView);
-		AlertDialog.Builder alert = new AlertDialog.Builder(this.getActivity());
+
 		alert.setTitle(linjeObjLabel);
-		alert.setMessage("Ange metertal för linjeobjekt");
-		alert.setPositiveButton("Spara", new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int whichButton) {
-				Editable metA=null;
-				Editable metS=meterEd.getText();
-				boolean error = false;
-				if (typ==Linjetyp.INTERVALL) {
-					metA = meterEnEd.getText();
-					if (metA==null || metA.length()==0) {
-						o.addRow("");
-						o.addRedText("Avstånd meter tom");
-						error = true;
-					} 
-				}
-				if (metS!=null && metS.length()>0 && !error) {
-					Log.d("nils","Got meters: "+meterEd.getText());
 
-					//Create new !linjeobjekt with the meters.
-					String meter = (meterEd.getText().toString());
-					//peel away zeros from beginning.
-					meter = meter.replaceFirst("^0+(?!$)", "");
-					Log.d("nils","meter is now: "+meter);
-					Variable currentMeter = al.getVariableInstance(NamedVariables.CURRENT_METER);
-					if (currentYear==null||al.getVariableValue(null,"Current_Ruta")==null||currentLinje==null||currentMeter==null) {
-						o.addRow("");
-						o.addRedText("Could not start workflow "+linjeObjLabel+
-								"_wf, since no value exist for one of [Current_year, Current_ruta, Current_Linje, Current_Meter]");
-					} else {
-						currentMeter.setValue(meter);
-						//check if the variable exist. If so - no deal.
-						Map<String,String> key = Tools.createKeyMap(VariableConfiguration.KEY_YEAR,currentYear,"ruta",al.getVariableValue(null,"Current_Ruta"),"linje",currentLinje,"meter",meter,"value",linjeObjLabel);
-						Map<String,String> keyI = new HashMap<String,String>(key);
-						keyI.remove("value");
-						if (typ==Linjetyp.INTERVALL) {							
-							Log.d("nils","Sätter intervall variabler");
-							gs.setKeyHash(keyI);
-							Variable v = al.getVariableInstance(NamedVariables.AVGRANSSLUT);
-							v.setValue(metA.toString());
-							v= al.getVariableInstance(NamedVariables.AVGRTYP);
-							Log.d("nils","Setting avgrtyp to "+((String)avgrSp.getSelectedItem()));
-							v.setValue((String)avgrSp.getSelectedItem());
-						}
-						gs.setKeyHash(key);
-						Variable v = al.getVariableUsingKey(key, NamedVariables.LINJEOBJEKT);
-						//Variable v = al.getVariableInstance();
+		if (!skipToEnd) {
 
-						if (v.setValue(linjeObjLabel)) {
-							Log.d("nils","Stored "+linjeObjLabel+" under meter "+meter);
-							myContext.registerEvent(new WF_Event_OnSave("Template"));
-						} else
-							Log.d("nils","Variable already exists");
-
-						if (typ == Linjetyp.PUNKT) {
-							if (linjeObjLabel.equals("Renstig")) {								
-								al.getVariableUsingKey(keyI, NamedVariables.TransportledTyp).setValue("2");
-							} else {
-								//Start workflow here.
-								Log.d("nils","Trying to start workflow "+"wf_"+linjeObjLabel);
-								Workflow wf = gs.getWorkflow("wf_"+linjeObjLabel);
-								if (wf!=null) {
-									Fragment f = wf.createFragment(wf.getTemplate());
-									if (f == null) {
-										o.addRow("");
-										o.addRedText("Couldn't create new fragment...Workflow was named"+wf.getName());
-										Log.e("nils","Couldn't create new fragment...Workflow was named"+wf.getName());
-									}
-									Bundle b = new Bundle();
-									b.putString("workflow_name", "wf_"+linjeObjLabel); //Your id
-									f.setArguments(b); //Put your id to your next Intent
-									//save all changes¨
-									CHash r = gs.evaluateContext(wf.getContext());
-									if (r.err==null) {
-									gs.setKeyHash(r.keyHash);
-									//Keep this if the hash values change.
-									gs.setRawHash(r.rawHash);
-
-									Start.singleton.changePage(f,linjeObjLabel);
-									Log.d("nils","Should have started "+"wf_"+linjeObjLabel);
-									} else {
-										o.addRow("");
-										o.addRedText("Error in context when trying to start : "+"wf_"+linjeObjLabel+". Error: "+r.err);
-									}
-								} else {
-									o.addRow("");
-									o.addRedText("Couldn't find workflow named "+"wf_"+linjeObjLabel);
-									Log.e("nils","Couldn't find workflow named"+"wf_"+linjeObjLabel);
+			alert.setPositiveButton("Spara", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int whichButton) {
+					Editable metA=null;
+					Editable metS=meterEd.getText();
+					boolean error = false;
+					if (typ==Linjetyp.INTERVALL) {
+						metA = meterEnEd.getText();
+						
+						if (metA.length()==0||metS.length()==0) {
+							o.addRow("");
+							o.addRedText("Avstånd meter tom");
+							error = true;
+							new AlertDialog.Builder(LinjePortalTemplate.this.getActivity())
+							.setTitle("FEL: Slut värde fattas")
+							.setMessage("Du måste ange både start och slut på avgränsningen!") 
+							.setIcon(android.R.drawable.ic_dialog_alert)
+							.setCancelable(false)
+							.setNeutralButton("Ok",new Dialog.OnClickListener() {				
+								@Override
+								public void onClick(DialogInterface dialog, int which) {
+									
 								}
-							}
+							} )
+							.show();
+						} else if (Integer.parseInt(metS.toString())>Integer.parseInt(metA.toString())) {
+							o.addRow("");
+							o.addRedText("Start längre bort än Slut");
+							error = true;
+							new AlertDialog.Builder(LinjePortalTemplate.this.getActivity())
+							.setTitle("Fel värden")
+							.setMessage("Start måste vara lägre än slut!") 
+							.setIcon(android.R.drawable.ic_dialog_alert)
+							.setCancelable(false)
+							.setNeutralButton("Ok",new Dialog.OnClickListener() {				
+								@Override
+								public void onClick(DialogInterface dialog, int which) {
+									
+								}
+							} )
+							.show();
 						}
+					}
+					if (metS!=null && metS.length()>0 && !error) {
+						Log.d("nils","Got meters: "+meterEd.getText());
+
+						//Create new !linjeobjekt with the meters.
+						String meter = (meterEd.getText().toString());
+						//peel away zeros from beginning.
+						meter = meter.replaceFirst("^0+(?!$)", "");
+						Log.d("nils","meter is now: "+meter);
+						jumpToWorkFlow(meter, metA!=null?metA.toString():null,linjeObjLabel,typ);
+					}
+				}
+
+			});
+			alert.setNegativeButton("Avbryt", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int whichButton) {
+
+				}
+			});	
+		}
+		complexD = alert.setView(myView).create();
+		complexD.setCancelable(false);
+		complexD.show();
+
+	}
+
+	private void jumpToWorkFlow(String start, String end, String linjeObjLabel,Linjetyp typ) {
+		Variable currentMeter = al.getVariableInstance(NamedVariables.CURRENT_METER);
+		if (currentYear==null||al.getVariableValue(null,"Current_Ruta")==null||currentLinje==null||currentMeter==null) {
+			o.addRow("");
+			o.addRedText("Could not start workflow "+linjeObjLabel+
+					"_wf, since no value exist for one of [Current_year, Current_ruta, Current_Linje, Current_Meter]");
+		} else {
+			currentMeter.setValue(start);
+			//check if the variable exist. If so - no deal.
+			Map<String,String> key = Tools.createKeyMap(VariableConfiguration.KEY_YEAR,currentYear,"ruta",al.getVariableValue(null,"Current_Ruta"),"linje",currentLinje,"meter",start,"value",linjeObjLabel);
+			Map<String,String> keyI = new HashMap<String,String>(key);
+			keyI.remove("value");
+			if (typ==Linjetyp.INTERVALL) {							
+				Log.d("nils","Sätter intervall variabler");
+				gs.setKeyHash(keyI);
+				Variable v = al.getVariableInstance(NamedVariables.AVGRANSSLUT);
+				v.setValue(end);
+				v= al.getVariableInstance(NamedVariables.AVGRTYP);
+				Log.d("nils","Setting avgrtyp to "+((String)avgrSp.getSelectedItem()));
+				v.setValue((String)avgrSp.getSelectedItem());
+			}
+			gs.setKeyHash(key);
+			Variable v = al.getVariableUsingKey(key, NamedVariables.LINJEOBJEKT);
+			//Variable v = al.getVariableInstance();
+
+			if (v.setValue(linjeObjLabel)) {
+				Log.d("nils","Stored "+linjeObjLabel+" under meter "+start);
+				myContext.registerEvent(new WF_Event_OnSave("Template"));
+			} else 
+				Log.e("nils","Variable "+v.getId()+" Obj:"+v+" already has value "+v.getValue()+" for keychain "+key.toString());
+
+			if (typ == Linjetyp.PUNKT) {
+				if (linjeObjLabel.equals(NamedVariables.RENSTIG)) {								
+					al.getVariableUsingKey(keyI, NamedVariables.TransportledTyp).setValue("2");
+				} else {
+					//Start workflow here.
+					Log.d("nils","Trying to start workflow "+"wf_"+linjeObjLabel);
+					Workflow wf = gs.getWorkflow("wf_"+linjeObjLabel);
+					if (wf!=null) {
+						Fragment f = wf.createFragment(wf.getTemplate());
+						if (f == null) {
+							o.addRow("");
+							o.addRedText("Couldn't create new fragment...Workflow was named"+wf.getName());
+							Log.e("nils","Couldn't create new fragment...Workflow was named"+wf.getName());
+						}
+						Bundle b = new Bundle();
+						b.putString("workflow_name", "wf_"+linjeObjLabel); //Your id
+						f.setArguments(b); //Put your id to your next Intent
+						//save all changes¨
+						CHash r = gs.evaluateContext(wf.getContext());
+						if (r.err==null) {
+							gs.setKeyHash(r.keyHash);
+							//Keep this if the hash values change.
+							gs.setRawHash(r.rawHash);
+
+							Start.singleton.changePage(f,linjeObjLabel);
+							Log.d("nils","Should have started "+"wf_"+linjeObjLabel);
+						} else {
+							o.addRow("");
+							o.addRedText("Error in context when trying to start : "+"wf_"+linjeObjLabel+". Error: "+r.err);
+						}
+					} else {
+						o.addRow("");
+						o.addRedText("Couldn't find workflow named "+"wf_"+linjeObjLabel);
+						Log.e("nils","Couldn't find workflow named"+"wf_"+linjeObjLabel);
 					}
 				}
 			}
+		}
+	}
 
-		});
-		alert.setNegativeButton("Avbryt", new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int whichButton) {
 
-			}
-		});	
-
-		Dialog d = alert.setView(myView).create();
-		d.setCancelable(false);
-		d.show();
-
+	private Set<Map<String, String>> getExistingObjects(String linjeObjLabel) {
+		Map<String,String> objChain = Tools.createKeyMap(VariableConfiguration.KEY_YEAR,currentYear,"ruta",al.getVariableValue(null,"Current_Ruta"),"linje",currentLinje,"value",linjeObjLabel);
+		return db.getAllInstances(NamedVariables.LINJEOBJEKT, objChain, "meter");
 	}
 
 
 	@Override
 	public void onEvent(Event e) {
 		//Py ruta changed. Force reload of page with new settings.
-		
-			
-				if (e instanceof WF_Event_OnBluetoothMessageReceived) { 
-					if ((gs.getOriginalMessage() instanceof LinjeStarted) && !isRunning()) {
-						String linjeId = ((LinjeStarted)gs.getOriginalMessage()).linjeId;
-						if (linjeId!=null && linjeId.equals(currentLinje)) {
-						if (linjeStartEast.getValue()!=null && linjeStartNorth!=null) {
-							double lStartE = Double.parseDouble(linjeStartEast.getValue());
-							double lStartN = Double.parseDouble(linjeStartNorth.getValue());										
-							setStart(lStartE,lStartN);
-						}
-						}
-					}
-					else if (gs.getOriginalMessage() instanceof LinjeDone && isRunning()) {
-						String linjeId = ((LinjeDone)gs.getOriginalMessage()).linjeId;
-						if (linjeId!=null && linjeId.equals(currentLinje)) 
-							setEnded();
-					
+
+
+		if (e instanceof WF_Event_OnBluetoothMessageReceived) { 
+			if ((gs.getOriginalMessage() instanceof LinjeStarted) && !isRunning()) {
+				String linjeId = ((LinjeStarted)gs.getOriginalMessage()).linjeId;
+				if (linjeId!=null && linjeId.equals(currentLinje)) {
+					if (linjeStartEast.getValue()!=null && linjeStartNorth!=null) {
+						double lStartE = Double.parseDouble(linjeStartEast.getValue());
+						double lStartN = Double.parseDouble(linjeStartNorth.getValue());										
+						setStart(lStartE,lStartN);
 					}
 				}
+			}
+			else if (gs.getOriginalMessage() instanceof LinjeDone && isRunning()) {
+				String linjeId = ((LinjeDone)gs.getOriginalMessage()).linjeId;
+				if (linjeId!=null && linjeId.equals(currentLinje)) 
+					setEnded();
+
+			}
+		}
 	}
 
 	public boolean isRunning() {
@@ -751,7 +855,7 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 
 
 	private static String ticker = "         Väntar på GPS...det kan ta upp till flera minuter på den här dosan. Kanske en kaffekopp?";
-			
+
 
 	private int tStrLen = 10, curPos=0;
 	private void updateStatus() {
@@ -775,9 +879,9 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 	}
 
 	void stopRepeatingTask() {
-			mHandler.removeCallbacks(mStatusChecker);
-			tickerRunning = false;
-		
+		mHandler.removeCallbacks(mStatusChecker);
+		tickerRunning = false;
+
 	}
 	private Handler mHandler;
 	private int mInterval = 250;

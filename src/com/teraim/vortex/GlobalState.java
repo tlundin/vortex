@@ -422,7 +422,7 @@ public class GlobalState  {
 
 
 	public void  setKeyHash(Map<String,String> h) { 	
-		artLista.destroyCache();
+		//artLista.destroyCache();
 		RuleExecutor.getInstance(getContext()).destroyCache();
 		myKeyHash=h;
 		Log.d("vortex","SetKeyHash was called with "+h+" on this "+this.toString());
@@ -736,6 +736,12 @@ public class GlobalState  {
 	public void flushModules() {
 		myModules.flush();
 	}
+
+	public static void destroy() {
+		singleton=null;
+	}
+
+	
 
 	
 

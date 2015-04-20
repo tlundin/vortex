@@ -164,6 +164,7 @@ public class WF_Linje_Meter_List extends WF_List implements EventListener {
 	private void refreshList() {
 		Log.d("nils","In refereshlist..");
 		list.clear();
+		al.destroyCache();
 		linjeV.removeAllMarkers();
 		List<String[]> rows = gs.getDb().getValues(columnNames,s);
 		if (rows!=null) {
@@ -171,6 +172,7 @@ public class WF_Linje_Meter_List extends WF_List implements EventListener {
 			int rowC=0;
 
 			for (String[] colVals:rows) {
+				Log.d("vortex","colVals header: "+colVals[myHeaderCol]);
 				if (colVals!=null) {	
 					Map<String,String> bonnlapp = new HashMap<String,String>(listElemSelector);				
 					for (int colC=0;colC<colVals.length;colC++) {
@@ -180,6 +182,7 @@ public class WF_Linje_Meter_List extends WF_List implements EventListener {
 					String header = colVals[myHeaderCol];
 					WF_ClickableField_Selection entryF = new WF_ClickableField_Selection(header,"",myContext,this.getId()+rowC,true);										
 					if (colVals[myHeaderCol]!=null && colVals[myHeaderCol].equals("Avgränsning")) {
+						Log.d("vortex","In refreshlist for avgränsning");
 						Variable v = new Variable(varId,"Start",al.getCompleteVariableDefinition(varId),bonnlapp,gs,"meter",null,null);
 						v.setType(DataType.numeric);
 						al.addToCache(v);
@@ -195,6 +198,8 @@ public class WF_Linje_Meter_List extends WF_List implements EventListener {
 						entryF.addVariable(v, false, null, true,false);
 						if (slut!=null)
 							linjeV.addMarker(start, slut, v.getValue());
+						else
+							Log.d("vortex","slut null!");
 					} else {
 						Variable v = new Variable(varId,"Avstånd",al.getCompleteVariableDefinition(varId),bonnlapp,gs,"meter",null,null);
 						v.setType(DataType.numeric);						

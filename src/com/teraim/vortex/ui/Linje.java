@@ -151,6 +151,7 @@ public class Linje extends View {
 	}
 	
 	public void removeMarker(String tag, String meters) {
+		Log.e("vortex","Removing marker "+tag+" at "+meters+" meters");
 		Map<String,LineMarker> lm = markers.get(meters);
 		LineMarker a;
 		if (lm!=null)

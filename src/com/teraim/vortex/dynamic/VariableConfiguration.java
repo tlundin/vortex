@@ -452,8 +452,8 @@ public class VariableConfiguration implements Serializable {
 	}
 	
 	public void destroyCache() {
-		Log.d("nils","In destroy cache...will not destroy");
-		//varCache.clear();
+		Log.d("nils","In destroy cache...will destroy");
+		myCache.invalidateAll();
 	}
 
 	public void addToCache(Variable v) {

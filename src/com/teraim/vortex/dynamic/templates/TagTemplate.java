@@ -180,7 +180,7 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 				final String provytaId = al.getVariableValue(null, "Current_Provyta");
 				new AlertDialog.Builder(TagTemplate.this.getActivity())
 				.setTitle("Nyutlägg - Varning")
-				.setMessage("Alla delytor under ruta/provyta ["+rutaId+"/"+provytaId+"] kommer suddas. Är du säker?")
+				.setMessage("Nytt utlägg av provyta görs om tillståndet på provytan har förändrats så att en ny provytedelning måste göras, eller om man inte hittar provytecentrum.\nAlla delytor under ruta/provyta ["+rutaId+":"+provytaId+"] kommer suddas. Är du säker?")
 				.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) { 
 						drawEmptyTable();

@@ -149,6 +149,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 				while (its.hasNext()) {
 					Map.Entry<Variable,View> pairs = (Map.Entry<Variable,View>)its.next();
 					Variable variable = pairs.getKey();
+					Log.d("vortex","deleting variable "+variable.getId()+" with value "+variable.getValue());
 					DataType type = variable.getType();
 					View view = pairs.getValue();
 					if (type == DataType.numeric||
@@ -499,12 +500,17 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 
 				private void hideOrShowViews(List<String> varIds,
 						boolean mode) {
+					Log.d("vortex","In hideOrShowViews...");
 					if (varIds == null||varIds.size()==0)
 						return;
+					
 					for (String varId:varIds) {
+						Log.d("vortex","Trying to find "+varId);
 						if (varId!=null) {
 							for(Variable v:myVars.keySet()) {
+								Log.d("vortex","Comparing with "+v.getId());
 								if (v.getId().equals(varId.trim()))  {
+									Log.d("vortex","Match! "+v.getId());
 									View gView = myVars.get(v);
 									gView.setVisibility(mode?View.VISIBLE:View.GONE);
 									if (gView instanceof LinearLayout) {
@@ -638,11 +644,11 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 								newValue = v[s];
 							else
 								newValue = null;
-							Log.d("nils","VALUE FOR SPINNER A"+newValue);
+							Log.d("nils","VALUE FOR SPINNER A "+newValue);
 						}
 						else {
 							newValue = (String)sp.getSelectedItem();
-							Log.d("nils","VALUE FOR SPINNER B"+newValue);
+							Log.d("nils","VALUE FOR SPINNER B "+newValue);
 						}
 					} else
 						if (type == DataType.auto_increment) {
@@ -657,8 +663,11 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 			if (newValue == null || !newValue.equals(existingValue)||variable.isUsingDefault()) {
 				Log.d("nils","New value: "+newValue);
 				saveEvent=true;
-				if (newValue==null)
+				if (newValue==null) {
+					Log.e("vortex","Calling delete on "+variable.getId()+"Obj:"+variable+" with keychain\n"+variable.getKeyChain().toString());
 					variable.deleteValue();
+					Log.e("vortex","Getvalue now returns: "+variable.getValue());
+				}
 				else {
 					//Re-evaluate rules.					
 					variable.setValue(newValue);

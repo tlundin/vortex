@@ -666,17 +666,41 @@ public class RuleExecutor {
 			if (args==null||args.length!=1) {
 				Log.e("vortex","no or too few arguments in hasSame");
 				gs.getLogger().addRow("");
-				gs.getLogger().addRedText("No or too few arguments in hasSame");
+				gs.getLogger().addRedText("No or too few arguments in getDelytaArea");
 				return null;
 			}
-			Delyta dy = dym.getDelyta(Integer.parseInt(args[0]));
+			//TODO This is wrong...variable arg should be tokenized.
+			String arg = args[0];
+			if (arg !=null && arg.length()>0) {
+				
+			} else {
+				Log.e("vortex","no first argument in hasSame");
+				gs.getLogger().addRow("");
+				gs.getLogger().addRedText("Argument missing in getDelytaArea");
+				return null;
+			}
+			value=null;
+			if (!Tools.isNumeric(arg)) {
+				Variable v = al.getVariableInstance(arg);
+				if (v==null) {
+					Log.e("vortex","variable null in getdelytaarea");
+					gs.getLogger().addRow("");
+					gs.getLogger().addRedText("Variable"+arg+" does not exist (in function getDelytaArea)");
+					return null;
+				} else 
+					value = v.getValue();
+					
+			} else
+				value = arg;
+			
+			Delyta dy = dym.getDelyta(Integer.parseInt(value));
 			if (dy==null) {
 				Log.e("vortex","delyta null in getdelytaarea");
 				gs.getLogger().addRow("");
 				gs.getLogger().addRedText("Delyta "+args[0]+" does not exist (in function getDelytaArea)");
 				return null;
 			}
-			return Float.toString(dy.getArea());
+			return Float.toString(dy.getArea()/100);
 		}
 
 		if (item.getType()==TokenType.hasSame) {
@@ -688,7 +712,7 @@ public class RuleExecutor {
 			} else {
 				//Get all variables in Functional Group x.
 				List<List<String>> rows = al.getTable().getRowsContaining(VariableConfiguration.Col_Functional_Group, item.getArguments()[0]);
-				Log.d("vortex","found "+(rows.size()-1)+" variables in "+item.getArguments()[0]);
+				Log.d("vortex","found "+(rows.size()-1)+" variables in "+args[0]);
 				//Parse the expression. Find all references to Functional Group.
 				//Each argument need to either exist or not exist.
 				Map<String, String[]>values=new HashMap<String,String[]>();

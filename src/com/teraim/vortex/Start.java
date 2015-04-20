@@ -64,20 +64,8 @@ public class Start extends MenuActivity {
 		getActionBar().setDisplayHomeAsUpEnabled(true);
 		getActionBar().setHomeButtonEnabled(true);
 		
-		//Create a global logger.
-		debugLogger = new Logger(this,"DEBUG");
 		
-		//Start the login fragment.
-		if (loginFragment == null) {
-			loginFragment = new LoginConsoleFragment();
-			FragmentManager fragmentManager = getFragmentManager();
-			fragmentManager.beginTransaction()
-			.replace(R.id.content_frame, loginFragment)
-			.commit();
-		}
 		
-		//Execution continues in loginFragment
-
 	}
 
 
@@ -86,9 +74,7 @@ public class Start extends MenuActivity {
 	@Override
 	protected void onStart() {
 		super.onStart();
-	//	this.invalidateOptionsMenu();
-
-
+	
 	}
 
 //	private boolean doRefresh=false;
@@ -388,10 +374,27 @@ public class Start extends MenuActivity {
 	 */
 	@Override
 	protected void onResume() {
-		Log.d("nils","Gets to onResume");
-
-
 		super.onResume();
+		Log.d("nils","Gets to onResume");
+		//Check if program is already up.
+		if (GlobalState.getInstance()==null) {
+			Log.d("vortex","Globalstate null...need to reload");
+			//Create a global logger.
+			
+			
+			//Start the login fragment.
+			if (loginFragment == null) {
+				loginFragment = new LoginConsoleFragment();
+				FragmentManager fragmentManager = getFragmentManager();
+				fragmentManager.beginTransaction()
+				.replace(R.id.content_frame, loginFragment)
+				.commit();
+			}
+		} else {
+			Log.d("vortex","Globalstate is not null!");
+			
+		}
+		
 
 	}
 
@@ -529,8 +532,10 @@ public class Start extends MenuActivity {
 			Log.d("nils","Trying to cancel histT");
 			histT.cancel(true);
 		}
-		if (GlobalState.getInstance()!=null)
+		if (GlobalState.getInstance()!=null) {
 			GlobalState.getInstance().getDb().closeDatabaseBeforeExit();
+			GlobalState.destroy();
+		}
 		super.onDestroy();
 	}
 
@@ -593,6 +598,8 @@ public class Start extends MenuActivity {
 
 
 	public LoggerI getLogger() {
+		if (debugLogger==null)
+			debugLogger = new Logger(this,"DEBUG");
 		return debugLogger;
 	}
 	

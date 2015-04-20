@@ -6,8 +6,8 @@ public class NamedVariables {
 	public static final String RENSTIG = "Renstig";
 
 	//VARIABLER SOM OMNÄMNS
-	public static final String AVGRANSSLUT = "Avgränsning_avgransslut";
-	public static final String AVGRTYP = "Avgränsning_avgrtyp";
+	public static final String AVGRANSSLUT = "Avgränsning:avgransslut";
+	public static final String AVGRTYP = "Avgränsning:avgrtyp";
 	public static final String CentrumGPSNS = "CentrumGPSNS";
 	public static final String CentrumGPSEW = "CentrumGPSEW";
 	public static final String CentrumGPSLat = "CentrumGPSLat";
@@ -19,15 +19,15 @@ public class NamedVariables {
 	public static final String ProfilRikt = "FlyttadProfil_ProfilRiktning";
 	public static final String NYUTLAGG = "Nyutlagg";
 	public static final String STATUS_LINJE = "status_linje";
-	public static final String TransportledTyp = "Väg_TransportLedTyp";
+	public static final String TransportledTyp = "Väg:TransportLedTyp";
 
 
 
-	public static final String[] FIXPUNKT_VARS = new String[] {"fixpunkter_FixPunkt1_avstand",
-		"fixpunkter_FixPunkt1_riktning","fixpunkter_FixPunkt2_avstand",
-		"fixpunkter_FixPunkt2_riktning","fixpunkter_FixPunkt3_avstand",
-		"fixpunkter_FixPunkt3_riktning","fixpunkter_FixPunkt4_avstand",
-		"fixpunkter_FixPunkt4_riktning"
+	public static final String[] FIXPUNKT_VARS = new String[] {"fixpunkter:FixPunkt1_avstand",
+		"fixpunkter:FixPunkt1_riktning","fixpunkter:FixPunkt2_avstand",
+		"fixpunkter:FixPunkt2_riktning","fixpunkter:FixPunkt3_avstand",
+		"fixpunkter:FixPunkt3_riktning","fixpunkter:FixPunkt4_avstand",
+		"fixpunkter:FixPunkt4_riktning"
 	};
 	
 	

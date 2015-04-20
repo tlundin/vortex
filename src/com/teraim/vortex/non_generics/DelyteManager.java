@@ -510,8 +510,10 @@ public class DelyteManager {
 		if (instance == null) {
 			GlobalState gs = GlobalState.getInstance();
 			String py = gs.getVariableConfiguration().getCurrentProvyta();
-			if (py!=null)
+			if (py!=null) {
 				instance = new DelyteManager(gs,Integer.parseInt(py));
+				instance.init();
+			}
 		}
 		return instance;
 	}

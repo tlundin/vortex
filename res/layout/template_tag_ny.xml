@@ -44,7 +44,7 @@
          android:layout_toLeftOf="@+id/rensa"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="15dp"
-        android:text="Kalkylera delytor" />
+        android:text="Beräkna delytor" />
     
     <Button
         android:id="@+id/rensa"

@@ -115,16 +115,7 @@ public abstract class Executor extends Fragment {
 		gs = GlobalState.getInstance();
 		if (gs == null) {
 			Log.e("vortex","no globalstate...reloading App.");
-			Log.d("vortex","restarting...");
-			Activity context = this.getActivity();
-			android.app.FragmentManager fm = context.getFragmentManager();
-			for(int i = 0; i < fm.getBackStackEntryCount(); ++i) {    
-			    fm.popBackStack();
-			}
-			Intent intent = new Intent(context, Start.class);
-			intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-			startActivity(intent);
-			context.finish();		
+			
 		}
 		myContext = new WF_Context((Context)activity,this,R.id.content_frame);
 		o = gs.getLogger();

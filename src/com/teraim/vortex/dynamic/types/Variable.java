@@ -223,7 +223,7 @@ public class Variable implements Serializable {
 
 
 	public Variable(String name,String label,List<String> row,Map<String,String>keyChain, GlobalState gs,String valueColumn, String defaultOrExistingValue, Boolean valueIsPersisted) {
-		Log.d("nils","Creating variable ["+name+"]");
+		Log.e("nils","Creating variable ["+name+"] with keychain "+((keyChain==null)?"null":printKeyChain(keyChain))+"\nthis obj: "+this);
 		this.gs=gs;
 		al=gs.getVariableConfiguration();
 		this.name = name;
@@ -287,6 +287,18 @@ public class Variable implements Serializable {
 		return false;
 	}
 	 */
+
+	private String printKeyChain(Map<String, String> kc) {
+		if (kc==null)
+			return "empty";
+		String ret="";
+		for (String key:kc.keySet()) {
+			if (key!=null) 
+				ret+="{"+key+" = "+kc.get(key)+"}\n";
+			
+		}
+		return ret;
+	}
 
 	private void setDefault(String defaultValue) {
 		if (defaultValue == null)

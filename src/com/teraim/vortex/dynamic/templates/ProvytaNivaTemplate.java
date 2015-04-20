@@ -30,6 +30,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.teraim.vortex.R;
+import com.teraim.vortex.Start;
 import com.teraim.vortex.dynamic.Executor;
 import com.teraim.vortex.dynamic.blocks.ButtonBlock;
 import com.teraim.vortex.dynamic.blocks.OnclickExtra;
@@ -90,11 +91,7 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 		final String currPy = al.getCurrentProvyta();
 		final String currRuta = al.getCurrentRuta();
 		dym = DelyteManager.getInstance();
-		//If init not done yet, do it now
-		if (dym == null) {
-			dym = DelyteManager.create(gs,Integer.parseInt(al.getCurrentProvyta()));
-			dym.init();
-		}
+		
 		dym.setSelected(null);
 		statusHandler = gs.getStatusHandler();
 
@@ -147,7 +144,7 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 		
 		tagSidaB = new Button(this.getActivity());
 		
-		tagSidaB.setText("Rita delytor");
+		tagSidaB.setText("Delningsskärm");
 		
 		tagSidaB.setTextSize(30);
 		
@@ -155,15 +152,16 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 			
 			@Override
 			public void onClick(View v) {
-				final FragmentTransaction ft = getActivity().getFragmentManager().beginTransaction(); 
+				/*final FragmentTransaction ft = getActivity().getFragmentManager().beginTransaction(); 
 				Fragment gs = new TagTemplate();  			
 				ft.replace(R.id.content_frame, gs);
 				ft.addToBackStack(null);
-				ft.commit(); 
+				ft.commit(); */
+				Start.singleton.changePage(new TagTemplate(), "Delningsskärm");
 			}
 		});
 		
-		taBild = new ButtonBlock("_tabild","Foto och mittpunkt","Start_Workflow", "fotobutton","Field_List_panel_1",NamedVariables.WF_FOTO,"action", "status_foto",true,null,null);
+		taBild = new ButtonBlock("_tabild","Foto","Start_Workflow", "fotobutton","Field_List_panel_1",NamedVariables.WF_FOTO,"action", "status_foto",true,null,null);
 		
 		fixPunkter = new ButtonBlock("_","Fixpunkter","Start_Workflow", "fixpunktbutton","Field_List_panel_1",NamedVariables.WF_FIXPUNKTER,"action", "status_fixpunkter",true,null,null);
 
