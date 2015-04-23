@@ -4,31 +4,33 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-<RelativeLayout 
-    
+<LinearLayout 
     android:layout_width="match_parent"
-    android:layout_height="match_parent" >
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
     
-    <FrameLayout 
-        android:id="@+id/parent"
-        android:layout_width="match_parent"
-        android:layout_height="500dp"
-        
-        >
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:padding="10dp"
+        android:text="Överblick fixpunkter"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
 
-        <TextView
-            android:id="@+id/textView1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:text="Överblick fixpunkter" />
+    <FrameLayout
+        android:id="@+id/circle"
+        android:layout_width="match_parent"
+        android:layout_height="550dp" >
 
     </FrameLayout>
-    <FrameLayout
-         android:id="@+id/circle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" 
-        android:layout_alignBottom="@id/parent"/>
 
-</RelativeLayout>
+    <Button
+        android:id="@+id/backB"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="30sp"
+        android:text="&lt;&lt;Tillbaka" />
+
+</LinearLayout>
 </android.gesture.GestureOverlayView>

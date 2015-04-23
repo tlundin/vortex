@@ -93,7 +93,7 @@ public abstract class Loader extends AsyncTask<ConfigurationModule ,Integer,Load
 				reader.close();
 				return ErrorCode.Aborted;
 			}
-			if (rowC++%10==0)
+			if ((rowC++%20)==0) 
 				this.publishProgress(0,rowC);
 		}
 		m.setRawData(sb.toString(), rowC);
@@ -111,7 +111,7 @@ public abstract class Loader extends AsyncTask<ConfigurationModule ,Integer,Load
 
 	protected LoadResult parseCSV(CSVConfigurationModule m) throws IOException {
 		String[] myRows=null;
-		Integer noOfRows=rowC;
+		int noOfRows=rowC;
 		LoadResult res = null;
 		rowC=1;
 		LoadResult lr = m.prepare();
@@ -129,7 +129,7 @@ public abstract class Loader extends AsyncTask<ConfigurationModule ,Integer,Load
 				res = loadR;
 				break;
 			}
-			if (rowC++%20==0)
+			if ((rowC++%20)==0) 
 				this.publishProgress(rowC,noOfRows);
 			
 		}
@@ -149,8 +149,10 @@ public abstract class Loader extends AsyncTask<ConfigurationModule ,Integer,Load
 		if (lr!=null)
 			return lr;
 		rowC=0;
-		while((lr=m.parse(parser))==null)
-			this.publishProgress(rowC++);
+		while((lr=m.parse(parser))==null) {
+			if ((rowC++%20)==0) 
+				this.publishProgress(rowC);
+		}
 		return lr;
 	}
 	
@@ -161,20 +163,25 @@ public abstract class Loader extends AsyncTask<ConfigurationModule ,Integer,Load
 		if (lr!=null)
 			return lr;
 		rowC=0;
-		while((lr=m.parse(parser))==null)
-			this.publishProgress(rowC++);
+		
+		while((lr=m.parse(parser))==null) {
+			if ((rowC++%20)==0) 
+				this.publishProgress(rowC);				
+			
+		}
 		return lr;
 	}
 	
-
+	
+	
 	protected LoadResult freeze(ConfigurationModule m) throws IOException {
-		
+
 		//Multiple steps or only one to freeze?
 		if (m.freezeSteps>0) {
 			rowC=0;
 			while (rowC<m.freezeSteps) {
-			m.freeze(rowC++);
-			if (rowC%10==0)
+			m.freeze(rowC);
+			if ((rowC++%100)==0)
 				this.publishProgress(rowC,m.freezeSteps);
 
 			}
@@ -184,7 +191,7 @@ public abstract class Loader extends AsyncTask<ConfigurationModule ,Integer,Load
 		
 		if (m.version!=null)
 			m.setFrozenVersion(m.version);
-		if (m.getEssence()!=null)
+		if (m.getEssence()!=null||m.isDatabaseModule)
 			return new LoadResult(m,ErrorCode.frozen);
 		else {
 			//Log.d("vortex","in freez: Essence is "+m.getEssence());

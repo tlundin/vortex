@@ -5,6 +5,7 @@ import java.util.List;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.Executor;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Container;
 
@@ -28,7 +29,8 @@ public class EmptyTemplate extends Executor {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		run();
+		if (wf!=null)
+			run();
 
 	}
 

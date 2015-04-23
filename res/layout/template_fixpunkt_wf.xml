@@ -57,6 +57,13 @@
             android:layout_height="5dip"
             android:background="#000000" />
 
+        <Button
+            android:id="@+id/framB"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="30sp"
+            android:text="Grafisk vy>>" />
+
         <ScrollView
             android:id="@+id/scrollView3"
             android:layout_width="match_parent"
@@ -71,6 +78,7 @@
                 android:orientation="vertical" >
             </LinearLayout>
         </ScrollView>
+
     </LinearLayout>
 
 </android.gesture.GestureOverlayView>

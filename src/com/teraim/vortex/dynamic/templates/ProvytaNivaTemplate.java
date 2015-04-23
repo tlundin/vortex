@@ -226,7 +226,7 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 				//String avst = al.getVariableValue(pyKeyMap,"ProfilAvstand");
 				//String rikt = al.getVariableValue(pyKeyMap,"ProfilRiktning");
 				AlertDialog.Builder alert = new AlertDialog.Builder(v.getContext());
-				alert.setTitle("Varning");
+				alert.setTitle("OBS!");
 				alert.setMessage("Den här provytan har flyttat centrum!");					
 				alert.setCancelable(false);
 				alert.setPositiveButton("Okej", new DialogInterface.OnClickListener() {
@@ -242,7 +242,7 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 					//String avst = al.getVariableValue(pyKeyMap,"ProfilAvstand");
 					//String rikt = al.getVariableValue(pyKeyMap,"ProfilRiktning");
 					AlertDialog.Builder alert = new AlertDialog.Builder(v.getContext());
-					alert.setTitle("Varning");
+					alert.setTitle("OBS!");
 					alert.setMessage("Den här provytan saknar profil!");					
 					alert.setCancelable(false);
 					alert.setPositiveButton("Okej", new DialogInterface.OnClickListener() {
@@ -263,7 +263,8 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 		//Rita sidan
 		refresh();
 
-		Toast.makeText(this.getActivity(),"<<<<<< Svep åt vänster för Tågdelnings-sidan!", Toast.LENGTH_SHORT).show();
+		if (gs.isMaster()||gs.isSolo())
+			Toast.makeText(this.getActivity(),"<<<<<< Svep för Delningssidan!", Toast.LENGTH_SHORT).show();
 
 		return v;
 

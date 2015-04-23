@@ -66,6 +66,7 @@ import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.ui.MenuActivity;
 import com.teraim.vortex.utils.RuleExecutor;
+import com.teraim.vortex.utils.Tools;
 import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 
 /*
@@ -114,8 +115,8 @@ public abstract class Executor extends Fragment {
 		activity = this.getActivity();
 		gs = GlobalState.getInstance();
 		if (gs == null) {
-			Log.e("vortex","no globalstate...reloading App.");
-			
+			Log.e("vortex","globalstate null, exit");
+			return;
 		}
 		myContext = new WF_Context((Context)activity,this,R.id.content_frame);
 		o = gs.getLogger();

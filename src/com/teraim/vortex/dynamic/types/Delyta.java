@@ -29,18 +29,18 @@ public class Delyta {
 	private static final float NO_VALUE = -9999999;
 	private static final int[] DelytaColor = {Color.BLACK,
 		Color.parseColor("#4d90fe"),Color.parseColor("#EE7600"),Color.parseColor("#8A9A5B"),Color.DKGRAY};
-	
+
 	private float myNumX=NO_VALUE,myNumY=NO_VALUE;
 	private DelyteManager dym;
 
 	public Delyta(DelyteManager dym) {
 		this.dym=dym;
 	}
-	
-	
-	
+
+
+
 	public ErrCode create(List<Coord> raw) {
-		
+
 		Log.d("nils","Got coordinates: "+raw.toString());
 		String sue = "";
 		if (raw == null||raw.size()==0)
@@ -83,14 +83,14 @@ public class Delyta {
 			Log.e("nils","No ending arc added. Start & end are next to each other");
 		//Calc area.
 		calcStats();
-		
-		
+
+
 		return ErrCode.ok;
 	}
 	private int containsSmaProv=-1;
 	private List<Coord> delytePolygon=null;
 	private boolean isSelected;
-	
+
 	//TODO: Change implementation so that delyta is only asked to check smaprovytor that remains & part of study
 	private void checkIfContainsSmaProv() {
 		final boolean abo = Constants.isAbo(dym.getPyID());
@@ -101,7 +101,7 @@ public class Delyta {
 		//avst to smaprov is always 6 meters.
 		int i=0;
 		Polygon.Builder builder = Polygon.Builder();
-		
+
 		for (Coord c:delytePolygon) {
 			builder.addVertex(new Point(c.x,c.y));
 		}
@@ -112,8 +112,8 @@ public class Delyta {
 			for (int rikt:smaRikt) {
 				if (contains(avst,rikt,p)) 
 					containsSmaProv+=b[i];
-				
-			i++;
+
+				i++;
 			}
 		}
 	}
@@ -124,23 +124,23 @@ public class Delyta {
 		return containsSmaProv;
 	}
 
-	
+
 	private boolean isInside(Polygon polygon, Point point)
 	{
 		boolean contains = polygon.contains(point);
 		System.out.println("The point:" + point.toString() + " is " + (contains ? "" : "not ") + "inside the polygon");
 		return contains;
 	}
-	
-	
+
+
 	public boolean contains(int avst, int rikt, Polygon p) {
-		
-		
-		
+
+
+
 		Coord test = new Coord(avst,rikt);
-		
+
 		return isInside(p,new Point(test.x,test.y));
-		
+
 	}	/*
 	      int i;
 	      int j;
@@ -158,9 +158,9 @@ public class Delyta {
 	      }
 	      Log.d("nils","contains for smaprov at ["+test.x+","+test.y+"] are "+(result?"inside":"outside")+" delyta "+delNr);
 	      return result;
-	     */
+	 */
 	/*
-	
+
 	public boolean contains(Point test) {
 	      int i;
 	      int j;
@@ -174,15 +174,15 @@ public class Delyta {
 	      return result;
 	    }
 
-	*/
-	
-	
-	
+	 */
+
+
+
 	private void calcStats() {
 		area = calcArea();
 		mySouth = distance(South);
 		myWest = distance(West);
-		
+
 	}
 
 	public void createFromSegments(List<Segment> ls) {
@@ -206,7 +206,7 @@ public class Delyta {
 	private float distance(Coord Pole) {
 		float Dx,Dy,x1y2,x2y1;
 		float ret=-1,max=10000;
-		
+
 		for (Segment s:tag) {
 			if (s.isArc) {
 				int endToPoleDist = pDist(s.end.rikt,Pole.rikt);
@@ -229,7 +229,7 @@ public class Delyta {
 					Dy = shortest.y-Pole.y;
 					ret = (float)Math.sqrt(Dx*Dx+Dy*Dy);
 					Log.d("nils","DISTANCE TO "+(Pole.equals(West)?"WEST":"SOUTH")+" POLAR: "+ret);
-					
+
 				}
 
 			} else {
@@ -242,7 +242,7 @@ public class Delyta {
 				ret = d/hyp;
 				Log.d("nils","DISTANCE TO "+(Pole.equals(West)?"WEST":"SOUTH")+ret);
 				float slope = Dy/Dx;
-				
+
 			}
 			if (ret<max)
 				max = ret;
@@ -297,14 +297,14 @@ public class Delyta {
 				pol+="["+i+":{"+areaC.get(i).x+","+areaC.get(i).y+"}]";
 			Log.e("nils",pol);
 		}
-		*/
+		 */
 		return T/2;
 	}
 
 	public List<Coord> getSpecial() {
 		return delytePolygon;
 	}
-	
+
 	//should be coordinates on the radius. with grad running 0..359. 
 	private void addArcCoords(List<Coord> areaC, Coord start, Coord end) {
 		int i = (int)start.rikt;
@@ -329,12 +329,12 @@ public class Delyta {
 		myNumX = mX;
 		myNumY = mY;
 	}
-	
+
 	public Point getNumberPos() {
 		if (myNumX==NO_VALUE||myNumX==NO_VALUE)
 			return null;
-//		Point p = new Point();
-//		p.set((int)myNumX,(int)myNumY);
+		//		Point p = new Point();
+		//		p.set((int)myNumX,(int)myNumY);
 		return new Point(myNumX,myNumY);
 	}
 
@@ -344,7 +344,7 @@ public class Delyta {
 			return null;
 
 		for (Coord c:rawData) {
-			res = res + c.avst+"|"+c.rikt+"|";
+			res = res + c.getAvst()+"|"+c.getRikt()+"|";
 		}
 		//remove superfl divider.
 		if (rawData.size()>0)
@@ -355,10 +355,34 @@ public class Delyta {
 		return res;
 	}
 
+	public String getTagPrettyPrint() {
+		String res="[ ";
+		String splitToken = " | ";
+		if (rawData == null||rawData.size()==0) {
+			Log.e("nils","Something is wrong...rawData empty");
+			GlobalState.getInstance().getLogger().addRow("");
+			GlobalState.getInstance().getLogger().addRedText("Rawdata empty in Delyta, getTagPretyPrint");
+			return "";
+		}
+		for (Coord c:rawData) 
+			res = res + c.getAvst()+","+c.getRikt()+splitToken;
+		res = res.substring(0, res.length()-splitToken.length());
+
+		return res+" ]";
+	}
+	
+	public String getTagCommaPrint() {
+		String res = "";
+		for (Coord c:rawData) 
+			res = res + c.getAvst()+","+c.getRikt()+",";
+		res = res.substring(0, res.length()-1);
+		return res;
+	}
+
 	public boolean isSelected() {
 		return isSelected;
 	}
-	
+
 	public void setSelected(boolean sel) {
 		isSelected=sel;
 	}
@@ -367,5 +391,13 @@ public class Delyta {
 		Log.d("nils","color: "+DelytaColor[this.getId()>0?this.getId():0]);
 		return DelytaColor[delNr>=0&&delNr<6?delNr:0];
 	}
+	
+	public List<Coord> getRawTag() {
+		return rawData;
+	}
+
+
+
+	
 }
 

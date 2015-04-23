@@ -61,7 +61,7 @@ public class FixytaView extends View {
 
 		p.setColor(Color.BLACK);
 		p.setStyle(Style.STROKE);
-		p.setTextSize(15);
+		p.setTextSize(20);
 
 		p20.setColor(Color.BLUE);
 		p20.setStrokeWidth(2);
@@ -116,8 +116,8 @@ public class FixytaView extends View {
 					uy = uy - Marker.Pic_H/2; 
 					Log.d("nils","gets here... "+focusMarker.dist+" iscenter: "+focusMarker.isCentre());
 					
-					if (focusMarker.isCentre()) 
-						canvas.drawText("A: "+focusMarker.getDistance()+" R: "+focusMarker.riktning, ux, uy, p);
+					//if (focusMarker.isCentre()) 
+					canvas.drawText("A: "+focusMarker.getDistance()+" R: "+focusMarker.riktning, ux, uy, p);
 	
 					canvas.drawBitmap(focusMarker.bmp, ux, uy, null);
 					//canvas.drawText("A: "+focusMarker.getDistance()+" R: "+focusMarker.riktning, ux, uy, p);

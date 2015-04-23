@@ -14,7 +14,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.Toast;
@@ -54,6 +56,19 @@ public class FixPunktTemplate extends Executor implements OnGesturePerformedList
 	    if (!gestureLib.load()) {      	
 	    	        Log.i("nils", "Load gesture libraries failed.");  
 	    	    }  
+	    Button framB = (Button)v.findViewById(R.id.framB);
+	    
+	    framB.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				final FragmentTransaction ft = getActivity().getFragmentManager().beginTransaction(); 
+	  			FixPunktFragment gs = new FixPunktFragment();  			
+	  			ft.replace(R.id.content_frame, gs);
+	  			ft.addToBackStack(null);
+	  			ft.commit(); 
+			}
+		});
 
 		if (wf!=null) {
 			run();

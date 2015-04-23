@@ -2,11 +2,14 @@ package com.teraim.vortex.loadermodule;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 import android.provider.MediaStore.Files;
 import android.util.Log;
 
 import com.teraim.vortex.FileLoadedCb;
+import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.loadermodule.LoadResult.ErrorCode;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.PersistenceHelper;
@@ -21,7 +24,7 @@ public abstract class ConfigurationModule {
 		xml,
 		csv
 	}
-	
+
 	public enum Source {
 		file,
 		internet
@@ -40,7 +43,7 @@ public abstract class ConfigurationModule {
 	protected int freezeSteps=-1;
 	//tells if this module is stored on disk or db.
 	protected boolean isDatabaseModule = false,hasSimpleVersion=true;
-	
+
 	public ConfigurationModule(PersistenceHelper gPh,PersistenceHelper ph, Type type, Source source, String urlOrPath,String fileName,String moduleName) {
 		this.source=source;
 		this.type=type;
@@ -54,14 +57,14 @@ public abstract class ConfigurationModule {
 		Log.d("vortex","full path "+fullPath);
 		this.versionControl=!globalPh.getB(PersistenceHelper.VERSION_CONTROL_SWITCH_OFF);
 	}
-	
+
 
 	public boolean frozenFileExists() {
 		return new File(frozenPath).isFile();
 	}
-	
+
 	public abstract String getFrozenVersion();
-	
+
 
 	//Stores version number. Can be different from frozen version during load.
 	public void setVersion(String version) {
@@ -72,11 +75,11 @@ public abstract class ConfigurationModule {
 	public void setLoaded() {
 		IamLoaded=true;
 	}
-	
+
 	public void setNotFound() {
 		notFound=true;
 	}
-	
+
 	protected abstract void setFrozenVersion(String version);
 
 	public abstract boolean isRequired();
@@ -85,7 +88,7 @@ public abstract class ConfigurationModule {
 		// :)
 		return IamLoaded||notFound;
 	}
-	
+
 	public void cancelLoader() {
 		if (mLoader!=null) {
 			Log.e("vortex","Canncelled mLoader!");
@@ -94,7 +97,7 @@ public abstract class ConfigurationModule {
 		}
 	}
 	private Loader mLoader=null;
-	
+
 	public void load(FileLoadedCb moduleLoader) {
 		if (source == Source.internet) 
 			mLoader = new WebLoader(null, null, moduleLoader,versionControl);
@@ -104,43 +107,70 @@ public abstract class ConfigurationModule {
 	}
 
 
-	
+
 	public void setRawData(String data, Integer tot) {
 		rawData = data;
 		this.linesOfRawData = tot;
 	}
-	
+
 	protected Integer getNumberOfLinesInRawData() {
 		// TODO Auto-generated method stub
 		return linesOfRawData;
 	}
-	
+
 
 	public void setLoadedFromFrozenCopy() {
 		//load the data from frozen
 		IamLoaded=true;
 	}
 
-	
+
 	public String getFileName() {
 		return fileName;
 	}
-	
+
 	public String getLabel() {
 		return printedLabel;
 	}
-	
+
 	//Freeze this configuration. counter is used by some dependants.
 	public boolean freeze(int counter) throws IOException {
 		this.setEssence();
 		if (essence!=null) {
-			Tools.witeObjectToFile(essence, this.frozenPath);
+			final String fPath = frozenPath;
+			Runnable r = new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					// your code here
+					try {
+						Tools.witeObjectToFile(essence, fPath);
+					} catch (IOException e) {
+
+						GlobalState gs = GlobalState.getInstance();
+						if (gs!=null) {
+							gs.getLogger().addRow("");
+							StringWriter sw = new StringWriter();
+							PrintWriter pw = new PrintWriter(sw);
+							e.printStackTrace(pw);		
+							gs.getLogger().addRedText(sw.toString());
+						}
+						e.printStackTrace();
+					}
+				}
+			};
+
+			Thread t = new Thread(r);
+			t.start();
+
 			return true;
 		}
+
 		else
-			return false;
+			return isDatabaseModule;
 	}
-	
+
 	public LoadResult thaw(){
 		//A database module is by default saved already.
 		if (isDatabaseModule)
@@ -156,13 +186,13 @@ public abstract class ConfigurationModule {
 			return new LoadResult(this,ErrorCode.ClassNotFound,"Failed to load frozen object");
 		}
 		return new LoadResult(this,ErrorCode.thawed);
-		
+
 	}
 
 	public Object getEssence() {
 		return essence;
 	}
-	
+
 	//Must set essence before freeze.
 	public abstract void setEssence();
 
@@ -170,10 +200,10 @@ public abstract class ConfigurationModule {
 	public boolean deleteFrozen() {
 		return new File(this.frozenPath).delete();
 	}
-	
 
 
-	
+
+
 
 
 

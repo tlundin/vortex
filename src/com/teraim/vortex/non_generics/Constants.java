@@ -27,7 +27,7 @@ import com.teraim.vortex.utils.PersistenceHelper;
 
 public class Constants {
 
-	public final static float VORTEX_VERSION = 1.073f;
+	public final static float VORTEX_VERSION = 1.075f;
 
 	
 	//String constants
@@ -86,7 +86,8 @@ public class Constants {
 	public static final String SYD = "SYD";
 	public static final String OST = "OST";
 	public static final String VAST = "VAST";
-
+	public static final String AVST = "AVST";
+	public static final String SMA = "SMA";
 	public static final String NULL_VALUE = "NULL";
 
 	public static final String NO_DEFAULT_VALUE = "*NULL*";
@@ -174,6 +175,12 @@ public class Constants {
 
 
 	public static final String VariableSeparator = ":";
+
+
+	
+
+
+	
 
 
 	

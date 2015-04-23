@@ -19,7 +19,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
@@ -59,6 +61,13 @@ public class FixPunktFragment extends Fragment implements OnGesturePerformedList
 	
 		final FrameLayout fl = (FrameLayout)v.findViewById(R.id.circle);
 		
+		final Button backB = (Button)v.findViewById(R.id.backB);
+		backB.setOnClickListener(new OnClickListener() {			
+			@Override
+			public void onClick(View v) {
+				getFragmentManager().popBackStackImmediate();
+			}
+		});
 		FixytaView fyv = new FixytaView(getActivity(),null);		
 		
 		//Create markers
@@ -104,6 +113,7 @@ public class FixPunktFragment extends Fragment implements OnGesturePerformedList
 		Log.d("nils","Markers has "+markers.size()+" elements");
 		fyv.setFixedMarkers(markers);
 		fl.addView(fyv);
+		
 		
 	    GestureOverlayView gestureOverlayView = (GestureOverlayView)v.findViewById(R.id.gesture_overlay);
 	    gestureOverlayView.setGestureVisible(false);

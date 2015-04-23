@@ -1404,4 +1404,13 @@ public class DbHelper extends SQLiteOpenHelper {
 		return ret;
 
 	}
+
+	public void beginTransaction() {
+		db.beginTransaction();
+	}
+
+	public void endTransaction() {
+		db.setTransactionSuccessful();
+		db.endTransaction();
+	}
 }

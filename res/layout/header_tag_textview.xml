@@ -3,9 +3,9 @@
     android:id="@+id/textView1"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-     android:gravity="center_horizontal|center_vertical"
-     android:layout_gravity="center_horizontal"
-     android:textStyle="bold"
+    android:gravity="center_horizontal|center_vertical|left"
+    android:paddingLeft="10dp"
     android:text="TextView"
-    android:textAppearance="?android:attr/textAppearanceLarge" />
+    android:textAppearance="?android:attr/textAppearanceLarge"
+    android:textStyle="bold" />
 

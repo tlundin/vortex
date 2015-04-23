@@ -28,7 +28,9 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
@@ -43,6 +45,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
+import com.teraim.vortex.Start;
 import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.types.Numerable.Type;
 import com.teraim.vortex.dynamic.types.SpinnerDefinition;
@@ -347,6 +350,12 @@ public class Tools {
 			return unit.name();
 	}
 
+	public static boolean doesFileExist(String folder, String fileName) {
+		Log.d("vortex","Looking for file "+fileName+ "in folder "+folder);
+		File f = new File(folder,fileName);
+		return (f.exists() && !f.isDirectory());
+	}
+	
 	public static boolean isNetworkAvailable(Context ctx) {
 		ConnectivityManager connectivityManager 
 		= (ConnectivityManager) ctx.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -554,6 +563,19 @@ public class Tools {
 			return value;
 		return removeStartingZeroes(value.substring(1));
 	}		
+	
+	
+	public static void restart(Activity context) {
+		Log.d("vortex","restarting...");			
+		android.app.FragmentManager fm = context.getFragmentManager();
+		for(int i = 0; i < fm.getBackStackEntryCount(); ++i) {    
+		    fm.popBackStack();
+		}
+		Intent intent = new Intent(context, Start.class);
+		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+		context.startActivity(intent);
+		context.finish();		
+	}
 
 
 }

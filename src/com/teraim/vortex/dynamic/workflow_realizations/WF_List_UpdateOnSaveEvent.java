@@ -89,7 +89,7 @@ public class WF_List_UpdateOnSaveEvent extends WF_Static_List implements EventLi
 					success=true;
 					break;
 				}
-				
+
 			}
 			if (!success) {
 				//This variable is either wrong or global.
@@ -128,18 +128,18 @@ public class WF_List_UpdateOnSaveEvent extends WF_Static_List implements EventLi
 		Variable v;
 
 		for (String vs: mapmap.keySet()) {
-			
+
 			//If variabel has value in db, use it.
 			if (varValueMap!=null && varValueMap.containsKey(vs)) 
 				v = al.getCheckedVariable(vs, varValueMap.get(vs),true);	
-			 else
-				 //Otherwise use default. 
+			else
+				//Otherwise use default. 
 				v = al.getCheckedVariable(vs, initialValue,false);
-			
-						
+
+
 			//Defaultvalue is either the historical value, null or the current value. 
 			//Historical value will be set if the variable does not exist already. If it exists, the current value is used, even if it is null.
-			
+
 			if (v!=null) {
 				//Log.d("nils","CreateAsync. Adding variable "+v.getId()+" to "+mapmap.get(vs).cfs.label);
 				mapmap.get(vs).cfs.addVariable(v, displayOut,format,isVisible,showHistorical);		
@@ -176,11 +176,17 @@ public class WF_List_UpdateOnSaveEvent extends WF_Static_List implements EventLi
 
 		String vName = targetField+Constants.VariableSeparator+varNameSuffix;
 		Variable v = al.getVariableInstance(vName,initialValue);
+
 		if (v==null) {
-			Log.e("nils","Didnt find variable "+vName+" in AddVariableToList");
-			o.addRow("");
-			o.addRedText("Did NOT find variable referred to as "+vName+" in AddVariableToList");
-			return null;
+			//try with simple name.
+			o.addRow("Will retry with variable name: "+varNameSuffix);
+			v = al.getVariableInstance(varNameSuffix,initialValue);
+			if (v==null) {
+				Log.e("nils","Didnt find variable "+vName+" in AddVariableToList");
+				o.addRow("");
+				o.addRedText("Did NOT find variable referred to as "+vName+" in AddVariableToList");
+				return null;
+			}
 		}
 		ef.cfs.addVariable(v, displayOut,format,isVisible,showHistorical);
 		return v;

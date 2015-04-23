@@ -1,10 +1,6 @@
 package com.teraim.vortex.ui;
 
-import android.app.Activity;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
@@ -13,15 +9,13 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
-import android.support.v4.app.FragmentManager;
 import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
-import com.teraim.vortex.Start;
-import com.teraim.vortex.bluetooth.BluetoothConnectionService;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.PersistenceHelper;
+import com.teraim.vortex.utils.Tools;
 
 public class ConfigMenu extends PreferenceActivity {
 
@@ -112,7 +106,7 @@ public class ConfigMenu extends PreferenceActivity {
 					GlobalState gs = GlobalState.getInstance();
 					if (gs != null) 
 						//if a state exists, restart the app.
-						restart();
+						Tools.restart(this.getActivity());
 						
 					
 						
@@ -135,7 +129,7 @@ public class ConfigMenu extends PreferenceActivity {
 						this.getActivity().getSharedPreferences(Constants.GLOBAL_PREFS,Context.MODE_PRIVATE).edit().putBoolean(PersistenceHelper.SYNC_FEATURE,false).apply();
 						Log.d("nils","Changed to SOLO");
 					}
-					restart();
+					Tools.restart(this.getActivity());
 					
 				}
 				
@@ -159,17 +153,6 @@ public class ConfigMenu extends PreferenceActivity {
 
 
 
-		private void restart() {
-			Log.d("vortex","restarting...");
-			Activity context = this.getActivity();
-			android.app.FragmentManager fm = context.getFragmentManager();
-			for(int i = 0; i < fm.getBackStackEntryCount(); ++i) {    
-			    fm.popBackStack();
-			}
-			Intent intent = new Intent(context, Start.class);
-			intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-			startActivity(intent);
-			context.finish();		}
 
 	}
 

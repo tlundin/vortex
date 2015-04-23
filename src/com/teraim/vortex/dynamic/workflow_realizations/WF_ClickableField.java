@@ -19,8 +19,10 @@ import android.net.Uri;
 import android.os.Handler;
 import android.text.InputFilter;
 import android.text.Selection;
+import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.TextUtils;
+import android.text.style.TextAppearanceSpan;
 import android.util.Log;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
@@ -119,7 +121,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 					y.setVisible(true);
 				else
 					y.setVisible(false);
-				
+
 			} else {
 				x.setVisible(false);
 				y.setVisible(false);
@@ -169,9 +171,9 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 						RadioGroup rbg = (RadioGroup)view.findViewById(R.id.radioG);
 						rbg.check(-1);
 					} else if (type == DataType.auto_increment) {
-						
+
 					}
-				
+
 				}
 				save();
 				refresh();
@@ -237,7 +239,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 				originalBackground = v.getBackground();
 				longClickedRow = v;
 				v.setBackgroundColor(Color.parseColor(Constants.Color_Pressed));
-				
+
 				// Start the CAB using the ActionMode.Callback defined above
 				mActionMode = ((Activity)myContext.getContext()).startActionMode(mActionModeCallback);
 				WF_ClickableField.this.getWidget().setSelected(true);
@@ -262,75 +264,75 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 					RadioButton nej = (RadioButton)vv.findViewById(R.id.nej);
 					if(value==null||var.getValue().equals("0")) 
 						ja.setChecked(true);
-					 else 						
-						 nej.setChecked(true);					
+					else 						
+						nej.setChecked(true);					
 					save();
 					refresh();
 					v.setBackgroundDrawable(originalBackground);
 				} else {
-				//On click, create dialog 			
-				AlertDialog.Builder alert = new AlertDialog.Builder(v.getContext());
-				alert.setTitle(label);
-				alert.setMessage(descriptionT);
-				refreshInputFields();
-				iAmOpen = true;
-				alert.setPositiveButton("Save", new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog, int whichButton) {
-						iAmOpen = false;
-						save();
-						refresh();
-						ViewGroup x = ((ViewGroup)inputContainer.getParent());
-						if (x!=null)
-							x.removeView(inputContainer);
-						v.setBackgroundDrawable(originalBackground);
-					}
-				});
-				alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog, int whichButton) {
-						iAmOpen = false;
-						ViewGroup x = ((ViewGroup)inputContainer.getParent());
-						if (x!=null)
-							x.removeView(inputContainer);
-						v.setBackgroundDrawable(originalBackground);
-					}
-				});	
-				if (inputContainer.getParent()!=null)
-					((ViewGroup)inputContainer.getParent()).removeView(inputContainer);
-				Dialog d = alert.setView(inputContainer).create();
-				d.setCancelable(false);
-				//WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
-				//lp.copyFrom(d.getWindow().getAttributes());
-				//lp.height = WindowManager.LayoutParams.FILL_PARENT;
-				//lp.height = 600;
+					//On click, create dialog 			
+					AlertDialog.Builder alert = new AlertDialog.Builder(v.getContext());
+					alert.setTitle(label);
+					alert.setMessage(descriptionT);
+					refreshInputFields();
+					iAmOpen = true;
+					alert.setPositiveButton("Save", new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int whichButton) {
+							iAmOpen = false;
+							save();
+							refresh();
+							ViewGroup x = ((ViewGroup)inputContainer.getParent());
+							if (x!=null)
+								x.removeView(inputContainer);
+							v.setBackgroundDrawable(originalBackground);
+						}
+					});
+					alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int whichButton) {
+							iAmOpen = false;
+							ViewGroup x = ((ViewGroup)inputContainer.getParent());
+							if (x!=null)
+								x.removeView(inputContainer);
+							v.setBackgroundDrawable(originalBackground);
+						}
+					});	
+					if (inputContainer.getParent()!=null)
+						((ViewGroup)inputContainer.getParent()).removeView(inputContainer);
+					Dialog d = alert.setView(inputContainer).create();
+					d.setCancelable(false);
+					//WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
+					//lp.copyFrom(d.getWindow().getAttributes());
+					//lp.height = WindowManager.LayoutParams.FILL_PARENT;
+					//lp.height = 600;
 
-				d.show();
-				
-				
+					d.show();
+
+
 				}
 				//d.getWindow().setAttributes(lp);
-				
-				
-				}
+
+
+			}
 
 			//first spinner should be opened automatically.
 			private void openFirstSpinner() {
-				 
+
 				if (firstSpinner!=null ) {
 					firstSpinner.performClick(); 
-					
+
 				}
 			}		
 		});	
-		
+
 	}
 
-	
-	
-	
+
+
+
 	//@Override
 	public void addVariable(final Variable var, boolean displayOut,String format,boolean isVisible,boolean showHistorical) {
 
-		
+
 		String varLabel = var.getLabel();
 		String varId = var.getId();
 		String hist = null;
@@ -346,30 +348,37 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 			Log.d("nils","Setting key variable to "+varId);
 			super.setKeyRow(var);
 			if (var.getType()!=null && var.getType().equals(DataType.bool)) 
-					singleBoolean=true;
-			
+				singleBoolean=true;
+
 		} else 
 			//cancel singleboolean if it was set.
 			if (!virgin && singleBoolean)
 				singleBoolean = false;
-		
+
 		if (var.getType()==null) {
 			o.addRow("");
 			o.addRedText("VARIABLE "+var.getId()+" HAS NO TYPE. TYPE ASSUMED TO BE NUMERIC");
 			var.setType(DataType.numeric);
 		}
-/*		if (initializeFromHistorical && var.getValue()==null && hist!=null) {
+		/*		if (initializeFromHistorical && var.getValue()==null && hist!=null) {
 			Log.e("nils","Historical init of variable "+var.getId()+" with value "+var.getValue());
 			var.setValue(hist);
 		}
-*/
+		 */
 		String unit = var.getPrintedUnit();
 		switch (var.getType()) {
 		case bool:
 			//o.addRow("Adding boolean dy-variable with label "+label+", name "+varId+", type "+var.getType().name()+" and unit "+unit.name());
 			View view = LayoutInflater.from(myContext.getContext()).inflate(R.layout.ja_nej_radiogroup,null);
 			TextView header = (TextView)view.findViewById(R.id.header);
-			header.setText(varLabel+(hist!=null?" ("+hist+")":""));
+
+			if (hist!=null && Tools.isNumeric(hist))  {
+				String histTxt = (hist.equals("1")?gs.getContext().getString(R.string.yes):gs.getContext().getString(R.string.no));
+				SpannableString s = new SpannableString(varLabel+" ("+histTxt+")");
+				s.setSpan(new TextAppearanceSpan(gs.getContext(), R.style.PurpleStyle),varLabel.length()+2,s.length()-1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+				header.setText(s);
+			} else
+				header.setText(varLabel);
 			inputContainer.addView(view);
 			myVars.put(var,view);
 			break;
@@ -387,7 +396,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 			if (firstSpinner==null)
 				firstSpinner = spinner;
 
-			sHeader.setText(varLabel+(hist!=null?" ("+hist+")":""));			
+			sHeader.setText(varLabel+(hist!=null?" ("+hist+")":""));
 			String listValues = al.getTable().getElement("List Values", var.getBackingDataSet());
 			//Parse 
 			if (listValues.startsWith("@file")) {
@@ -458,11 +467,24 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 							values.put(var, val);
 						} else 
 							values.put(var, opt);
-						
+
 					}
 				}
-			} 
+			}
+
 			if (opt!=null) {
+				if (hist!=null) {
+					try {
+						int histI = findSpinnerIndexFromValue(hist,val);
+						if (histI < opt.length) {
+							String histT = opt[histI];
+
+							SpannableString s = new SpannableString(varLabel+" ("+histT+")");
+							s.setSpan(new TextAppearanceSpan(gs.getContext(), R.style.PurpleStyle),varLabel.length()+2,s.length()-1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+							sHeader.setText(s);
+						}
+					} catch (NumberFormatException e) { Log.d("vortex","Hist spinner value is not a number: "+hist);};
+				}
 				spin=true;
 				adapter.addAll(opt);
 				Log.d("nils","Adapter has "+adapter.getCount()+" elements");
@@ -503,7 +525,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 					Log.d("vortex","In hideOrShowViews...");
 					if (varIds == null||varIds.size()==0)
 						return;
-					
+
 					for (String varId:varIds) {
 						Log.d("vortex","Trying to find "+varId);
 						if (varId!=null) {
@@ -538,6 +560,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 			Log.d("vortex","Adding text field for dy-variable with label "+label+", name "+varId+", type "+var.getType().name());
 			View l = LayoutInflater.from(myContext.getContext()).inflate(R.layout.edit_field_text,null);
 			header = (TextView)l.findViewById(R.id.header);
+
 			header.setText(varLabel+" "+unit+(hist!=null?" ("+hist+")":""));
 			inputContainer.addView(l);
 			myVars.put(var,l);			
@@ -546,7 +569,15 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 			//o.addRow("Adding edit field for dy-variable with label "+label+", name "+varId+", type "+numType.name()+" and unit "+unit.name());
 			l = LayoutInflater.from(myContext.getContext()).inflate(R.layout.edit_field_numeric,null);
 			header = (TextView)l.findViewById(R.id.header);
-			header.setText(varLabel+((unit!=null&&unit.length()>0)?" ("+unit+")":"")+((showHistorical&&(hist!=null))?" ("+hist+")":""));
+			String headerTxt = varLabel+((unit!=null&&unit.length()>0)?" ("+unit+")":"");
+			if (hist!=null && showHistorical) {
+				SpannableString s = new SpannableString(headerTxt+" ("+hist+")");
+				s.setSpan(new TextAppearanceSpan(gs.getContext(), R.style.PurpleStyle),headerTxt.length()+2,s.length()-1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+				header.setText(s);
+			} else
+				header.setText(headerTxt);
+
+
 			/*
 			String limitDesc = al.getLimitDescription(var.getBackingDataSet());
 			if (limitDesc!=null&&limitDesc.length()>0) {
@@ -554,7 +585,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 				CombinedRangeAndListFilter filter = FilterFactory.getInstance().createLimitFilter(var,limitDesc);			
 				etNum.setFilters(new InputFilter[] {filter});
 			}
-			*/
+			 */
 			//ruleExecutor.parseFormulas(al.getDynamicLimitExpression(var.getBackingDataSet()),var.getId());
 			inputContainer.addView(l);
 			myVars.put(var,l);
@@ -594,6 +625,24 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 		if (!isVisible) 
 			myVars.get(var).setVisibility(View.GONE);		
 	}
+
+
+
+	private int findSpinnerIndexFromValue(String hist, String[] val) {
+		int h = Integer.parseInt(hist);
+		if (val==null)
+			return h;
+		int i=0;
+		for (String v:val) {
+			if (Tools.isNumeric(v)) {
+				if (hist.equals(v))
+					return i;
+			}
+			i++;
+		}
+		return h;
+	}
+
 
 
 
@@ -675,7 +724,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 					if (variable.getPartOfKeyChain()!=null) {
 						invalidateKeys=variable.getPartOfKeyChain();
 					}
-						
+
 				}
 
 			}
@@ -739,14 +788,14 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 							et.setTextColor(Color.RED);
 						limiTxt = TextUtils.concat(limiTxt,filter.prettyPrint());
 					}
-/*
+					/*
 					CharSequence ruleExec = ruleExecutor.getRuleExecutionAsString(variable.getRuleState());
 					if (ruleExec!=null) {
 						limiTxt = TextUtils.concat(limiTxt,ruleExec);						
 						if (variable.hasBrokenRules()) 
 							et.setTextColor(Color.RED);	
 					} 
-*/
+					 */
 					limit.setText(limiTxt);
 					et.setText(value==null?"":value);
 					int position = et.getText().length();				
@@ -760,27 +809,27 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 						final Handler h = new Handler();
 						if (firstSpinner!=null ) 
 							new Thread(new Runnable() {
-					            public void run() {
-					                // DO NOT ATTEMPT TO DIRECTLY UPDATE THE UI HERE, IT WON'T WORK!
-					                // YOU MUST POST THE WORK TO THE UI THREAD'S HANDLER
-					            	h.postDelayed(new Runnable() {
-					                    public void run() {
-					                        // Open the Spinner...
-					                    	if (firstSpinner.isShown())
-					                    		firstSpinner.performClick(); 
-					                    }
-					                }, 100);
-					            }
-					        }).start();
-							
-						
-						
+								public void run() {
+									// DO NOT ATTEMPT TO DIRECTLY UPDATE THE UI HERE, IT WON'T WORK!
+									// YOU MUST POST THE WORK TO THE UI THREAD'S HANDLER
+									h.postDelayed(new Runnable() {
+										public void run() {
+											// Open the Spinner...
+											if (firstSpinner.isShown())
+												firstSpinner.performClick(); 
+										}
+									}, 100);
+								}
+							}).start();
+
+
+
 						String[] opt = null;
 						String tag = (String) sp.getTag();
 
 						String val[] = values.get(variable);
 						if (val!=null) {
-							
+
 							for (int i=0;i<val.length;i++) {
 								if (val[i].equals(variable.getValue()))
 									sp.setSelection(i);
@@ -829,12 +878,12 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 
 
 
-/*
+	/*
 	private CombinedRangeAndListFilter getFilter(EditText et) {
 		InputFilter[] tmp = et.getFilters();
 		return tmp.length==0?null:(CombinedRangeAndListFilter)tmp[0];						
 	}
-*/
+	 */
 
 }
 

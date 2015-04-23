@@ -19,15 +19,16 @@ public class NamedVariables {
 	public static final String ProfilRikt = "FlyttadProfil_ProfilRiktning";
 	public static final String NYUTLAGG = "Nyutlagg";
 	public static final String STATUS_LINJE = "status_linje";
+	public static final String STATUS_FOTO = "status_foto";
 	public static final String TransportledTyp = "Väg:TransportLedTyp";
 
 
 
-	public static final String[] FIXPUNKT_VARS = new String[] {"fixpunkter:FixPunkt1_avstand",
-		"fixpunkter:FixPunkt1_riktning","fixpunkter:FixPunkt2_avstand",
-		"fixpunkter:FixPunkt2_riktning","fixpunkter:FixPunkt3_avstand",
-		"fixpunkter:FixPunkt3_riktning","fixpunkter:FixPunkt4_avstand",
-		"fixpunkter:FixPunkt4_riktning"
+	public static final String[] FIXPUNKT_VARS = new String[] {"fixpunkter:FixPunkt1:avstand",
+		"fixpunkter:FixPunkt1:riktning","fixpunkter:FixPunkt2:avstand",
+		"fixpunkter:FixPunkt2:riktning","fixpunkter:FixPunkt3:avstand",
+		"fixpunkter:FixPunkt3:riktning","fixpunkter:FixPunkt4:avstand",
+		"fixpunkter:FixPunkt4:riktning"
 	};
 	
 	
@@ -56,6 +57,8 @@ public class NamedVariables {
 	public static final String WF_SMAPROV_INMATNING_ABO_YTTRE = "wf_ÄBO_småprovyta_yttre";
 	public static final String WF_SMAPROV_INMATNING_ABO_INRE = "wf_ÄBO_småprovyta_inre";
 	public static final String WF_DELYTE_INMATNING_ABO = "wf_ÄBO_delyta";
+
+	
 
 	
 

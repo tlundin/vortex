@@ -25,15 +25,15 @@
         android:background="@drawable/border"
         android:orientation="horizontal"/>
    
-	<GridLayout 
-    android:id="@+id/gridLayout"
-    android:layout_width="wrap_content"
+<LinearLayout
+    android:id="@+id/tagLayout"
+    android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    android:gravity="center_horizontal"
-    android:columnCount="6"
-    android:stretchMode="columnWidth" >
+    android:layout_gravity="center_horizontal"
+    android:gravity="center|center_horizontal"
+    android:orientation="vertical" >
 
-</GridLayout>
+</LinearLayout>
 
    <RelativeLayout 
     android:layout_width="fill_parent"

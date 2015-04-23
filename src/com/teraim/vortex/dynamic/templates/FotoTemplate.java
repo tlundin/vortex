@@ -43,6 +43,7 @@ import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.non_generics.NamedVariables;
 import com.teraim.vortex.utils.ImageHandler;
 import com.teraim.vortex.utils.PersistenceHelper;
+import com.teraim.vortex.utils.Tools;
 
 
 public class FotoTemplate extends Executor {
@@ -72,6 +73,10 @@ public class FotoTemplate extends Executor {
 	
 	private String selectedPictureName="";
 	private ImageButton selectedPicture=null;
+	private ImageView compass;
+
+	private Variable myStatusVariable;
+
 	
 	private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
 
@@ -138,7 +143,6 @@ public class FotoTemplate extends Executor {
 		}
 	};
 
-	private ImageView compass;
 	
 	
 	
@@ -146,6 +150,7 @@ public class FotoTemplate extends Executor {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
+		if (myContext!=null) {
 		myContext.resetState();
 		Log.d("nils","in onCreateView of foto template");
 		
@@ -196,14 +201,12 @@ public class FotoTemplate extends Executor {
 		lm = (LocationManager)this.getActivity().getSystemService(Context.LOCATION_SERVICE);
 		//Create buttons.
 		
-		if (initPic(norr,Constants.NORR)||
-		initPic(syd,Constants.SYD)||
-		initPic(ost,Constants.OST)||
-		initPic(vast,Constants.VAST)||
-		initPic(sp,"SMA")) {
-			avstandB.setVisibility(Button.INVISIBLE);
-			Log.e("vortex","found at least one picture in init");
-		}
+		initPic(norr,Constants.NORR);
+		initPic(syd,Constants.SYD);
+		initPic(ost,Constants.OST);
+		initPic(vast,Constants.VAST);
+		initPic(sp,Constants.SMA);	
+		
 		
 		File folder = new File(Constants.PIC_ROOT_DIR);
 		folder.mkdirs();
@@ -228,7 +231,7 @@ public class FotoTemplate extends Executor {
 				toggleAvstand(isChecked);
 				if (isChecked && !gs.getPreferences().getB(PersistenceHelper.AVSTAND_WARNING_SHOWN)) {
 					new AlertDialog.Builder(FotoTemplate.this.getActivity())
-					.setTitle("Varning")
+					.setTitle("OBS!")
 					.setMessage("Du ska ta antingen en avståndsbild eller så fyra vanliga bilder. Inte både och!") 
 					.setIcon(android.R.drawable.ic_dialog_alert)
 					.setCancelable(false)
@@ -276,16 +279,12 @@ public class FotoTemplate extends Executor {
 		
 		VariableConfiguration al = gs.getVariableConfiguration();
 		
-		//Toast.makeText(this.activity,"<<<< Svep åt vänster för historiska bilder!", Toast.LENGTH_SHORT).show();
-		
-		/*
-		if (wf!=null) {
-			run();
-		}
-			*/
+		myStatusVariable = al.getVariableUsingKey(al.createProvytaKeyMap(),NamedVariables.STATUS_FOTO);
 		
 		return v;
-
+		
+		} else
+			return super.onCreateView(inflater, container, savedInstanceState);
 	}
 	
 
@@ -296,7 +295,7 @@ public class FotoTemplate extends Executor {
 		boolean luck = false;
 		if (avstand) {
 			sydT.setText("Avståndsbild");
-			luck = initPic(syd,"AVST");
+			luck = initPic(syd,Constants.AVST);
 		} else {
 			sydT.setText("Mot syd");
 			luck = initPic(syd,Constants.SYD);
@@ -325,6 +324,7 @@ public class FotoTemplate extends Executor {
 		boolean ret;
 		buttonM.put(name, b);
 		ret = imgHandler.drawButton(b,name,2,false);
+		Log.e("vortex","Adding listener to imgb "+b+" with name "+name);
 		imgHandler.addListener(b,name);
 		b.setLongClickable(true);
 		b.setOnLongClickListener(new OnLongClickListener() {
@@ -434,6 +434,32 @@ public class FotoTemplate extends Executor {
 		ft.commit(); 
 	}
 
+
+	@Override
+	public void onStop() {
+		Log.d("vortex","In foto stop");
+		boolean hasN = Tools.doesFileExist(Constants.PIC_ROOT_DIR,imgHandler.createFileName(Constants.NORR,false));
+		boolean hasS = Tools.doesFileExist(Constants.PIC_ROOT_DIR,imgHandler.createFileName(Constants.SYD,false));
+		boolean hasE = Tools.doesFileExist(Constants.PIC_ROOT_DIR,imgHandler.createFileName(Constants.OST,false));
+		boolean hasW = Tools.doesFileExist(Constants.PIC_ROOT_DIR,imgHandler.createFileName(Constants.VAST,false)); 
+		boolean hasSma=Tools.doesFileExist(Constants.PIC_ROOT_DIR,imgHandler.createFileName(Constants.SMA,false));
+		boolean hasFjarr = Tools.doesFileExist(Constants.PIC_ROOT_DIR,imgHandler.createFileName(Constants.AVST,false));
+		boolean hasAll = hasN&&hasS&&hasE&&hasW&&hasSma;
+		boolean hasOne = hasN||hasS||hasE||hasW||hasSma;
+		
+		if (hasOne && hasFjarr)
+			myStatusVariable.setValue("2");
+		else if ((hasAll&&!hasFjarr)||(hasFjarr&&!hasAll))
+			myStatusVariable.setValue("3");
+		else if (!hasOne && !hasFjarr)
+			myStatusVariable.setValue("0");
+		else if (hasOne || hasFjarr)
+			myStatusVariable.setValue("1");
+		Log.d("vortex","mystatus: "+myStatusVariable.getValue()+" hasAll: "+hasAll+" hasFjarr: "+hasFjarr+" hasone: "+hasOne);
+		super.onStop();
+	}
+
+	
 /*
 	@Override
 	public void onLocationChanged(Location location) {

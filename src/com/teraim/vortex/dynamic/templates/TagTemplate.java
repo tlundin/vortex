@@ -16,27 +16,30 @@ import android.gesture.GestureOverlayView.OnGesturePerformedListener;
 import android.gesture.Prediction;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
-import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
-import android.widget.GridLayout;
 import android.widget.LinearLayout;
+import android.widget.PopupWindow;
+import android.widget.TableLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.internal.gv;
 import com.teraim.vortex.R;
 import com.teraim.vortex.dynamic.Executor;
 import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.types.Delyta;
 import com.teraim.vortex.dynamic.types.Marker;
-import com.teraim.vortex.dynamic.types.Segment;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.workflow_abstracts.Event;
 import com.teraim.vortex.dynamic.workflow_abstracts.EventListener;
@@ -56,10 +59,10 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 
 	private static final int MAX_TÅG = 5,MAX_DELPUNKTER =6;
 
-	private static final int COLS=MAX_TÅG+1,ROWS=MAX_DELPUNKTER+1;
+	private static final int COLS=MAX_DELPUNKTER;
 
 	private GestureLibrary gestureLib;
-	private GridLayout gl;
+	private LinearLayout gl;
 	private ProvytaView pyv;
 	private LayoutInflater inflater;
 	private DelyteManager dym;
@@ -88,7 +91,7 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 		View v = inflater.inflate(R.layout.template_tag, container, false);	
 
 		final FrameLayout py = (FrameLayout)v.findViewById(R.id.circle);
-		gl = (GridLayout)v.findViewById(R.id.gridLayout);
+		gl = (LinearLayout)v.findViewById(R.id.tagLayout);
 
 		areaL = (LinearLayout)v.findViewById(R.id.areaL);
 
@@ -110,7 +113,7 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 
 
 
-		drawEmptyTable();
+		//drawEmptyTable();
 
 		fillTable();
 
@@ -194,7 +197,7 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 						dym.init();
 						//show default
 						pyv.showDelytor(dym.getDelytor(),false);
-						nyUtlaggB.setEnabled(false);
+						//nyUtlaggB.setEnabled(false);
 						calculateB.setEnabled(true);
 						gl.setEnabled(true);
 					}
@@ -221,6 +224,7 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 							sparaB.setEnabled(false);
 							calculateB.setEnabled(false);
 							nyUtlaggB.setEnabled(true);
+							fillTable();
 							gs.triggerTransfer();
 						}
 					}
@@ -324,51 +328,53 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 	private void drawEmptyTable() {
 		Log.d("nils","In drawEmptyTable");
 		gl.removeAllViews();
-		//Create table for Tåg input.
-		//Add empty top corner at index 0.
-		gl.addView(new TextView(gs.getContext()),0);
-		//Add headers.
-		TextView h; LinearLayout l;
-		for (int i=1;i<COLS;i++)	{			
-			h = (TextView)inflater.inflate(R.layout.header_tag_textview, null);
-			h.setText("TÅG"+i);
-			gl.addView(h,i);
-		}
-		//while there are still some tåg with values, continue.
-		for (int j=1;j<ROWS;j++) {	
+		TextView header; LinearLayout l,tagRow;
+		for (int j=1;j<=MAX_TÅG;j++) {				
+			tagRow = (LinearLayout)inflater.inflate(R.layout.tag_table_row, null);
+			header = (TextView)tagRow.findViewById(R.id.tagHeader);
+			header.setText("Tåg "+j);
+			gl.addView(tagRow);
+			final TextView tagTextView = ((TextView)tagRow.findViewById(R.id.tagBody));
+			tagTextView.setText("Lägg till tåg");
+			final int row = j;
+			tagRow.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {					
+					openEditor(row,tagTextView);
+				}
+
+
+			});
+
+			//Fill row.
+			/*
 			for (int i=0;i<COLS;i++)	{
 				final int ii = i;final int jj = j;
-				if (i==0) {
-					//Add row header.
-					h = (TextView)inflater.inflate(R.layout.header_tag_textview, null);
-					h.setText(j+"");
-					gl.addView(h,j*COLS);
-				} else {
-					l = (LinearLayout)inflater.inflate(R.layout.edit_fields_tag, null);
-					gl.addView(l,i+j*COLS);
-					final EditText avst = (EditText)l.findViewById(R.id.avst);
-					final EditText rikt = (EditText)l.findViewById(R.id.rikt);
-					avst.setText("avs");
-					rikt.setText("rik");
-					final LinearLayout l2 = (LinearLayout)(gl.getChildAt(ii+(jj%COLS+1)*COLS));
-					avst.setOnFocusChangeListener(hav);
-					rikt.setOnFocusChangeListener(hav);
-					avst.setOnLongClickListener(new OnLongClickListener() {
+				l = (LinearLayout)inflater.inflate(R.layout.edit_fields_tag, null);
+				tagRow.addView(l);
+				final EditText avst = (EditText)l.findViewById(R.id.avst);
+				final EditText rikt = (EditText)l.findViewById(R.id.rikt);
+				avst.setText("avs");
+				rikt.setText("rik");
 
-						@Override
-						public boolean onLongClick(View v) {
-							avst.setText("avs");
-							return true;
-						}
-					});
-					rikt.setOnLongClickListener(new OnLongClickListener() {
-						@Override
-						public boolean onLongClick(View v) {
-							rikt.setText("rik");
-							return true;
-						}
-					});	
-					/*
+				avst.setOnFocusChangeListener(hav);
+				rikt.setOnFocusChangeListener(hav);
+				avst.setOnLongClickListener(new OnLongClickListener() {
+
+					@Override
+					public boolean onLongClick(View v) {
+						avst.setText("avs");
+						return true;
+					}
+				});
+				rikt.setOnLongClickListener(new OnLongClickListener() {
+					@Override
+					public boolean onLongClick(View v) {
+						rikt.setText("rik");
+						return true;
+					}
+				});	
+				/*
 					rikt.setOnKeyListener(new OnKeyListener() {
 						@Override
 						public boolean onKey(View v, int keyCode, KeyEvent event) {
@@ -383,68 +389,138 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 							return false;
 						}
 					});
-					 */
+			 */
 
 
-				}					
-			}
+
+
 
 		}
-		gl.getChildAt(COLS+1).requestFocus();
+
 
 	}
+
+	private void openEditor(int row, final TextView tagTextView) {
+		//check if there is data for this one.
+		List<Coord> rawTag = null;
+		Delyta delyta = null;
+		if (row<=delytor.size()) {			
+			delyta = delytor.get(row-1);
+			rawTag = delyta.getRawTag();
+
+		}
+		final String origText = tagTextView.getText().toString();
+		//Open popup.
+		View popUpView = inflater.inflate(R.layout.tag_edit_popup, null);
+		final PopupWindow mpopup = new PopupWindow(popUpView, LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT, true); //Creation of popup
+		mpopup.setAnimationStyle(android.R.style.Animation_Dialog);   
+		Button avbryt = (Button)popUpView.findViewById(R.id.avbrytB);
+		Button sparaB = (Button)popUpView.findViewById(R.id.sparaB);
+		Button hundraB = (Button)popUpView.findViewById(R.id.hundraB);
+		Button rensaB = (Button)popUpView.findViewById(R.id.rensaB);
+		final EditText tagE = (EditText)popUpView.findViewById(R.id.tagE);
+		avbryt.setOnClickListener(new OnClickListener() {			
+			@Override
+			public void onClick(View v) {
+				mpopup.dismiss();
+				tagTextView.setText(origText);
+			}
+		});
+		sparaB.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				String txt = tagE.getText().toString();
+				if (txt!=null) {
+					while (txt.endsWith(",")&& txt.length()>1)
+							txt = txt.substring(0,txt.length()-1);
+					txt.replaceAll(",,",",");
+					tagTextView.setText(txt);
+				}
+				mpopup.dismiss();
+			}
+		});
+		hundraB.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				String ct = tagE.getText().toString();
+				if (ct.isEmpty())
+					tagE.setText("100,");
+				else {
+					if (!ct.endsWith(","))
+						ct+=",";
+					tagE.setText(ct+"100,");
+				}
+				tagE.setSelection(tagE.getText().length());
+			}
+		});
+		rensaB.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+					tagE.setText("");		
+			}
+		});
+		tagE.addTextChangedListener(new TextWatcher(){
+			public void afterTextChanged(Editable s) {
+				tagTextView.setText(tagE.getText());
+			}
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count,
+					int after) {}
+
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before,
+					int count) {}
+		});
+		TextView headerTxt = (TextView)popUpView.findViewById(R.id.headerT);
+		TextView subHeaderTxt = (TextView)popUpView.findViewById(R.id.subHeaderT);
+		if (rawTag!=null) {
+			headerTxt.setText("Ändra tåg "+row);
+			tagE.setText(delyta.getTagCommaPrint());
+			subHeaderTxt.setText(delyta.getTagPrettyPrint());
+		}
+
+		else
+			headerTxt.setText("Skapa nytt tåg");
+		mpopup.showAtLocation(popUpView, Gravity.TOP, 0, 0);
+	}
+
+
+
+
+
+	private List<Delyta> delytor = new ArrayList<Delyta>();
 
 
 	private void fillTable() {
 		Log.d("nils","In fillTable");
-		List<Segment> tag;
-		int row =1; int col=1;
+		gl.removeAllViews();
+		delytor.clear();
+		String tag="";
+		int row =0; 
 		for (Delyta dy:dym.getDelytor()) {	
+			Log.d("vortex","row is "+row+" Tåg: "+dy.getTagPrettyPrint());
 			if (!dy.isBackground()) {
-				tag = dy.getSegments();
-				for (Segment s:tag) {
-					setElement((LinearLayout)(gl.getChildAt(col+row*COLS)),s.start);
-					row++;
-					if (row>=ROWS) {
-						Log.e("nils","Overflow in table. Too many rows");
-						break;
-					}
-				}
-				row=1;
-				if (col<COLS) 
-					col++;
-				else {
-					Log.e("nils","Overflow in table. Too many delytor!");
-					break;
-				}
+				delytor.add(dy);
+				tag = dy.getTagCommaPrint();
+				LinearLayout tagView = (LinearLayout)gl.getChildAt(row);
+				if (tagView == null) {
+					tagView = (LinearLayout)inflater.inflate(R.layout.tag_table_row, null);
+					gl.addView(tagView);
+				} 
+				TextView header = (TextView)tagView.findViewById(R.id.tagHeader);				
+				row++;
+				header.setText("Tåg "+row);				
+				((TextView)tagView.findViewById(R.id.tagBody)).setText(tag);
 			}
+
 		}
 	}
 
 
-	private void setElement(LinearLayout ll,Coord c) {
-		EditText avst,rikt;
-		avst = ((EditText)(ll).findViewById(R.id.avst));
-		rikt = ((EditText)(ll).findViewById(R.id.rikt));
-		avst.setText(c.avst+"");
-		rikt.setText(c.rikt+"");
-	}
 
-	private Coord getElement(LinearLayout ll) {
-		EditText avst,rikt;
-		avst = ((EditText)(ll).findViewById(R.id.avst));
-		rikt = ((EditText)(ll).findViewById(R.id.rikt));
-		String avstS = avst.getText().toString();
-		String riktS = rikt.getText().toString();
-		if (empty(avstS)||empty(riktS)||!Tools.isNumeric(avstS)||!Tools.isNumeric(riktS))
-			return null;
-		int avstI = Integer.parseInt(avstS);
-		int riktI = Integer.parseInt(riktS);
-		return new Coord(avstI,riktI);
-	}
-
-//	100|179|100|295|100|20|43|77|100|133
-/*
+	//	100|179|100|295|100|20|43|77|100|133
+	/*
 	private void createDelytorFromTable() {
 		dym.clear();
 		List<Coord> tc = new ArrayList<Coord>();
@@ -457,33 +533,62 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 
 
 	}
-*/	 
+	 */	 
 
 	private void createDelytorFromTable() {
 		//Empty existing. 
 		dym.clear();
 		List<Coord> tagCoordinateList = new ArrayList<Coord>();
-		Coord c;
-		LinearLayout ll;
-		for(int col=1;col<COLS;col++) {
-			for (int row=1;row<ROWS;row++) {
-				ll = (LinearLayout)(gl.getChildAt(col+row*COLS));
-				c = getElement(ll);
-				if (c==null) 
+		for (int row=0;row<=MAX_TÅG;row++) {
+			LinearLayout tagView = (LinearLayout)gl.getChildAt(row);
+			if (tagView == null)
+				break;
+			
+			String tagT = ((TextView)tagView.findViewById(R.id.tagBody)).getText().toString();
+			if (tagT==null||tagT.length()==0||tagT.startsWith("L"))
+				continue;
+			//parse...find x,y
+			String avst,rikt;
+			int start = 0,co=0;
+			boolean err=false;
+			while (true) {
+				co = tagT.indexOf(',', start);
+				if (co==-1) {
+					err=true;
 					break;
-				else
-					tagCoordinateList.add(c);
+				}
+				avst = tagT.substring(start,co);
+				Log.d("vortex","avst: "+avst);
+				start = co+1;
+				co = tagT.indexOf(',', start);
+				if (co==-1) {
+					rikt = tagT.substring(start,tagT.length());
+					if (rikt.length()==0 && rikt.length()>3)
+						err=true;
+					else
+						tagCoordinateList.add(new Coord(Integer.parseInt(avst),Integer.parseInt(rikt)));
+					break;
+				}
+				rikt = tagT.substring(start,co);
+				Log.d("vortex","rikt: "+rikt);
+				start = co+1;
+				tagCoordinateList.add(new Coord(Integer.parseInt(avst),Integer.parseInt(rikt)));
 			}
-			if (tagCoordinateList.size()>1) {
+			
+			
+			if (tagCoordinateList.size()>1 && !err) {
 				DelyteManager.ErrCode ec = dym.addUnknownTag(tagCoordinateList);
 				if (ec == null||ec!=DelyteManager.ErrCode.ok)
-					Toast.makeText(getActivity(), "Tåg i kolumn "+col+" är vajsing!", Toast.LENGTH_LONG).show();;
-			} 
+					Toast.makeText(getActivity(), "Tåg i rad "+row+" är vajsing!", Toast.LENGTH_LONG).show();
+			}
+			if (err) 
+				Toast.makeText(getActivity(), "Tåg i rad "+row+" har fel syntax eller är tomt!", Toast.LENGTH_SHORT).show();
 			tagCoordinateList.clear();
 		}
 		//Check if no delyta. In that case, add default.
 		if (dym.getDelytor().isEmpty()) {
 			Log.d("nils","Adding default in createdelytorfromtable");
+			Toast.makeText(getActivity(), "Inga tåg satta", Toast.LENGTH_LONG).show();
 			dym.addDefault();
 		}
 	}

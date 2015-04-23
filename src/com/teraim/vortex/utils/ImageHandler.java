@@ -37,7 +37,7 @@ public class ImageHandler {
 	}
 
 
-	private String createFileName(String name,boolean isHistorical) {
+	public String createFileName(String name,boolean isHistorical) {
 
 		String nameWithNum = name;
 		if (name.equals("SYD"))
@@ -68,6 +68,7 @@ public class ImageHandler {
 		return null;
 	}
 
+	
 
 	public boolean drawButton(ImageButton b, String name, int divisor,boolean historical) {
 

@@ -12,6 +12,7 @@ import android.util.JsonReader;
 import android.util.JsonToken;
 import android.util.Log;
 
+import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.types.ValuePair;
 import com.teraim.vortex.loadermodule.JSONConfigurationModule;
 import com.teraim.vortex.loadermodule.LoadResult;
@@ -103,7 +104,7 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 	public LoadResult parse(JsonReader reader) throws IOException, JSONException {
 		LoadResult lr=null;
 		if (state == State.readingKeys) {
-			Log.d("vortex","In parse ImportData");
+			//Log.d("vortex","In parse ImportData");
 			reader.beginObject(); 
 			if (reader.nextName().equals("contentType"))
 				lr = readKeys(reader);
@@ -114,7 +115,7 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 			state = State.readingVariables;
 			return null;
 		} else {
-			Log.d("vortex","reading variables");
+			//Log.d("vortex","reading variables");
 			lr = readVariables(reader);
 			if (lr!=null)
 				return lr;
@@ -149,13 +150,13 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 			String name = reader.nextName();
 			if (name.equals("name")) {
 				varName = getAttribute(reader);
-				Log.d("vortex","name: "+varName);
+				//Log.d("vortex","name: "+varName);
 			} else
 				return new LoadResult(this,ErrorCode.ParseError);
 			name = reader.nextName();
 			if (name.equals("value")) {
 				value = getAttribute(reader);
-				Log.d("vortex","value: "+value);
+				//Log.d("vortex","value: "+value);
 				vars.add(new ValuePair(varName,value));
 				
 			}
@@ -167,7 +168,7 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 		if (reader.peek() == JsonToken.END_ARRAY) {
 			//found end of array...consume and return
 			reader.endArray();
-			Log.d("vortex","found "+c+" variable values");
+			
 			if (reader.peek() == JsonToken.END_OBJECT) {
 				//wow! found end of current content type!
 				reader.endObject();
@@ -199,7 +200,8 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 	
 	private LoadResult readKeys(JsonReader reader) throws IOException {
 
-		Log.d("vortex","Reading content type "+getAttribute(reader));
+		//Log.d("vortex","Reading content type "+);
+		getAttribute(reader);
 		keys = new HashMap<String,String>();
 		while (reader.hasNext()) {
 			String name = reader.nextName();
@@ -236,17 +238,30 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 
 	@Override
 	public void setEssence() {
-		essence=entries;
+		//No essence...all goes into db.
+		essence = null;
+		
 	}
-
+	boolean firstCall = true;
+	
 	@Override
 	public boolean freeze(int counter) throws IOException {
 		if (entries == null)
 			return false;
-
+		
+		if (firstCall) {
+			myDb.beginTransaction();
+			Log.d("vortex","Transaction begins");
+			firstCall = false;
+		}
+		if (this.freezeSteps==(counter+1)) {
+			Log.d("vortex","Transaction ends");
+			myDb.endTransaction();
+		}
 		//Insert variables into database
 		Entry e = entries.get(counter);
 		{
+			
 			for(ValuePair v:e.variables) {
 			myDb.fastHistoricalInsert(e.keys.get("ruta"),
 					e.keys.get("provyta"),
@@ -255,6 +270,7 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 				v.mkey,v.mval);
 		}
 		}
+		
 		return true;
 	}
 
