@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import android.content.Context;
+import android.os.Vibrator;
 import android.util.Log;
 
 import com.teraim.vortex.dynamic.types.Variable;
@@ -20,6 +22,8 @@ public class FilterFactory {
 	private Map<String, CombinedRangeAndListFilter> filterCache = new HashMap<String, CombinedRangeAndListFilter>();
 
 	private int currentMin;
+
+	private Vibrator myVibrator;
 	
 	public static class Range {
 		public String minS,maxS;
@@ -48,15 +52,15 @@ public class FilterFactory {
 	
 	
 	
-	private FilterFactory() {
-		
+	private FilterFactory(Context ctx) {
+		myVibrator = (Vibrator) ctx.getSystemService(Context.VIBRATOR_SERVICE);
 	}
 	
 	
-	public static FilterFactory getInstance() {
+	public static FilterFactory getInstance(Context ctx) {
 		
 		if (singleton == null)
-			singleton = new FilterFactory();
+			singleton = new FilterFactory(ctx);
 		return singleton;			
 	}
 	
@@ -100,7 +104,7 @@ public class FilterFactory {
 			allowedRanges.add(0,new Range(0,currentMin-1));
 			hasDefaultFilter = true;
 		}
-		cached = new CombinedRangeAndListFilter(myVar,allowedValues,allowedRanges,hasDefaultFilter);
+		cached = new CombinedRangeAndListFilter(myVibrator,myVar,allowedValues,allowedRanges,hasDefaultFilter);
 		return cached;
 	}
 

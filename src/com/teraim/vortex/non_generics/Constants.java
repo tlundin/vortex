@@ -27,7 +27,7 @@ import com.teraim.vortex.utils.PersistenceHelper;
 
 public class Constants {
 
-	public final static float VORTEX_VERSION = 1.075f;
+	public final static float VORTEX_VERSION = 1.076f;
 
 	
 	//String constants
@@ -176,14 +176,10 @@ public class Constants {
 
 	public static final String VariableSeparator = ":";
 
-
-	
-
-
-	
+	//Vibrate when error x milliseconds...
+	public static final long BURR_LENGTH = 250;
 
 
-	
 
 
 	public static List<ConfigurationModule> getCurrentlyKnownModules(PersistenceHelper globalPh,PersistenceHelper ph,String server, String bundle, LoggerI debugConsole) {

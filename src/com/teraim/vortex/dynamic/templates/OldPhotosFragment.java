@@ -180,7 +180,7 @@ public class OldPhotosFragment extends Fragment implements OnGesturePerformedLis
 
 					AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 					builder.setView(b);
-					builder.setPositiveButton("Tack", new DialogInterface.OnClickListener() {
+					builder.setPositiveButton("Stäng", new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int id) {
 
 						}

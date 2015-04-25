@@ -5,11 +5,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.TransitionDrawable;
+import android.os.Vibrator;
 import android.text.SpannableString;
 import android.text.Spanned;
-import android.util.Log;
+import android.widget.LinearLayout;
 
 import com.teraim.vortex.dynamic.types.Variable;
+import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.FilterFactory.Range;
 
 public class CombinedRangeAndListFilter implements TextFilter {
@@ -18,9 +23,11 @@ public class CombinedRangeAndListFilter implements TextFilter {
 	String myPrint = "";
 	boolean hasDefault = false;
 	private Variable mVar;
+	private Vibrator myVibrator;
 
-	public CombinedRangeAndListFilter(Variable myVar, Set<String> allowedValues, List<Range> allowedRanges, boolean hasDefault) {
+	public CombinedRangeAndListFilter(Vibrator vib, Variable myVar, Set<String> allowedValues, List<Range> allowedRanges, boolean hasDefault) {
 		this.hasDefault=hasDefault;
+		myVibrator = vib;
 		myFilters = new ArrayList<TextFilter>();
 		if (allowedRanges!=null) {
 			for (Range r:allowedRanges) 
@@ -60,11 +67,13 @@ public class CombinedRangeAndListFilter implements TextFilter {
 //					Log.d("nils","Other filter triggered.");
 				}
 				return null;
-			} else
+			} //else
 //				Log.d("nils","Filter did not trigger");
 			c++;
 		}
 		//If no filter ok - disallow.
+		if (source.length()>0)
+			burroblink(Constants.BURR_LENGTH);
 		return "";
 	}
 
@@ -77,5 +86,12 @@ public class CombinedRangeAndListFilter implements TextFilter {
 			filter(mVar.getValue(), 0, 0, DUMMY, 0, 0);
 	}
 	
+	private void burroblink(long time) {
+		myVibrator.vibrate(time);
+		//ColorDrawable[] colorBlink = {new ColorDrawable(Color.parseColor("#47A3FF")), new Color.parseColor("#60BF60")};
+		//TransitionDrawable trans = new TransitionDrawable(colorBlink);
+		//bg.setBackgroundDrawable(trans);
+		//trans.startTransition((int)time);
+	}
 	
 }

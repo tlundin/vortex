@@ -23,6 +23,7 @@ import com.teraim.vortex.dynamic.blocks.ButtonBlock;
 import com.teraim.vortex.dynamic.blocks.ConditionalContinuationBlock;
 import com.teraim.vortex.dynamic.blocks.ContainerDefineBlock;
 import com.teraim.vortex.dynamic.blocks.CreateEntryFieldBlock;
+import com.teraim.vortex.dynamic.blocks.CreateGisBlock;
 import com.teraim.vortex.dynamic.blocks.CreateImageBlock;
 import com.teraim.vortex.dynamic.blocks.CreateSortWidgetBlock;
 import com.teraim.vortex.dynamic.blocks.DisplayValueBlock;
@@ -224,6 +225,9 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				blocks.add(readBlockCreateVarValueSource(parser));
 			else if (name.equals("block_create_picture"))
 				blocks.add(readBlockCreatePicture(parser));
+			else if (name.equals("block_add_image_gis_view"))
+				blocks.add(readBlockAddGisView(parser));
+			
 
 			else {			
 				skip(name,parser,o);
@@ -241,6 +245,45 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 		o.addRow("");
 		o.addGreenText("No duplicate block IDs");
 		return blocks;
+	}
+
+	
+	/*
+	 *  <block_ID>1140</block_ID>
+        <container>root</container>
+        <is_visible>true</is_visible>
+        <file>/flygdata/207.jpg</url>
+    </block_add_image_gis_view>
+	 */
+	private Block readBlockAddGisView(XmlPullParser parser) throws IOException, XmlPullParserException {
+		o.addRow("Parsing block: block_add_gis_view...");
+		String id=null,nName=null,container=null,source=null,scale=null;
+		boolean isVisible=true;
+
+		parser.require(XmlPullParser.START_TAG, null,"block_add_image_gis_view");
+		Log.d("vortex","In block block_add_gis_view!!");
+		while (parser.next() != XmlPullParser.END_TAG) {
+			if (parser.getEventType() != XmlPullParser.START_TAG) {
+				continue;
+			}
+			String name= parser.getName();
+			if (name.equals("block_ID")) {
+				id = readText("block_ID",parser);
+			} else if (name.equals("container_name")) {
+				container = readText("container_name",parser);
+			} else if (name.equals("source")) {
+				source = readText("source",parser);
+			} else if (name.equals("is_displayed")) {
+				isVisible = readText("is_displayed",parser).equals("true");
+			} 
+			else
+				skip(name,parser);
+
+		}
+		
+		checkForNull("block_ID",id,"name",nName,"container_name",container,"source",source,"scale",scale);
+		return new CreateGisBlock(id,"dummy",container,isVisible,source);
+
 	}
 
 	private Block readBlockCreatePicture(XmlPullParser parser) throws IOException, XmlPullParserException {
@@ -274,7 +317,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				skip(name,parser);
 
 		}
-		checkForNull("block_ID",id,"name",nName,"container_name",container,"source",source,"scale",scale);
+		checkForNull("block_ID",id,"container_name",container,"source",source);
 		return new CreateImageBlock(id,nName,container,source,scale,isVisible);
 
 	}

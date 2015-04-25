@@ -22,7 +22,6 @@ import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
-import com.teraim.vortex.Start;
 import com.teraim.vortex.bluetooth.BluetoothConnectionService;
 import com.teraim.vortex.dynamic.blocks.AddEntryToFieldListBlock;
 import com.teraim.vortex.dynamic.blocks.AddRuleBlock;
@@ -36,6 +35,7 @@ import com.teraim.vortex.dynamic.blocks.ButtonBlock;
 import com.teraim.vortex.dynamic.blocks.ConditionalContinuationBlock;
 import com.teraim.vortex.dynamic.blocks.ContainerDefineBlock;
 import com.teraim.vortex.dynamic.blocks.CreateEntryFieldBlock;
+import com.teraim.vortex.dynamic.blocks.CreateGisBlock;
 import com.teraim.vortex.dynamic.blocks.CreateImageBlock;
 import com.teraim.vortex.dynamic.blocks.CreateSortWidgetBlock;
 import com.teraim.vortex.dynamic.blocks.DisplayValueBlock;
@@ -66,7 +66,6 @@ import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.ui.MenuActivity;
 import com.teraim.vortex.utils.RuleExecutor;
-import com.teraim.vortex.utils.Tools;
 import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 
 /*
@@ -526,6 +525,11 @@ public abstract class Executor extends Fragment {
 					((VarValueSourceBlock) b).create(myContext);
 					
 				}
+				else if (b instanceof CreateGisBlock) {
+					((CreateGisBlock) b).create(myContext);
+					
+				}
+				
 				
 				
 				

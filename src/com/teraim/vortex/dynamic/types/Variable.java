@@ -236,7 +236,7 @@ public class Variable implements Serializable {
 			addRules(al.getDynamicLimitExpression(row));
 			String limitDesc = al.getLimitDescription(row);
 			if (limitDesc!=null&&limitDesc.length()>0) 
-				myFilter = FilterFactory.getInstance().createLimitFilter(this,limitDesc);	
+				myFilter = FilterFactory.getInstance(gs.getContext()).createLimitFilter(this,limitDesc);	
 		} else 
 			Log.d("nils","Parameter ROW was null!!");
 		this.keyChain=keyChain;		

@@ -1,17 +1,17 @@
 package com.teraim.vortex.dynamic.blocks;
 
-import java.util.Set;
-
+import android.graphics.Bitmap;
 import android.util.Log;
+import android.view.View;
 
 import com.teraim.vortex.GlobalState;
-import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.types.Workflow.Unit;
 import com.teraim.vortex.dynamic.workflow_abstracts.Container;
-import com.teraim.vortex.dynamic.workflow_realizations.WF_ClickableField_Selection;
-import com.teraim.vortex.dynamic.workflow_realizations.WF_ClickableField_Selection_OnSave;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
+import com.teraim.vortex.dynamic.workflow_realizations.WF_Gis_Widget;
+import com.teraim.vortex.gis.GisImageView;
+import com.teraim.vortex.utils.Tools;
 
 public class CreateGisBlock extends Block {
 
@@ -24,9 +24,10 @@ public class CreateGisBlock extends Block {
 	GlobalState gs;
 	boolean isVisible = false,showHistorical;
 	String format;
+	private String picUrlorName;
 
 	public CreateGisBlock(String id,String name, 
-			String containerId,boolean isVisible,String format,boolean showHistorical,String initialValue) {
+			String containerId,boolean isVisible,String picUrlorName) {
 		super();
 		this.name = name;
 		this.containerId=containerId;
@@ -59,23 +60,18 @@ public class CreateGisBlock extends Block {
 
 
 
-	public Variable create(WF_Context myContext) {
+	public void create(WF_Context myContext) {
 		gs = GlobalState.getInstance();
 		Container myContainer = myContext.getContainer(containerId);
 		o = gs.getLogger();
+
 		if(myContainer !=null) {
-				WF_ClickableField_Selection myField = new WF_ClickableField_Selection_OnSave(v.getLabel(),
-						al.getDescription(v.getBackingDataSet()),myContext,name,isVisible);
-
-
+				myContainer.add(new WF_Gis_Widget(blockId, new GisImageView(myContext.getContext()), isVisible, picUrlorName,myContext));
 			
-
-			return v;
 		} else {
-			Log.e("vortex","Container null! Cannot add entryfield!");
+			Log.e("vortex","Container null! Cannot add GisImageView!");
 			o.addRow("");
-			o.addRedText("Adding Entryfield for "+name+" failed. Container not configured");
-			return null;
+			o.addRedText("Adding GisImageView to "+containerId+" failed. Container not configured");
 		}
 	}
 
