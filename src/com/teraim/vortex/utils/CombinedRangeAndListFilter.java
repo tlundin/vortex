@@ -5,13 +5,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.TransitionDrawable;
 import android.os.Vibrator;
 import android.text.SpannableString;
 import android.text.Spanned;
-import android.widget.LinearLayout;
+import android.util.Log;
 
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.non_generics.Constants;
@@ -58,7 +55,7 @@ public class CombinedRangeAndListFilter implements TextFilter {
 		//Set if default filter triggers.
 		mVar.setOutOfRange(false);
 		for (TextFilter filter:myFilters) {
-//			Log.d("nils","checking filter "+c+" hasdefault: "+hasDefault);
+			Log.d("nils","checking filter "+c+" hasdefault: "+hasDefault);
 			if (filter.filter(source, start, end,dest, dstart, dend)==null){
 				if (hasDefault && c==0) {
 //					Log.d("nils","Default triggered!");
@@ -72,8 +69,12 @@ public class CombinedRangeAndListFilter implements TextFilter {
 			c++;
 		}
 		//If no filter ok - disallow.
-		if (source.length()>0)
+		/*
+		if (source.length()>0) {
+			Log.e("vortex","burr: "+source+"dest: "+((dest==null)?"null":dest.toString()));
 			burroblink(Constants.BURR_LENGTH);
+		}
+		*/
 		return "";
 	}
 

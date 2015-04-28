@@ -44,8 +44,6 @@ import com.teraim.vortex.utils.DbHelper;
 import com.teraim.vortex.utils.PersistenceHelper;
 
 
-
-
 public class LoginConsoleFragment extends Fragment implements ModuleLoaderListener {
 
 	TextView log;
@@ -341,7 +339,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 				Log.d("vortex","name "+m.getFileName());
 				Table t = (Table)m.getEssence();
 				myDb = new DbHelper(this.getActivity().getApplicationContext(),t, globalPh,ph,bundleName);
-				Configuration dbModules = new Configuration(Constants.getDBImportModules(globalPh, ph, server(), bundleName, debugConsole, myDb));
+				Configuration dbModules = new Configuration(Constants.getDBImportModules(globalPh, ph, server(), bundleName, debugConsole, myDb,t));
 				//Import historical data to database. 
 				myDBLoader = new ModuleLoader("dbloader",dbModules,loginConsole,globalPh,debugConsole,this,this.getActivity());
 				loginConsole.addRow("Loading Database Modules");			
@@ -358,7 +356,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 			List<Workflow> workflows = (List<Workflow>)(myModules.getModule(bundleName).getEssence());
 			Table t = (Table)(myModules.getModule(VariablesConfiguration.NAME).getEssence());
 			SpinnerDefinition sd = (SpinnerDefinition)(myModules.getModule(SpinnerConfiguration.NAME).getEssence());
-
+			
 			GlobalState gs = 
 			GlobalState.createInstance(this.getActivity().getApplicationContext(),globalPh,ph,debugConsole,myDb, workflows, t,sd);
 

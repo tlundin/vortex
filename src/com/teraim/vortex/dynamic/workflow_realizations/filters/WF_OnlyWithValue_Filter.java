@@ -1,4 +1,4 @@
-package com.teraim.vortex.dynamic.workflow_realizations;
+package com.teraim.vortex.dynamic.workflow_realizations.filters;
 
 import java.util.Iterator;
 import java.util.List;
@@ -9,6 +9,11 @@ import com.teraim.vortex.dynamic.workflow_abstracts.Filter;
 import com.teraim.vortex.dynamic.workflow_abstracts.Listable;
 
 public class WF_OnlyWithValue_Filter extends WF_Filter implements Filter {
+
+	public WF_OnlyWithValue_Filter(String id) {
+		super(id);
+		
+	}
 
 	@Override
 	public List<? extends Listable> filter(List<? extends Listable> list) {

@@ -122,8 +122,7 @@ public abstract class WF_Not_ClickableField extends WF_ListEntry {
 			if (variable.hasBrokenRules()||variable.hasValueOutOfRange()) {
 				Log.d("nils","VARID: "+variable.getId()+" hasBroken: "+variable.hasBrokenRules()+" hasoutofRange: "+variable.hasValueOutOfRange());
 				o.setTextColor(Color.RED);	
-			}
-			else {
+			} else {
 				if (variable.isUsingDefault()) {
 					Log.d("nils","Variable "+variable.getId()+" is purple");
 					o.setTextColor(myContext.getContext().getResources().getColor(R.color.purple));

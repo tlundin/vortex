@@ -1,4 +1,4 @@
-package com.teraim.vortex.dynamic.workflow_realizations;
+package com.teraim.vortex.dynamic.workflow_realizations.filters;
 
 import java.util.Iterator;
 import java.util.List;
@@ -15,7 +15,7 @@ public class WF_Column_Name_Filter extends WF_Filter {
 	private String columnToMatch;
 	private FilterType filterType;
 
-	enum FilterType{
+	public enum FilterType{
 		exact,
 		prefix
 	}
@@ -67,6 +67,7 @@ public class WF_Column_Name_Filter extends WF_Filter {
 
 
 	public WF_Column_Name_Filter(String id,String filterCh,String columnToMatch,FilterType type) {
+		super(id);
 		myPrefix = filterCh;
 		this.columnToMatch=columnToMatch;
 		filterType = type;

@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.Map;
 
 import android.util.Log;
+import android.view.LayoutInflater.Filter;
 
+import com.google.android.gms.drive.query.Filters;
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.workflow_abstracts.Container;
@@ -13,9 +15,9 @@ import com.teraim.vortex.dynamic.workflow_realizations.WF_Alphanumeric_Sorter;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Instance_List;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_List_UpdateOnSaveEvent;
-import com.teraim.vortex.dynamic.workflow_realizations.WF_OnlyWithValue_Filter;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Static_List;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_TimeOrder_Sorter;
+import com.teraim.vortex.dynamic.workflow_realizations.filters.WF_OnlyWithValue_Filter;
 
 public class BlockCreateListEntriesFromFieldList extends Block {
 
@@ -63,7 +65,7 @@ public class BlockCreateListEntriesFromFieldList extends Block {
 					myList =  new WF_List_UpdateOnSaveEvent(id,myContext,rows,isVisible);
 					myList.addSorter(new WF_TimeOrder_Sorter());	
 					o.addRow("Adding Filter Type: only instantiated");
-					myList.addFilter(new WF_OnlyWithValue_Filter());
+					myList.addFilter(new WF_OnlyWithValue_Filter(id));
 				}
 				else { 
 					if (type.equals("selection_list")) {

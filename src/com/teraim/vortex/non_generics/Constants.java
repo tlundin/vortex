@@ -14,6 +14,8 @@ import java.util.UUID;
 
 import android.os.Environment;
 
+import com.teraim.vortex.dynamic.VariableConfiguration;
+import com.teraim.vortex.dynamic.types.Table;
 import com.teraim.vortex.loadermodule.ConfigurationModule;
 import com.teraim.vortex.loadermodule.configurations.GisPolygonConfiguration;
 import com.teraim.vortex.loadermodule.configurations.GroupsConfiguration;
@@ -27,7 +29,7 @@ import com.teraim.vortex.utils.PersistenceHelper;
 
 public class Constants {
 
-	public final static float VORTEX_VERSION = 1.076f;
+	public final static float VORTEX_VERSION = 1.077f;
 
 	
 	//String constants
@@ -197,11 +199,11 @@ public class Constants {
 
 	public static List<ConfigurationModule> getDBImportModules(
 			PersistenceHelper globalPh, PersistenceHelper ph, String server,
-			String bundle, LoggerI debugConsole,DbHelper db) {
+			String bundle, LoggerI debugConsole,DbHelper db, Table t) {
 		List<ConfigurationModule> ret = new ArrayList<ConfigurationModule>();
 		//Workflow xml. Named same as bundle.		
 		ret.add(new GisPolygonConfiguration(globalPh,ph,Constants.VORTEX_ROOT_DIR+bundle+"/flygdata/",debugConsole,db));
-		ret.add(new ImportDataConfiguration(globalPh,ph,server,bundle,debugConsole,db));
+		ret.add(new ImportDataConfiguration(globalPh,ph,server,bundle,debugConsole,db,t));
 		return ret;
 	}
 

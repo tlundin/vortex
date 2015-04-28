@@ -1,4 +1,4 @@
-package com.teraim.vortex.dynamic.workflow_realizations;
+package com.teraim.vortex.dynamic.workflow_realizations.filters;
 
 import java.util.Iterator;
 import java.util.List;
@@ -9,6 +9,13 @@ import com.teraim.vortex.dynamic.workflow_abstracts.Listable;
 
 //Specialized filter. Will remove elements with a value.
 public class WF_OnlyWithoutValue_Filter extends WF_Filter {
+	
+	
+	
+	public WF_OnlyWithoutValue_Filter(String id) {
+		super(id);
+		
+	}
 
 	@Override
 	public List<? extends Listable> filter(List<? extends Listable> list) {

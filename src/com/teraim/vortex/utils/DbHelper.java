@@ -1276,23 +1276,23 @@ public class DbHelper extends SQLiteOpenHelper {
 	}
 	
 	
-	public void fastHistoricalInsert(String rID,String pID,String dID,String sID,
+	public void fastHistoricalInsert(Map<String,String> keys,
 			String varId, String value) {
 
 		valuez.clear();
 		valuez.put(ac,VariableConfiguration.HISTORICAL_MARKER);		
-		if (rID!=null)
-			valuez.put(rc,rID);
-		if (pID!=null)
-			valuez.put(pc,pID);
-		if (dID!=null)
-			valuez.put(dc,dID);
-		if (sID!=null)
-			valuez.put(sc,sID);
+		String keyVal=null;
+		for(String key:keys.keySet()) {
+			keyVal = keys.get(key);
+			if (keyVal!=null)
+				valuez.put(getColumnName(key),keyVal);
+				
+		}
 		//		values.put(getColumnName("linje"),lID);
 		//		values.put(getColumnName("abo"),aID);	
 		valuez.put("var", varId);
 		valuez.put("value", value);
+		//Log.d("vortex",valuez.toString());
 		db.insert(TABLE_VARIABLES, // table
 				null, //nullColumnHack
 				valuez

@@ -17,12 +17,12 @@ import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.workflow_abstracts.Container;
 import com.teraim.vortex.dynamic.workflow_abstracts.Filterable;
-import com.teraim.vortex.dynamic.workflow_realizations.WF_Column_Name_Filter;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
-import com.teraim.vortex.dynamic.workflow_realizations.WF_Filter;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_SorterWidget;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Static_List;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Widget;
+import com.teraim.vortex.dynamic.workflow_realizations.filters.WF_Column_Name_Filter;
+import com.teraim.vortex.dynamic.workflow_realizations.filters.WF_Filter;
 
 public class CreateSortWidgetBlock extends Block {
 

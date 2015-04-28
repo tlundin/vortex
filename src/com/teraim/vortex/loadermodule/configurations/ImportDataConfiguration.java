@@ -3,8 +3,10 @@ package com.teraim.vortex.loadermodule.configurations;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.json.JSONException;
 
@@ -13,6 +15,8 @@ import android.util.JsonToken;
 import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
+import com.teraim.vortex.dynamic.VariableConfiguration;
+import com.teraim.vortex.dynamic.types.Table;
 import com.teraim.vortex.dynamic.types.ValuePair;
 import com.teraim.vortex.loadermodule.JSONConfigurationModule;
 import com.teraim.vortex.loadermodule.LoadResult;
@@ -26,14 +30,16 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 	private LoggerI o;
 	private DbHelper myDb;
 	private ArrayList<ValuePair> vars;
-	private Map<String,String> meta,keys;
+	private Map<String,String> meta,keyz;
+	private Table varTable;
 
 	public ImportDataConfiguration(PersistenceHelper globalPh,PersistenceHelper ph, String server, String bundle, LoggerI debugConsole,
-			DbHelper myDb) {
+			DbHelper myDb, Table t) {
 		super(globalPh,ph, Source.internet, server+bundle.toLowerCase()+"/", "Importdata","Historical data module");	 
 		this.o = debugConsole;
 		this.myDb = myDb;
 		isDatabaseModule=true;
+		varTable = t;
 
 	}
 
@@ -53,7 +59,7 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 		return false;
 	}
 
-	
+
 	@Override
 	protected LoadResult prepare(JsonReader reader) throws IOException, JSONException {
 
@@ -79,10 +85,11 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 			}
 			state = State.readingKeys;
 			Log.d("vortex","found date time version "+meta.get("date")+","+meta.get("time")+","+meta.get("version"));
+			o.addRow("Import file date time version: ["+meta.get("date")+"],["+meta.get("time")+"],["+meta.get("version")+"]");
 			//jArray = jObject.getJSONArray("source");
 			//Erase old history
 			o.addRow("");
-			o.addYellowText("HISTORIA RENSAS!!");
+			o.addYellowText("Deleting existing historical data..");
 			if (myDb.deleteNilsHistory())
 				myDb.fastPrep();
 			else 
@@ -129,7 +136,7 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 
 	}
 	private class Entry {
-		
+
 		Map<String,String> keys;
 		List<ValuePair> variables;
 		public Entry(Map<String,String> keys, List<ValuePair> variables) {
@@ -137,10 +144,10 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 			this.keys = keys;
 			this.variables = variables;
 		}
-		
+
 	}
 	private List<Entry> entries = new ArrayList<Entry>();
-	
+
 	private LoadResult readVariables(JsonReader reader) throws IOException {
 		String varName = null, value = null;
 		vars = new ArrayList<ValuePair>();
@@ -158,7 +165,7 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 				value = getAttribute(reader);
 				//Log.d("vortex","value: "+value);
 				vars.add(new ValuePair(varName,value));
-				
+
 			}
 			else
 				return new LoadResult(this,ErrorCode.ParseError);
@@ -168,11 +175,11 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 		if (reader.peek() == JsonToken.END_ARRAY) {
 			//found end of array...consume and return
 			reader.endArray();
-			
+
 			if (reader.peek() == JsonToken.END_OBJECT) {
 				//wow! found end of current content type!
 				reader.endObject();
-				Entry entry = new Entry(keys,vars);
+				Entry entry = new Entry(keyz,vars);
 				entries.add(entry);
 				//double powwow! End of the whole import!!
 				if (reader.peek() == JsonToken.END_ARRAY) {
@@ -180,6 +187,7 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 					this.setEssence();
 					//set number of steps for counter
 					freezeSteps = entries.size();
+
 					return new LoadResult(this,ErrorCode.parsed);
 				} else
 					return null;
@@ -187,8 +195,8 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 				Log.e("vortex","Found a place where contenttype object is not ended");
 				return new LoadResult(this,ErrorCode.ParseError);
 			}
-				
-			
+
+
 		}
 		Log.e("vortex","unexpected end of import file");
 		return new LoadResult(this,ErrorCode.ParseError);
@@ -196,34 +204,37 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 	}
 
 	String ar,ruta,provyta,delyta,smaprovyta,linje,abo;
-	
-	
+
+
 	private LoadResult readKeys(JsonReader reader) throws IOException {
 
 		//Log.d("vortex","Reading content type "+);
 		getAttribute(reader);
-		keys = new HashMap<String,String>();
+		keyz = new HashMap<String,String>();
 		while (reader.hasNext()) {
 			String name = reader.nextName();
-//			Log.d("vortex","Name: "+name);
+			//			Log.d("vortex","Name: "+name);
 			if (name.equals("ar")) {
 				ar = getAttribute(reader);
 			} else if (name.equals("ruta")) {
-				keys.put("ruta",getAttribute(reader));
+				keyz.put("ruta",getAttribute(reader));
 			} else if (name.equals("provyta")) {
-				keys.put("provyta",getAttribute(reader));
+				keyz.put("provyta",getAttribute(reader));
 			} else if (name.equals("delyta")) {
-				keys.put("delyta",getAttribute(reader));
+				keyz.put("delyta",getAttribute(reader));
 			} else if (name.equals("smaprovyta")) {
-				keys.put("smaprovyta",getAttribute(reader));
+				keyz.put("smaprovyta",getAttribute(reader));
 			} else if (name.equals("linje")) {
-				keys.put("linje",getAttribute(reader));
+				keyz.put("linje",getAttribute(reader));
 			}else if (name.equals("abo")) {
-				keys.put("abo",getAttribute(reader));
+				keyz.put("abo",getAttribute(reader));
 			} else if (name.equals("Vars")) {
 				//found variables array. Time to return and report progress.
+				for (String k:keyz.keySet())
+					allKeys.add(k);
 				return null;
 			} else {
+				skipped.add(name);
 				reader.skipValue();
 			}
 		}		
@@ -231,24 +242,34 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 		return new LoadResult(this,ErrorCode.ParseError,"Error in keys object in importdata");
 	}
 
+	Set<String> skipped = new HashSet<String>();
+	Set<String> allKeys = new HashSet<String>();
+	Set<String> missingVariables = new HashSet<String>();
 
-
-
-	
 
 	@Override
 	public void setEssence() {
 		//No essence...all goes into db.
 		essence = null;
+		Log.e("vortex","SKIPPED KEYS:\n"+skipped.toString());
+		Log.e("vortex","Keys Found:\n"+allKeys.toString());
+		o.addRow("");
+		if (skipped.isEmpty())
+			o.addGreenText("No unknown keys..");
+		else
+			o.addRow("Unknown keys: "+skipped.toString());
+		o.addRow("");
+		o.addGreenText("Keys Found:\n"+allKeys.toString());
+		
 		
 	}
 	boolean firstCall = true;
-	
+
 	@Override
 	public boolean freeze(int counter) throws IOException {
 		if (entries == null)
 			return false;
-		
+
 		if (firstCall) {
 			myDb.beginTransaction();
 			Log.d("vortex","Transaction begins");
@@ -257,20 +278,26 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 		if (this.freezeSteps==(counter+1)) {
 			Log.d("vortex","Transaction ends");
 			myDb.endTransaction();
+			o.addRow("");
+			o.addRedText("Variables not found:");
+			for (String var:missingVariables) {
+				o.addRow("");
+				o.addRedText(var);				
+			}
+			Log.e("vortex","Variables not found:\n"+missingVariables.toString());
 		}
 		//Insert variables into database
 		Entry e = entries.get(counter);
 		{
-			
+
 			for(ValuePair v:e.variables) {
-			myDb.fastHistoricalInsert(e.keys.get("ruta"),
-					e.keys.get("provyta"),
-					e.keys.get("delyta"),
-					e.keys.get("smaprovyta"),
-				v.mkey,v.mval);
+				myDb.fastHistoricalInsert(e.keys,
+						v.mkey,v.mval);
+				if(varTable.getRowFromKey(v.mkey)==null)
+					missingVariables.add(v.mkey);
+			}
 		}
-		}
-		
+
 		return true;
 	}
 

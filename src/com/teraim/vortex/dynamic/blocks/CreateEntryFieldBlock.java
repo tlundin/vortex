@@ -85,7 +85,7 @@ public class CreateEntryFieldBlock extends Block {
 				o.addRow("Adding Entryfield "+v.getId()+" to container "+containerId);
 				myContainer.add(myField);
 				//				myField.refreshInputFields();	
-				myField.refresh();
+				//myField.refresh();
 
 			}
 

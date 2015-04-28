@@ -14,8 +14,8 @@ import com.teraim.vortex.R;
 import com.teraim.vortex.dynamic.Executor;
 import com.teraim.vortex.dynamic.workflow_abstracts.Filter;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Container;
-import com.teraim.vortex.dynamic.workflow_realizations.WF_OnlyWithoutValue_Filter;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Static_List;
+import com.teraim.vortex.dynamic.workflow_realizations.filters.WF_OnlyWithoutValue_Filter;
 
 
 public class ListInputTemplate extends Executor {
@@ -89,7 +89,7 @@ public class ListInputTemplate extends Executor {
 
 	}
 
-	Filter f = new WF_OnlyWithoutValue_Filter();
+	Filter f = new WF_OnlyWithoutValue_Filter("_filter");
 	private boolean toggleStateH = true;
 	private void hideEdited(String target) {
 		final WF_Static_List fieldList = (WF_Static_List)myContext.getFilterable(target);

@@ -1,14 +1,23 @@
 package com.teraim.vortex.dynamic.workflow_realizations;
 
+/**
+ * 
+ * Copyright Teraim 2015.
+ * Core class in the Vortex Engine.
+ * Redistribution and changes only after agreement with Teraim.
+ */
+
+
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import android.app.Activity;
 import android.content.Context;
-import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 
 import com.teraim.vortex.dynamic.EventBroker;
@@ -17,10 +26,10 @@ import com.teraim.vortex.dynamic.types.Rule;
 import com.teraim.vortex.dynamic.workflow_abstracts.Container;
 import com.teraim.vortex.dynamic.workflow_abstracts.Drawable;
 import com.teraim.vortex.dynamic.workflow_abstracts.Event;
+import com.teraim.vortex.dynamic.workflow_abstracts.Event.EventType;
 import com.teraim.vortex.dynamic.workflow_abstracts.EventListener;
 import com.teraim.vortex.dynamic.workflow_abstracts.Filterable;
 import com.teraim.vortex.dynamic.workflow_abstracts.Listable;
-import com.teraim.vortex.dynamic.workflow_abstracts.Event.EventType;
 
 public class WF_Context {
 
@@ -31,9 +40,9 @@ public class WF_Context {
 	private final Executor myTemplate;
 	private EventBroker eventBroker;
 	private Map<String,Set<Rule>> rules=new HashMap<String,Set<Rule>>();
-	//ID for the container containing the template itself
-	private final int rootContainerId;
+	private final int rootContainerId; 
 	private String statusVariable=null;
+	private List<Filterable> filterables;
 
 
 
@@ -43,6 +52,7 @@ public class WF_Context {
 		eventBroker = new EventBroker(ctx);
 		this.rootContainerId=rootContainerId;
 		this.drawables=new HashMap<String,Drawable>();
+		this.filterables=new ArrayList<Filterable>();
 	}
 	public Context getContext() {
 		return ctx;
@@ -77,25 +87,30 @@ public class WF_Context {
 		return null;
 	}	
 
-	//for now it is assumed that all lists implements filterable.
+	
 	public Filterable getFilterable(String id) {
 		Log.d("nils","Getfilterable called with id "+id);
 		if (id==null||lists==null)
 			return null;
-		for (WF_Static_List wfl:lists) {
-			Log.d("nils","filterable list: "+wfl.getId());
+		for (Filterable wfl:lists) {
+			Log.d("nils","filterable: "+wfl.getId());
 			String myId = wfl.getId();				
 			if(myId!=null && myId.equalsIgnoreCase(id))
 				return wfl;
 		}
 		return null;
 	}
+	
 	public void addContainers(List<WF_Container> containers) {
 		this.containers = containers; 
 	}
-
+	//TODO: If required introduce nonfilterable lists. For now it is assumed that all lists implements filterable. 
 	public void addList(WF_Static_List l) {
 		lists.add(l);
+		filterables.add(l);
+	}
+	public void addFilterable(Filterable f) {
+		filterables.add(f);
 	}
 
 	public void addDrawable(String key,Drawable d) {	
@@ -130,8 +145,8 @@ public class WF_Context {
 
 	public void resetState() {
 		emptyContainers();
-		if (lists.size()!=0) 
-			lists.clear();
+		lists.clear();
+		filterables.clear();
 		drawables.clear();
 		eventBroker.removeAllListeners();
 		rules.clear();
@@ -231,5 +246,6 @@ public class WF_Context {
 	public String getStatusVariable() {
 		return statusVariable;
 	}
+
 
 }

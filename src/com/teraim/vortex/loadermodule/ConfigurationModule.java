@@ -31,7 +31,7 @@ public abstract class ConfigurationModule {
 	}
 	public Source source;
 	public Type type;
-	public  String urlOrPath;
+	private  String urlOrPath;
 	public String rawData,version,fileName,fullPath,printedLabel,frozenPath;
 	protected PersistenceHelper globalPh,ph;
 	protected boolean IamLoaded=false,versionControl;

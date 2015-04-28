@@ -19,9 +19,9 @@ public class AirPhotoMetaData extends XMLConfigurationModule {
 
 	
 	public AirPhotoMetaData(PersistenceHelper gPh, PersistenceHelper ph,
-			 Source source, String urlOrPath, String fileName,
+			 Source source, String urlOrPath, String metaDataFileName,
 			String moduleName) {
-		super(gPh, ph, source, urlOrPath, fileName, moduleName);
+		super(gPh, ph, source, urlOrPath, metaDataFileName, moduleName);
 		hasSimpleVersion=false;
 	}
 
@@ -53,25 +53,27 @@ public class AirPhotoMetaData extends XMLConfigurationModule {
 	}
 
 	private PhotoMeta readCorners(XmlPullParser parser) throws XmlPullParserException, IOException {
-		PhotoMeta pm = new PhotoMeta();
+		float topE=0,bottomE=0,topN=0,bottomN=0;
 		Log.d("vortex","calling readCordners");
 		while (parser.next() != XmlPullParser.END_TAG) {
 			if (parser.getEventType() != XmlPullParser.START_TAG) {
 				continue;
-			}		
+			}
+
 			Log.d("vortex","reading corners!");
 			String name= parser.getName();
 			if (name.equals("westBL")) {
-				pm.left = getCorner(parser);
+				topE = getCorner(parser);
 			} else if (name.equals("eastBL")) {
-				pm.right = getCorner(parser);
+				bottomE = getCorner(parser);
 			} else if (name.equals("northBL")) {
-				pm.top= getCorner(parser);
+				topN = getCorner(parser);
 			} else if (name.equals("southBL")) {
-				pm.bottom= getCorner(parser);
+				bottomN = getCorner(parser);
 			} else
 				skip(name,parser);
 		}
+		PhotoMeta pm = new PhotoMeta(topN,topE,bottomN,bottomE);
 		return pm;
 	}
 	

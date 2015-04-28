@@ -11,12 +11,14 @@ import java.util.Set;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Handler;
+import android.os.Vibrator;
 import android.text.InputFilter;
 import android.text.Selection;
 import android.text.Spannable;
@@ -718,7 +720,28 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 					Log.e("vortex","Getvalue now returns: "+variable.getValue());
 				}
 				else {
-					//Re-evaluate rules.					
+					//Re-evaluate rules.
+					if (variable.hasValueOutOfRange()) {
+						String earlierValue = variable.getValue();
+						if (earlierValue==null)
+							earlierValue="";
+						Context ctx = myContext.getContext();
+						Vibrator myVibrator = (Vibrator) ctx.getSystemService(Context.VIBRATOR_SERVICE);
+						myVibrator.vibrate(250);
+						new AlertDialog.Builder(ctx)
+						.setTitle("Felaktigt värde!!")
+						.setMessage("Värdet du angivit är utanför angivna gränsvärden för variabeln. Tidigare angivet värde kommer användas: ["+earlierValue+"]") 
+						.setIcon(android.R.drawable.ic_dialog_alert)
+						.setCancelable(false)
+						.setNeutralButton("Ok",new Dialog.OnClickListener() {				
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+								// TODO Auto-generated method stub
+
+							}
+						} )
+						.show();
+					}
 					variable.setValue(newValue);
 					//This is a keychain variable. 
 					if (variable.getPartOfKeyChain()!=null) {
@@ -788,6 +811,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 							et.setTextColor(Color.RED);
 						limiTxt = TextUtils.concat(limiTxt,filter.prettyPrint());
 					}
+					et.setTextColor(Color.BLACK);
 					/*
 					CharSequence ruleExec = ruleExecutor.getRuleExecutionAsString(variable.getRuleState());
 					if (ruleExec!=null) {

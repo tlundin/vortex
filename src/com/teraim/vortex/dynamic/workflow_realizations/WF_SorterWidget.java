@@ -14,7 +14,9 @@ import android.widget.TableLayout.LayoutParams;
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.types.Table;
-import com.teraim.vortex.dynamic.workflow_realizations.WF_Column_Name_Filter.FilterType;
+import com.teraim.vortex.dynamic.workflow_realizations.filters.WF_Column_Name_Filter;
+import com.teraim.vortex.dynamic.workflow_realizations.filters.WF_Column_Name_Filter.FilterType;
+import com.teraim.vortex.dynamic.workflow_realizations.filters.WF_Filter;
 
 
 public class WF_SorterWidget extends WF_Widget {

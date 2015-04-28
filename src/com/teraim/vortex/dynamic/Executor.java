@@ -68,9 +68,14 @@ import com.teraim.vortex.ui.MenuActivity;
 import com.teraim.vortex.utils.RuleExecutor;
 import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 
-/*
- * Executes workflow blocks. Child classes define layouts and other specialized behavior
+/**
+ * Executor - executes workflow blocks.  
+ * Copyright Teraim 2015.
+ * Core class in the Vortex Engine.
+ * Redistribution and changes only after agreement with Teraim.
  */
+
+
 public abstract class Executor extends Fragment {
 
 
@@ -344,7 +349,7 @@ public abstract class Executor extends Fragment {
 				else if (b instanceof SetValueBlock) {
 					final SetValueBlock bl = (SetValueBlock)b;
 					o.addRow("");
-					o.addYellowText("Running SetValueBlock "+b.getBlockId()+"for variable "+bl.getMyVariable());
+					o.addYellowText("SetValueBlock "+b.getBlockId()+" ["+bl.getMyVariable()+"]");
 					o.addRow("Formula: "+bl.getFormula());
 					final List<TokenizedItem> tokens = RuleExecutor.getInstance(gs.getContext()).findTokens(bl.getFormula(),null);
 					if (bl.getBehavior()!=ExecutionBehavior.constant) {
@@ -414,17 +419,16 @@ public abstract class Executor extends Fragment {
 							o.addRow("Execution stopped on SetValueBlock "+bl.getBlockId()+". Expression "+bl.getFormula()+"evaluates to null");
 							//jump.put(bl.getBlockId(), Executor.STOP_ID);
 							notDone = false;
-						} else 
-							o.addRow("SetValueBlock "+bl.getBlockId()+" eval result: "+eval);					
+						} 				
 
 						String val = v.getValue();
 						if ((val == null && eval == null)||
 								(val != null && eval != null && val.equals(eval))) {
-							o.addRow("No change in Setvalueblock"+bl.getBlockId()+": Value: "+val+" Eval: "+eval);
+							o.addRow("No change. Value: "+val+" Eval: "+eval);
 						}
 						else {	
 							v.setValue(eval);
-							o.addRow("Change! "+bl.getFormula()+"evaluates to "+eval);
+							o.addRow(bl.getFormula()+" Eval: ["+eval+"]");
 							//Take care of any side effects before triggering redraw.
 							myContext.registerEvent(new WF_Event_OnSave(bl.getBlockId()));
 							o.addRow("Continues after onSave Event in block "+bl.getBlockId());

@@ -12,6 +12,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import android.util.Log;
 
 import com.teraim.vortex.dynamic.blocks.AddEntryToFieldListBlock;
+import com.teraim.vortex.dynamic.blocks.AddGisLayerBlock;
 import com.teraim.vortex.dynamic.blocks.AddRuleBlock;
 import com.teraim.vortex.dynamic.blocks.AddSumOrCountBlock;
 import com.teraim.vortex.dynamic.blocks.AddVariableToEntryFieldBlock;
@@ -162,106 +163,115 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 	private List<Block> readBlocks(XmlPullParser parser) throws IOException, XmlPullParserException {
 		List<Block> blocks=new ArrayList<Block>();
 		parser.require(XmlPullParser.START_TAG, null,"blocks");
-		while (parser.next() != XmlPullParser.END_TAG) {
-			if (parser.getEventType() != XmlPullParser.START_TAG) {
-				continue;
-			}
-			String name = parser.getName();
+		String name="";
+		try {
+			while (parser.next() != XmlPullParser.END_TAG) {
+				if (parser.getEventType() != XmlPullParser.START_TAG) {
+					continue;
+				}
+				name = parser.getName();
 
-			if (name.equals("block_start")) 
-				blocks.add(readBlockStart(parser));
-			else if (name.equals("block_define_page")) 
-				blocks.add(readPageDefineBlock(parser));				
-			else if (name.equals("block_define_container")) 
-				blocks.add(readContainerDefineBlock(parser));				
-			else if (name.equals("block_layout")) 
-				blocks.add(readBlockLayout(parser));				
-			else if (name.equals("block_button")) 
-				blocks.add(readBlockButton(parser));
-			else if (name.equals("block_add_rule")) 
-				blocks.add(readBlockAddRule(parser));
-			else if (name.equals("block_add_sum_of_selected_variables_display")) 
-				blocks.add(readBlockAddSelectionOrSum(parser,isSum));
-			else if (name.equals("block_add_number_of_selections_display")) 
-				blocks.add(readBlockAddSelectionOrSum(parser,isCount));
-			else if (name.equals("block_create_sort_widget")) 
-				blocks.add(readBlockCreateSorting(parser));
-			//This is a dummy call. Not supported block.
-			else if (name.equals("block_create_list_filter")) 
-				dummyWarning("block_create_list_filter",parser);					
-			else if (name.equals("block_create_list_entries")) 
-				dummyWarning("block_create_list_entries",parser);
-			else if (name.equals("block_create_entry_field")) 
-				blocks.add(readBlockCreateEntryField(parser));
-			else if (name.equals("block_create_display_field"))
-				blocks.add(readBlockCreateDisplayField(parser));
-			else if (name.equals("block_create_list_entries_from_field_list"))
-				blocks.add(readBlockCreateListEntriesFromFieldList(parser));
-			else if (name.equals("block_add_variable_to_every_list_entry"))
-				blocks.add(readBlockAddVariableToEveryListEntry(parser));
-			else if (name.equals("block_add_variable_to_entry_field"))
-				blocks.add(readBlockAddVariableToEntryField(parser));	
-			else if (name.equals("block_add_entry_to_field_list")) 
-				blocks.add(readBlockAddEntryToFieldList(parser));
-			else if (name.equals("block_add_variable_to_list_entry")) 
-				blocks.add(readBlockAddVariableToListEntry(parser));
-			else if (name.equals("block_conditional_continuation")) 
-				blocks.add(readBlockConditionalContinuation(parser));
-			else if (name.equals("block_jump")) 
-				blocks.add(readBlockJump(parser));
-			else if (name.equals("block_set_value"))
-				blocks.add(readBlockSetValue(parser));
-			else if (name.equals("block_add_rule"))
-				blocks.add(readBlockAddRule(parser));
-			else if (name.equals("block_define_menu_header"))
-				blocks.add(readBlockDefineMenuHeader(parser));
-			else if (name.equals("block_define_menu_entry"))
-				blocks.add(readBlockDefineMenuEntry(parser));			
-			else if (name.equals("block_create_text_field"))
-				blocks.add(readBlockCreateTextField(parser));
-			else if (name.equals("block_create_round_chart"))
-				blocks.add(readBlockCreateRoundChart(parser));
-			else if (name.equals("block_create_var_value_source"))
-				blocks.add(readBlockCreateVarValueSource(parser));
-			else if (name.equals("block_create_picture"))
-				blocks.add(readBlockCreatePicture(parser));
-			else if (name.equals("block_add_image_gis_view"))
-				blocks.add(readBlockAddGisView(parser));
-			
+				if (name.equals("block_start")) 
+					blocks.add(readBlockStart(parser));
+				else if (name.equals("block_define_page")) 
+					blocks.add(readPageDefineBlock(parser));				
+				else if (name.equals("block_define_container")) 
+					blocks.add(readContainerDefineBlock(parser));				
+				else if (name.equals("block_layout")) 
+					blocks.add(readBlockLayout(parser));				
+				else if (name.equals("block_button")) 
+					blocks.add(readBlockButton(parser));
+				else if (name.equals("block_add_rule")) 
+					blocks.add(readBlockAddRule(parser));
+				else if (name.equals("block_add_sum_of_selected_variables_display")) 
+					blocks.add(readBlockAddSelectionOrSum(parser,isSum));
+				else if (name.equals("block_add_number_of_selections_display")) 
+					blocks.add(readBlockAddSelectionOrSum(parser,isCount));
+				else if (name.equals("block_create_sort_widget")) 
+					blocks.add(readBlockCreateSorting(parser));
+				//This is a dummy call. Not supported block.
+				else if (name.equals("block_create_list_filter")) 
+					dummyWarning("block_create_list_filter",parser);					
+				else if (name.equals("block_create_list_entries")) 
+					dummyWarning("block_create_list_entries",parser);
+				else if (name.equals("block_create_entry_field")) 
+					blocks.add(readBlockCreateEntryField(parser));
+				else if (name.equals("block_create_display_field"))
+					blocks.add(readBlockCreateDisplayField(parser));
+				else if (name.equals("block_create_list_entries_from_field_list"))
+					blocks.add(readBlockCreateListEntriesFromFieldList(parser));
+				else if (name.equals("block_add_variable_to_every_list_entry"))
+					blocks.add(readBlockAddVariableToEveryListEntry(parser));
+				else if (name.equals("block_add_variable_to_entry_field"))
+					blocks.add(readBlockAddVariableToEntryField(parser));	
+				else if (name.equals("block_add_entry_to_field_list")) 
+					blocks.add(readBlockAddEntryToFieldList(parser));
+				else if (name.equals("block_add_variable_to_list_entry")) 
+					blocks.add(readBlockAddVariableToListEntry(parser));
+				else if (name.equals("block_conditional_continuation")) 
+					blocks.add(readBlockConditionalContinuation(parser));
+				else if (name.equals("block_jump")) 
+					blocks.add(readBlockJump(parser));
+				else if (name.equals("block_set_value"))
+					blocks.add(readBlockSetValue(parser));
+				else if (name.equals("block_add_rule"))
+					blocks.add(readBlockAddRule(parser));
+				else if (name.equals("block_define_menu_header"))
+					blocks.add(readBlockDefineMenuHeader(parser));
+				else if (name.equals("block_define_menu_entry"))
+					blocks.add(readBlockDefineMenuEntry(parser));			
+				else if (name.equals("block_create_text_field"))
+					blocks.add(readBlockCreateTextField(parser));
+				else if (name.equals("block_create_round_chart"))
+					blocks.add(readBlockCreateRoundChart(parser));
+				else if (name.equals("block_create_var_value_source"))
+					blocks.add(readBlockCreateVarValueSource(parser));
+				else if (name.equals("block_create_picture"))
+					blocks.add(readBlockCreatePicture(parser));
+				else if (name.equals("block_add_gis_image_view"))
+					blocks.add(readBlockAddGisView(parser));
+				else if (name.equals("block_add_gis_layer"))
+					blocks.add(readBlockAddGisLayer(parser));
 
-			else {			
-				skip(name,parser,o);
+
+				else {			
+					skip(name,parser,o);
+				}
 			}
+		} catch (XmlPullParserException e) {
+			Log.d("vortex","Got parse error when reading "+name+" on line "+e.getLineNumber());
+			Log.d("vortex","Cause: "+e.getCause());
+			Log.d("vortex","Message: "+e.getMessage());
+			o.addRow("");
+			o.addRedText("Got parse error when reading "+name+" on line "+e.getLineNumber());
+			o.addRow("Message from parser:");
+			o.addRedText(e.getMessage());
+			throw e;
 		}
 		//Check that no block has the same ID
 		Set tempSet = new HashSet<String>();
 		for (Block b:blocks)  {
-			 if (!tempSet.add(b.getBlockId())) {
-	                o.addRow("");
-	                o.addRedText("Duplicate Block ID "+b.getBlockId()+" This is potentially serious");
-	                return blocks;
-	            }
+			if (!tempSet.add(b.getBlockId())) {
+				o.addRow("");
+				o.addRedText("Duplicate Block ID "+b.getBlockId()+" This is potentially serious");
+				return blocks;
+			}
 		}
 		o.addRow("");
 		o.addGreenText("No duplicate block IDs");
 		return blocks;
 	}
 
-	
-	/*
-	 *  <block_ID>1140</block_ID>
-        <container>root</container>
-        <is_visible>true</is_visible>
-        <file>/flygdata/207.jpg</url>
-    </block_add_image_gis_view>
-	 */
-	private Block readBlockAddGisView(XmlPullParser parser) throws IOException, XmlPullParserException {
-		o.addRow("Parsing block: block_add_gis_view...");
-		String id=null,nName=null,container=null,source=null,scale=null;
-		boolean isVisible=true;
 
-		parser.require(XmlPullParser.START_TAG, null,"block_add_image_gis_view");
-		Log.d("vortex","In block block_add_gis_view!!");
+
+
+	private Block readBlockAddGisLayer(XmlPullParser parser) throws IOException, XmlPullParserException {
+		o.addRow("Parsing block: block_add_gis_layer...");
+		String id=null,nName=null,target=null,label=null;
+		boolean isVisible=true,hasWidget=true;
+
+		parser.require(XmlPullParser.START_TAG, null,"block_add_gis_layer");
+		Log.d("vortex","In block block_add_gis_layer!!");
 		while (parser.next() != XmlPullParser.END_TAG) {
 			if (parser.getEventType() != XmlPullParser.START_TAG) {
 				continue;
@@ -269,20 +279,78 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			String name= parser.getName();
 			if (name.equals("block_ID")) {
 				id = readText("block_ID",parser);
+			} else if (name.equals("target")) {
+				target = readText("target",parser);
+			} else if (name.equals("label")) {
+				label = readText("label",parser);
+			} else if (name.equals("is_visible")) {
+				isVisible = readText("is_visible",parser).equals("true");
+			}else if (name.equalsIgnoreCase("name")) {
+				nName = readText("name",parser);
+			}else if (name.equalsIgnoreCase("has_widget")) {
+				hasWidget = readText("has_widget",parser).equals("true");
+			} 
+			else {
+				Log.e("vortex","Skipped "+name);
+				skip(name,parser);
+			}
+		}
+
+		checkForNull("block_ID",id,"target",target);
+		return new AddGisLayerBlock(id,nName,label,target,isVisible,hasWidget);
+
+	}
+
+	/*
+	 *  <block_ID>1140</block_ID>
+        <container>root</container>
+        <is_visible>true</is_visible>
+        <file>/flygdata/207.jpg</url>
+    </block_add_image_gis_view>
+	 */
+	private Block readBlockAddGisView(XmlPullParser parser) throws IOException,XmlPullParserException {
+		o.addRow("Parsing block: block_add_gis_image_view...");
+		String id=null,nName=null,container=null,source=null;
+		String topN=null,topE=null,bottomE=null,bottomN=null;
+		boolean isVisible=true;
+
+		parser.require(XmlPullParser.START_TAG, null,"block_add_gis_image_view");
+		Log.d("vortex","In block block_add_gis_view!!");
+		String name="";
+
+		while (parser.next() != XmlPullParser.END_TAG) {
+			if (parser.getEventType() != XmlPullParser.START_TAG) {
+				continue;
+			}
+			name= parser.getName();
+			if (name.equals("block_ID")) {
+				id = readText("block_ID",parser);
+			} else if (name.equals("name")) {
+				nName = readText("name",parser);				
 			} else if (name.equals("container_name")) {
 				container = readText("container_name",parser);
 			} else if (name.equals("source")) {
 				source = readText("source",parser);
-			} else if (name.equals("is_displayed")) {
-				isVisible = readText("is_displayed",parser).equals("true");
+			} else if (name.equals("is_visible")) {
+				isVisible = readText("is_visible",parser).equals("true");
+			}else if (name.equalsIgnoreCase("TopN")) {
+				topN = readText("TopN",parser);
+			}else if (name.equalsIgnoreCase("TopE")) {
+				topE = readText("TopE",parser);
+			}else if (name.equalsIgnoreCase("BottomE")) {
+				bottomE = readText("BottomE",parser);
+			}else if (name.equalsIgnoreCase("BottomN")) {
+				bottomN = readText("BottomN",parser);
 			} 
-			else
+			else {
+				Log.e("vortex","Skipped "+name);
 				skip(name,parser);
+			}
+		} 
 
-		}
-		
-		checkForNull("block_ID",id,"name",nName,"container_name",container,"source",source,"scale",scale);
-		return new CreateGisBlock(id,"dummy",container,isVisible,source);
+
+		checkForNull("block_ID",id,"name",nName,"container_name",container,"source",source);
+		return new CreateGisBlock(id,nName,container,isVisible,source,topN,topE,bottomN,bottomE);
 
 	}
 
@@ -950,7 +1018,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 	 * @throws IOException
 	 * @throws XmlPullParserException
 	 */
-	
+
 	private AddSumOrCountBlock readBlockAddSelectionOrSum(XmlPullParser parser,boolean isCount) throws IOException, XmlPullParserException {
 		String containerName=null,label=null,postLabel = null,filter=null,target=null,result=null,format=null,id=null;
 		WF_Not_ClickableField_SumAndCountOfVariables.Type type;

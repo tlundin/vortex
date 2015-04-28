@@ -15,11 +15,11 @@ import android.graphics.Rect;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.Display;
-import android.view.WindowManager;
 
+import com.teraim.vortex.dynamic.types.GisLayer;
 import com.teraim.vortex.dynamic.types.PhotoMeta;
 import com.teraim.vortex.dynamic.types.Point;
+import com.teraim.vortex.dynamic.workflow_realizations.gis.WF_MapLayer;
 import com.teraim.vortex.loadermodule.configurations.GisPolygonConfiguration;
 import com.teraim.vortex.loadermodule.configurations.GisPolygonConfiguration.GisBlock;
 import com.teraim.vortex.loadermodule.configurations.GisPolygonConfiguration.SweRefCoordinate;
@@ -41,6 +41,11 @@ public class GisImageView extends GestureImageView {
 	private Context ctx;
 	private Paint polyPaint;
 
+	private int colorCount = 0;
+	private int[] myColors = {Color.BLUE,Color.YELLOW,Color.RED,Color.GREEN,Color.WHITE,Color.CYAN};
+	private List<WF_MapLayer> mapLayers;
+
+	
 	public GisImageView(Context context) {
 		super(context);
 		init(context);
@@ -82,7 +87,7 @@ public class GisImageView extends GestureImageView {
 		borderPaint.setStyle(Paint.Style.STROKE);
 		borderPaint.setStrokeWidth(3);
 
-		
+
 		polyPaint = new Paint();
 		polyPaint.setColor(Color.WHITE);
 		polyPaint.setStyle(Paint.Style.STROKE);
@@ -97,7 +102,7 @@ public class GisImageView extends GestureImageView {
 		Log.d("vortex","Fixscale is "+fixScale);
 
 		//make sure cursor blinks.
-		final int interval = 1000; // 1 Second
+		/*final int interval = 1000; // 1 Second
 		handler = new Handler();
 		Runnable runnable = new Runnable(){
 			public void run() {
@@ -109,7 +114,7 @@ public class GisImageView extends GestureImageView {
 		};
 
 		handler.postDelayed(runnable, interval);
-
+		 */
 	}
 
 	private Paint createNewPaint() {
@@ -131,9 +136,9 @@ public class GisImageView extends GestureImageView {
 	PhotoMeta gisImage;
 	//difference in % between ruta and image size.
 	private float rXRatio,rYRatio;
+
 	
-	
-	
+
 	public void setGisData(PhotoMeta gd, String rutaId) {
 		GisPolygonConfiguration gp = GisPolygonConfiguration.getSingleton();
 		if (gp == null) {
@@ -146,13 +151,13 @@ public class GisImageView extends GestureImageView {
 		gisImage = gd;
 		//calculate ratio between grid and ruta size.
 		Log.d("vortex","Calling.... "+rXRatio+","+rYRatio);
-		
+
 		//diff between real size and pixel size.
 		Log.d("vortex","w h of gis image. w h of image ("+gd.getWidth()+","+gd.getHeight()+") ("+this.getImageWidth()+","+this.getImageHeight()+")");
-	
+
 		float pXR = this.getImageWidth()/gd.getWidth()*fixScale;
 		float pYR = this.getImageHeight()/gd.getHeight()*fixScale;
-		
+
 		//Translate into a list of Path objects.
 		if (mBlocks!=null) {
 			for (GisBlock bl:mBlocks) {
@@ -168,20 +173,22 @@ public class GisImageView extends GestureImageView {
 						}
 						else {
 							this.addVertex(x, y);
-						//Log.d("vortex","lägger till x,y "+x+","+y);
+							//Log.d("vortex","lägger till x,y "+x+","+y);
 						}
 					}
 					this.savePoly();
 				}
 			}
 		}
-	
+
 	}
 	
+	
+
 	public void startPoly() {
 		startPoly(polyVertexX,polyVertexY);
 	}
-	
+
 	private void startPoly(float px,float py) {
 		fixScale = scale * scaleAdjust;
 		Path mPath = new Path();
@@ -207,9 +214,9 @@ public class GisImageView extends GestureImageView {
 		fixedX = x;
 		fixedY = y;
 		fixScale = scale * scaleAdjust;
-		
+
 		//check if any current Poly Label is within click.
-		
+
 		for (Poly p:myPaths) {
 			if (!p.isComplete())
 				continue;
@@ -238,25 +245,22 @@ public class GisImageView extends GestureImageView {
 		float dy = Math.abs(py - mY);
 		//if difference between two presses is small, discard it.
 		//if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
-			float cX = calcX(px);
-			float cY = calcY(py);
-			//Save these for diff calculation.
-			mX = px;
-			mY = py;
-			myPaths.get(myPaths.size()-1).getPath().lineTo(cX, cY);
-			//mPath.quadTo(mX, mY, (polyVertexX + mX)/2, (polyVertexY + mY)/2);
-			Point p = new Point(cX,cY);
-			myPoints.add(p);
-			invalidate();
+		float cX = calcX(px);
+		float cY = calcY(py);
+		//Save these for diff calculation.
+		mX = px;
+		mY = py;
+		myPaths.get(myPaths.size()-1).getPath().lineTo(cX, cY);
+		//mPath.quadTo(mX, mY, (polyVertexX + mX)/2, (polyVertexY + mY)/2);
+		Point p = new Point(cX,cY);
+		myPoints.add(p);
+		invalidate();
 		//} else
 		//	Log.d("vortex"," failed on diff");
 
 	}
 
 
-	int colorCount = 0;
-	int[] myColors = {Color.BLUE,Color.YELLOW,Color.RED,Color.GREEN,Color.WHITE,Color.CYAN};
-	private boolean showLabels = true;
 	private int nextColor() {
 		colorCount++;
 		if (colorCount==myColors.length)
@@ -274,7 +278,7 @@ public class GisImageView extends GestureImageView {
 		drawActive=false;
 
 	}
-	
+
 	public void savePoly() {
 		myPoints = new ArrayList<Point>();
 		myPaths.get(myPaths.size()-1).save();
@@ -282,9 +286,9 @@ public class GisImageView extends GestureImageView {
 	}
 
 
-
-	@Override
-	protected void dispatchDraw(Canvas canvas) {
+	
+	//@Override
+	protected void dispatchDraw2(Canvas canvas) {
 		super.dispatchDraw(canvas);
 		//		canvas.drawCircle(0, 0, 12, bCursorPaint);
 		//		canvas.drawCircle(x, y, 12, mCursorPaint);
@@ -299,38 +303,45 @@ public class GisImageView extends GestureImageView {
 			canvas.scale(adjustedScale, adjustedScale);
 		}
 
+	 
+	//Draw a small circle at the head of the current polygon being drawn.
 	
-		//Draw a small circle at the head of the current polygon being drawn.
 		if (drawActive && myPoints!=null && myPoints.size()>0) {
 			int s = myPoints.size()-1;
 			canvas.drawCircle(myPoints.get(s).x, myPoints.get(s).y,15, markerPaint);
 		} 
+	 
+	
 		if (myPaths!=null && myPaths.size()>0){
 
 			for (Poly p:myPaths) {
 				canvas.drawPath( p.getPath(),  p.getPaint());
 				if (p.isComplete()) {
-					
+
 					canvas.drawRect(p.getRect(), bCursorPaint);
-					if (showLabels )
+//					if (showLabels)
 						canvas.drawText(p.getLabel(),p.labelX,p.labelY, txtPaint);
 				}
 			}
 		}
-		//Draw a blinking square cursor at current location if nothing else is happening
-		canvas.drawCircle((polyVertexX-fixedX)*1/fixScale,(polyVertexY-fixedY)*1/fixScale, 10, currCursorPaint);
+	 
+	//Draw a blinking square cursor at current location if nothing else is happening
+	canvas.drawCircle((polyVertexX-fixedX)*1/fixScale,(polyVertexY-fixedY)*1/fixScale, 10, currCursorPaint);
 
-		//Draw a square around edge of picture
-		//float w =(this.getImageWidth()+this.getImageWidth()*rXRatio)/2.0f;
-		//float h =(this.getImageHeight()+this.getImageHeight()*rXRatio)/2.0f;
-		//canvas.drawRect(fCalcX(-w), fCalcY(-h), fCalcX(w), fCalcY(h), borderPaint);
-		
-		//Draw the polygons for all partaking blocks, if any.
+	//Draw a square around edge of picture
+	float w =(this.getImageWidth()+this.getImageWidth()*rXRatio)/2.0f;
+	float h =(this.getImageHeight()+this.getImageHeight()*rXRatio)/2.0f;
+	canvas.drawRect(fCalcX(-w), fCalcY(-h), fCalcX(w), fCalcY(h), borderPaint);
 
-		//If person visible, draw a little figure at location.
-		
-		canvas.restore();
+	//Draw the polygons for all partaking blocks, if any.
+
+	//If person visible, draw a little figure at location.
+
+	canvas.restore();
 	}
+
+
+
 
 	private float calcX(float mx) {
 		return (mx-x)*1/fixScale;
@@ -346,9 +357,9 @@ public class GisImageView extends GestureImageView {
 		return (my-fixedY)*1/fixScale;
 	}
 
-	
+
 	private class Poly {
-		
+
 		Path mPath;
 		String mLabel;
 		float labelX,labelY;
@@ -357,7 +368,7 @@ public class GisImageView extends GestureImageView {
 		Rect bounds;
 		int picW,picH;
 
-		
+
 		public Poly(Path p, float lx, float ly) {
 			mPath = p;
 			labelX=lx;
@@ -367,7 +378,7 @@ public class GisImageView extends GestureImageView {
 			setLabel("Poly "+rNum++);
 
 		}
-		
+
 		private void setLabel(String label) {
 			mLabel = label;
 			txtPaint.getTextBounds(mLabel, 0, mLabel.length(), bounds);
@@ -383,12 +394,12 @@ public class GisImageView extends GestureImageView {
 		private Paint getPaint() {
 			return myPaint;
 		}
-		
+
 		public void save() {
 			isReady=true;
 			mPath.close();
 		}
-		
+
 		public boolean isComplete() {
 			return isReady;
 		}
@@ -397,5 +408,16 @@ public class GisImageView extends GestureImageView {
 			return bounds;
 		}
 	}
+
+	List<GisLayer> myLayers=new ArrayList<GisLayer>();
+	public void addLayer(GisLayer layer) {
+		if(layer!=null) {
+			Log.d("vortex","Succesfully added layer");
+			myLayers.add(layer);
+		}
+		
+	}
+	
+
 
 }

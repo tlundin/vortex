@@ -74,6 +74,8 @@ public class WF_DisplayValueField extends WF_Widget implements EventListener {
 				if (strRes==null) {
 					o.addRow("");
 					o.addText("Formula "+formula+" returned null");	
+					((TextView)this.getWidget().findViewById(R.id.outputValueField)).setText("");
+					((TextView)this.getWidget().findViewById(R.id.outputUnitField)).setText("");
 					return;
 				}
 			}
