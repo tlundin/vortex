@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -17,8 +20,10 @@ import android.util.AttributeSet;
 import android.util.Log;
 
 import com.teraim.vortex.dynamic.types.GisLayer;
+import com.teraim.vortex.dynamic.types.Location;
 import com.teraim.vortex.dynamic.types.PhotoMeta;
 import com.teraim.vortex.dynamic.types.Point;
+import com.teraim.vortex.dynamic.workflow_realizations.gis.GisObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.WF_MapLayer;
 import com.teraim.vortex.loadermodule.configurations.GisPolygonConfiguration;
 import com.teraim.vortex.loadermodule.configurations.GisPolygonConfiguration.GisBlock;
@@ -44,7 +49,8 @@ public class GisImageView extends GestureImageView {
 	private int colorCount = 0;
 	private int[] myColors = {Color.BLUE,Color.YELLOW,Color.RED,Color.GREEN,Color.WHITE,Color.CYAN};
 	private List<WF_MapLayer> mapLayers;
-
+	private PhotoMeta photoMetaData;
+	private Paint rCursorPaint;
 	
 	public GisImageView(Context context) {
 		super(context);
@@ -65,8 +71,9 @@ public class GisImageView extends GestureImageView {
 		this.ctx=ctx;
 		//used for cursor blink.
 		calendar.setTime(new Date());
-
-
+		rCursorPaint = new Paint();
+		rCursorPaint.setColor(Color.RED);
+		rCursorPaint.setStyle(Paint.Style.FILL);
 		wCursorPaint = new Paint();
 		wCursorPaint.setColor(Color.WHITE);
 		wCursorPaint.setStyle(Paint.Style.FILL);
@@ -81,23 +88,17 @@ public class GisImageView extends GestureImageView {
 		txtPaint.setColor(Color.WHITE);
 		txtPaint.setStyle(Paint.Style.STROKE);
 		txtPaint.setTextAlign(Paint.Align.CENTER);
-
 		borderPaint = new Paint();
 		borderPaint.setColor(Color.WHITE);
 		borderPaint.setStyle(Paint.Style.STROKE);
 		borderPaint.setStrokeWidth(3);
-
-
 		polyPaint = new Paint();
 		polyPaint.setColor(Color.WHITE);
 		polyPaint.setStyle(Paint.Style.STROKE);
 		polyPaint.setStrokeWidth(1);
-
 		currCursorPaint = wCursorPaint;
-
 		myPoints = new ArrayList<Point>();
 		myPaths = Collections.synchronizedList(new ArrayList<Poly>());
-
 		fixScale = scale * scaleAdjust;
 		Log.d("vortex","Fixscale is "+fixScale);
 
@@ -115,6 +116,15 @@ public class GisImageView extends GestureImageView {
 
 		handler.postDelayed(runnable, interval);
 		 */
+	}
+	double pXR,pYR;
+	public void setPhotoMetaData(PhotoMeta pm) {
+		fixScale = scale * scaleAdjust;
+		this.photoMetaData=pm;
+		pXR = this.getImageWidth()/photoMetaData.getWidth();
+		pYR = this.getImageHeight()/photoMetaData.getHeight();
+		fixedX = x;
+		fixedY = y;
 	}
 
 	private Paint createNewPaint() {
@@ -136,8 +146,37 @@ public class GisImageView extends GestureImageView {
 	PhotoMeta gisImage;
 	//difference in % between ruta and image size.
 	private float rXRatio,rYRatio;
-
-	
+/*
+	private int[] translateMapToRealCoordinates(float scale, Location l) {
+		Log.d("vortex","w h of gis image. w h of image ("+photoMetaData.getWidth()+","+photoMetaData.getHeight()+") ("+this.getImageWidth()+","+this.getImageHeight()+")");
+		final float pXR = this.getImageWidth()/photoMetaData.getWidth()*fixScale;
+		final float pYR = this.getImageHeight()/photoMetaData.getHeight()*fixScale;
+		Log.d("vortex","px, py"+pXR+","+pYR);
+		int x = ((int)calcX((float)((l.getX()-photoMetaData.left)*pXR)));
+		
+		int y = ((int)calcY((float)((photoMetaData.top-l.getY())*pYR)));
+		Log.d("vortex","lägger till x,y "+x+","+y);
+		
+		return new int[]{x,y};
+	}
+*/
+	private int[] translateMapToRealCoordinates(float scale, Location l) {
+		Log.d("vortex","w h of gis image. w h of image ("+photoMetaData.getWidth()+","+photoMetaData.getHeight()+") ("+this.getImageWidth()+","+this.getImageHeight()+")");
+		Log.d("vortex","px, py"+pXR+","+pYR);
+		double mapDistX = l.getX()-photoMetaData.left;
+		double mapDistY = photoMetaData.top-l.getY();
+		Log.d("vortex","distance on map (real): x,y "+mapDistX+","+mapDistY);
+		double pixDX = mapDistX*pXR;
+		double pixDY = mapDistY*pYR;
+		Log.d("vortex","distance on map (in pixel no scale): x,y "+pixDX+","+pixDY);
+		double sX = pixDX*fixScale;
+		double sY = pixDY*fixScale;
+		Log.d("vortex","distance on map (in pixel scaled): x,y "+sX+","+sY);
+		float pX = (float) (sX);
+		float pY = (float) (sY);
+		Log.d("vortex","distance on map projected "+pX+","+pY);		
+		return new int[]{(int)pX,(int)pY};
+	}
 
 	public void setGisData(PhotoMeta gd, String rutaId) {
 		GisPolygonConfiguration gp = GisPolygonConfiguration.getSingleton();
@@ -155,8 +194,8 @@ public class GisImageView extends GestureImageView {
 		//diff between real size and pixel size.
 		Log.d("vortex","w h of gis image. w h of image ("+gd.getWidth()+","+gd.getHeight()+") ("+this.getImageWidth()+","+this.getImageHeight()+")");
 
-		float pXR = this.getImageWidth()/gd.getWidth()*fixScale;
-		float pYR = this.getImageHeight()/gd.getHeight()*fixScale;
+		float mpXR = (float)pXR*fixScale;
+		float mpYR = (float)pYR*fixScale;
 
 		//Translate into a list of Path objects.
 		if (mBlocks!=null) {
@@ -166,8 +205,8 @@ public class GisImageView extends GestureImageView {
 					SweRefCoordinate swe;
 					for (int i=0;i<sl.size();i++) {
 						swe = sl.get(i);	
-						float x = (swe.E-gd.left)*pXR;
-						float y = (gd.top-swe.N)*pYR+margin;
+						float x =(float)( (swe.E-gd.left)*pXR);
+						float y =(float)( (gd.top-swe.N)*pYR+margin);
 						if (i==0) {
 							startPoly(x,y);
 						}
@@ -286,7 +325,35 @@ public class GisImageView extends GestureImageView {
 	}
 
 
-	
+	@Override
+	protected void dispatchDraw(Canvas canvas) {
+		super.dispatchDraw(canvas);
+		canvas.save();
+		//scale and adjust.
+		
+		float adjustedScale = scale * scaleAdjust;
+		canvas.translate(x, y);
+		if(adjustedScale != 1.0f) {
+			canvas.scale(adjustedScale, adjustedScale);
+		}
+		for (String layer:myLayers.keySet()) {
+			Log.d("vortex","drawing layer "+layer);
+			//get all objects that should be drawn on this layer.
+			Map<String, Set<GisObject>> bags = myLayers.get(layer).getGisBags();
+			if (!bags.isEmpty()) {
+				for (String key:bags.keySet()) {
+					Set<GisObject> gisObjects = bags.get(key);
+					for (GisObject go:gisObjects) {
+						Location l = go.getLocation();
+						int[] xy = translateMapToRealCoordinates(adjustedScale,l);
+						Rect r = new Rect();
+						r.set(xy[0], xy[1], xy[0]+5, xy[1]+5);
+						canvas.drawRect(r, rCursorPaint);
+					}
+				}
+			}
+		}
+	}
 	//@Override
 	protected void dispatchDraw2(Canvas canvas) {
 		super.dispatchDraw(canvas);
@@ -344,10 +411,10 @@ public class GisImageView extends GestureImageView {
 
 
 	private float calcX(float mx) {
-		return (mx-x)*1/fixScale;
+		return (mx-x)/fixScale;
 	}
 	private float calcY(float my) {
-		return (my-y)*1/fixScale;
+		return (my-y)/fixScale;
 	}
 
 	private float fCalcX(float mx) {
@@ -409,14 +476,21 @@ public class GisImageView extends GestureImageView {
 		}
 	}
 
-	List<GisLayer> myLayers=new ArrayList<GisLayer>();
-	public void addLayer(GisLayer layer) {
+	Map<String,GisLayer> myLayers=new HashMap<String,GisLayer>();
+	
+	public void addLayer(GisLayer layer,String identifier) {
 		if(layer!=null) {
 			Log.d("vortex","Succesfully added layer");
-			myLayers.add(layer);
+			myLayers.put(identifier,layer);
 		}
 		
 	}
+
+	public GisLayer getLayer(String identifier) {
+		return myLayers.get(identifier);
+	}
+	
+	
 	
 
 

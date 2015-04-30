@@ -232,8 +232,8 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 					blocks.add(readBlockAddGisView(parser));
 				else if (name.equals("block_add_gis_layer"))
 					blocks.add(readBlockAddGisLayer(parser));
-
-
+				else if (name.equals("block_add_gis_point_objects"))
+					blocks.add(readBlockAddGisPointObjects(parser));
 				else {			
 					skip(name,parser,o);
 				}
@@ -262,8 +262,66 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 		return blocks;
 	}
 
+/*
+	 <block_add_gis_point_object>
+	 <block_ID>2145</block_ID>
+	 <name>Rutor</name>
+	 <target>Layer 1</target>
+	 <coord_type>Sweref</coord_type>
+	 <x_variable>Koord5kmLR_EW</x_variable>
+	 <y_variable>Koord5kmLR_NS</y_variable>
+	 <obj_context>år=?,ruta=?</obj_context>
+	 <label>RUTA @ruta</label>
+	 </block_add_gis_point_object>
+*/
+	
+	
+	private Block readBlockAddGisPointObjects(XmlPullParser parser) throws IOException, XmlPullParserException {
+		o.addRow("Parsing block: block_add_gis_point_objects...");
+		String id=null,nName=null,target=null,label=null,coordType = null,
+				xVar=null,yVar=null,objContext=null,imgSource=null,type=null;
+		boolean isVisible=true;
 
+		parser.require(XmlPullParser.START_TAG, null,"block_add_gis_point_objects");
+		Log.d("vortex","In block_add_gis_point_objects!!");
+		while (parser.next() != XmlPullParser.END_TAG) {
+			if (parser.getEventType() != XmlPullParser.START_TAG) {
+				continue;
+			}
+			String name= parser.getName();
+			if (name.equals("block_ID")) {
+				id = readText("block_ID",parser);
+			} else if (name.equals("target")) {
+				target = readText("target",parser);
+			} else if (name.equals("label")) {
+				label = readText("label",parser);
+			} else if (name.equals("is_visible")) {
+				isVisible = readText("is_visible",parser).equals("true");
+			} else if (name.equalsIgnoreCase("name")) {
+				nName = readText("name",parser);
+			} else if (name.equalsIgnoreCase("coord_type")) {
+				coordType = readText("coord_type",parser);
+			} else if (name.equalsIgnoreCase("x_variable")) {
+				xVar = readText("x_variable",parser);
+			} else if (name.equalsIgnoreCase("y_variable")) {
+				yVar = readText("y_variable",parser);
+			} else if (name.equalsIgnoreCase("obj_context")) {
+				objContext = readText("obj_context",parser);
+			} else if (name.equalsIgnoreCase("img_source")) {
+				imgSource = readText("img_source",parser);
+			} else if (name.equalsIgnoreCase("type")) {
+				type = readText("type",parser);
+			}
+			else {
+				Log.e("vortex","Skipped "+name);
+				skip(name,parser);
+			}
+		}
 
+		checkForNull("block_ID",id,"target",target,"x_variable",xVar,"y_variable",yVar);
+		return new AddGisPointObjects(id,nName,label,target,objContext,coordType,xVar,yVar,imgSource,type,isVisible);
+
+	}
 
 	private Block readBlockAddGisLayer(XmlPullParser parser) throws IOException, XmlPullParserException {
 		o.addRow("Parsing block: block_add_gis_layer...");

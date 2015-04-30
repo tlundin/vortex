@@ -44,14 +44,12 @@ public class AddGisLayerBlock extends Block {
 		
 	}
 	
-	
-	
 
 	public void create(WF_Context myContext) {
 		Drawable gisMap = myContext.getDrawable(target);
 		if (gisMap!=null && gisMap instanceof WF_Gis_Map) {
 			myGis = ((WF_Gis_Map)gisMap).getGis();
-			myGis.addLayer(new GisLayer(name,label,isVisible,hasWidget));
+			myGis.addLayer(new GisLayer(name,label,isVisible,hasWidget),name);
 		}
 		
 	}

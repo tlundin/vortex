@@ -24,6 +24,7 @@ import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
 import com.teraim.vortex.bluetooth.BluetoothConnectionService;
 import com.teraim.vortex.dynamic.blocks.AddEntryToFieldListBlock;
+import com.teraim.vortex.dynamic.blocks.AddGisLayerBlock;
 import com.teraim.vortex.dynamic.blocks.AddRuleBlock;
 import com.teraim.vortex.dynamic.blocks.AddSumOrCountBlock;
 import com.teraim.vortex.dynamic.blocks.AddVariableToEntryFieldBlock;
@@ -62,6 +63,7 @@ import com.teraim.vortex.dynamic.workflow_realizations.WF_Event;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnBluetoothMessageReceived;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnSave;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Static_List;
+import com.teraim.vortex.loadermodule.configurations.AddGisPointObjects;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.ui.MenuActivity;
@@ -534,8 +536,13 @@ public abstract class Executor extends Fragment {
 					
 				}
 				
-				
-				
+				else if (b instanceof AddGisLayerBlock) {
+					((AddGisLayerBlock) b).create(myContext);
+					
+				}
+				else if (b instanceof AddGisPointObjects) {
+					((AddGisPointObjects) b).create(myContext);
+				}
 				
 				String cId = b.getBlockId();
 				String jNext = jump.get(cId);

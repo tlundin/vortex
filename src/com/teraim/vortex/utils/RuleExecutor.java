@@ -572,43 +572,56 @@ public class RuleExecutor {
 
 	private String evalFunc(TokenizedItem item) {
 		String value;	
-		//Check if this is historical(x) function.
-		if (item.getType()==TokenType.historical) {
-			Variable var = GlobalState.getInstance().getVariableCache().getVariable(item.get());
-			if (var != null) {
-				value = var.getHistoricalValue();
-				Log.d("nils","Found historical value "+value+" for variable "+item.get());
-				return value;				
-			}
-		}
-
-		if (item.getType()==TokenType.getCurrentYear) {
-			Log.d("vortex","Returning current year!");
-			return Constants.getYear();
-		}
-		if (item.getType()==TokenType.getCurrentMonth) {
-			return Constants.getMonth();
-		}
-		if (item.getType()==TokenType.getCurrentDay) {
-			return Constants.getDayOfMonth();
-		}
-		if (item.getType()==TokenType.getCurrentHour) {
-			return Constants.getHour();
-		}
-		if (item.getType()==TokenType.getCurrentSecond) {
-			return Constants.getSecond();
-		}
-		if (item.getType()==TokenType.getCurrentMinute) {
-			return Constants.getMinute();
-		}
-		if (item.getType()==TokenType.getCurrentWeekNumber) {
-			return Constants.getWeekNumber();
-		}
-		//Check if variable has value
 		String[] args = item.getArguments();
 		GlobalState gs = GlobalState.getInstance();
 		VariableConfiguration al = gs.getVariableConfiguration();
-		if (item.getType()==TokenType.sum) {
+		//Check if this is historical(x) function.
+		if (item.getType()==TokenType.historical) {
+			if (args!=null) {
+				if (args.length!=1) {
+					gs.getLogger().addRow("");
+					gs.getLogger().addRedText("historical() has more than one argument..will use first: "+args[0]);							
+				}
+				Variable var = GlobalState.getInstance().getVariableCache().getVariable(args[0]);
+				if (var != null) {
+					value = var.getHistoricalValue();
+					Log.d("nils","Found historical value "+value+" for variable "+item.get());
+					return value;				
+				} else {
+					Log.e("vortex","Variable not found: "+args[0]);
+					gs.getLogger().addRow("");
+					gs.getLogger().addRedText("Variable not found in historical: "+args[0]);							
+				}
+			} else {
+				Log.e("vortex","Historical() have no arguments. You must specify a variable!");
+				gs.getLogger().addRow("");
+				gs.getLogger().addRedText("Historical() have no arguments. You must specify a variable!");
+			}
+		}
+		else if (item.getType()==TokenType.getCurrentYear) {
+			Log.d("vortex","Returning current year!");
+			return Constants.getYear();
+		}
+		else if (item.getType()==TokenType.getCurrentMonth) {
+			return Constants.getMonth();
+		}
+		else if (item.getType()==TokenType.getCurrentDay) {
+			return Constants.getDayOfMonth();
+		}
+		else if (item.getType()==TokenType.getCurrentHour) {
+			return Constants.getHour();
+		}
+		else if (item.getType()==TokenType.getCurrentSecond) {
+			return Constants.getSecond();
+		}
+		else if (item.getType()==TokenType.getCurrentMinute) {
+			return Constants.getMinute();
+		}
+		else if (item.getType()==TokenType.getCurrentWeekNumber) {
+			return Constants.getWeekNumber();
+		}
+		
+		else if (item.getType()==TokenType.sum) {
 			float sum = 0;
 			if (args!=null) {
 				Log.d("vortex","Calculating sum!  ");
@@ -654,8 +667,8 @@ public class RuleExecutor {
 			}
 
 		}
-		
-		if (item.getType()==TokenType.getDelytaArea) {
+
+		else if (item.getType()==TokenType.getDelytaArea) {
 			Log.d("vortex","running getDelytaArea function");
 			DelyteManager dym = DelyteManager.getInstance();
 			if (dym==null) {
@@ -672,7 +685,7 @@ public class RuleExecutor {
 			//TODO This is wrong...variable arg should be tokenized.
 			String arg = args[0];
 			if (arg !=null && arg.length()>0) {
-				
+
 			} else {
 				Log.e("vortex","no first argument in hasSame");
 				gs.getLogger().addRow("");
@@ -689,10 +702,10 @@ public class RuleExecutor {
 					return null;
 				} else 
 					value = v.getValue();
-					
+
 			} else
 				value = arg;
-			
+
 			Delyta dy = dym.getDelyta(Integer.parseInt(value));
 			if (dy==null) {
 				Log.e("vortex","delyta null in getdelytaarea");
@@ -703,7 +716,7 @@ public class RuleExecutor {
 			return Float.toString(dy.getArea()/100);
 		}
 
-		if (item.getType()==TokenType.hasSame) {
+		else if (item.getType()==TokenType.hasSame) {
 			Log.d("vortex","running hasSame function");
 			if(args==null || args.length<3) {
 				Log.e("vortex","no or too few arguments in hasSame");
@@ -778,7 +791,7 @@ public class RuleExecutor {
 			}
 		}
 
-		if (item.getType()==TokenType.has) {
+		else if (item.getType()==TokenType.has) {
 			if (args!=null) {
 				Variable v = gs.getVariableConfiguration().getVariableInstance(args[0]);
 				if (v==null||v.getValue()==null)
@@ -790,7 +803,7 @@ public class RuleExecutor {
 				return "0";
 			}
 
-		}
+		} else if (item.getType().name().startsWith("has")){
 		Log.d("vortex","HASx function");
 		//Apply filter parameter <filter> on all variables in current table. Return those that match.
 		float failC=0;
@@ -841,6 +854,10 @@ public class RuleExecutor {
 		gs.getLogger().addRow("");
 		gs.getLogger().addYellowText("hasMost filter failed. Not filled in: "+(int)((failC/rowC)*100f)+"%");
 		return "0";
+		}
+		gs.getLogger().addRow("");
+		gs.getLogger().addYellowText("Function evaluation failed for "+item.get()+". Returning 0");
+		return "0";		
 	}
 
 	public String parseExpression(String formula, String subst) {

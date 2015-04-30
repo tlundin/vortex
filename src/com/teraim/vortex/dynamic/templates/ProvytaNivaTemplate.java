@@ -227,7 +227,7 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 				//String rikt = al.getVariableValue(pyKeyMap,"ProfilRiktning");
 				AlertDialog.Builder alert = new AlertDialog.Builder(v.getContext());
 				alert.setTitle("OBS!");
-				alert.setMessage("Den här provytan har flyttat centrum!");					
+				alert.setMessage("Profil på annat ställe!");					
 				alert.setCancelable(false);
 				alert.setPositiveButton("Okej", new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int whichButton) {
@@ -243,7 +243,7 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 					//String rikt = al.getVariableValue(pyKeyMap,"ProfilRiktning");
 					AlertDialog.Builder alert = new AlertDialog.Builder(v.getContext());
 					alert.setTitle("OBS!");
-					alert.setMessage("Den här provytan saknar profil!");					
+					alert.setMessage("Profil saknas!");					
 					alert.setCancelable(false);
 					alert.setPositiveButton("Okej", new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int whichButton) {

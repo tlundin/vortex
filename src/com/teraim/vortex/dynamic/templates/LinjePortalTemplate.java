@@ -222,7 +222,10 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 
 			avgrSp = (Spinner) intervallL.findViewById(R.id.avgrTyp);
 
-			List<String>avgrTyper = Arrays.asList(new String[] {"Åkermark","Slåttervall","Vatten","Otillgänglig våtmark","Otillgänglig brant","Rasrisk","Tomt/Bebyggelse","Onåbar biotopö","Beträdnadsförbud"});			
+//			List<String>avgrTyper = Arrays.asList(new String[] {"Åkermark","Slåttervall","Vatten","Otillgänglig våtmark","Otillgänglig brant","Rasrisk","Tomt/Bebyggelse","Onåbar biotopö","Beträdnadsförbud"});			
+			
+			List<String>avgrTyper = al.getListElements(al.getCompleteVariableDefinition(NamedVariables.AVGRTYP));
+			
 			ArrayAdapter<String> sara=new ArrayAdapter<String>(getActivity(),android.R.layout.simple_list_item_1,avgrTyper);
 			avgrSp.setAdapter(sara);
 
@@ -258,6 +261,7 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 						public void onClick(DialogInterface dialog, int whichButton) {
 							setEnded();
 							gs.sendMessage(new LinjeDone(currentLinje));
+							getFragmentManager().popBackStackImmediate();
 						}
 
 
@@ -820,7 +824,7 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 
 	private Set<Map<String, String>> getExistingObjects(String linjeObjLabel) {
 		Map<String,String> objChain = Tools.createKeyMap(VariableConfiguration.KEY_YEAR,currentYear,"ruta",al.getVariableValue(null,"Current_Ruta"),"linje",currentLinje,"value",linjeObjLabel);
-		return db.getAllInstances(NamedVariables.LINJEOBJEKT, objChain, "meter");
+		return db.getKeyChainsForAllVariableInstances(NamedVariables.LINJEOBJEKT, objChain, "meter");
 	}
 
 

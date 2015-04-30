@@ -381,7 +381,7 @@ public class DbHelper extends SQLiteOpenHelper {
 			Log.d("nils","Variables found in db:");
 			for (int i = 1;i<=DbHelper.NO_OF_KEYS;i++)
 				header+=colKeyM.get("L"+i)+"|";
-			header +="variable|value";
+			header +="var|value";
 			Log.d("vortex",header);
 			writer.println(header);
 			String row;
@@ -837,7 +837,7 @@ public class DbHelper extends SQLiteOpenHelper {
 	}
 
 
-	Map <Set<String>,String>cachedSelArgs = new HashMap<Set<String>,String>();
+	//Map <Set<String>,String>cachedSelArgs = new HashMap<Set<String>,String>();
 
 	public static class Selection {
 		public String[] selectionArgs=null;
@@ -931,7 +931,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
 				//		}
 
-				cachedSelArgs.put(keySet.keySet(), selection);
+				//cachedSelArgs.put(keySet.keySet(), selection);
 
 			} 
 
@@ -1276,7 +1276,7 @@ public class DbHelper extends SQLiteOpenHelper {
 	}
 	
 	
-	public void fastHistoricalInsert(Map<String,String> keys,
+	public boolean fastHistoricalInsert(Map<String,String> keys,
 			String varId, String value) {
 
 		valuez.clear();
@@ -1284,20 +1284,30 @@ public class DbHelper extends SQLiteOpenHelper {
 		String keyVal=null;
 		for(String key:keys.keySet()) {
 			keyVal = keys.get(key);
-			if (keyVal!=null)
-				valuez.put(getColumnName(key),keyVal);
+			if (keyVal!=null) {
+				if(keyColM.get(key)!=null)
+					valuez.put(keyColM.get(key),keyVal);
+				else 
+					//Column not found. Do not insert!!
+					return false ;
 				
+					
+			}
 		}
 		//		values.put(getColumnName("linje"),lID);
 		//		values.put(getColumnName("abo"),aID);	
 		valuez.put("var", varId);
 		valuez.put("value", value);
 		//Log.d("vortex",valuez.toString());
+		try {
 		db.insert(TABLE_VARIABLES, // table
 				null, //nullColumnHack
 				valuez
-				); 	
-		//Log.d("nils",".");
+				);
+		} catch (SQLiteException e) {
+			return false;
+		}
+		return true;
 	}
 	/*	
 	public String getHistoricalValue(String varName,Map<String, String> keyChain) {
@@ -1306,9 +1316,16 @@ public class DbHelper extends SQLiteOpenHelper {
 		return getValue(varName,createSelection(histKeyChain,varName),new String[] {VALUE});
 	}
 	 */
+	//Get values for all instances of a given variable, from a keychain with * values.
+	
+	public DBColumnPicker getAllVariableInstances(Selection s) {
+		Cursor c = db.query(TABLE_VARIABLES,null,s.selection,
+				s.selectionArgs,null,null,null,null);
+		return new DBColumnPicker(c);
+	}
 
 	//Generates keychains for all instances.
-	public Set<Map<String,String>> getAllInstances(String varID,
+	public Set<Map<String,String>> getKeyChainsForAllVariableInstances(String varID,
 			Map<String, String> keyChain, String variatorColumn) {
 		Set<Map<String,String>> ret = null;
 		String variatorColTransl = this.getColumnName(variatorColumn);

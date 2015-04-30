@@ -30,6 +30,7 @@ import com.teraim.vortex.dynamic.workflow_abstracts.Event.EventType;
 import com.teraim.vortex.dynamic.workflow_abstracts.EventListener;
 import com.teraim.vortex.dynamic.workflow_abstracts.Filterable;
 import com.teraim.vortex.dynamic.workflow_abstracts.Listable;
+import com.teraim.vortex.dynamic.workflow_realizations.gis.WF_Gis_Map;
 
 public class WF_Context {
 
@@ -43,6 +44,8 @@ public class WF_Context {
 	private final int rootContainerId; 
 	private String statusVariable=null;
 	private List<Filterable> filterables;
+	private WF_Gis_Map currentGis;
+	private List<WF_Gis_Map> gisses;
 
 
 
@@ -53,6 +56,7 @@ public class WF_Context {
 		this.rootContainerId=rootContainerId;
 		this.drawables=new HashMap<String,Drawable>();
 		this.filterables=new ArrayList<Filterable>();
+		this.gisses=new ArrayList<WF_Gis_Map>();
 	}
 	public Context getContext() {
 		return ctx;
@@ -150,7 +154,8 @@ public class WF_Context {
 		drawables.clear();
 		eventBroker.removeAllListeners();
 		rules.clear();
-		
+		currentGis = null;
+		gisses.clear();
 
 	}
 
@@ -245,6 +250,14 @@ public class WF_Context {
 
 	public String getStatusVariable() {
 		return statusVariable;
+	}
+	public void addGis(String id, WF_Gis_Map wf_Gis_Map) {
+		currentGis = wf_Gis_Map;
+		gisses.add(wf_Gis_Map);
+	}
+	
+	public WF_Gis_Map getCurrentGis() {
+		return currentGis;
 	}
 
 

@@ -29,7 +29,7 @@ import com.teraim.vortex.utils.PersistenceHelper;
 
 public class Constants {
 
-	public final static float VORTEX_VERSION = 1.077f;
+	public final static float VORTEX_VERSION = 1.078f;
 
 	
 	//String constants
@@ -180,6 +180,9 @@ public class Constants {
 
 	//Vibrate when error x milliseconds...
 	public static final long BURR_LENGTH = 250;
+
+
+	public static final String WILD_CARD_MARKER = "%";
 
 
 

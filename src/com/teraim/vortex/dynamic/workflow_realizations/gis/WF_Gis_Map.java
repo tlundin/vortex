@@ -31,14 +31,13 @@ import com.teraim.vortex.utils.Tools;
  */
 public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener {
 
-	private PhotoMeta photoMetaData;
 	private PersistenceHelper globalPh,ph;
 	private String gisDir;
 	private GisImageView gisImageView;
 	private LinearLayout filtersC,layersC;
 	
 	public WF_Gis_Map(String id, View mapView, boolean isVisible, String picUrlorName,
-			WF_Context myContext) {
+			WF_Context myContext, PhotoMeta photoMeta) {
 		super(id, mapView, isVisible, myContext);
 		GlobalState gs = GlobalState.getInstance();
 		globalPh = gs.getGlobalPreferences();
@@ -48,7 +47,8 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener {
 		Bitmap bmp = Tools.getScaledImage(ctx,fullPicFileName);
 		gisImageView = (GisImageView)mapView.findViewById(R.id.GisV);		
 		gisImageView.setImageBitmap(bmp);
-		
+		gisImageView.setPhotoMetaData(photoMeta);
+		myContext.addGis(id,this);
 		
 		
 	}
@@ -56,10 +56,15 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener {
 	public GisImageView getGis() {
 		return gisImageView;
 	}
+	
+	
 
 
 	@Override
 	public void onEvent(Event e) {
+		
 		Log.d("vortex","In GIS_Map Event Handler");
-	}	
+	}
+	
+	
 }

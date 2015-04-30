@@ -12,4 +12,18 @@ public class LatLong implements Location {
 		this.latitude=latitude;
 		this.longitude=longitude;
 	}
+
+
+	@Override
+	public double getX() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+
+	@Override
+	public double getY() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }

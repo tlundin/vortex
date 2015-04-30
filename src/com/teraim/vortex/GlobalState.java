@@ -30,6 +30,7 @@ import com.teraim.vortex.expr.Aritmetic;
 import com.teraim.vortex.expr.Parser;
 import com.teraim.vortex.loadermodule.Configuration;
 import com.teraim.vortex.log.LoggerI;
+import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.non_generics.StatusHandler;
 import com.teraim.vortex.ui.DrawerMenu;
 import com.teraim.vortex.ui.MenuActivity;
@@ -77,19 +78,19 @@ public class GlobalState  {
 		if (singleton == null) {			
 			//singleton = new GlobalState(c.getApplicationContext());
 			Log.e("vortex","Global state was lost...ajabaja");
-						
+
 		}
 		return singleton;
 	}
-	
+
 	public static GlobalState createInstance(Context applicationContext, PersistenceHelper globalPh,
 			PersistenceHelper ph, LoggerI debugConsole, DbHelper myDb,
 			List<Workflow> workflows,Table t,SpinnerDefinition sd) {
 		singleton = null;
 		return new GlobalState(applicationContext,  globalPh,
-				 ph, debugConsole,  myDb,
+				ph, debugConsole,  myDb,
 				workflows, t, sd);
-		
+
 	}
 
 	//private GlobalState(Context ctx)  {
@@ -112,19 +113,19 @@ public class GlobalState  {
 		myHandler = getHandler();
 		//Handles status for 
 		myStatusHandler = new StatusHandler(this);
-		
+
 		mySpinnerDef = sd;
-		
+
 		singleton =this;
 	}
 
 
-	
+
 
 	/*Validation
 	 * 
 	 */
-	
+
 	/*
 	public ErrorCode validateFrozenObjects() {
 
@@ -152,7 +153,7 @@ public class GlobalState  {
 	public SpinnerDefinition getSpinnerDefinitions() {
 		return mySpinnerDef;
 	}
-/*
+	/*
 	public void setSpinnerDefinitions(SpinnerDefinition sd) {
 		if (sd!=null)
 			Log.d("nils","SetSpinnerDef called with "+sd.size()+" spinners");
@@ -160,17 +161,17 @@ public class GlobalState  {
 			Log.e("nils","Spinnerdef null!!!");
 		mySpinnerDef=sd;
 	}
-*/
+	 */
 	//Persistance for app specific variables.
 	public PersistenceHelper getPreferences() {
 		return ph;
 	}
-	
+
 	//Persistence for global, non app specific variables
 	public PersistenceHelper getGlobalPreferences() {
 		return globalPh;
 	}
-	
+
 
 	public DbHelper getDb() {
 		return db;
@@ -188,9 +189,9 @@ public class GlobalState  {
 		return artLista;
 	}
 
-	
 
-	
+
+
 
 	/**************************************************
 	 * 
@@ -223,7 +224,7 @@ public class GlobalState  {
 	public Table thawTable() { 	
 		return ((Table)Tools.readObjectFromFile(myC,Constants.CONFIG_FILES_DIR+Constants.CONFIG_FROZEN_FILE_ID));		
 	}
-	*/
+	 */
 
 	public Workflow getWorkflow(String id) {
 		return myWfs.get(id);
@@ -388,7 +389,7 @@ public class GlobalState  {
 			log.addRedText("Refresh failed - Table is missing. This is likely due to previous errors on startup");
 		}
 	}
-	*/
+	 */
 
 	public VarCache getVariableCache() {
 		return myVarCache;
@@ -415,7 +416,7 @@ public class GlobalState  {
 
 
 	public Map<String,String> getCurrentKeyHash() {
-		
+
 		Log.d("vortex",this.toString()+" getCurrentKeyHash returned "+myKeyHash);
 		return myKeyHash==null?null:myKeyHash;
 	}
@@ -461,11 +462,11 @@ public class GlobalState  {
 			return m.equals("Master");
 
 	}
-	
+
 	public boolean isSolo() {
 		return globalPh.get(PersistenceHelper.DEVICE_COLOR_KEY).equals("Solo");
 	}
-	
+
 	public boolean isSlave() {
 		return globalPh.get(PersistenceHelper.DEVICE_COLOR_KEY).equals("Client");
 	}
@@ -475,12 +476,12 @@ public class GlobalState  {
 			myHandler = getNewMessageHandler(isMaster());
 		return myHandler;
 	}
-/*
+	/*
 	public void resetHandler() {
 		myHandler = getNewMessageHandler(isMaster());
 		getHandler();
 	}
-*/
+	 */
 	private MessageHandler getNewMessageHandler(boolean master) {
 		if (master)
 			return new MasterMessageHandler(this);
@@ -626,8 +627,8 @@ public class GlobalState  {
 
 	//Change current context (side effect) to the context given in the workflow startblock.
 	//If no context can be built (missing variable values), return error. Otherwise, return null.
-	
-	
+
+
 	public CHash evaluateContext(String cContext) {
 		boolean contextError=false;
 		String err = "undefined error";
@@ -681,58 +682,63 @@ public class GlobalState  {
 									Log.d("nils","Added "+arg+","+val+" to current context");
 								} 
 								else {
-									//Variable. need to evaluate first..
-									Variable v = getVariableConfiguration().getVariableInstance(val);
-									if (v==null) {
-										contextError=true;
-										o.addRow("");
-										o.addRedText("One of the variables missing: "+val);
-										err = "Context missing (at least) variable: "+val;
-										Log.d("nils","Couldn't find variable "+val);
-										break;
+									//TODO: Get rid of historical token...
+									if (val.equals(Constants.WILD_CARD_MARKER)||val.equals(VariableConfiguration.HISTORICAL_MARKER)) {
+										Log.d("vortex","Open context!");
+										keyHash.put(arg,val);
 									} else {
-										String varVal = v.getValue();
-										if(varVal==null||varVal.isEmpty()) {
+										//Variable. need to evaluate first..
+										Variable v = getVariableConfiguration().getVariableInstance(val);
+										if (v==null) {
 											contextError=true;
-											err = "Context missing value for (at least): "+val;
 											o.addRow("");
-											o.addRedText("One of the variables used in current context("+v.getId()+") has no value in database");
-											Log.e("nils","var was null or empty: "+v.getId());
+											o.addRedText("One of the variables missing: "+val);
+											err = "Context missing (at least) variable: "+val;
+											Log.d("nils","Couldn't find variable "+val);
 											break;
 										} else {
+											String varVal = v.getValue();
+											if(varVal==null||varVal.isEmpty()) {
+												contextError=true;
+												err = "Context missing value for (at least): "+val;
+												o.addRow("");
+												o.addRedText("One of the variables used in current context("+v.getId()+") has no value in database");
+												Log.e("nils","var was null or empty: "+v.getId());
+												break;
+											} else {
 
-											keyHash.put(arg, varVal);
-											rawHash.put(arg,v);
-											Log.d("nils","Added "+arg+","+varVal+" to current context");
-											v.setKeyChainVariable(arg);
-											//update status menu
-											
+												keyHash.put(arg, varVal);
+												rawHash.put(arg,v);
+												Log.d("nils","Added "+arg+","+varVal+" to current context");
+												v.setKeyChainVariable(arg);
+												//update status menu
+
+											}
+
 										}
-
 									}
-
 								}
 							}
 						}
 					} else
 						Log.d("nils","Found empty or null pair");
 				} 
-				
+
 			}
 		}
-	
 
-	if (keyHash!=null && !contextError && !keyHash.isEmpty()) 
-		return new CHash(keyHash,rawHash);
-	else
-		return new CHash(err);
 
-}
+		if (keyHash!=null && !contextError && !keyHash.isEmpty()) 
+			return new CHash(keyHash,rawHash);
+		else
+			return new CHash(err);
+
+	}
 
 	public void setModules(Configuration myModules) {
 		this.myModules = myModules;
 	}
-	
+
 	public void flushModules() {
 		myModules.flush();
 	}
@@ -741,9 +747,9 @@ public class GlobalState  {
 		singleton=null;
 	}
 
-	
 
-	
+
+
 
 
 }

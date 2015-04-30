@@ -55,37 +55,31 @@ public class CreateGisBlock extends Block {
 	
 	public void create(WF_Context myContext) {
 		gs = GlobalState.getInstance();
-		Container myContainer = myContext.getContainer(containerId);
 		o = gs.getLogger();
 
-		if(myContainer !=null && picUrlorName!=null) {
+		if(picUrlorName!=null) {
 			if (!picUrlorName.startsWith("/"))
 				picUrlorName="/"+picUrlorName;
-			 LayoutInflater li = LayoutInflater.from(myContext.getContext());
-			 View mapView = li.inflate(R.layout.image_gis_layout, null);
-				WF_Gis_Map gis = new WF_Gis_Map(blockId, mapView, isVisible, picUrlorName,myContext);
-				myContainer.add(gis);
-				myContext.addDrawable(id,gis);
-				loadImageMetaData();
+				loadImageMetaData(myContext);
 		} else {
-			Log.e("vortex","Container null! Cannot add GisImageView!");
+			Log.e("vortex","Pic url null! Cannot add GisImageView!");
 			o.addRow("");
-			o.addRedText("Adding GisImageView to "+containerId+" failed. Container not configured");
+			o.addRedText("Adding GisImageView failed. No picture defined!");
 		}
 	}
 
-	private void loadImageMetaData() {		
+	private void loadImageMetaData(WF_Context myContext) {		
 		//Did we get image meta data in xml tags?
 		//If not, try to load it from file.
 		if (topE==null||topN==null||bottomE==null||bottomN==null||topE.length()==0) 
-			loadImageMetaFromFile();
+			loadImageMetaFromFile(myContext);
 		else {
 			Log.e("vortex","Found tags for photo meta");
-			setMetaData(new PhotoMeta(topN,topE,bottomN,bottomE));
+			setMetaData(myContext,new PhotoMeta(topN,topE,bottomN,bottomE));
 		}
 	}
 	
-	private void loadImageMetaFromFile() {
+	private void loadImageMetaFromFile(final WF_Context myContext) {
 		
 		String tmp[] = picUrlorName.split("/");
 		if (tmp.length>0) {
@@ -105,7 +99,7 @@ public class CreateGisBlock extends Block {
 				if (res.errCode==ErrorCode.frozen) {
 					PhotoMeta pm = (PhotoMeta)meta.getEssence();
 					Log.d("vortex","img top, botton, left, right "+pm.top+","+pm.bottom+","+pm.left+","+pm.right);
-					setMetaData(pm);
+					setMetaData(myContext,pm);
 				}
 				else
 					Log.d("vortex","Failed to parse image location. Errorcode "+res.errCode.name());
@@ -122,8 +116,20 @@ public class CreateGisBlock extends Block {
 		}
 	}
 
-	protected void setMetaData(PhotoMeta pm) {
-		this.photoMetaData=pm;
+	protected void setMetaData(WF_Context myContext,PhotoMeta photoMeta) {
+		Container myContainer = myContext.getContainer(containerId);
+		if (myContainer!=null) {
+		LayoutInflater li = LayoutInflater.from(myContext.getContext());
+		View mapView = li.inflate(R.layout.image_gis_layout, null);
+		WF_Gis_Map gis = new WF_Gis_Map(blockId, mapView, isVisible, picUrlorName,myContext,photoMeta);
+		myContainer.add(gis);
+		myContext.addDrawable(id,gis);
+		} else {
+			Log.e("vortex","Container null! Cannot add GisImageView!");
+			o.addRow("");
+			o.addRedText("Adding GisImageView to "+containerId+" failed. Container not configured");
+		}
+
 	}
 
 
