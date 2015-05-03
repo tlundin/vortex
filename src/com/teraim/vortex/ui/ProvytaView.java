@@ -304,7 +304,7 @@ public class ProvytaView extends View {
 				float ny = cy+(numPos.y*oScaleF);
 				Log.d("nils","Drawing number at: "+nx+","+ny);
 				px.setColor(d.isSelected()?Color.RED:isSelected?Color.LTGRAY:d.getColor());
-				c.drawText(d.getId()+"", nx, ny, px);
+				c.drawText(d.getId()+"["+Math.round(d.getArea()/100)+"]", nx, ny, px);
 			}
 		}
 	}

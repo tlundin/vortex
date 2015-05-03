@@ -1,9 +1,14 @@
 package com.teraim.vortex.utils;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Environment;
 import android.util.Log;
@@ -22,6 +27,7 @@ public class PersistenceHelper {
 	public static final String DEVICE_COLOR_KEY = "device_type";
 	public static final String CONFIG_LOCATION = "config_name";
 	public static final String BUNDLE_NAME = "bundle_name";
+	public static final String BACKUP_LOCATION = "backup_location";	
 	public static final String SERVER_URL = "server_location";
 	public static final String CURRENT_VERSION_OF_WF_BUNDLE = "current_version_wf";
 	public static final String CURRENT_VERSION_OF_CONFIG_FILE = "current_version_config";
@@ -29,6 +35,7 @@ public class PersistenceHelper {
 	public static final String CURRENT_VERSION_OF_HISTORY_FILE = "current_version_hist";
 	public static final String CURRENT_VERSION_OF_SPINNERS = "current_version_spinners";
 	public static final String CURRENT_VERSION_OF_GIS_BLOCKS = "current_version_gis_blocks";
+	public static final String CURRENT_VERSION_OF_GIS_OBJECT_BLOCKS = "current_version_gis_object_blocks";
 	public static final String FIRST_TIME_KEY = "firzzt";
 	public static final String DEVELOPER_SWITCH = "dev_switch";
 	public static final String VERSION_CONTROL_SWITCH_OFF = "no_version_control";
@@ -42,6 +49,7 @@ public class PersistenceHelper {
 	public static final String CHANGE_BUNDLE = "change_bundle";
 	public static final String HIST_LOAD_COUNTER = "hist_counter";
 	public static final String AVSTAND_WARNING_SHOWN = "Avstand_warning_was_shown";
+	
 
 
 	SharedPreferences sp;
@@ -91,13 +99,17 @@ public class PersistenceHelper {
 		return false;
 	}
 
-	public File getDbBackupStorageDir(String albumName) {
+	public File getBackupStorageDir() {
 		// Get the directory for the user's public pictures directory.
-		String path = "/mnt/external_sdcard/"+Constants.EXT_BACKUP_DIR;
+		String path = this.get(BACKUP_LOCATION);
+		if (path==null||path.length()==0) {
+			//use default if not set.
+			path = Constants.DEFAULT_EXT_BACKUP_DIR;
+		}
 
 		File backupFolder = new File(path);
 		if (!backupFolder.exists()) {
-			System.out.println("creating directory: " + Constants.EXT_BACKUP_DIR);
+			System.out.println("creating directory: " + Constants.DEFAULT_EXT_BACKUP_DIR);
 			boolean result = false;
 
 			try{
@@ -108,41 +120,68 @@ public class PersistenceHelper {
 			}        
 			if(result) {    
 				System.out.println("DIR created");  
+				return backupFolder;
 			}
 		}
 
 
 		return null;
 	}
-	public boolean backup(Context ctx) {
-
-		Log.d("vortex","DB path: "+ctx.getDatabasePath(DbHelper.DATABASE_NAME));
-		try {
-			File sd = Environment.getExternalStorageDirectory();
-			File data = Environment.getDataDirectory();
-			Log.d("vortex","data directory is "+data.getAbsolutePath());
-			/*
-        if (sd.canWrite()) {
-            String currentDBPath = "//data//{package name}//databases//{database name}";
-            String backupDBPath = "{database name}";
-            File currentDB = new File(data, currentDBPath);
-            File backupDB = new File(sd, backupDBPath);
-
-            if (currentDB.exists()) {
-                FileChannel src = new FileInputStream(currentDB).getChannel();
-                FileChannel dst = new FileOutputStream(backupDB).getChannel();
-                dst.transferFrom(src, 0, src.size());
-                src.close();
-                dst.close();
-            }
-        }
-			 */
-		} catch (Exception e) {
-			Log.e("vortex","Error backing up database\n");e.printStackTrace();
+	
+	public boolean backup(String exportFileName, String data) {
+		
+		String state = Environment.getExternalStorageState();
+		Log.d("vortex","ext state: "+state);
+		Log.d("backup stordir: ", Environment.getExternalStorageDirectory().toString());
+		if (exportFileName==null) {
+			Log.e("vortex","no filename!!");
 			return false;
 		}
+		if (data==null) {
+			Log.e("vortex","no data sent to backup!");
+			return false;
+		}
+		//File sdCard = Environment.getExternalStorageDirectory();
+		//File dir = new File (sdCard.getAbsolutePath() + "/vortex");
+		String backupFolder = get(BACKUP_LOCATION);
+		if (backupFolder==null || backupFolder.isEmpty()) {
+			Log.e("vortex","no backup folder configured...reverting to default");
+			backupFolder = Constants.DEFAULT_EXT_BACKUP_DIR;
+		}
+		File dir = new File (backupFolder);
+		
+		dir.mkdirs();
+		File file = new File(dir, exportFileName);
+		BufferedWriter outWriter=null;
+		try { 
+			FileOutputStream f = new FileOutputStream(file);
+			outWriter = new BufferedWriter(new OutputStreamWriter(f),1024);
+            // write the whole string
+            outWriter.write(data);
+            outWriter.close();
+	    }catch(Exception e){
+	        System.out.println("Could not write backup file! Filename: "+exportFileName);
+	        e.printStackTrace();
+	        try {
+				outWriter.close();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+	        return false;
+	    }
+		Log.d("vortex","file succesfully written to backup: "+exportFileName);
+		
 		return true;
+		
+		
 	}
+
+
+	
+		
+		
+	
 
 
 }

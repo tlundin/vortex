@@ -60,6 +60,15 @@ public class ConfigMenu extends PreferenceActivity {
 			epref = (EditTextPreference) findPreference(PersistenceHelper.BUNDLE_NAME);
 			epref.setSummary(epref.getText());
 			
+			epref = (EditTextPreference) findPreference(PersistenceHelper.BACKUP_LOCATION);
+			if (epref.getText()==null||epref.getText().isEmpty()) {
+				Log.e("vortex","gets here");
+				epref.setText(Constants.DEFAULT_EXT_BACKUP_DIR);
+				Log.d("vortex","TEXT: "+epref.getText());
+			}
+			Log.d("vortex","backup epref txt: "+epref.getText()+" le: "+epref.getText().length());
+			epref.setSummary(epref.getText());
+			
 			//CheckBoxPreference cpref = (CheckBoxPreference) findPreference(PersistenceHelper.DEVELOPER_SWITCH);
 			
 		}

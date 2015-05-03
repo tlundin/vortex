@@ -53,7 +53,7 @@ public class AirPhotoMetaData extends XMLConfigurationModule {
 	}
 
 	private PhotoMeta readCorners(XmlPullParser parser) throws XmlPullParserException, IOException {
-		float topE=0,bottomE=0,topN=0,bottomN=0;
+		double N=-1,E=-1,S=-1,W=-1;
 		Log.d("vortex","calling readCordners");
 		while (parser.next() != XmlPullParser.END_TAG) {
 			if (parser.getEventType() != XmlPullParser.START_TAG) {
@@ -63,23 +63,24 @@ public class AirPhotoMetaData extends XMLConfigurationModule {
 			Log.d("vortex","reading corners!");
 			String name= parser.getName();
 			if (name.equals("westBL")) {
-				topE = getCorner(parser);
+				W = getCorner(parser);
 			} else if (name.equals("eastBL")) {
-				bottomE = getCorner(parser);
+				E = getCorner(parser);
 			} else if (name.equals("northBL")) {
-				topN = getCorner(parser);
+				N = getCorner(parser);
 			} else if (name.equals("southBL")) {
-				bottomN = getCorner(parser);
+				S = getCorner(parser);
+				
 			} else
 				skip(name,parser);
 		}
-		PhotoMeta pm = new PhotoMeta(topN,topE,bottomN,bottomE);
+		PhotoMeta pm = new PhotoMeta(N,E,S,W);
 		return pm;
 	}
 	
-	private float getCorner(XmlPullParser parser) throws XmlPullParserException, IOException {
+	private double getCorner(XmlPullParser parser) throws XmlPullParserException, IOException {
 		parser.next();
-		float f =Float.parseFloat(parser.getText());
+		double f =Double.parseDouble(parser.getText());
 		parser.nextTag();
 		return f;
 

@@ -192,7 +192,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		for (String e:s)
 			Log.d("nils","Key: "+e+"Value:"+keyColM.get(e));
 
-		fastPrep();
+
 	}
 
 
@@ -254,7 +254,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		this.onCreate(db);
 	}
 
-/*
+	/*
 	public void exportAllData() {
 		Cursor c = db.query(TABLE_VARIABLES,null,
 				null,null,null,null,null,null);
@@ -272,11 +272,11 @@ public class DbHelper extends SQLiteOpenHelper {
 				author = c.getString(c.getColumnIndex("author"));
 				for (int i=0;i<L.length;i++)
 					L[i]=c.getString(c.getColumnIndex("L"+(i+1)));	
-				
+
 			}
 		}
 	}
-*/
+	 */
 
 	//Export a specific context with a specific Exporter.
 	public Report export(Map<String,String> context, Exporter exporter, String exportFileName) {
@@ -314,18 +314,21 @@ public class DbHelper extends SQLiteOpenHelper {
 			//Wrap the cursor in an object that understand how to pick it!
 			Report r = exporter.writeVariables(new DBColumnPicker(c));
 			if (r!=null&&r.noOfVars>0) {
+				Report res;
 				if (Tools.writeToFile(Constants.EXPORT_FILES_DIR+exportFileName+"."+exporter.getType(),r.result)) {
 					Log.d("nils","Exported file succesfully");
 					c.close();
-					return r;
+					res=r;
 				} else {
 					Log.e("nils","Export of file failed");
-						c.close();
-						return new Report(ExportReport.FILE_WRITE_ERROR);
+					c.close();
+					res = new Report(ExportReport.FILE_WRITE_ERROR);
 				}
+				globalPh.backup(exportFileName+"."+exporter.getType(),r.result);
+				return res;
 			} else 
 				c.close();
-				return new Report(ExportReport.NO_DATA);
+			return new Report(ExportReport.NO_DATA);
 		} else {
 			Log.e("nils","NO Variables found in db for context "+context);
 			return new Report(ExportReport.NO_DATA);
@@ -359,24 +362,12 @@ public class DbHelper extends SQLiteOpenHelper {
 		File file = new File(fileName);
 		Log.d("vortex","file created at: "+fileName);		
 		PrintWriter writer=null;
+		Cursor c = null;
 		try {
 			boolean cre = file.createNewFile();
 			if (!cre)
 				Log.d("vortex","file was already there");
 			writer = new PrintWriter(file, "UTF-8");
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		Cursor c = db.query(TABLE_VARIABLES,null,
-				null,null,null,null,null,null);
-		if (c!=null) {
 			String header = "";
 			Log.d("nils","Variables found in db:");
 			for (int i = 1;i<=DbHelper.NO_OF_KEYS;i++)
@@ -384,26 +375,54 @@ public class DbHelper extends SQLiteOpenHelper {
 			header +="var|value";
 			Log.d("vortex",header);
 			writer.println(header);
+			int offSet = 0; boolean notDone=true;
+
+			//Ask for 500 rows per query.
 			String row;
-			while (c.moveToNext()) {
-				row=
-						c.getString(c.getColumnIndex("L1"))+"|"+
-								c.getString(c.getColumnIndex("L2"))+"|"+
-								c.getString(c.getColumnIndex("L3"))+"|"+
-								c.getString(c.getColumnIndex("L4"))+"|"+
-								c.getString(c.getColumnIndex("L5"))+"|"+
-								c.getString(c.getColumnIndex("L6"))+"|"+
-								c.getString(c.getColumnIndex("L7"))+"|"+
-								c.getString(c.getColumnIndex("L8"))+"|"+
-								c.getString(c.getColumnIndex("L9"))+"|"+
-								c.getString(c.getColumnIndex("L10"))+"|"+
-								c.getString(c.getColumnIndex("var"))+"|"+
-								c.getString(c.getColumnIndex("value"));
-				writer.println(row);
+			//while (notDone) {
+				
+				c = db.query(TABLE_VARIABLES,null,
+						null,null,null,null,null,null);//offSet+",100"
+				if (c!=null) {
+					
+					int i = 0;
+					while (c.moveToNext()) {
+						row=(
+								c.getString(c.getColumnIndex("L1"))+"|"+
+										c.getString(c.getColumnIndex("L2"))+"|"+
+										c.getString(c.getColumnIndex("L3"))+"|"+
+										c.getString(c.getColumnIndex("L4"))+"|"+
+										c.getString(c.getColumnIndex("L5"))+"|"+
+										c.getString(c.getColumnIndex("L6"))+"|"+
+										c.getString(c.getColumnIndex("L7"))+"|"+
+										c.getString(c.getColumnIndex("L8"))+"|"+
+										c.getString(c.getColumnIndex("L9"))+"|"+
+										c.getString(c.getColumnIndex("L10"))+"|"+
+										c.getString(c.getColumnIndex("var"))+"|"+
+										c.getString(c.getColumnIndex("value")));
+						writer.println(row);
+						i++;
+					}
+					c.close();
+				}
+					/*
+					Log.d("vortex","i is "+i);
+					if (i<100)
+						notDone = false;
+				} else {
+					Log.d("vortex","C was null!");
+					notDone = false;
+				}
+				offSet+=100;
 			}
+			*/
+		} catch (Exception e) {
+			e.printStackTrace();
+			if (c!=null)
+				c.close();
 		}
+
 		
-		c.close();
 		writer.close();
 	}
 
@@ -1253,34 +1272,39 @@ public class DbHelper extends SQLiteOpenHelper {
 
 	}
 
-	String rc,pc,dc,sc,ac;
-	public void fastPrep() {
-		rc= getColumnName("ruta");
-		pc= getColumnName("provyta");
-		dc= getColumnName("delyta");
-		sc= getColumnName("smaprovyta");
-		ac= getColumnName("år");
-	}
 
 
-	public boolean deleteNilsHistory() {
+
+	public boolean deleteHistory() {
 		try {
-		Log.d("nils","deleting all historical values");
-		int rows = db.delete(TABLE_VARIABLES, getColumnName("år")+"= ?", new String[]{VariableConfiguration.HISTORICAL_MARKER});
-		Log.d("nils","Deleted "+rows+" rows of history");
+			Log.d("nils","deleting all historical values");
+			int rows = db.delete(TABLE_VARIABLES, getColumnName("år")+"= ?", new String[]{VariableConfiguration.HISTORICAL_MARKER});
+			Log.d("nils","Deleted "+rows+" rows of history");
 		} catch (SQLiteException e) {
 			Log.d("nils","not a nils db");
 			return false;
 		}
 		return true;
 	}
-	
-	
+
+	public boolean deleteHistoryEntries(String typeColumn, String typeValue) {
+		try {
+			Log.d("nils","deleting historical values of type "+typeValue);
+			int rows = db.delete(TABLE_VARIABLES, getColumnName("år")+"= ? AND "+getColumnName(typeColumn)+"= ?", new String[]{VariableConfiguration.HISTORICAL_MARKER,typeValue});
+			Log.d("nils","Deleted "+rows+" rows of history");
+		} catch (SQLiteException e) {
+			Log.d("nils","not a nils db");
+			return false;
+		}
+		return true;
+	}
+
+
 	public boolean fastHistoricalInsert(Map<String,String> keys,
 			String varId, String value) {
 
 		valuez.clear();
-		valuez.put(ac,VariableConfiguration.HISTORICAL_MARKER);		
+		valuez.put(getColumnName("år"),VariableConfiguration.HISTORICAL_MARKER);		
 		String keyVal=null;
 		for(String key:keys.keySet()) {
 			keyVal = keys.get(key);
@@ -1290,8 +1314,8 @@ public class DbHelper extends SQLiteOpenHelper {
 				else 
 					//Column not found. Do not insert!!
 					return false ;
-				
-					
+
+
 			}
 		}
 		//		values.put(getColumnName("linje"),lID);
@@ -1300,11 +1324,12 @@ public class DbHelper extends SQLiteOpenHelper {
 		valuez.put("value", value);
 		//Log.d("vortex",valuez.toString());
 		try {
-		db.insert(TABLE_VARIABLES, // table
-				null, //nullColumnHack
-				valuez
-				);
+			db.insert(TABLE_VARIABLES, // table
+					null, //nullColumnHack
+					valuez
+					);
 		} catch (SQLiteException e) {
+			e.printStackTrace();
 			return false;
 		}
 		return true;
@@ -1317,7 +1342,7 @@ public class DbHelper extends SQLiteOpenHelper {
 	}
 	 */
 	//Get values for all instances of a given variable, from a keychain with * values.
-	
+
 	public DBColumnPicker getAllVariableInstances(Selection s) {
 		Cursor c = db.query(TABLE_VARIABLES,null,s.selection,
 				s.selectionArgs,null,null,null,null);
@@ -1345,7 +1370,7 @@ public class DbHelper extends SQLiteOpenHelper {
 					ret = new HashSet<Map<String,String>>();
 				ret.add(varKeyChain);
 			} while (c.moveToNext());
-			
+
 
 		}
 		if (c!=null)

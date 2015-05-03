@@ -13,6 +13,8 @@ import android.util.Log;
 
 import com.teraim.vortex.dynamic.blocks.AddEntryToFieldListBlock;
 import com.teraim.vortex.dynamic.blocks.AddGisLayerBlock;
+import com.teraim.vortex.dynamic.blocks.AddGisPointObjects;
+import com.teraim.vortex.dynamic.blocks.AddGisPointObjects.GisObjectType;
 import com.teraim.vortex.dynamic.blocks.AddRuleBlock;
 import com.teraim.vortex.dynamic.blocks.AddSumOrCountBlock;
 import com.teraim.vortex.dynamic.blocks.AddVariableToEntryFieldBlock;
@@ -233,7 +235,9 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				else if (name.equals("block_add_gis_layer"))
 					blocks.add(readBlockAddGisLayer(parser));
 				else if (name.equals("block_add_gis_point_objects"))
-					blocks.add(readBlockAddGisPointObjects(parser));
+					blocks.add(readBlockAddGisPointObjects(parser,GisObjectType.point));
+				else if (name.equals("block_add_gis_multipoint_objects"))
+					blocks.add(readBlockAddGisPointObjects(parser,GisObjectType.multipoint));
 				else {			
 					skip(name,parser,o);
 				}
@@ -276,13 +280,13 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 */
 	
 	
-	private Block readBlockAddGisPointObjects(XmlPullParser parser) throws IOException, XmlPullParserException {
+	private Block readBlockAddGisPointObjects(XmlPullParser parser,GisObjectType type) throws IOException, XmlPullParserException {
 		o.addRow("Parsing block: block_add_gis_point_objects...");
 		String id=null,nName=null,target=null,label=null,coordType = null,
-				xVar=null,yVar=null,objContext=null,imgSource=null,type=null;
+				location=null,objContext=null,imgSource=null,refreshRate=null;
 		boolean isVisible=true;
 
-		parser.require(XmlPullParser.START_TAG, null,"block_add_gis_point_objects");
+		//parser.require(XmlPullParser.START_TAG, null,"block_add_gis_point_objects")
 		Log.d("vortex","In block_add_gis_point_objects!!");
 		while (parser.next() != XmlPullParser.END_TAG) {
 			if (parser.getEventType() != XmlPullParser.START_TAG) {
@@ -301,16 +305,14 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				nName = readText("name",parser);
 			} else if (name.equalsIgnoreCase("coord_type")) {
 				coordType = readText("coord_type",parser);
-			} else if (name.equalsIgnoreCase("x_variable")) {
-				xVar = readText("x_variable",parser);
-			} else if (name.equalsIgnoreCase("y_variable")) {
-				yVar = readText("y_variable",parser);
-			} else if (name.equalsIgnoreCase("obj_context")) {
+			} else if (name.equalsIgnoreCase("gis_variables")) {
+				location = readText("gis_variables",parser);
+			}  else if (name.equalsIgnoreCase("obj_context")) {
 				objContext = readText("obj_context",parser);
 			} else if (name.equalsIgnoreCase("img_source")) {
 				imgSource = readText("img_source",parser);
-			} else if (name.equalsIgnoreCase("type")) {
-				type = readText("type",parser);
+			} else if (name.equalsIgnoreCase("refresh_rate")) {
+				refreshRate = readText("refresh_rate",parser);
 			}
 			else {
 				Log.e("vortex","Skipped "+name);
@@ -318,8 +320,8 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			}
 		}
 
-		checkForNull("block_ID",id,"target",target,"x_variable",xVar,"y_variable",yVar);
-		return new AddGisPointObjects(id,nName,label,target,objContext,coordType,xVar,yVar,imgSource,type,isVisible);
+		checkForNull("block_ID",id,"target",target,"location",location);
+		return new AddGisPointObjects(id,nName,label,target,objContext,coordType,location,imgSource,refreshRate,isVisible,type);
 
 	}
 
@@ -369,7 +371,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 	private Block readBlockAddGisView(XmlPullParser parser) throws IOException,XmlPullParserException {
 		o.addRow("Parsing block: block_add_gis_image_view...");
 		String id=null,nName=null,container=null,source=null;
-		String topN=null,topE=null,bottomE=null,bottomN=null;
+		String N=null,E=null,S=null,W=null;
 		boolean isVisible=true;
 
 		parser.require(XmlPullParser.START_TAG, null,"block_add_gis_image_view");
@@ -392,13 +394,13 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			} else if (name.equals("is_visible")) {
 				isVisible = readText("is_visible",parser).equals("true");
 			}else if (name.equalsIgnoreCase("TopN")) {
-				topN = readText("TopN",parser);
+				N = readText("TopN",parser);
 			}else if (name.equalsIgnoreCase("TopE")) {
-				topE = readText("TopE",parser);
+				W = readText("TopE",parser);
 			}else if (name.equalsIgnoreCase("BottomE")) {
-				bottomE = readText("BottomE",parser);
+				E = readText("BottomE",parser);
 			}else if (name.equalsIgnoreCase("BottomN")) {
-				bottomN = readText("BottomN",parser);
+				S = readText("BottomN",parser);
 			} 
 			else {
 				Log.e("vortex","Skipped "+name);
@@ -408,7 +410,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 
 
 		checkForNull("block_ID",id,"name",nName,"container_name",container,"source",source);
-		return new CreateGisBlock(id,nName,container,isVisible,source,topN,topE,bottomN,bottomE);
+		return new CreateGisBlock(id,nName,container,isVisible,source,N,E,S,W,ph,globalPh);
 
 	}
 

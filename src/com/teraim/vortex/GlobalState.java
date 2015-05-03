@@ -683,39 +683,47 @@ public class GlobalState  {
 								} 
 								else {
 									//TODO: Get rid of historical token...
-									if (val.equals(Constants.WILD_CARD_MARKER)||val.equals(VariableConfiguration.HISTORICAL_MARKER)) {
-										Log.d("vortex","Open context!");
+									if (val.equals(VariableConfiguration.HISTORICAL_MARKER)) {
+										Log.d("vortex","Historical!");
 										keyHash.put(arg,val);
 									} else {
 										//Variable. need to evaluate first..
 										Variable v = getVariableConfiguration().getVariableInstance(val);
+										String varVal;
 										if (v==null) {
+											//Assume it is a string value.
+											Log.d("vortex","found no variable for string "+val);
+											varVal = val;
+											/*
 											contextError=true;
 											o.addRow("");
 											o.addRedText("One of the variables missing: "+val);
 											err = "Context missing (at least) variable: "+val;
 											Log.d("nils","Couldn't find variable "+val);
 											break;
+											 */
+
+										} else 
+											varVal = v.getValue();
+
+										if(varVal==null||varVal.isEmpty()) {
+											contextError=true;
+											err = "Context missing value for (at least): "+val;
+											o.addRow("");
+											o.addRedText("One of the variables used in current context("+v.getId()+") has no value in database");
+											Log.e("nils","var was null or empty: "+v.getId());
+											break;
 										} else {
-											String varVal = v.getValue();
-											if(varVal==null||varVal.isEmpty()) {
-												contextError=true;
-												err = "Context missing value for (at least): "+val;
-												o.addRow("");
-												o.addRedText("One of the variables used in current context("+v.getId()+") has no value in database");
-												Log.e("nils","var was null or empty: "+v.getId());
-												break;
-											} else {
 
-												keyHash.put(arg, varVal);
-												rawHash.put(arg,v);
-												Log.d("nils","Added "+arg+","+varVal+" to current context");
+											keyHash.put(arg, varVal);
+											rawHash.put(arg,v);
+											Log.d("nils","Added "+arg+","+varVal+" to current context");
+											if (v!=null)
 												v.setKeyChainVariable(arg);
-												//update status menu
-
-											}
+											//update status menu
 
 										}
+
 									}
 								}
 							}
@@ -726,10 +734,11 @@ public class GlobalState  {
 
 			}
 		}
-
-
-		if (keyHash!=null && !contextError && !keyHash.isEmpty()) 
+		if (keyHash!=null && !contextError && !keyHash.isEmpty()) {
+			o.addRow("");
+			o.addYellowText("Context now: "+keyHash.toString());
 			return new CHash(keyHash,rawHash);
+		}
 		else
 			return new CHash(err);
 

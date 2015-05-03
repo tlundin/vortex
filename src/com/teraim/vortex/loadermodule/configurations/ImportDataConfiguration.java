@@ -90,10 +90,8 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 			//Erase old history
 			o.addRow("");
 			o.addYellowText("Deleting existing historical data..");
-			if (myDb.deleteNilsHistory())
-				myDb.fastPrep();
-			else 
-				return new LoadResult(this,ErrorCode.Aborted,"Database is not a NILS database. Missing column 'år'");
+			if (!myDb.deleteHistory())
+				return new LoadResult(this,ErrorCode.Aborted,"Database is missing column 'år', cannot continue");
 			return null;
 		} catch (IllegalStateException e) {
 			return new LoadResult(this,ErrorCode.ParseError,"Could not read header in ImportDataConfig.json");

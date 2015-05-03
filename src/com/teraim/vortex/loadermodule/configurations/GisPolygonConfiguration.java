@@ -102,7 +102,7 @@ public class GisPolygonConfiguration extends JSONConfigurationModule {
 		else if (tag.equals(JsonToken.BEGIN_OBJECT)) {
 		reader.beginObject();
 		String attr = reader.nextName();
-		Log.d("vortex","Attr "+attr);
+		//Log.d("vortex","Attr "+attr);
 		reader.beginObject();
 		while (reader.hasNext()) {
 			String name = reader.nextName();
@@ -156,7 +156,7 @@ public class GisPolygonConfiguration extends JSONConfigurationModule {
 			SweRefCoordinate sec;
 			poly = new ArrayList<SweRefCoordinate>();
 			while (reader.peek() == JsonToken.BEGIN_ARRAY) {
-				Log.d("vortex","new poly!");
+				//Log.d("vortex","new poly!");
 				reader.beginArray();
 				
 			while (reader.hasNext()) {

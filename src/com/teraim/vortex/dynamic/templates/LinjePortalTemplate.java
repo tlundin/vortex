@@ -447,7 +447,7 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 	private void setStart(double east, double north) {
 		linjeStartEast.setValue(east+"");
 		linjeStartNorth.setValue(north+"");
-		center = new SweLocation(north,east);
+		center = new SweLocation(east,north);
 		startB.setBackgroundColor(Color.GREEN);
 		stopB.setBackgroundColor(Color.RED);
 		fieldListB.setVisibility(View.VISIBLE);

@@ -6,30 +6,30 @@ import android.util.Log;
 
 public class PhotoMeta implements Serializable {
 	private static final long serialVersionUID = -3400543797668108398L;
-	public double top=0,left=0,bottom=0,right=0;
+	public double N=0,E=0,S=0,W=0;
 
 
-	public PhotoMeta(String topN,String topE,String bottomN,String bottomE) {
+	public PhotoMeta(String N,String E, String S, String W) {
 		try {
-			top = Double.parseDouble(topN);
-			left = Double.parseDouble(topE);
-			bottom = Double.parseDouble(bottomN);
-			right = Double.parseDouble(bottomE);
+			this.N = Double.parseDouble(N);
+			this.W = Double.parseDouble(W);
+			this.S = Double.parseDouble(S);
+			this.E = Double.parseDouble(E);
 		} catch (NumberFormatException e) { Log.e("vortex","non number in gis bg coordinates"); };
 
 
 	}
-	public PhotoMeta(double topN,double topE,double bottomN,double bottomE) {
-		this.top=topN;
-		this.left=topE;
-		this.bottom=bottomN;
-		this.right=bottomE;
+	public PhotoMeta(double N,double E,double S,double W) {
+		this.N=N;
+		this.W=W;
+		this.S=S;
+		this.E=E;
 	}
 	
 	public double getWidth()  {
-		return right-left;
+		return E-W;
 	}
 	public double getHeight() {
-		return top-bottom;
+		return N-S;
 	}
 }

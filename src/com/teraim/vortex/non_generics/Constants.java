@@ -7,16 +7,18 @@ package com.teraim.vortex.non_generics;
  * For now, persistence implemented via SharedPreferences only.
  */
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
 
 import android.os.Environment;
+import android.util.Log;
 
-import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.types.Table;
 import com.teraim.vortex.loadermodule.ConfigurationModule;
+import com.teraim.vortex.loadermodule.configurations.GisObjectConfiguration;
 import com.teraim.vortex.loadermodule.configurations.GisPolygonConfiguration;
 import com.teraim.vortex.loadermodule.configurations.GroupsConfiguration;
 import com.teraim.vortex.loadermodule.configurations.ImportDataConfiguration;
@@ -29,25 +31,25 @@ import com.teraim.vortex.utils.PersistenceHelper;
 
 public class Constants {
 
-	public final static float VORTEX_VERSION = 1.078f;
+	public final static float VORTEX_VERSION = 1.080f;
 
-	
+
 	//String constants
 	//The root folder for the SD card is in the global Environment.
 	private final static String path = Environment.getExternalStorageDirectory().getPath();
-		//Remember to always add system root path before any app specific path!
+	//Remember to always add system root path before any app specific path!
 
 	//Root for NILS
-	
+
 	public final static String HISTORICAL_TOKEN = "*HISTORICAL*";
 	public final static String VORTEX_ROOT_DIR = path+"/vortex/";
 	public static final String EXPORT_FILES_DIR = VORTEX_ROOT_DIR + "export/";
 	public static final String PIC_ROOT_DIR = VORTEX_ROOT_DIR + "pics/";
 	public static final String OLD_PIC_ROOT_DIR = VORTEX_ROOT_DIR + "old_pics/";
-	
-	//Folders for backup on SD card.
-	public static final String EXT_BACKUP_DIR = VORTEX_ROOT_DIR + "Backup";
-	
+	public static final String AIR_PHOTO_FILE_DIR = "/flygdata/";
+	public static final String GIS_FILE_DIR = "/gisdata/";
+	//Folder for backup on SD card.
+	public static final String DEFAULT_EXT_BACKUP_DIR = "/mnt/external_sdcard/vortex/backup";
 	//public static String NILS_BASE_DIR = "/nils";
 	public static String UNDEFINED = "undefined";
 
@@ -62,8 +64,8 @@ public class Constants {
 	//NILS uid
 	public static final UUID RED_UID = UUID.fromString("58500d27-6fd9-47c9-bf6b-d0969ce78bb3");
 	public static final UUID BLUE_UID = UUID.fromString("ce8ec829-30e3-469b-886e-6cf8f1168e98");
-		
-	
+
+
 	//Static methods
 	public static String compassToPicName(int compass) {
 		return (compass==0?"vast":(compass==1?"norr":(compass==2?"syd":(compass==3?"ost":null))));
@@ -96,7 +98,7 @@ public class Constants {
 
 
 
-	
+
 	public static UUID getmyUUID() {
 		/*
 		String myC = getDeviceColor();
@@ -105,18 +107,18 @@ public class Constants {
 		else if (myC.equals(red()))
 			return RED_UID;
 		else
-		*/
-			return BLUE_UID;
+		 */
+		return BLUE_UID;
 	}
 
 
-//TODO: REMOVE
+	//TODO: REMOVE
 	public static final int MAX_NILS = 16;
 
 	public static final int MIN_ABO = 50;
 
 	public static final int MAX_ABO = 99;
-	
+
 	//ruta size in meters.
 	public static final float RUTA_SIZE = 3000;
 
@@ -128,40 +130,40 @@ public class Constants {
 		return pyID>=Constants.MIN_ABO && pyID<=Constants.MAX_ABO;
 	}
 
- 	//Static Time providers.
+	//Static Time providers.
 
 
 	public static String getTimeStamp() {
-		 return getYear()+getMonth()+getDayOfMonth()+"_"+getHour()+"_"+getMinute();
+		return getYear()+getMonth()+getDayOfMonth()+"_"+getHour()+"_"+getMinute();
 	}
-	
+
 	public static String getYear() {
-		 return Integer.toString(Calendar.getInstance().get(Calendar.YEAR));
+		return Integer.toString(Calendar.getInstance().get(Calendar.YEAR));
 	}
 
 	public static String getWeekNumber() {
-		 return Integer.toString(Calendar.getInstance().get(Calendar.WEEK_OF_YEAR));
+		return Integer.toString(Calendar.getInstance().get(Calendar.WEEK_OF_YEAR));
 	}
 
 	public static String getMonth() {
-		 return Integer.toString(Calendar.getInstance().get(Calendar.MONTH));
+		return Integer.toString(Calendar.getInstance().get(Calendar.MONTH));
 	}
 
 	public static String getDayOfMonth() {
-		 return Integer.toString(Calendar.getInstance().get(Calendar.DAY_OF_MONTH));
+		return Integer.toString(Calendar.getInstance().get(Calendar.DAY_OF_MONTH));
 	}
-		
+
 	public static String getHour() {
-		 return Integer.toString(Calendar.getInstance().get(Calendar.HOUR));
+		return Integer.toString(Calendar.getInstance().get(Calendar.HOUR));
 	}
-	
+
 	public static String getMinute() {
-		 return Integer.toString(Calendar.getInstance().get(Calendar.MINUTE));
+		return Integer.toString(Calendar.getInstance().get(Calendar.MINUTE));
 	}
 	public static String getSecond() {
-		 return Integer.toString(Calendar.getInstance().get(Calendar.SECOND));
+		return Integer.toString(Calendar.getInstance().get(Calendar.SECOND));
 	}
-	
+
 	public static final String GroupFileName = "Groups.csv";
 	public static final String VariablesFileName = "Variables.csv";
 	public static final String SpinnersFileName = "Spinners.csv";
@@ -190,13 +192,13 @@ public class Constants {
 	public static List<ConfigurationModule> getCurrentlyKnownModules(PersistenceHelper globalPh,PersistenceHelper ph,String server, String bundle, LoggerI debugConsole) {
 		List<ConfigurationModule> ret = new ArrayList<ConfigurationModule>();
 		//Workflow xml. Named same as bundle.
-		
+
 		ret.add(new SpinnerConfiguration(globalPh,ph,server,bundle,debugConsole));
 		ret.add(new WorkFlowBundleConfiguration(globalPh,ph,server,bundle,debugConsole));
 		ret.add(new GroupsConfiguration(globalPh,ph,server,bundle,debugConsole));		
 		//VariableConfiguration depends on the Groups Configuration.
 		ret.add(new VariablesConfiguration(globalPh,ph,server,bundle,debugConsole));
-		
+
 		return ret;
 	}
 
@@ -205,25 +207,47 @@ public class Constants {
 			String bundle, LoggerI debugConsole,DbHelper db, Table t) {
 		List<ConfigurationModule> ret = new ArrayList<ConfigurationModule>();
 		//Workflow xml. Named same as bundle.		
-		ret.add(new GisPolygonConfiguration(globalPh,ph,Constants.VORTEX_ROOT_DIR+bundle+"/flygdata/",debugConsole,db));
+		ret.add(new GisPolygonConfiguration(globalPh,ph,VORTEX_ROOT_DIR+bundle+AIR_PHOTO_FILE_DIR,debugConsole,db));
 		ret.add(new ImportDataConfiguration(globalPh,ph,server,bundle,debugConsole,db,t));
+
+		String gisConfDir = VORTEX_ROOT_DIR+bundle+GIS_FILE_DIR;
+		List<String> fileNames = getAllConfigurationFileNames(gisConfDir);
+		if (!fileNames.isEmpty()) {
+			for (String file:fileNames) 
+				ret.add(new GisObjectConfiguration(globalPh,ph,gisConfDir,file,debugConsole,db));
+		} else 
+			Log.d("vortex","found no GIS configuration files.");
 		return ret;
 	}
 
-	
+
+	private static List<String> getAllConfigurationFileNames(String folderName) {
+		List<String> ret = new ArrayList<String>();
+		File folder = new File(folderName);
+		File[] listOfFiles = folder.listFiles();
+		if (listOfFiles!=null) {
+		for (File f:listOfFiles) {
+			Log.d("vortex","scanning "+f.getName());
+			if (f.isFile() && f.getName().endsWith(".json"))
+				ret.add(f.getName().substring(0, f.getName().length()-".json".length()));
+		}
+		}
+		return ret;
+	}
+
 	//Historical picture year is currently five years minus current year.
 	public static int getHistoricalPictureYear() {
 		return Calendar.getInstance().get(Calendar.YEAR)-5;
 	}
-	
 
 
 
 
 
-	
 
-	
+
+
+
 
 
 }

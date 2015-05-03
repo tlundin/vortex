@@ -12,18 +12,26 @@ public class LatLong implements Location {
 		this.latitude=latitude;
 		this.longitude=longitude;
 	}
-
+	public LatLong(String latitude, String longitude) {
+		this.latitude=Double.parseDouble(latitude);
+		this.longitude=Double.parseDouble(longitude);
+	}
 
 	@Override
 	public double getX() {
-		// TODO Auto-generated method stub
-		return 0;
+		
+		return latitude;
 	}
 
 
 	@Override
 	public double getY() {
-		// TODO Auto-generated method stub
-		return 0;
+		
+		return longitude;
+	}
+	
+	@Override
+	public String toString() {
+		return getX()+","+getY();
 	}
 }

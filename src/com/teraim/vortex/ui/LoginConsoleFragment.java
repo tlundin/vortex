@@ -342,7 +342,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 				Configuration dbModules = new Configuration(Constants.getDBImportModules(globalPh, ph, server(), bundleName, debugConsole, myDb,t));
 				//Import historical data to database. 
 				myDBLoader = new ModuleLoader("dbloader",dbModules,loginConsole,globalPh,debugConsole,this,this.getActivity());
-				loginConsole.addRow("Loading Database Modules");			
+				loginConsole.addRow("Defaults & GIS modules");			
 				myDBLoader.loadModules();
 
 			} 
@@ -400,7 +400,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 
 
 
-	private class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
+	private static class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
 	    ImageView bmImage;
 
 	    public DownloadImageTask(ImageView bmImage) {

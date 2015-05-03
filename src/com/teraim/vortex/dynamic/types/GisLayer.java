@@ -7,6 +7,7 @@ import java.util.Set;
 import android.util.Log;
 
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisObject;
+import com.teraim.vortex.dynamic.workflow_realizations.gis.GisPointObject;
 
 public class GisLayer {
 
@@ -26,7 +27,7 @@ public class GisLayer {
 
 	public void addObjectBag(String key, Set<GisObject> myGisObjects) {
 		myObjects.put(key, myGisObjects);
-		Log.d("vortex","added "+myObjects.size()+" gisObjects to Layer: "+name);
+		Log.d("vortex","added "+myGisObjects.size()+" gisObjects to Layer: "+name+" of type "+key);
 	}
 
 	public Map<String,Set<GisObject>> getGisBags() {

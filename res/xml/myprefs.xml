@@ -66,7 +66,15 @@ xmlns:android="http://schemas.android.com/apk/res/android" >
     		android:summary="Turn on or off the sync feature"
     		android:dialogTitle=""
     		android:dialogMessage=""
-    		android:defaultValue="false" />
+    		android:defaultValue="true" />
+
+<EditTextPreference
+            android:key="backup_location"
+            android:title="Backup folder" 
+            android:summary="The client will save export files to this folder on the SD card"
+            android:dialogTitle="Backup folder"
+            android:dialogMessage="Backup folder path. Do not change this if you are not absolutely sure you know what you are doing."    
+            android:defaultValue="" />
 
 </PreferenceCategory>
 

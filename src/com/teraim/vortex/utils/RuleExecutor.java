@@ -571,6 +571,7 @@ public class RuleExecutor {
 	}
 
 	private String evalFunc(TokenizedItem item) {
+		Log.d("vortex","Evaluating function "+item.get()+"with arg "+print(item.getArguments()));
 		String value;	
 		String[] args = item.getArguments();
 		GlobalState gs = GlobalState.getInstance();
@@ -858,6 +859,16 @@ public class RuleExecutor {
 		gs.getLogger().addRow("");
 		gs.getLogger().addYellowText("Function evaluation failed for "+item.get()+". Returning 0");
 		return "0";		
+	}
+
+	private String print(String[] arguments) {
+		String ret="";
+		if (arguments == null)
+			return "null";
+		for (String a:arguments) {
+			ret+=a+",";
+		}
+		return ret;
 	}
 
 	public String parseExpression(String formula, String subst) {

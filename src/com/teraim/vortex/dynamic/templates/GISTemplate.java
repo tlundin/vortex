@@ -367,7 +367,7 @@ public class GISTemplate extends Executor implements LocationListener {
 
 				if (res.errCode==ErrorCode.frozen) {
 					PhotoMeta pm = (PhotoMeta)meta.getEssence();
-					Log.d("vortex","img top, botton, left, right "+pm.top+","+pm.bottom+","+pm.left+","+pm.right);
+					Log.d("vortex","img N, W, S, E "+pm.N+","+pm.W+","+pm.S+","+pm.E);
 					gi.setGisData(pm, myRuta);
 				}
 				else
