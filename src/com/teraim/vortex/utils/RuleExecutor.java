@@ -105,6 +105,8 @@ public class RuleExecutor {
 		hasSome(function,1),
 		hasMost(function,1),
 		hasSame(function,-1),
+		hasValue(function,-1),
+		allHaveValue(function,-1),
 		historical(function,1),
 		getCurrentYear(function,0),
 		getCurrentMonth(function,0),
@@ -621,7 +623,7 @@ public class RuleExecutor {
 		else if (item.getType()==TokenType.getCurrentWeekNumber) {
 			return Constants.getWeekNumber();
 		}
-		
+
 		else if (item.getType()==TokenType.sum) {
 			float sum = 0;
 			if (args!=null) {
@@ -696,12 +698,15 @@ public class RuleExecutor {
 			value=null;
 			if (!Tools.isNumeric(arg)) {
 				Variable v = al.getVariableInstance(arg);
-				if (v==null) {
-					Log.e("vortex","variable null in getdelytaarea");
-					gs.getLogger().addRow("");
-					gs.getLogger().addRedText("Variable"+arg+" does not exist (in function getDelytaArea)");
-					return null;
-				} else 
+				if (v==null || v.getValue()==null) {
+					Log.e("vortex","variable or value null in getdelytaarea");
+					if (v==null) {
+						gs.getLogger().addRow("");
+						gs.getLogger().addRedText("Variable "+arg+" does not exist (in function getDelytaArea)");
+						return null;
+					} else
+						return null;
+					} else  
 					value = v.getValue();
 
 			} else
@@ -717,81 +722,149 @@ public class RuleExecutor {
 			return Float.toString(dy.getArea()/100);
 		}
 
-		else if (item.getType()==TokenType.hasSame) {
-			Log.d("vortex","running hasSame function");
+		else if (item.getType()==TokenType.hasSame||item.getType()==TokenType.hasValue||item.getType()==TokenType.allHaveValue) {
+			String function = item.getType().name();
+			Log.d("vortex","running "+function);
 			if(args==null || args.length<3) {
 				Log.e("vortex","no or too few arguments in hasSame");
 				gs.getLogger().addRow("");
-				gs.getLogger().addRedText("No or too few arguments in hasSame");
+				gs.getLogger().addRedText("No or too few arguments in "+function);
 			} else {
+				List<List<String>> rows;
 				//Get all variables in Functional Group x.
-				List<List<String>> rows = al.getTable().getRowsContaining(VariableConfiguration.Col_Functional_Group, item.getArguments()[0]);
-				Log.d("vortex","found "+(rows.size()-1)+" variables in "+args[0]);
+				if (item.getType()==TokenType.hasSame)
+						rows= al.getTable().getRowsContaining(VariableConfiguration.Col_Functional_Group, args[0]);
+				else
+					rows = al.getTable().getRowsContaining(VariableConfiguration.Col_Variable_Name, args[0]);
+				if (rows == null||rows.size()==0) {
+					Log.e("vortex","no variables found for filter "+args[0]);
+				}
+				Log.d("vortex","found "+(rows.size()-1)+" variables for "+args[0]);
 				//Parse the expression. Find all references to Functional Group.
 				//Each argument need to either exist or not exist.
 				Map<String, String[]>values=new HashMap<String,String[]>();
+				boolean allNull = true;
 				for (List<String>row:rows) {
 					Log.d("vortex","Var name: "+al.getVarName(row));
-					for (int i = 1; i<args.length;i++) {
-						String[] varName = al.getVarName(row).split(Constants.VariableSeparator);
-						int size = varName.length;
-						if (size<3) {
-							gs.getLogger().addRow("");
-							gs.getLogger().addRedText("This variable has no Functional Group...cannot apply hasSame function. Variable id: "+varName);
-							Log.e("vortex","This is not a group variable...stopping.");
-							return null;
-						} else {
-
-							String name = varName[size-1];
-							String art = varName[size-2];
-							String group = varName[0];
-							Log.d("vortex","name: "+name+" art: "+art+" group: "+group+" args["+i+"]: "+args[i]);
-							if (name.equalsIgnoreCase(args[i])) {
-								Log.d("vortex","found varname. Adding "+art);
-								Variable v = al.getVariableInstance(al.getVarName(row));
-								String varde = null;
-								if (v == null) {
-									Log.d("vortex","var was null!");
-
+ 
+							if (item.getType()==TokenType.hasValue||
+									item.getType()==TokenType.allHaveValue) {
+								
+								String operator = args[1];
+								String val = args[2];
+								String formula = al.getVarName(row)+operator+val;
+								Variable myVar = al.getVariableInstance(al.getVarName(row));
+								String res=null;
+								if (myVar.getValue()!=null) {
+									allNull = false;
+									res = parseExpression(formula, myVar.getValue()+operator+val);
+								if (!Tools.isNumeric(res)) {
+									Log.e("vortex", formula+" evaluates to null..something wrong");
+								} else {
+									int intRes = Integer.parseInt(res);
+									if (intRes==0 && item.getType()==TokenType.allHaveValue) {
+										gs.getLogger().addRow("");
+										gs.getLogger().addYellowText("allHaveValue failed on expression "+formula);
+										Log.e("vortex","allHaveValue failed on "+formula);
+										return "0";
+									} else {
+										if (intRes==0)
+											continue;
+										else {
+											if (item.getType()==TokenType.hasValue) {
+												gs.getLogger().addRow("");
+												gs.getLogger().addGreenText("hasvalue succeeded on expression "+formula);
+												Log.d("vortex","hasvalue succeeded on expression "+formula);
+												return("1");
+											}
+										}
+											
+									}
+								}
+								} else {
+									Log.d("vortex","null value...skipping");
+								}
+									
+							}
+						else if (item.getType()==TokenType.hasSame) {
+							for (int i = 1; i<args.length;i++) {
+								String[] varName = al.getVarName(row).split(Constants.VariableSeparator);
+								int size = varName.length;
+								if (size<3) {
+									gs.getLogger().addRow("");
+									gs.getLogger().addRedText("This variable has no Functional Group...cannot apply hasSame function. Variable id: "+varName);
+									Log.e("vortex","This is not a group variable...stopping.");
+									return null;
 								} else
-									varde = v.getValue();
-								String [] result;
-								if (values.get(art)==null) {
-									Log.d("vortex","empty..creating new val arr");
-									result = new String[args.length-1];
-									values.put(art, result);
-								} else 
-									result = values.get(art);
-								result[i-1]=varde;
-								break;
+								{
+								String name = varName[size-1];
+								String art = varName[size-2];
+								String group = varName[0];
+								Log.d("vortex","name: "+name+" art: "+art+" group: "+group+" args["+i+"]: "+args[i]);
+								if (name.equalsIgnoreCase(args[i])) {
+									Log.d("vortex","found varname. Adding "+art);
+									Variable v = al.getVariableInstance(al.getVarName(row));
+									String varde = null;
+									if (v == null) {
+										Log.d("vortex","var was null!");
+
+									} else
+										varde = v.getValue();
+									String [] result;
+									if (values.get(art)==null) {
+										Log.d("vortex","empty..creating new val arr");
+										result = new String[args.length-1];
+										values.put(art, result);
+									} else 
+										result = values.get(art);
+									result[i-1]=varde;
+									break;
+								}
 							}
 						}
 					}
-
-
 				}
-				//now we should have an array containing all values for all variables.
-				Log.d("vortex","printing resulting map");
-				for (String key:values.keySet()) {
-					String vCompare = values.get(key)[0];
-					for (int i = 1;i<args.length-1;i++) {
-						String vz = values.get(key)[i];
-						if (vCompare==null && vz ==null ||vCompare!=null&&vz!=null)
-							continue;
-						else {
-							gs.getLogger().addRow("hasSame difference detected for "+key+". Stopping");
-							Log.e("vortex","Diffkey values for "+key+": "+(vCompare==null?"null":vCompare)+" "+(vz==null?"null":vz));
-							return "0";
+				if (item.getType()==TokenType.hasSame) {
+					//now we should have an array containing all values for all variables.
+					Log.d("vortex","printing resulting map");
+					for (String key:values.keySet()) {
+						String vCompare = values.get(key)[0];
+						for (int i = 1;i<args.length-1;i++) {
+							String vz = values.get(key)[i];
+							if (vCompare==null && vz ==null ||vCompare!=null&&vz!=null)
+								continue;
+							else {
+								gs.getLogger().addRow("hasSame difference detected for "+key+". Stopping");
+								Log.e("vortex","Diffkey values for "+key+": "+(vCompare==null?"null":vCompare)+" "+(vz==null?"null":vz));
+								return "0";
+							}
+
 						}
-
 					}
+					Log.d("vortex","all values same. Success for hasSame!");
+					return "1";
+					
+				} else if (item.getType()==TokenType.hasValue) {
+					//Hasvalue fails since none of the variables fullfilled the criteria
+					gs.getLogger().addRow("");
+					gs.getLogger().addYellowText("hasvalue failed to find any match");
+					Log.e("vortex","hasValue failed. No match found");
+					return "0";
+				} else {
+					if (!allNull) {
+					gs.getLogger().addRow("");
+					gs.getLogger().addYellowText("allHaveValue succeeded!");
+					Log.e("vortex","allHaveValue succeeded!");
+					return "1";		
+					} else {
+						gs.getLogger().addRow("");
+						gs.getLogger().addYellowText("allHaveValue failed - no values");
+						Log.e("vortex","allHaveValue failed on empty list");						
+					}
+						
 				}
-				Log.d("vortex","all values same. Success for hasSame!");
-				return "1";
-
 			}
 		}
-
 		else if (item.getType()==TokenType.has) {
 			if (args!=null) {
 				Variable v = gs.getVariableConfiguration().getVariableInstance(args[0]);
@@ -805,56 +878,56 @@ public class RuleExecutor {
 			}
 
 		} else if (item.getType().name().startsWith("has")){
-		Log.d("vortex","HASx function");
-		//Apply filter parameter <filter> on all variables in current table. Return those that match.
-		float failC=0;
-		//If any of the variables matching filter doesn't have a value, return 0. Otherwise 1.
-		List<List<String>> rows = al.getTable().getRowsContaining(VariableConfiguration.Col_Variable_Name, args[0]);
-		if (rows==null || rows.size()==0) {
-			gs.getLogger().addRow("");
-			gs.getLogger().addRedText("Filter returned emptylist in HASx construction. Filter: "+item.get());
-			gs.getLogger().addRow("");
-			gs.getLogger().addRedText("This is not good! A HASx function needs a list with something in. Check your rule!");
+			Log.d("vortex","HASx function");
+			//Apply filter parameter <filter> on all variables in current table. Return those that match.
+			float failC=0;
+			//If any of the variables matching filter doesn't have a value, return 0. Otherwise 1.
+			List<List<String>> rows = al.getTable().getRowsContaining(VariableConfiguration.Col_Variable_Name, args[0]);
+			if (rows==null || rows.size()==0) {
+				gs.getLogger().addRow("");
+				gs.getLogger().addRedText("Filter returned emptylist in HASx construction. Filter: "+item.get());
+				gs.getLogger().addRow("");
+				gs.getLogger().addRedText("This is not good! A HASx function needs a list with something in. Check your rule!");
 
-			return null;
-		}
-		float rowC=rows.size();
+				return null;
+			}
+			float rowC=rows.size();
 
-		for (List<String>row:rows) {
-			value = gs.getVariableConfiguration().getVariableValue(gs.getCurrentKeyHash(), al.getVarName(row));
-			if (value==null) {
-				if (item.getType()==TokenType.hasAll) {
-					gs.getLogger().addRow("");
-					gs.getLogger().addYellowText("hasAll filter stopped on variable "+al.getVarName(row)+" that is missing a value");
-					return "0";
-				}
-				else 
-					failC++;
-			} else 
-				if (item.getType()==TokenType.hasSome) {					
-					gs.getLogger().addRow("");
-					gs.getLogger().addYellowText("hasSome filter succeeded on variable "+al.getVarName(row)+" that has value "+value);
-					return "1";			
-				}
-		}
-		if (failC == rowC && item.getType()==TokenType.hasSome) {
+			for (List<String>row:rows) {
+				value = gs.getVariableConfiguration().getVariableValue(gs.getCurrentKeyHash(), al.getVarName(row));
+				if (value==null) {
+					if (item.getType()==TokenType.hasAll) {
+						gs.getLogger().addRow("");
+						gs.getLogger().addYellowText("hasAll filter stopped on variable "+al.getVarName(row)+" that is missing a value");
+						return "0";
+					}
+					else 
+						failC++;
+				} else 
+					if (item.getType()==TokenType.hasSome) {					
+						gs.getLogger().addRow("");
+						gs.getLogger().addYellowText("hasSome filter succeeded on variable "+al.getVarName(row)+" that has value "+value);
+						return "1";			
+					}
+			}
+			if (failC == rowC && item.getType()==TokenType.hasSome) {
+				gs.getLogger().addRow("");
+				gs.getLogger().addYellowText("hasSome filter failed. No variables with values found for "+((item.getArguments()!=null&&item.getArguments().length>0)?item.getArguments()[0]:""));
+				return "0";						
+			} 
+			if (item.getType()==TokenType.hasAll) {
+				gs.getLogger().addRow("");
+				gs.getLogger().addYellowText("hasAll filter succeeded.");
+				return "1";			
+			}
+			if (failC <= rowC/2) {
+				gs.getLogger().addRow("");
+				gs.getLogger().addYellowText("hasMost filter succeeded. Filled in: "+(int)((failC/rowC)*100f)+"%");
+				return "1";				
+			} 	
 			gs.getLogger().addRow("");
-			gs.getLogger().addYellowText("hasSome filter failed. No variables with values found for "+((item.getArguments()!=null&&item.getArguments().length>0)?item.getArguments()[0]:""));
-			return "0";						
-		} 
-		if (item.getType()==TokenType.hasAll) {
-			gs.getLogger().addRow("");
-			gs.getLogger().addYellowText("hasAll filter succeeded.");
-			return "1";			
-		}
-		if (failC <= rowC/2) {
-			gs.getLogger().addRow("");
-			gs.getLogger().addYellowText("hasMost filter succeeded. Filled in: "+(int)((failC/rowC)*100f)+"%");
-			return "1";				
-		} 	
-		gs.getLogger().addRow("");
-		gs.getLogger().addYellowText("hasMost filter failed. Not filled in: "+(int)((failC/rowC)*100f)+"%");
-		return "0";
+			gs.getLogger().addYellowText("hasMost filter failed. Not filled in: "+(int)((failC/rowC)*100f)+"%");
+			return "0";
 		}
 		gs.getLogger().addRow("");
 		gs.getLogger().addYellowText("Function evaluation failed for "+item.get()+". Returning 0");

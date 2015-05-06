@@ -111,23 +111,20 @@ public class Geomatte {
 	double b4 = (49561.0/161280.0)*Math.pow(n, 4);
 
 			
-	double x = k0*ap*(oui+
+	double y = k0*ap*(oui+
 			b1*Math.sin(2.0*oui)*Math.cosh(2.0*nui)+
 			b2*Math.sin(4.0*oui)*Math.cosh(4.0*nui)+
 			b3*Math.sin(6.0*oui)*Math.cosh(6.0*nui)+
 			b4*Math.sin(8.0*oui)*Math.cosh(8.0*nui))+FN;
-	double y = k0*ap*(nui+
+	double x = k0*ap*(nui+
 			b1*Math.cos(2.0*oui)*Math.sinh(2.0*nui)+
 			b2*Math.cos(4.0*oui)*Math.sinh(4.0*nui)+
 			b3*Math.cos(6.0*oui)*Math.sinh(6.0*nui)+
 			b4*Math.cos(8.0*oui)*Math.sinh(8.0*nui))+FE;
-	x = Math.round(x * 1000.0) / 1000.0;
 	y = Math.round(y * 1000.0) / 1000.0;
+	x = Math.round(x * 1000.0) / 1000.0;
 
-	Log.d("NILS"," lat long "+x+" "+y);
-	double[] ret = new double[2];
-	ret[0]=x;
-	ret[1]=y;
+	Log.d("NILS"," lat long (x,y): "+x+" "+y);
 	return new SweLocation(x,y);
 	}
 

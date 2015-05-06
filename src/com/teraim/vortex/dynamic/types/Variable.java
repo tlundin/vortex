@@ -23,16 +23,18 @@ import com.teraim.vortex.utils.Tools;
 import com.teraim.vortex.utils.DbHelper.Selection;
 import com.teraim.vortex.utils.DbHelper.StoredVariableData;
 
+/**
+ * 
+ * @author Terje
+ * Variable Class. Part of Vortex core.
+ * Copyright Teraim Holding. 
+ * No modification and use allowed before prior permission. 
+ */
+
 public class Variable implements Serializable {
 
 
 
-	//A Stored Variable has a key, value + timestamp/team/userId
-	//It has a scope 
-
-	//The key is a String[] of up to X separate values.
-
-	//Current columnIds for keypart.
 
 	private static final long serialVersionUID = 6239650487891494128L;
 
@@ -90,7 +92,7 @@ public class Variable implements Serializable {
 	private boolean usingDefault = false;
 
 	public enum DataType {
-		numeric,bool,list,text,existence,auto_increment
+		numeric,bool,list,text,existence,auto_increment, array
 	}
 
 	public String getValue() {
@@ -166,7 +168,7 @@ public class Variable implements Serializable {
 		myValue = value;		
 		//will change keyset as side effect if valueKey variable.
 		//reason for changing indirect is that old variable need to be erased. 
-		myDb.insertVariable(this,value,isSynchronized);
+		insertVariable(value,isSynchronized);
 		//If rules attached, reevaluate.
 
 		refreshRuleState();
@@ -175,6 +177,11 @@ public class Variable implements Serializable {
 		//In the case the variable was previously displaying a default value different from the DB value.
 		usingDefault = false;
 		return true;
+	}
+
+	protected void insertVariable(String value,
+			boolean isSynchronized) {
+		myDb.insertVariable(this,value,isSynchronized);
 	}
 
 	public void setValueNoSync(String value) {
@@ -223,7 +230,7 @@ public class Variable implements Serializable {
 
 
 	public Variable(String name,String label,List<String> row,Map<String,String>keyChain, GlobalState gs,String valueColumn, String defaultOrExistingValue, Boolean valueIsPersisted) {
-		Log.e("nils","Creating variable ["+name+"] with keychain "+((keyChain==null)?"null":printKeyChain(keyChain))+"\nthis obj: "+this);
+		//Log.e("nils","Creating variable ["+name+"] with keychain "+((keyChain==null)?"null":printKeyChain(keyChain))+"\nthis obj: "+this);
 		this.gs=gs;
 		al=gs.getVariableConfiguration();
 		this.name = name;

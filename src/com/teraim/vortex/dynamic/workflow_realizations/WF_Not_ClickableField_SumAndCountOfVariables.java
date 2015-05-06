@@ -79,6 +79,8 @@ WF_Not_ClickableField implements EventListener {
 	public void matchAndRecalculateMe() {
 		String variablesWithNoValue = "[";
 		Long sum=Long.valueOf(0);
+		if (targetList==null) 
+			return;
 		for (Listable l:targetList.getList()) {
 			Set<Variable> vars = l.getAssociatedVariables();
 			//Log.d("nils","now in matchandrecalculate with list "+vars.size());

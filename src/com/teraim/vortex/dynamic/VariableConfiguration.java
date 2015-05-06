@@ -192,9 +192,10 @@ public class VariableConfiguration implements Serializable {
 				return Variable.DataType.list;
 			else if (type.equals("text")||type.equals("string"))
 				return Variable.DataType.text;
-			else if (type.equals("auto_increment")) {
+			else if (type.equals("auto_increment")) 
 				return Variable.DataType.auto_increment;
-			}
+			else if (type.equals("array")) 
+				return Variable.DataType.array;
 			else
 				Log.e("nils","TYPE NOT KNOWN: ["+type+"]");
 		}

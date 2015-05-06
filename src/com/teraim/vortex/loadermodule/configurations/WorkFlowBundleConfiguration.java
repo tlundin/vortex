@@ -1370,6 +1370,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 	private PageDefineBlock readPageDefineBlock(XmlPullParser parser) throws IOException, XmlPullParserException {
 		//o.addRow("Parsing block: block_define_page...");
 		String pageType=null,label="",id=null;
+		boolean hasGPS=false;
 		parser.require(XmlPullParser.START_TAG, null,"block_define_page");
 		while (parser.next() != XmlPullParser.END_TAG) {
 			if (parser.getEventType() != XmlPullParser.START_TAG) {
@@ -1380,6 +1381,8 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				id = readText("block_ID",parser);
 			} else if (name.equals("type")) {
 				pageType = readText("type",parser);				
+			} else if (name.equals("gps_tracker")) {
+				hasGPS = readText("gps_tracker",parser).equals("on");				
 			} else if (name.equals("label")) {
 				label = readText("label",parser);
 				o.addRow("Parsing workflow "+label);
@@ -1387,7 +1390,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				skip(name,parser,o);
 		}
 		checkForNull("block_ID",id,"type",pageType,"label",label);
-		return new PageDefineBlock(id,"root", pageType,label);
+		return new PageDefineBlock(id,"root", pageType,label,hasGPS);
 	}
 
 

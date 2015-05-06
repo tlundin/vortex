@@ -1,10 +1,7 @@
 package com.teraim.vortex.utils;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -29,9 +26,11 @@ import com.teraim.vortex.bluetooth.BluetoothConnectionService;
 import com.teraim.vortex.bluetooth.SyncEntry;
 import com.teraim.vortex.bluetooth.SyncEntryHeader;
 import com.teraim.vortex.dynamic.VariableConfiguration;
+import com.teraim.vortex.dynamic.types.ArrayVariable;
 import com.teraim.vortex.dynamic.types.Table;
 import com.teraim.vortex.dynamic.types.VarCache;
 import com.teraim.vortex.dynamic.types.Variable;
+import com.teraim.vortex.dynamic.types.Variable.DataType;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.non_generics.DelyteManager;
 import com.teraim.vortex.non_generics.NamedVariables;
@@ -503,7 +502,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		storeAuditEntry("P",rId+"|"+pyId,null);
 		Log.d("nils","inserted Erase Provyta into audit for R:"+rId+" P:"+pyId);
 	}
-	private void insertAuditEntry(Variable v,Map<String,String> valueSet) {
+	private void insertAuditEntry(Variable v,Map<String,String> valueSet,String action) {
 		String changes = "";
 		//First the keys.
 		Map<String, String> keyChain = v.getKeyChain();
@@ -534,7 +533,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		}
 
 		//Log.d("nils","Audit entry: "+changes);
-		storeAuditEntry("I",changes,v.getId());
+		storeAuditEntry(action,changes,v.getId());
 	}
 
 
@@ -757,28 +756,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		}
 		// 1. create ContentValues to add key "column"/value
 
-		//Add column,value mapping.
-		Map<String,String> keyChain=var.getKeyChain();
-		//If no key column mappings, skip. Variable is global with Id as key.
-		if (keyChain!=null) {
-			//			Log.d("nils","keychain has "+keyChain.size()+" elements");
-			for(String key:keyChain.keySet()) { 
-				String value = keyChain.get(key);
-				String column = getColumnName(key);
-				values.put(column,value);
-				//				Log.d("nils","Adding column "+column+"(key):"+key+" with value "+value);
-			}
-		} //else
-		//	Log.d("nils","Inserting global variable "+var.getId()+" value: "+newValue);
-		values.put("var", var.getId());
-		//if (!var.isKeyVariable()) {
-		//Log.d("nils","Inserting new value into column "+var.getValueColumnName()+" ("+getColumnName(var.getValueColumnName())+")");
-		values.put(getColumnName(var.getValueColumnName()), newValue);
-		//}
-		values.put("lag",globalPh.get(PersistenceHelper.LAG_ID_KEY));
-		values.put("timestamp", timeStamp);
-		values.put("author", globalPh.get(PersistenceHelper.USER_ID_KEY));
-
+		createValueMap(var,newValue,values,timeStamp);
 		// 3. insert
 		long rId;
 		if (isReplace) {
@@ -801,17 +779,66 @@ public class DbHelper extends SQLiteOpenHelper {
 
 			//If this variable is not local, store the action for synchronization.
 			if (syncMePlease) {
-				Map <String,String> valueSet = new HashMap<String,String>();
-				//if (!var.isKeyVariable())
-				valueSet.put(getColumnName(var.getValueColumnName()), newValue);
-				valueSet.put("lag",globalPh.get(PersistenceHelper.LAG_ID_KEY));
-				valueSet.put("timestamp", timeStamp);
-				valueSet.put("author", globalPh.get(PersistenceHelper.USER_ID_KEY));
-				insertAuditEntry(var,valueSet);
+				insertAuditEntry(var,createAuditEntry(var,newValue,timeStamp),"I");
 
 			}
 			//else
 			//	Log.d("nils","Variable "+var.getId()+" not inserted in Audit: local");
+		}
+	}
+	private Map<String, String> createAuditEntry(Variable var,String newValue,
+			String timeStamp) {
+		Map <String,String> valueSet = new HashMap<String,String>();
+		//if (!var.isKeyVariable())
+		valueSet.put(getColumnName(var.getValueColumnName()), newValue);
+		valueSet.put("lag",globalPh.get(PersistenceHelper.LAG_ID_KEY));
+		valueSet.put("timestamp", timeStamp);
+		valueSet.put("author", globalPh.get(PersistenceHelper.USER_ID_KEY));
+		return valueSet;
+	}
+
+	private void createValueMap(Variable var,String newValue,ContentValues values, String timeStamp) {
+		//Add column,value mapping.
+		Map<String,String> keyChain=var.getKeyChain();
+		//If no key column mappings, skip. Variable is global with Id as key.
+		if (keyChain!=null) {
+			//			Log.d("nils","keychain has "+keyChain.size()+" elements");
+			for(String key:keyChain.keySet()) { 
+				String value = keyChain.get(key);
+				String column = getColumnName(key);
+				values.put(column,value);
+				//				Log.d("nils","Adding column "+column+"(key):"+key+" with value "+value);
+			}
+		} //else
+		//	Log.d("nils","Inserting global variable "+var.getId()+" value: "+newValue);
+		values.put("var", var.getId());
+		//if (!var.isKeyVariable()) {
+		//Log.d("nils","Inserting new value into column "+var.getValueColumnName()+" ("+getColumnName(var.getValueColumnName())+")");
+		values.put(getColumnName(var.getValueColumnName()), newValue);
+		//}
+		values.put("lag",globalPh.get(PersistenceHelper.LAG_ID_KEY));
+		values.put("timestamp", timeStamp);
+		values.put("author", globalPh.get(PersistenceHelper.USER_ID_KEY));
+
+	}
+
+	
+	//Adds a value for the variable but does not delete any existing value. 
+	//This in effect creates an array of values for different timestamps. 
+	public void insertVariableSnap(ArrayVariable var, String newValue,
+			boolean syncMePlease) {
+		Log.d("vortex","I am in snap insert for variable "+var.getId());
+		String timeStamp = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())+"";
+		ContentValues values = new ContentValues();
+		createValueMap(var,newValue,values,timeStamp);
+
+		long rId = db.insert(TABLE_VARIABLES, // table
+				null, //nullColumnHack
+				values
+				); 
+		if (syncMePlease) {
+			insertAuditEntry(var,createAuditEntry(var,newValue,timeStamp),"A");
+
 		}
 	}
 
@@ -982,6 +1009,7 @@ public class DbHelper extends SQLiteOpenHelper {
 	int synC=0;
 	public void synchronise(SyncEntry[] ses,boolean isMaster, VarCache vc,GlobalState gs) {
 		String name=null;
+		db.beginTransaction();
 		/*
 		if (isMaster) {
 			SyncEntry[] myChanges = getMyChanges();
@@ -1021,7 +1049,7 @@ public class DbHelper extends SQLiteOpenHelper {
 				continue;
 			}
 
-			if (s.isInsert()) {				
+			if (s.isInsert()||s.isInsertArray()) {				
 				Map<String, String> keySet=null; 
 				ContentValues cv = new ContentValues();
 				if (s.getKeys()==null||s.getValues()==null) {
@@ -1074,8 +1102,8 @@ public class DbHelper extends SQLiteOpenHelper {
 				Selection sel = this.createSelection(keySet, name);
 				int id = this.getId(name, sel);
 				long rId=-1;
-				if (id==-1) {
-					Log.d("nils","Vairable doesn't exist. Inserting..");
+				if (id==-1 || s.isInsertArray()) {// || gs.getVariableConfiguration().getnumType(row).equals(DataType.array)) {
+					Log.d("nils","Vairable array or doesn't exist. Inserting..");
 					//now there should be ContentValues that can be inserted.
 					rId = db.insert(TABLE_VARIABLES, // table
 							null, //nullColumnHack
@@ -1084,7 +1112,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
 
 				} else {
-					Log.d("nils","Vairable exists! Replacing..");
+					Log.d("nils","Variable exists! Replacing..");
 					cv.put("id", id);
 					rId = db.replace(TABLE_VARIABLES, // table
 							null, //nullColumnHack
@@ -1148,7 +1176,7 @@ public class DbHelper extends SQLiteOpenHelper {
 			}
 
 		}
-
+		db.endTransaction();
 	}
 
 	private boolean partOfValues(String key) {
@@ -1345,7 +1373,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
 	public DBColumnPicker getAllVariableInstances(Selection s) {
 		Cursor c = db.query(TABLE_VARIABLES,null,s.selection,
-				s.selectionArgs,null,null,null,null);
+				s.selectionArgs,null,null,"timestamp DESC","1");
 		return new DBColumnPicker(c);
 	}
 
@@ -1455,4 +1483,6 @@ public class DbHelper extends SQLiteOpenHelper {
 		db.setTransactionSuccessful();
 		db.endTransaction();
 	}
+
+	
 }

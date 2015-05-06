@@ -28,16 +28,15 @@ import com.teraim.vortex.dynamic.types.Workflow;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
 import com.teraim.vortex.expr.Aritmetic;
 import com.teraim.vortex.expr.Parser;
+import com.teraim.vortex.gis.Tracker;
 import com.teraim.vortex.loadermodule.Configuration;
 import com.teraim.vortex.log.LoggerI;
-import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.non_generics.StatusHandler;
 import com.teraim.vortex.ui.DrawerMenu;
 import com.teraim.vortex.ui.MenuActivity;
 import com.teraim.vortex.utils.DbHelper;
 import com.teraim.vortex.utils.PersistenceHelper;
 import com.teraim.vortex.utils.RuleExecutor;
-import com.teraim.vortex.utils.Tools;
 
 
 /**
@@ -74,6 +73,7 @@ public class GlobalState  {
 	private String myPartner="?";
 	private VarCache myVarCache;
 	private PersistenceHelper globalPh=null;
+	private Tracker myTracker;
 	public static GlobalState getInstance() {
 		if (singleton == null) {			
 			//singleton = new GlobalState(c.getApplicationContext());
@@ -117,6 +117,10 @@ public class GlobalState  {
 		mySpinnerDef = sd;
 
 		singleton =this;
+		
+		//GPS listener service
+		myTracker = new Tracker();
+		
 	}
 
 
@@ -754,6 +758,10 @@ public class GlobalState  {
 
 	public static void destroy() {
 		singleton=null;
+	}
+
+	public Tracker getTracker() {
+		return myTracker;
 	}
 
 

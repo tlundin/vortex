@@ -138,6 +138,7 @@ public class Table implements Serializable {
 			}
 			if (ret!=null)
 				Log.d("nils","Returning "+ret.size()+" rows in getRows(Table)");
+				
 		} 
 		return ret;
 	}

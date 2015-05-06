@@ -9,9 +9,9 @@ public class SyncEntry extends SyncMessage {
 		delete,
 		deleteDelytor,
 		deleteProvyta,
-		unknown
+		unknown, insertArray
 	}
-	private static final long serialVersionUID = 862826293136691823L;
+	private static final long serialVersionUID = 862826293136691824L;
 	private Type mType;
 	private String keys;
 	private String values;
@@ -30,6 +30,8 @@ public class SyncEntry extends SyncMessage {
 			mType = Type.deleteDelytor;
 		else if (a.equals("P"))
 			mType = Type.deleteProvyta;
+		else if (a.equals("A"))
+			mType = Type.insertArray;
 		else {
 			Log.e("nils","Unknown type of Sync action!: "+a);
 			mType = Type.unknown;
@@ -68,6 +70,10 @@ public class SyncEntry extends SyncMessage {
 		return (mType==Type.insert);
 	}
 	
+	public boolean isInsertArray() {
+		return (mType==Type.insertArray);
+	}
+	
 	public boolean isDelete() {
 		return (mType==Type.delete);
 	}
@@ -93,8 +99,8 @@ public class SyncEntry extends SyncMessage {
 	}
 
 	public boolean isInvalid() {
-		// TODO Auto-generated method stub
 		return invalid;
 	}
+
 
 }

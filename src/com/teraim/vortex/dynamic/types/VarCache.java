@@ -12,6 +12,7 @@ import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.VariableConfiguration;
+import com.teraim.vortex.dynamic.types.Variable.DataType;
 import com.teraim.vortex.log.LoggerI;
 
 
@@ -57,7 +58,7 @@ public class VarCache {
 		
 		boolean newA = false;
 		if (ret==null) {
-			Log.d("nils","Creating new CacheList entry for "+varId);			
+			//Log.d("nils","Creating new CacheList entry for "+varId);			
 			ret = new ArrayList<Variable>();
 			cache.put(varId.toLowerCase(), ret);
 			newA=true;
@@ -66,7 +67,7 @@ public class VarCache {
 			//	Log.d("nils",s);
 		} else {
 			if (ret.size()==1 && ret.get(0).getKeyChain()==null) {
-				Log.d("nils","Found Global variable in Cache: "+varId+" Value: "+ret.get(0).getValue());
+				//Log.d("nils","Found Global variable in Cache: "+varId+" Value: "+ret.get(0).getValue());
 				return ret.get(0);
 			}
 		}
@@ -99,9 +100,11 @@ public class VarCache {
 		if (v == null) {
 			//Log.d("nils","Variable not found. Inserting"+varId+" with chain "+(instKey==null?"null":instKey.toString()));							
 			String header = gs.getVariableConfiguration().getVarLabel(row);
-			//String header = row==null?null:al.getVarLabel(row);
-			Log.d("nils","Creating new variable: "+varId+" known value: "+hasValueInDB);
-			v = new Variable(varId,header,row,instKey,gs,vCol,defaultValue,hasValueInDB);
+			DataType type = gs.getVariableConfiguration().getnumType(row);
+			if (type == DataType.array)
+				v= new ArrayVariable(varId,header,row,instKey,gs,vCol,defaultValue,hasValueInDB);
+			else
+				v = new Variable(varId,header,row,instKey,gs,vCol,defaultValue,hasValueInDB);
 			//add to cache.		
 			ret.add(v);
 		}
@@ -161,11 +164,11 @@ public class VarCache {
 //			Log.d("nils","Keychain null or empty. returning from buildDBKey");
 			return null;
 		}
-		if (cMap!=null){
-			Log.d("nils","Current context: "+cMap.toString());
-			Log.d("nils","Key values:"+cMap.entrySet().toString());
-		}
-		Log.d("nils","Keys in chain:"+keyChain);
+		//if (cMap!=null){
+		//	Log.d("nils","Current context: "+cMap.toString());
+		//	Log.d("nils","Key values:"+cMap.entrySet().toString());
+		//}
+		//Log.d("nils","Keys in chain:"+keyChain);
 
 		String[] keys = keyChain.split("\\|");
 		Map<String, String> vMap = new HashMap<String,String>();

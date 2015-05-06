@@ -53,7 +53,7 @@ public class BlockCreateListEntriesFromFieldList extends Block {
 			if (rows==null)
 				rows  = al.getTable().getRowsContaining(selectionField, selectionPattern);
 			if (rows==null||rows.size()==0) {
-				Log.d("nils","no cached value found in BlockCreateEntries");
+				Log.e("vortex","Selectionfield: "+selectionField+" selectionPattern: "+selectionPattern+" returns zero rows! List cannot be created");
 				o.addRow("");
 				o.addRedText("Selectionfield: "+selectionField+" selectionPattern: "+selectionPattern+" returns zero rows! List cannot be created");
 			} else {		

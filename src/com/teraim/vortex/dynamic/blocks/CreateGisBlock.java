@@ -3,6 +3,8 @@ package com.teraim.vortex.dynamic.blocks;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.ImageButton;
 
 import com.teraim.vortex.FileLoadedCb;
 import com.teraim.vortex.GlobalState;
@@ -12,11 +14,10 @@ import com.teraim.vortex.dynamic.types.Workflow.Unit;
 import com.teraim.vortex.dynamic.workflow_abstracts.Container;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.WF_Gis_Map;
-import com.teraim.vortex.gis.GisImageView;
 import com.teraim.vortex.loadermodule.ConfigurationModule;
+import com.teraim.vortex.loadermodule.ConfigurationModule.Source;
 import com.teraim.vortex.loadermodule.FileLoader;
 import com.teraim.vortex.loadermodule.LoadResult;
-import com.teraim.vortex.loadermodule.ConfigurationModule.Source;
 import com.teraim.vortex.loadermodule.LoadResult.ErrorCode;
 import com.teraim.vortex.loadermodule.configurations.AirPhotoMetaData;
 import com.teraim.vortex.non_generics.Constants;
@@ -36,6 +37,7 @@ public class CreateGisBlock extends Block {
 	private String picUrlorName;
 	private String N,E,S,W;
 	private PhotoMeta photoMetaData;
+	private boolean menuUp = false;
 	
 	public CreateGisBlock(String id,String name, 
 			String containerId,boolean isVisible,String source,String N,String E, String S,String W, PersistenceHelper ph, PersistenceHelper globalPh) {
@@ -73,6 +75,18 @@ public class CreateGisBlock extends Block {
 		WF_Gis_Map gis = new WF_Gis_Map(blockId, mapView, isVisible, picUrlorName,myContext,photoMetaData);
 		myContainer.add(gis);
 		myContext.addDrawable(id,gis);
+		final View menuL = mapView.findViewById(R.id.menuL);
+		menuL.setVisibility(View.INVISIBLE);
+		final ImageButton menuB = (ImageButton)mapView.findViewById(R.id.menuB);
+		
+		menuB.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				menuL.setVisibility(menuUp?View.INVISIBLE:View.VISIBLE);
+				menuUp = !menuUp;
+			}
+		});
 		} else {
 			Log.e("vortex","Container null! Cannot add GisImageView!");
 			o.addRow("");

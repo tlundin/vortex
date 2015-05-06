@@ -31,6 +31,7 @@ import com.teraim.vortex.dynamic.workflow_abstracts.EventListener;
 import com.teraim.vortex.dynamic.workflow_abstracts.Filterable;
 import com.teraim.vortex.dynamic.workflow_abstracts.Listable;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.WF_Gis_Map;
+import com.teraim.vortex.gis.Tracker;
 
 public class WF_Context {
 
@@ -46,6 +47,7 @@ public class WF_Context {
 	private List<Filterable> filterables;
 	private WF_Gis_Map currentGis;
 	private List<WF_Gis_Map> gisses;
+	private boolean hasGPSTracker = false;
 
 
 
@@ -156,6 +158,7 @@ public class WF_Context {
 		rules.clear();
 		currentGis = null;
 		gisses.clear();
+		hasGPSTracker=false;
 
 	}
 
@@ -258,6 +261,18 @@ public class WF_Context {
 	
 	public WF_Gis_Map getCurrentGis() {
 		return currentGis;
+	}
+	
+	public void startTracker() {
+		hasGPSTracker=true;
+	}
+	
+	
+	public boolean hasGPSTracker() {
+		return hasGPSTracker;
+	}
+	public void enableGPS() {
+		hasGPSTracker = true;
 	}
 
 

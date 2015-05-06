@@ -12,6 +12,9 @@ public class NamedVariables {
 	public static final String CentrumGPSEW = "CentrumGPSEW";
 	public static final String CentrumGPSLat = "CentrumGPSLat";
 	public static final String CentrumGPSLong = "CentrumGPSLong";
+	public static final String MY_GPS_LAT = "GPS_X";
+	public static final String MY_GPS_LONG = "GPS_Y";
+
 	public static final String STRATUM_HISTORICAL = "StratumHistorical";
 	public static final String STRATUM = "Stratum";
 	public static final String LINJEOBJEKT = "!linjeobjekt";
@@ -57,6 +60,7 @@ public class NamedVariables {
 	public static final String WF_SMAPROV_INMATNING_ABO_YTTRE = "wf_ÄBO_småprovyta_yttre";
 	public static final String WF_SMAPROV_INMATNING_ABO_INRE = "wf_ÄBO_småprovyta_inre";
 	public static final String WF_DELYTE_INMATNING_ABO = "wf_ÄBO_delyta";
+
 
 	
 

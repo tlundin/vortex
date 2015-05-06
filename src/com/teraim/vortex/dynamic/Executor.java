@@ -44,6 +44,7 @@ import com.teraim.vortex.dynamic.blocks.DisplayValueBlock;
 import com.teraim.vortex.dynamic.blocks.JumpBlock;
 import com.teraim.vortex.dynamic.blocks.MenuEntryBlock;
 import com.teraim.vortex.dynamic.blocks.MenuHeaderBlock;
+import com.teraim.vortex.dynamic.blocks.PageDefineBlock;
 import com.teraim.vortex.dynamic.blocks.RoundChartBlock;
 import com.teraim.vortex.dynamic.blocks.SetValueBlock;
 import com.teraim.vortex.dynamic.blocks.SetValueBlock.ExecutionBehavior;
@@ -64,6 +65,7 @@ import com.teraim.vortex.dynamic.workflow_realizations.WF_Event;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnBluetoothMessageReceived;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnSave;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Static_List;
+import com.teraim.vortex.gis.Tracker;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.ui.MenuActivity;
@@ -167,6 +169,8 @@ public abstract class Executor extends Fragment {
 		Log.d("vortex","in Executor onResume");
 		activity.registerReceiver(brr, ifi);
 		gs = GlobalState.getInstance();
+		if (gs!=null&&myContext!=null&&myContext.hasGPSTracker())
+			gs.getTracker().startScan(gs.getContext());
 		super.onResume();
 	}
 
@@ -177,6 +181,8 @@ public abstract class Executor extends Fragment {
 		Log.d("NILS", "In the onPause() event");
 		//Stop listening for bluetooth events.
 		activity.unregisterReceiver(brr);
+		if (gs!=null&&myContext!=null&&myContext.hasGPSTracker())
+			gs.getTracker().stopUsingGPS();
 		super.onPause();
 
 	}
@@ -236,8 +242,19 @@ public abstract class Executor extends Fragment {
 			boolean hasDrawer=false;
 			while(notDone) {
 				Block b = blocks.get(blockP);
+				if (b instanceof PageDefineBlock) {
+					PageDefineBlock bl = (PageDefineBlock)b;
+					Log.d("vortex","Found pagedefine!");
+					if (bl.hasGPS()) {
+						myContext.enableGPS();
+						Log.d("vortex","GPS scanning started");
+						Tracker.ErrorCode code = gs.getTracker().startScan(gs.getContext());
+						Log.d("vortex","got "+code.name());
+					}
+	
+				}
 
-				if (b instanceof ContainerDefineBlock) {
+				else if (b instanceof ContainerDefineBlock) {
 					o.addRow("");
 					o.addYellowText("ContainerDefineBlock found "+b.getBlockId());
 					String id = (((ContainerDefineBlock) b).getContainerName());

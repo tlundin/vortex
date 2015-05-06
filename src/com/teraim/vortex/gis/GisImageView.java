@@ -109,6 +109,19 @@ public class GisImageView extends GestureImageView {
 		fixScale = scale * scaleAdjust;
 		Log.d("vortex","Fixscale is "+fixScale);
 
+		
+		
+		final int interval = 3000; // 1 Second
+		handler = new Handler();
+		Runnable runnable = new Runnable(){
+			public void run() {
+				invalidate();
+				handler.postDelayed(this, interval);
+			}
+		};
+
+		handler.postDelayed(runnable, interval);
+
 		//make sure cursor blinks.
 		/*final int interval = 1000; // 1 Second
 		handler = new Handler();
@@ -171,7 +184,7 @@ public class GisImageView extends GestureImageView {
 		double imgHReal = photoMetaData.N-photoMetaData.S;
 		double imgWReal = photoMetaData.E-photoMetaData.W;
 		Log.d("vortex","w h of gis image. w h of image ("+photoMetaData.getWidth()+","+photoMetaData.getHeight()+") ("+this.getScaledWidth()+","+this.getScaledHeight()+")");
-		
+
 		Log.d("vortex","photo (X) "+photoMetaData.W+"-"+photoMetaData.E);
 		Log.d("vortex","photo (Y) "+photoMetaData.S+"-"+photoMetaData.N);
 		Log.d("vortex","object X,Y: "+l.getX()+","+l.getY());
@@ -371,33 +384,38 @@ public class GisImageView extends GestureImageView {
 					Set<GisObject> gisObjects = bags.get(key);
 					for (GisObject go:gisObjects) {
 						if (go instanceof GisPointObject) {
-							
+
 							GisPointObject gop = (GisPointObject)go;
 							Location l = gop.getLocation();
-							int[] xy = translateMapToRealCoordinates(adjustedScale,l);
-							Bitmap bitmap = gop.getIcon();
-							Rect r = new Rect();
-							
-							if (bitmap!=null) {
-								r.set(xy[0]-32, xy[1]-32, xy[0], xy[1]);
-								canvas.drawBitmap(bitmap, null, r, null);
-							}
-							else {
-								r.set(xy[0]-5, xy[1]-5, xy[0]+5, xy[1]+5);
-								canvas.drawRect(r, rCursorPaint);
+							if (l!=null) {
+								Log.d("vortex","drawing pointobject: "+gop.toString());
+								int[] xy = translateMapToRealCoordinates(adjustedScale,l);
+								Bitmap bitmap = gop.getIcon();
+								Rect r = new Rect();
+
+								if (bitmap!=null) {
+									r.set(xy[0]-32, xy[1]-32, xy[0], xy[1]);
+									canvas.drawBitmap(bitmap, null, r, null);
+								}
+								else {
+									r.set(xy[0]-5, xy[1]-5, xy[0]+5, xy[1]+5);
+									canvas.drawRect(r, rCursorPaint);
+								}
 							}
 						} else if (go instanceof GisMultiPointObject) {
 							Log.d("vortex","Drawing multipoint!!");
 							GisMultiPointObject gop = (GisMultiPointObject)go;
 							List<Location> ll = go.getCoordinates();
-							for (Location l:ll) {
-								int[] xy = translateMapToRealCoordinates(adjustedScale,l);
-								Rect r = new Rect();
-								r.set(xy[0]-10, xy[1]-10, xy[0]+10, xy[1]+10);
-								canvas.drawRect(r, blCursorPaint);
-								
+							if (ll!=null) {
+								for (Location l:ll) {
+									int[] xy = translateMapToRealCoordinates(adjustedScale,l);
+									Rect r = new Rect();
+									r.set(xy[0]-10, xy[1]-10, xy[0]+10, xy[1]+10);
+									canvas.drawRect(r, blCursorPaint);
+
+								}
 							}
-							
+
 						}
 					}
 				}
