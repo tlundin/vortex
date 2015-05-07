@@ -101,6 +101,8 @@ public class VariableConfiguration implements Serializable {
 		}
 		return el;
 	}
+	
+
 	public String getVarName(List<String> row) {
 		return row.get(fromNameToColumn.get(requiredColumns.get(VARIABLE_NAME)));
 	}

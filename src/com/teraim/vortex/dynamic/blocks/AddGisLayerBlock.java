@@ -3,6 +3,10 @@ package com.teraim.vortex.dynamic.blocks;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.LinearLayout;
 
 import com.teraim.vortex.FileLoadedCb;
 import com.teraim.vortex.GlobalState;
@@ -29,7 +33,7 @@ public class AddGisLayerBlock extends Block {
 	
 	private String id, name, label,target;
 	private boolean isVisible, hasWidget;
-	private GisImageView myGis;
+	private WF_Gis_Map myGis;
 	
 	public AddGisLayerBlock(String id, String name, String label,
 			String target, boolean isVisible, boolean hasWidget) {
@@ -48,8 +52,27 @@ public class AddGisLayerBlock extends Block {
 	public void create(WF_Context myContext) {
 		Drawable gisMap = myContext.getDrawable(target);
 		if (gisMap!=null && gisMap instanceof WF_Gis_Map) {
-			myGis = ((WF_Gis_Map)gisMap).getGis();
-			myGis.addLayer(new GisLayer(name,label,isVisible,hasWidget),name);
+			myGis = ((WF_Gis_Map)gisMap);
+			final GisLayer gisLayer = new GisLayer(name,label,isVisible,hasWidget);		
+			myGis.getGis().addLayer(gisLayer,name);
+			if (hasWidget) {
+				Log.d("vortex","Layer "+name+" has a widget");
+				LinearLayout layersL = (LinearLayout)myGis.getWidget().findViewById(R.id.LayersL);
+				//LayoutInflater li = LayoutInflater.from(myContext.getContext());
+				CheckBox lt = new CheckBox(myContext.getContext());
+				lt.setText(label);
+				lt.setTextSize(25);
+				lt.setChecked(isVisible);
+				lt.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+					
+					@Override
+					public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {						
+						gisLayer.setVisible(isChecked);
+						myGis.getGis().invalidate();
+					}
+				});
+				layersL.addView(lt);
+			}
 		}
 		
 	}

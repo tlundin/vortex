@@ -7,7 +7,9 @@ import java.util.Map;
 
 import android.util.Log;
 
+import com.teraim.vortex.dynamic.types.LatLong;
 import com.teraim.vortex.dynamic.types.Location;
+import com.teraim.vortex.dynamic.types.SweLocation;
 
 public class GisObject {
 
@@ -40,6 +42,29 @@ public class GisObject {
 
 	public List<Location> getCoordinates() {
 		return myCoordinates;
+	}
+	
+	public static List<Location> createListOfLocations(String value, String coordType) {
+		if (value==null) {
+			return null;
+		}
+		String[] coords = value.split(",");
+		boolean x=true;
+		String gX=null;
+		List<Location> ret = new ArrayList<Location>();
+		for (String coord:coords) {
+			if (x) {
+				x=false;
+				gX=coord;
+			} else {
+				x=true;
+				if(coordType.equals(GisConstants.SWEREF))
+					ret.add(new SweLocation(gX,coord));
+				else
+					ret.add(new LatLong(gX,coord));
+			}
+		}
+		return ret;
 	}
 
 }

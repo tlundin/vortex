@@ -101,6 +101,9 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 	private SweLocation center;
 	private String histNorr;
 	private String histOst;
+	
+	private String[] avgrValueA;
+	
 	@Override
 	public View onCreateView(final LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
@@ -224,8 +227,27 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 
 //			List<String>avgrTyper = Arrays.asList(new String[] {"Åkermark","Slåttervall","Vatten","Otillgänglig våtmark","Otillgänglig brant","Rasrisk","Tomt/Bebyggelse","Onåbar biotopö","Beträdnadsförbud"});			
 			
-			List<String>avgrTyper = al.getListElements(al.getCompleteVariableDefinition(NamedVariables.AVGRTYP));
-			
+			List<String>avgrTyperRaw = al.getListElements(al.getCompleteVariableDefinition(NamedVariables.AVGRTYP));
+			String[] tmp;
+			String[] avgrTyper = new String[avgrTyperRaw.size()];
+			avgrValueA=new String[avgrTyperRaw.size()];
+			int c=0;
+			for (String s:avgrTyperRaw) {
+				s=s.replace("{", "");
+				s=s.replace("}", "");								
+				tmp = s.split("=");
+				if (tmp==null||tmp.length!=2) {
+					Log.e("nils","found corrupt element: "+s);
+					o.addRow("");
+					o.addRedText("Variabeln Avgränsning:AvgrTyp saknar värden.");					
+					avgrValueA[c]="null";
+					avgrTyper[c]="****";
+				} else {
+					avgrValueA[c]=tmp[1];
+					avgrTyper[c]=tmp[0];
+				}
+				c++;
+			}
 			ArrayAdapter<String> sara=new ArrayAdapter<String>(getActivity(),android.R.layout.simple_list_item_1,avgrTyper);
 			avgrSp.setAdapter(sara);
 
@@ -769,7 +791,7 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 				v.setValue(end);
 				v= al.getVariableInstance(NamedVariables.AVGRTYP);
 				Log.d("nils","Setting avgrtyp to "+((String)avgrSp.getSelectedItem()));
-				v.setValue((String)avgrSp.getSelectedItem());
+				v.setValue(avgrValueA[avgrSp.getSelectedItemPosition()]);
 			}
 			gs.setKeyHash(key);
 			Variable v = al.getVariableUsingKey(key, NamedVariables.LINJEOBJEKT);

@@ -238,6 +238,10 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 					blocks.add(readBlockAddGisPointObjects(parser,GisObjectType.point));
 				else if (name.equals("block_add_gis_multipoint_objects"))
 					blocks.add(readBlockAddGisPointObjects(parser,GisObjectType.multipoint));
+				else if (name.equals("block_add_gis_polygons"))
+					blocks.add(readBlockAddGisPointObjects(parser,GisObjectType.polygon));
+				else if (name.equals("block_add_gis_linestring_objects"))
+					blocks.add(readBlockAddGisPointObjects(parser,GisObjectType.linestring));
 				else {			
 					skip(name,parser,o);
 				}
@@ -283,7 +287,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 	private Block readBlockAddGisPointObjects(XmlPullParser parser,GisObjectType type) throws IOException, XmlPullParserException {
 		o.addRow("Parsing block: block_add_gis_point_objects...");
 		String id=null,nName=null,target=null,label=null,coordType = null,
-				location=null,objContext=null,imgSource=null,refreshRate=null;
+				location=null,objContext=null,imgSource=null,refreshRate=null,radius="";
 		boolean isVisible=true;
 
 		//parser.require(XmlPullParser.START_TAG, null,"block_add_gis_point_objects")
@@ -313,6 +317,8 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				imgSource = readText("img_source",parser);
 			} else if (name.equalsIgnoreCase("refresh_rate")) {
 				refreshRate = readText("refresh_rate",parser);
+			} else if (name.equalsIgnoreCase("radius")) {
+				radius= readText("radius",parser);
 			}
 			else {
 				Log.e("vortex","Skipped "+name);
@@ -321,7 +327,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 		}
 
 		checkForNull("block_ID",id,"target",target,"location",location);
-		return new AddGisPointObjects(id,nName,label,target,objContext,coordType,location,imgSource,refreshRate,isVisible,type);
+		return new AddGisPointObjects(id,nName,label,target,objContext,coordType,location,imgSource,refreshRate,radius,isVisible,type);
 
 	}
 

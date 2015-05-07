@@ -31,7 +31,7 @@ import com.teraim.vortex.utils.PersistenceHelper;
 
 public class Constants {
 
-	public final static float VORTEX_VERSION = 1.083f;
+	public final static float VORTEX_VERSION = 1.085f;
 
 
 	//String constants
@@ -207,7 +207,7 @@ public class Constants {
 			String bundle, LoggerI debugConsole,DbHelper db, Table t) {
 		List<ConfigurationModule> ret = new ArrayList<ConfigurationModule>();
 		//Workflow xml. Named same as bundle.		
-		ret.add(new GisPolygonConfiguration(globalPh,ph,VORTEX_ROOT_DIR+bundle+AIR_PHOTO_FILE_DIR,debugConsole,db));
+		//ret.add(new GisPolygonConfiguration(globalPh,ph,VORTEX_ROOT_DIR+bundle+AIR_PHOTO_FILE_DIR,debugConsole,db));
 		ret.add(new ImportDataConfiguration(globalPh,ph,server,bundle,debugConsole,db,t));
 
 		String gisConfDir = VORTEX_ROOT_DIR+bundle+GIS_FILE_DIR;

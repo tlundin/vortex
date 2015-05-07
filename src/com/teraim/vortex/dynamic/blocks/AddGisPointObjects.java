@@ -20,10 +20,14 @@ import com.teraim.vortex.dynamic.types.Location;
 import com.teraim.vortex.dynamic.types.SweLocation;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
+import com.teraim.vortex.dynamic.workflow_realizations.gis.DynamicGisPoint;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisConstants;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisMultiPointObject;
+import com.teraim.vortex.dynamic.workflow_realizations.gis.GisMultiPointObject.Type;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisPointObject;
+import com.teraim.vortex.dynamic.workflow_realizations.gis.GisPolygonObject;
+import com.teraim.vortex.dynamic.workflow_realizations.gis.StaticGisPoint;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.WF_Gis_Map;
 import com.teraim.vortex.utils.DbHelper.DBColumnPicker;
 import com.teraim.vortex.utils.DbHelper.Selection;
@@ -46,14 +50,16 @@ public class AddGisPointObjects extends Block {
 	public boolean loadDone=false;
 	public enum GisObjectType {
 		point,
-		multipoint
+		multipoint,
+		polygon, linestring
 	}
 	private Set<GisObject> myGisObjects;
+	private String radius;
 
 
 	public AddGisPointObjects(String id, String nName, String label,
 			String target, String objContext,String coordType, String locationVars, 
-			String imgSource, String refreshRate, boolean isVisible, GisObjectType type) {
+			String imgSource, String refreshRate, String radius, boolean isVisible, GisObjectType type) {
 		super();
 		this.id = id;
 		this.nName = nName;
@@ -65,6 +71,7 @@ public class AddGisPointObjects extends Block {
 		this.imgSource = imgSource;
 		this.isVisible = isVisible;
 		this.refreshRate=refreshRate;
+		this.radius=radius;
 		myType = type;
 		if (this.coordType==null)
 			this.coordType=GisConstants.SWEREF;
@@ -86,7 +93,7 @@ public class AddGisPointObjects extends Block {
 			return;
 		}
 
-		if (imgSource!=null&&imgSource.length()>0) {
+		if (imgSource!=null&&imgSource.length()>0 ) {
 			String protocol="http://";
 			if (!imgSource.toLowerCase().startsWith(protocol))
 				imgSource = protocol+imgSource;
@@ -172,11 +179,11 @@ public class AddGisPointObjects extends Block {
 			}
 
 			myGisObjects = new HashSet<GisObject> ();
-			int i=0;String testLabel;
+			int i=0;
 
 			do {
 				i++;
-				testLabel=Integer.toString(i);
+				
 				storedVar1 = pickerLocation1.getVariable();
 				Log.d("vortex","Found "+storedVar1.value+" for "+storedVar1.name);
 				map1 = pickerLocation1.getKeyColumnValues();
@@ -194,11 +201,11 @@ public class AddGisPointObjects extends Block {
 						Log.e("vortex","key mismatch in db fetch: X key:"+map1.toString()+"\nY key: "+map2.toString());
 					} else {
 						if (!dynamic)
-							myGisObjects.add(new GisPointObject(storedVar2.name, new SweLocation(storedVar1.value,storedVar2.value)));
+							myGisObjects.add(new StaticGisPoint(storedVar2.name, new SweLocation(storedVar1.value,storedVar2.value)));
 						else {
 							v2 = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(pickerLocation1.getKeyColumnValues(),storedVar2.name);
 							if (v1!=null && v2!=null) 
-								myGisObjects.add(new GisPointObject(v1.getId()+"_"+v2.getId(), v1,v2));
+								myGisObjects.add(new DynamicGisPoint(v1.getId()+"_"+v2.getId(), v1,v2));
 						}
 					}
 					if (!pickerLocation2.next())
@@ -206,58 +213,47 @@ public class AddGisPointObjects extends Block {
 				} else {
 					if (myType.equals(GisObjectType.point)) {
 						if (!dynamic)
-							myGisObjects.add(new GisPointObject(storedVar1.name, new SweLocation(storedVar1.value)));
+							myGisObjects.add(new StaticGisPoint(storedVar1.name, new SweLocation(storedVar1.value)));
 						else
-							myGisObjects.add(new GisPointObject(v1.getId(),v1));
+							myGisObjects.add(new DynamicGisPoint(v1.getId(),v1));
 					}
-					else
-						myGisObjects.add(new GisMultiPointObject(map1,createListOfLocations(storedVar1.value)));
-
+					else if (myType.equals(GisObjectType.multipoint))
+						myGisObjects.add(new GisMultiPointObject(map1,GisObject.createListOfLocations(storedVar1.value,coordType),Type.MULTIPOINT));
+					else if (myType.equals(GisObjectType.linestring)) {
+						myGisObjects.add(new GisMultiPointObject(map1,GisObject.createListOfLocations(storedVar1.value,coordType),Type.LINESTRING));
+					}
+					else if (myType.equals(GisObjectType.polygon))
+						myGisObjects.add(new GisPolygonObject(map1,storedVar1.value,coordType));
 				}
 				//Add these variables to bag 
-
+				
 			} while (pickerLocation1.next());
-
+			Log.d("vortex","Added "+myGisObjects.size()+" objects");
 			if (target!=null&&target.length()>0) {
 				//Add bag to layer.
 				GisLayer myLayer=myContext.getCurrentGis().getGis().getLayer(target);
+				//Apply radius to all point objects, if any.
 				if (myLayer!=null) {
-					myLayer.addObjectBag(nName,myGisObjects);
+					if (radius!=null) {
+						for (GisObject go:myGisObjects) {
+							if (go instanceof GisPointObject) 
+								((GisPointObject)go).setRadius(radius);
+						}
+					}
+
+					myLayer.addObjectBag(nName,myGisObjects,dynamic);
 					loadDone=true;
 					return;
-				} 
+				} else
+					Log.e("vortex","Layer was null! "+target);
 			}
 		} else
-			Log.d("vortex","picker was null");
+			Log.e("vortex","picker was null");
 
 
 	}
 
-	private List<Location> createListOfLocations(String value) {
-		if (value==null) {
-			Log.e("vortex","Locaiton variable contains null");
-			o.addRow("");
-			o.addRedText("Cannot find any values in multipoint variable!");
-			return null;
-		}
-		String[] coords = value.split(",");
-		boolean x=true;
-		String gX=null;
-		List<Location> ret = new ArrayList<Location>();
-		for (String coord:coords) {
-			if (x) {
-				x=false;
-				gX=coord;
-			} else {
-				x=true;
-				if(coordType.equals(GisConstants.SWEREF))
-					ret.add(new SweLocation(gX,coord));
-				else
-					ret.add(new LatLong(gX,coord));
-			}
-		}
-		return ret;
-	}
+
 
 	private String print(String[] selectionArgs) {
 		String res="";

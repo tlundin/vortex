@@ -27,6 +27,7 @@ import com.teraim.vortex.dynamic.types.Point;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisMultiPointObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisPointObject;
+import com.teraim.vortex.dynamic.workflow_realizations.gis.GisPolygonObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.WF_MapLayer;
 import com.teraim.vortex.loadermodule.configurations.GisPolygonConfiguration;
 import com.teraim.vortex.loadermodule.configurations.GisPolygonConfiguration.GisBlock;
@@ -109,18 +110,9 @@ public class GisImageView extends GestureImageView {
 		fixScale = scale * scaleAdjust;
 		Log.d("vortex","Fixscale is "+fixScale);
 
-		
-		
-		final int interval = 3000; // 1 Second
-		handler = new Handler();
-		Runnable runnable = new Runnable(){
-			public void run() {
-				invalidate();
-				handler.postDelayed(this, interval);
-			}
-		};
 
-		handler.postDelayed(runnable, interval);
+
+
 
 		//make sure cursor blinks.
 		/*final int interval = 1000; // 1 Second
@@ -183,37 +175,38 @@ public class GisImageView extends GestureImageView {
 	private int[] translateMapToRealCoordinates(float scale, Location l) {
 		double imgHReal = photoMetaData.N-photoMetaData.S;
 		double imgWReal = photoMetaData.E-photoMetaData.W;
-		Log.d("vortex","w h of gis image. w h of image ("+photoMetaData.getWidth()+","+photoMetaData.getHeight()+") ("+this.getScaledWidth()+","+this.getScaledHeight()+")");
-
-		Log.d("vortex","photo (X) "+photoMetaData.W+"-"+photoMetaData.E);
-		Log.d("vortex","photo (Y) "+photoMetaData.S+"-"+photoMetaData.N);
-		Log.d("vortex","object X,Y: "+l.getX()+","+l.getY());
 		double mapDistX = l.getX()-photoMetaData.W;
 		if (mapDistX <=imgWReal && mapDistX>=0)
-			Log.d("vortex","Distance X in meter: "+mapDistX+" [inside]");
-		else
-			Log.d("vortex","Distance X in meter: "+mapDistX+" [outside!]");
+			;//	Log.d("vortex","Distance X in meter: "+mapDistX+" [inside]");
+		else {
+			Log.e("vortex","Distance X in meter: "+mapDistX+" [outside!]");
+			Log.d("vortex","w h of gis image. w h of image ("+photoMetaData.getWidth()+","+photoMetaData.getHeight()+") ("+this.getScaledWidth()+","+this.getScaledHeight()+")");
+			Log.d("vortex","photo (X) "+photoMetaData.W+"-"+photoMetaData.E);
+			Log.d("vortex","photo (Y) "+photoMetaData.S+"-"+photoMetaData.N);
+			Log.d("vortex","object X,Y: "+l.getX()+","+l.getY());
+			return null;
+		}
 		double mapDistY = l.getY()-photoMetaData.S;
 		if (mapDistY <=imgHReal && mapDistY>=0)
-			Log.d("vortex","Distance Y in meter: "+mapDistY+" [inside]");
+			;//Log.d("vortex","Distance Y in meter: "+mapDistY+" [inside]");
 		else
-			Log.d("vortex","Distance Y in meter: "+mapDistY+" [outside!]");
+			Log.e("vortex","Distance Y in meter: "+mapDistY+" [outside!]");
 		pXR = this.getImageWidth()/photoMetaData.getWidth();
 		pYR = this.getImageHeight()/photoMetaData.getHeight();
 
-		Log.d("vortex","px, py"+pXR+","+pYR);
+		//		Log.d("vortex","px, py"+pXR+","+pYR);
 		double pixDX = mapDistX*pXR;
 		double pixDY = mapDistY*pYR;
-		Log.d("vortex","distance on map (in pixel no scale): x,y "+pixDX+","+pixDY);
+		//		Log.d("vortex","distance on map (in pixel no scale): x,y "+pixDX+","+pixDY);
 		float rX = ((float)pixDX)-this.getImageWidth()/2;
-		float rY = ((float)pixDY)-this.getImageHeight()/2;
+		float rY = this.getImageHeight()/2-((float)pixDY);
 		//float rX = calcX(sX);
 		//float rY = calcY(sY);
-		Log.d("vortex","X: Y:"+x+","+y);
-		Log.d("vortex","fixScale: "+fixScale);
-		Log.d("vortex","after calc(x), calc(y) "+rX+","+rY);
-		Log.d("vortex","fX: fY:"+fixedX+","+fixedY);
-		Log.d("vortex","after fcalc(x), fcalc(y) "+this.fCalcX(rX)+","+fCalcY(rY));
+		//		Log.d("vortex","X: Y:"+x+","+y);
+		//		Log.d("vortex","fixScale: "+fixScale);
+		//		Log.d("vortex","after calc(x), calc(y) "+rX+","+rY);
+		//		Log.d("vortex","fX: fY:"+fixedX+","+fixedY);
+		//		Log.d("vortex","after fcalc(x), fcalc(y) "+this.fCalcX(rX)+","+fCalcY(rY));
 		return new int[]{(int)rX,(int)rY};
 	}
 
@@ -378,44 +371,102 @@ public class GisImageView extends GestureImageView {
 		for (String layer:myLayers.keySet()) {
 			Log.d("vortex","drawing layer "+layer);
 			//get all objects that should be drawn on this layer.
-			Map<String, Set<GisObject>> bags = myLayers.get(layer).getGisBags();
+			GisLayer layerO = myLayers.get(layer);
+			if (!layerO.isVisible())
+				continue;
+			if (layerO.hasDynamic())
+				this.startDynamicRedraw();
+			Map<String, Set<GisObject>> bags = layerO.getGisBags();
 			if (!bags.isEmpty()) {
 				for (String key:bags.keySet()) {
 					Set<GisObject> gisObjects = bags.get(key);
+					//Log.d("vortex","Found "+gisObjects.size()+" objects");
 					for (GisObject go:gisObjects) {
 						if (go instanceof GisPointObject) {
 
 							GisPointObject gop = (GisPointObject)go;
 							Location l = gop.getLocation();
 							if (l!=null) {
-								Log.d("vortex","drawing pointobject: "+gop.toString());
+								//Log.d("vortex","drawing pointobject: "+gop.toString());
 								int[] xy = translateMapToRealCoordinates(adjustedScale,l);
+								if (xy==null)
+									continue;
 								Bitmap bitmap = gop.getIcon();
 								Rect r = new Rect();
 
 								if (bitmap!=null) {
 									r.set(xy[0]-32, xy[1]-32, xy[0], xy[1]);
 									canvas.drawBitmap(bitmap, null, r, null);
-								}
+								} //circular?
+								else if(gop.getRadius()!=-1) {
+									canvas.drawCircle(xy[0], xy[1], gop.getRadius(), rCursorPaint);
+								} //no...square.
 								else {
 									r.set(xy[0]-5, xy[1]-5, xy[0]+5, xy[1]+5);
 									canvas.drawRect(r, rCursorPaint);
 								}
 							}
 						} else if (go instanceof GisMultiPointObject) {
-							Log.d("vortex","Drawing multipoint!!");
+							//Log.d("vortex","Drawing multipoint!!");
 							GisMultiPointObject gop = (GisMultiPointObject)go;
 							List<Location> ll = go.getCoordinates();
 							if (ll!=null) {
-								for (Location l:ll) {
-									int[] xy = translateMapToRealCoordinates(adjustedScale,l);
-									Rect r = new Rect();
-									r.set(xy[0]-10, xy[1]-10, xy[0]+10, xy[1]+10);
-									canvas.drawRect(r, blCursorPaint);
+								if (gop.isLineString()) {
+									Log.d("vortex","Drawing linestring!!");
+									boolean first=true;
+									Path p = new Path();
+									for (Location l:ll) {
+										int[] xy = translateMapToRealCoordinates(adjustedScale,l);
+										if (xy==null)
+											continue;
+										else
+											Log.d("vortex","not outside!!");
+										if (first) {
+											p.moveTo(xy[0],xy[1]);
+											first =false;
+										} else
+											p.lineTo(xy[0],xy[1]);
+									}
+									canvas.drawPath(p, rCursorPaint);
 
+								} else {
+
+									for (Location l:ll) {
+										int[] xy = translateMapToRealCoordinates(adjustedScale,l);
+										if (xy==null)
+											break;
+										Rect r = new Rect();
+										r.set(xy[0]-10, xy[1]-10, xy[0]+10, xy[1]+10);
+										canvas.drawRect(r, blCursorPaint);
+									}
 								}
 							}
 
+						} else if (go instanceof GisPolygonObject) {
+							//Log.d("vortex","Drawing Polygons!!");
+							GisPolygonObject gop = (GisPolygonObject)go;
+							Map<String, List<Location>> polys = gop.getPolygons();
+
+							for (List<Location> poly:polys.values()) {
+								String path="";
+								Path p = new Path();
+								int[] xy;
+								boolean first=true;
+								for (Location l:poly) {
+									xy = translateMapToRealCoordinates(adjustedScale,l);
+									if (xy==null)
+										break;;
+										path+="{"+xy[0]+","+xy[1]+"}";
+										if (first) {
+											p.moveTo(xy[0],xy[1]);
+											first =false;
+										} else
+											p.lineTo(xy[0],xy[1]);	
+								}
+								//p.close();
+								Log.d("vortex",path);
+								canvas.drawPath(p, polyPaint);
+							}
 						}
 					}
 				}
@@ -514,6 +565,12 @@ public class GisImageView extends GestureImageView {
 
 		}
 
+		public Poly(Path p) {
+			mPath = p;
+			myPaint = polyPaint;
+			bounds = new Rect();
+		}
+
 		private void setLabel(String label) {
 			mLabel = label;
 			txtPaint.getTextBounds(mLabel, 0, mLabel.length(), bounds);
@@ -558,8 +615,23 @@ public class GisImageView extends GestureImageView {
 		return myLayers.get(identifier);
 	}
 
+	private boolean isStarted=false;
+	//Starts a redraw every 3rd second if at least one object is dynamic.
+	private void startDynamicRedraw() {
+		if (!isStarted) {
+			final int interval = 3000; // 1 Second
+			handler = new Handler();
+			Runnable runnable = new Runnable(){
+				public void run() {
+					invalidate();
+					handler.postDelayed(this, interval);
+				}
+			};
 
-
+			handler.postDelayed(runnable, interval);
+			isStarted=true;
+		}
+	}
 
 
 }

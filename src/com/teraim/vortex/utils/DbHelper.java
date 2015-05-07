@@ -1373,7 +1373,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
 	public DBColumnPicker getAllVariableInstances(Selection s) {
 		Cursor c = db.query(TABLE_VARIABLES,null,s.selection,
-				s.selectionArgs,null,null,"timestamp DESC","1");
+				s.selectionArgs,null,null,null,null);//"timestamp DESC","1");
 		return new DBColumnPicker(c);
 	}
 
