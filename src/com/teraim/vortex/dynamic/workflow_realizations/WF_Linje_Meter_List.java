@@ -29,12 +29,13 @@ public class WF_Linje_Meter_List extends WF_List implements EventListener {
 	int myHeaderCol = 0;
 	Map<String,String> listElemSelector;
 	Linje linjeV;
+	String[] avgrT,avgrV;
 
 	//Variablename should always be first element of columns. Will be used as header.
 	public WF_Linje_Meter_List(String id, boolean isVisible, WF_Context ctx, List<ColumnDescriptor> columns, Selection selection, 
-			String varId, Map<String, String> keySet,Linje linje) {
+			String varId, Map<String, String> keySet,Linje linje, String[] avgrValueA, String[] avgrTyper) {
 		super(id, isVisible, ctx);
-
+		
 		//this.variableName= variableName; 
 		this.s = selection;
 		columnNames = new String[columns.size()];
@@ -50,6 +51,8 @@ public class WF_Linje_Meter_List extends WF_List implements EventListener {
 		cd=columns;
 		this.varId = varId;
 		this.listElemSelector = keySet;
+		avgrV =avgrValueA;
+		avgrT =avgrTyper;
 		ctx.addEventListener(this, EventType.onSave);
 	}
 
@@ -197,7 +200,7 @@ public class WF_Linje_Meter_List extends WF_List implements EventListener {
 						v = al.getVariableInstance(NamedVariables.AVGRTYP);
 						entryF.addVariable(v, false, null, true,false);
 						if (slut!=null)
-							linjeV.addMarker(start, slut, v.getValue());
+							linjeV.addMarker(start, slut, getCorrectLabel(v.getValue()));
 						else
 							Log.d("vortex","slut null!");
 					} else {
@@ -214,5 +217,16 @@ public class WF_Linje_Meter_List extends WF_List implements EventListener {
 			}
 		}
 		linjeV.invalidate();
+	}
+
+
+	private String getCorrectLabel(String value) {
+		int i=0;
+		for (String avgrS:avgrV) {
+			if (avgrS.equals(value))
+				return avgrT[i];
+			i++;
+		}
+		return "?";
 	}
 }

@@ -87,7 +87,10 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-
+		if (myContext == null) {
+			Log.e("vortex","No context, exit");
+			return null;
+		}
 		View v = inflater.inflate(R.layout.template_tag, container, false);	
 
 		final FrameLayout py = (FrameLayout)v.findViewById(R.id.circle);

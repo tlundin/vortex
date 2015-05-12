@@ -18,30 +18,23 @@ public class GisObject {
 		latlong
 	}
 	
-	protected String myLabel;
+	public GisObject(Map<String, String> keyChain,List<Location> myCoordinates) {
+		this.keyChain=keyChain;this.myCoordinates=myCoordinates;
+	}
+	
 	protected CoordinateType coordinateType = CoordinateType.sweref;
 	protected List<Location> myCoordinates = new ArrayList<Location>();
 	protected Map<String, String> keyChain = new HashMap<String,String>();
-	public Map<String, String> getKeyHash() {
-		return keyChain;
-	}
+
 	
-	public String coordsToString() {
-		StringBuilder sb = new StringBuilder();
-		Log.d("vortex","Size of myC: "+myCoordinates.size());
-		for (Location l:myCoordinates) {
-			
-			sb.append(l.toString());
-			sb.append(",");
-		}
-		if (sb.length()>0)
-			return sb.substring(0, sb.length()-1);
-		else
-			return null;
-	}
+
 
 	public List<Location> getCoordinates() {
 		return myCoordinates;
+	}
+	
+	public Map<String, String> getKeyHash() {
+		return keyChain;
 	}
 	
 	public static List<Location> createListOfLocations(String value, String coordType) {
@@ -65,6 +58,20 @@ public class GisObject {
 			}
 		}
 		return ret;
+	}
+	
+	public String coordsToString() {
+		StringBuilder sb = new StringBuilder();
+		Log.d("vortex","Size of myC: "+myCoordinates.size());
+		for (Location l:myCoordinates) {
+			
+			sb.append(l.toString());
+			sb.append(",");
+		}
+		if (sb.length()>0)
+			return sb.substring(0, sb.length()-1);
+		else
+			return null;
 	}
 
 }

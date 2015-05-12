@@ -19,11 +19,14 @@ import android.graphics.Rect;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.View;
+import android.view.View.OnClickListener;
 
 import com.teraim.vortex.dynamic.types.GisLayer;
 import com.teraim.vortex.dynamic.types.Location;
 import com.teraim.vortex.dynamic.types.PhotoMeta;
 import com.teraim.vortex.dynamic.types.Point;
+import com.teraim.vortex.dynamic.types.SweLocation;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisMultiPointObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisPointObject;
@@ -40,7 +43,7 @@ public class GisImageView extends GestureImageView {
 	private float mX, mY;
 	private static final float TOUCH_TOLERANCE = 4;
 	private List<Point> myPoints;
-	private List<Poly> myPaths; 
+	//private List<Poly> myPaths; 
 	private Calendar calendar = Calendar.getInstance();
 	private Paint currCursorPaint,mPaint,txtPaint;
 	private Handler handler;
@@ -106,11 +109,16 @@ public class GisImageView extends GestureImageView {
 		polyPaint.setStrokeWidth(1);
 		currCursorPaint = wCursorPaint;
 		myPoints = new ArrayList<Point>();
-		myPaths = Collections.synchronizedList(new ArrayList<Poly>());
+		//myPaths = Collections.synchronizedList(new ArrayList<Poly>());
 		fixScale = scale * scaleAdjust;
 		Log.d("vortex","Fixscale is "+fixScale);
 
-
+		setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				 checkForTargets(polyVertexX,polyVertexY);
+			}
+		});
 
 
 
@@ -138,7 +146,7 @@ public class GisImageView extends GestureImageView {
 		fixedX = x;
 		fixedY = y;
 	}
-
+/*
 	private Paint createNewPaint() {
 		mPaint = new Paint();
 		mPaint.setAntiAlias(true);
@@ -150,7 +158,7 @@ public class GisImageView extends GestureImageView {
 		mPaint.setStrokeWidth(1); 
 		return mPaint;
 	}
-
+*/
 	float fixScale;
 	private float fixedX;
 	private float fixedY;
@@ -172,6 +180,42 @@ public class GisImageView extends GestureImageView {
 		return new int[]{x,y};
 	}
 	 */
+	private float[] translate(float mx,float my) {
+		float fixScale = scale * scaleAdjust;
+		//Log.d("vortex","MX, MY "+mx+","+my);
+		Log.d("vortex","W, H "+this.getImageWidth()+","+this.getImageHeight());
+		Log.d("vortex","fixscale: "+fixScale);
+		mx = (mx-x)/fixScale;//+(this.getImageWidth()/2)/fixScale;
+		my = (my-y)/fixScale;//+(this.getImageHeight()/2)/fixScale;
+		return new float[]{mx,my};
+		
+	}
+	
+	
+	private Location translateRealCoordinatestoMap(float mx,float my) {
+		float fixScale = scale * scaleAdjust;
+		//Log.d("vortex","MX, MY "+mx+","+my);
+		Log.d("vortex","W, H "+this.getImageWidth()+","+this.getImageHeight());
+		Log.d("vortex","fixscale: "+fixScale);
+		mx = (mx-x)/fixScale;
+		my = (my-y)/fixScale;
+		Log.d("vortex","MX, MY "+mx+","+my);
+
+		float rX = this.getImageWidth()/2+((float)mx);
+		float rY = this.getImageHeight()/2+((float)my);
+
+		
+		pXR = photoMetaData.getWidth()/this.getImageWidth();
+		pYR = photoMetaData.getHeight()/this.getImageHeight();
+		
+		double mapDistX = rX*pXR;
+		double mapDistY = rY*pYR;
+		
+		return new SweLocation(mapDistX + photoMetaData.W,photoMetaData.N-mapDistY);
+		
+	}
+	
+	
 	private int[] translateMapToRealCoordinates(float scale, Location l) {
 		double imgHReal = photoMetaData.N-photoMetaData.S;
 		double imgWReal = photoMetaData.E-photoMetaData.W;
@@ -209,7 +253,7 @@ public class GisImageView extends GestureImageView {
 		//		Log.d("vortex","after fcalc(x), fcalc(y) "+this.fCalcX(rX)+","+fCalcY(rY));
 		return new int[]{(int)rX,(int)rY};
 	}
-
+/*
 	public void setGisData(PhotoMeta gd, String rutaId) {
 		GisPolygonConfiguration gp = GisPolygonConfiguration.getSingleton();
 		if (gp == null) {
@@ -254,8 +298,8 @@ public class GisImageView extends GestureImageView {
 
 	}
 
-
-
+*/
+/*
 	public void startPoly() {
 		startPoly(polyVertexX,polyVertexY);
 	}
@@ -278,13 +322,44 @@ public class GisImageView extends GestureImageView {
 		drawActive=true;
 		invalidate();
 	}
-
-
-	public String checkForTargets() {
+*/
+	List<Location> clicked = null;
+	//Determine if something clicked. If so, open a something dialog.
+	
+	
+	public void checkForTargets(float x, float y) {
+		//Figure out geo coords from pic coords.
+		Location mapLocationForClick = translateRealCoordinatestoMap(x,y);
+		Log.d("vortex","click at "+mapLocationForClick.getX()+","+mapLocationForClick.getY());
+		if (clicked==null)
+			clicked = new ArrayList<Location>();
+		clicked.add(mapLocationForClick);
+		this.invalidate();
+	}
+	
+	List<float[]> plicked=null;
+	/*
+	public void checkForTargets(float x, float y) {
+		//Figure out geo coords from pic coords.
+		
+		if (plicked==null)
+			plicked = new ArrayList<float[]>();
+		plicked.add(this.translate(x, y));
+		this.invalidate();
+	}*/
+/*	public String checkForTargetsOld() {
 		//draws cursor at current location.
 		fixedX = x;
 		fixedY = y;
 		fixScale = scale * scaleAdjust;
+		(polyVertexY-x)/fixScale;
+		(polyVertexY-y)/fixScale;
+	private float calcX(polyVertexX) {
+		return (polyVertexY-x)/fixScale;
+	}
+	private float calcY(polyVertexY) {
+		return (polyVertexY-y)/fixScale;
+	}
 
 		//check if any current Poly Label is within click.
 
@@ -307,7 +382,8 @@ public class GisImageView extends GestureImageView {
 		invalidate();
 		return null;
 	}
-
+*/
+/*
 	public void addVertex() {
 		addVertex(polyVertexX,polyVertexY);
 	}
@@ -355,7 +431,7 @@ public class GisImageView extends GestureImageView {
 		myPaths.get(myPaths.size()-1).save();
 		drawActive=false;
 	}
-
+*/
 
 	@Override
 	protected void dispatchDraw(Canvas canvas) {
@@ -369,7 +445,7 @@ public class GisImageView extends GestureImageView {
 			canvas.scale(adjustedScale, adjustedScale);
 		}
 		for (String layer:myLayers.keySet()) {
-			Log.d("vortex","drawing layer "+layer);
+			//Log.d("vortex","drawing layer "+layer);
 			//get all objects that should be drawn on this layer.
 			GisLayer layerO = myLayers.get(layer);
 			if (!layerO.isVisible())
@@ -383,7 +459,6 @@ public class GisImageView extends GestureImageView {
 					//Log.d("vortex","Found "+gisObjects.size()+" objects");
 					for (GisObject go:gisObjects) {
 						if (go instanceof GisPointObject) {
-
 							GisPointObject gop = (GisPointObject)go;
 							Location l = gop.getLocation();
 							if (l!=null) {
@@ -398,12 +473,12 @@ public class GisImageView extends GestureImageView {
 									r.set(xy[0]-32, xy[1]-32, xy[0], xy[1]);
 									canvas.drawBitmap(bitmap, null, r, null);
 								} //circular?
-								else if(gop.getRadius()!=-1) {
-									canvas.drawCircle(xy[0], xy[1], gop.getRadius(), rCursorPaint);
+								else if(gop.isCircle()) {
+									canvas.drawCircle(xy[0], xy[1], gop.getRadius(), createPaint(gop.getColor()));
 								} //no...square.
 								else {
 									r.set(xy[0]-5, xy[1]-5, xy[0]+5, xy[1]+5);
-									canvas.drawRect(r, rCursorPaint);
+									canvas.drawRect(r, createPaint(gop.getColor()));
 								}
 							}
 						} else if (go instanceof GisMultiPointObject) {
@@ -472,8 +547,30 @@ public class GisImageView extends GestureImageView {
 				}
 			}
 		}
+		if (clicked!=null) {
+			for (Location l:clicked) {
+				int[] xy = translateMapToRealCoordinates(adjustedScale,l);
+				if (xy!=null)
+					canvas.drawCircle(xy[0], xy[1], 10, rCursorPaint);
+			}
+		}
+		if (plicked!=null) {
+			for (float[] l:plicked) {
+				canvas.drawCircle(l[0], l[1], 10, rCursorPaint);
+			}
+		}
+		canvas.restore();
 	}
+	private Paint createPaint(String color) {
+		
+		Paint p = new Paint();
+		p.setColor(color!=null?Color.parseColor(color):Color.RED);
+		p.setStyle(Paint.Style.FILL);
+		return p;
+	}
+
 	//@Override
+	/*
 	protected void dispatchDraw2(Canvas canvas) {
 		super.dispatchDraw(canvas);
 		//		canvas.drawCircle(0, 0, 12, bCursorPaint);
@@ -600,7 +697,7 @@ public class GisImageView extends GestureImageView {
 			return bounds;
 		}
 	}
-
+	 */
 	Map<String,GisLayer> myLayers=new HashMap<String,GisLayer>();
 
 	public void addLayer(GisLayer layer,String identifier) {

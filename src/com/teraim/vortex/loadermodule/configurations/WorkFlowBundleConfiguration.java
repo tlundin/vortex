@@ -14,7 +14,6 @@ import android.util.Log;
 import com.teraim.vortex.dynamic.blocks.AddEntryToFieldListBlock;
 import com.teraim.vortex.dynamic.blocks.AddGisLayerBlock;
 import com.teraim.vortex.dynamic.blocks.AddGisPointObjects;
-import com.teraim.vortex.dynamic.blocks.AddGisPointObjects.GisObjectType;
 import com.teraim.vortex.dynamic.blocks.AddRuleBlock;
 import com.teraim.vortex.dynamic.blocks.AddSumOrCountBlock;
 import com.teraim.vortex.dynamic.blocks.AddVariableToEntryFieldBlock;
@@ -43,6 +42,7 @@ import com.teraim.vortex.dynamic.blocks.VarValueSourceBlock;
 import com.teraim.vortex.dynamic.types.Workflow;
 import com.teraim.vortex.dynamic.types.Workflow.Unit;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Not_ClickableField_SumAndCountOfVariables;
+import com.teraim.vortex.dynamic.workflow_realizations.gis.FullGisObjectConfiguration.GisObjectType;
 import com.teraim.vortex.loadermodule.LoadResult;
 import com.teraim.vortex.loadermodule.LoadResult.ErrorCode;
 import com.teraim.vortex.loadermodule.XMLConfigurationModule;
@@ -286,7 +286,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 	
 	private Block readBlockAddGisPointObjects(XmlPullParser parser,GisObjectType type) throws IOException, XmlPullParserException {
 		o.addRow("Parsing block: block_add_gis_point_objects...");
-		String id=null,nName=null,target=null,label=null,coordType = null,
+		String id=null,nName=null,target=null,label=null,coordType = null, color=null,polyType=null,fillType=null,
 				location=null,objContext=null,imgSource=null,refreshRate=null,radius="";
 		boolean isVisible=true;
 
@@ -303,6 +303,12 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				target = readText("target",parser);
 			} else if (name.equals("label")) {
 				label = readText("label",parser);
+			} else if (name.equals("color")) {
+				color = readText("color",parser);
+			} else if (name.equals("fill_type")) {
+				fillType = readText("fill_type",parser);
+			} else if (name.equals("poly_type")) {
+				polyType = readText("poly_type",parser);
 			} else if (name.equals("is_visible")) {
 				isVisible = readText("is_visible",parser).equals("true");
 			} else if (name.equalsIgnoreCase("name")) {
@@ -327,7 +333,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 		}
 
 		checkForNull("block_ID",id,"target",target,"location",location);
-		return new AddGisPointObjects(id,nName,label,target,objContext,coordType,location,imgSource,refreshRate,radius,isVisible,type);
+		return new AddGisPointObjects(id,nName,label,target,objContext,coordType,location,imgSource,refreshRate,radius,isVisible,type,color,polyType,fillType);
 
 	}
 

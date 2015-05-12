@@ -76,6 +76,10 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 	public View onCreateView(final LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 		Log.d("nils","in onCreateView of ProvytaNivåTemplate");
+		if (myContext == null) {
+			Log.e("vortex","No context, exit");
+			return null;
+		}
 		v = inflater.inflate(R.layout.template_provyta_niva_wf, container, false);	
 		myContext.resetState();
 		myContext.addContainers(getContainers());

@@ -150,7 +150,10 @@ public class FotoTemplate extends Executor {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-		if (myContext!=null) {
+		if (myContext == null) {
+			Log.e("vortex","No context, exit");
+			return null;
+		}
 		myContext.resetState();
 		Log.d("nils","in onCreateView of foto template");
 		
@@ -283,8 +286,6 @@ public class FotoTemplate extends Executor {
 		
 		return v;
 		
-		} else
-			return super.onCreateView(inflater, container, savedInstanceState);
 	}
 	
 

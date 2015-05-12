@@ -61,11 +61,11 @@ public class SetValueBlock extends Block {
 		//substitute any variables or functions.
 		SubstiResult sr = re.substituteForValue(tokens,formula,stringT);
 		String subst = sr.result;
-		if (subst!=null && !sr.IamAString) { 
+		if (subst!=null && !sr.iAmAString()) { 
 			subst = re.parseExpression(formula,subst);
 			return subst;
 		}
-		if (sr.IamAString && subst  == null) {
+		if (sr.iAmAString() && subst  == null) {
 			Log.e("nils","Formula null after substitution: ["+formula+"]");
 			return null;
 		}

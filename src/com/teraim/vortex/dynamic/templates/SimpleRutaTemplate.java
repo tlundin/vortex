@@ -74,7 +74,10 @@ public class SimpleRutaTemplate extends Executor implements OnGesturePerformedLi
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-
+		if (myContext == null) {
+			Log.e("vortex","No context, exit");
+			return null;
+		}
 		al = gs.getVariableConfiguration();
 		myContext.resetState();
 		myLayouts = new ArrayList<WF_Container>();
@@ -173,10 +176,10 @@ public class SimpleRutaTemplate extends Executor implements OnGesturePerformedLi
 			}
 		});
 
-		if (gs.isMaster()||gs.isSolo()) {
+		//if (gs.isMaster()||gs.isSolo()) {
 			aggregatePanel.addView(exportB);
 			createInvTypSelection();			
-		}
+		//}
 
 		GestureOverlayView gestureOverlayView = (GestureOverlayView)v.findViewById(R.id.gesture_overlay);
 

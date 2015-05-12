@@ -58,7 +58,10 @@ public class DefaultTemplate extends Executor {
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 		Log.d("nils","I'm in the onCreateView method");
-
+		if (myContext == null) {
+			Log.e("vortex","No context, exit");
+			return null;
+		}
 		View v = inflater.inflate(R.layout.template_wf_default, container, false);	
 //		errorView = (TextView)v.findViewById(R.id.errortext);
 		my_root = (LinearLayout)v.findViewById(R.id.myRoot);

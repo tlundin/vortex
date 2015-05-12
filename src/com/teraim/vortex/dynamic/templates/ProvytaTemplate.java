@@ -142,6 +142,10 @@ public class ProvytaTemplate extends Executor implements EventListener,OnGesture
 	@Override
 	public View onCreateView(final LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
+		if (myContext == null) {
+			Log.e("vortex","No context, exit");
+			return null;
+		}
 		liv = gs.getVariableConfiguration().getVariableInstance(NamedVariables.CURRENT_LINJE);
 		pyv = gs.getVariableConfiguration().getVariableInstance(NamedVariables.CURRENT_PROVYTA);
 		myContext.resetState();

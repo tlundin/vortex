@@ -43,6 +43,10 @@ public class FixPunktTemplate extends Executor implements OnGesturePerformedList
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
+		if (myContext == null) {
+			Log.e("vortex","No context, exit");
+			return null;
+		}
 		myContext.resetState();
 		v = inflater.inflate(R.layout.template_fixpunkt_wf, container, false);	
 

@@ -108,6 +108,10 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 	public View onCreateView(final LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 		Log.d("nils","in onCreateView of LinjePortalTemplate");
+		if (myContext == null) {
+			Log.e("vortex","No context, exit");
+			return null;
+		}
 		myContext.resetState();
 		//Listen to LinjeStarted and LinjeDone events.
 		myContext.addEventListener(this, EventType.onBluetoothMessageReceived);
@@ -184,7 +188,8 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 						Log.d("nils","Linjestatus was STATUS_STARTAD_MEN_INTE_KLAR");
 					} else {
 						Log.d("nils","Status changed back to initial, because of missing values for startE,startN");
-						linjeStatus.setValue(Constants.STATUS_INITIAL);			
+						linjeStatus.setValue(Constants.STATUS_INITIAL);	
+						center = null;
 					}
 				}
 				else if (linjeStatus.getValue().equals(Constants.STATUS_AVSLUTAD_OK)){
@@ -193,6 +198,7 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 			} else {
 				Log.e("nils","Linjestatus was null");
 				linjeStatus.setValue(Constants.STATUS_INITIAL);
+				center = null;
 			}
 
 			/*
@@ -357,16 +363,12 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 										}  else if (startSp.getSelectedItemPosition()==startIHar) {
 
 											setStart(myL.east,myL.north);
-											refreshGPSInfo();
 
 										} else if (startSp.getSelectedItemPosition()==anvandTeoriStart) {	
 											Log.d("nils","I should en up here.");
 											double teoriNorr = Double.parseDouble(histNorr)+startPunkt[1];
 											double teoriOst = Double.parseDouble(histOst)+startPunkt[0];
 											setStart(teoriOst,teoriNorr);	
-											if (myL!=null)
-												refreshGPSInfo();
-
 										} else 
 											Log.d("nils","startSPinner: "+startSp.getSelectedItemPosition());
 										if (gs.syncIsAllowed()) {
@@ -401,7 +403,7 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 			List<ColumnDescriptor> columns = new ArrayList<ColumnDescriptor>();
 			columns.add(new ColumnDescriptor("meter",true,false,true));
 			columns.add(new ColumnDescriptor("value",false,true,false));
-			WF_Linje_Meter_List selectedList = new WF_Linje_Meter_List("selected_list", true, myContext,columns, selection,"!linjeobjekt",keySet,linje);
+			WF_Linje_Meter_List selectedList = new WF_Linje_Meter_List("selected_list", true, myContext,columns, selection,"!linjeobjekt",keySet,linje,avgrValueA,avgrTyper);
 
 			selectedList.addSorter(new WF_TimeOrder_Sorter());
 
@@ -466,18 +468,7 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 	}
 
 
-	private void setStart(double east, double north) {
-		linjeStartEast.setValue(east+"");
-		linjeStartNorth.setValue(north+"");
-		center = new SweLocation(east,north);
-		startB.setBackgroundColor(Color.GREEN);
-		stopB.setBackgroundColor(Color.RED);
-		fieldListB.setVisibility(View.VISIBLE);
-		startB.setText("STARTAD");
-		linjeStatus.setValue(Constants.STATUS_STARTAD_MEN_INTE_KLAR);
-		myContext.registerEvent(new WF_Event_OnSave(LinjePortalId));
-		//Initialize LinjeView
-	}
+
 
 	private void setEnded() {
 		startB.setBackgroundResource(android.R.drawable.btn_default);
@@ -499,6 +490,7 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 
 	@Override
 	public void onResume() {
+		myL=null;
 		lm.requestLocationUpdates(
 				LocationManager.GPS_PROVIDER,
 				0,
@@ -512,7 +504,7 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 
 	@Override
 	public void onPause() {
-		lm.removeUpdates(this);
+		myL=null;
 		stopRepeatingTask();
 		super.onPause();
 	}
@@ -520,6 +512,14 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 
 
 
+
+
+	@Override
+	public void onDestroy() {
+		Log.d("Vortex","On destroy called");
+		lm.removeUpdates(this);
+		super.onDestroy();
+	}
 
 
 	@Override
@@ -538,23 +538,36 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 		if (tickerRunning)
 			this.stopRepeatingTask();
 		myL = Geomatte.convertToSweRef(location.getLatitude(), location.getLongitude());
-
-		//double distance = Geomatte.sweDist(myL.east, myL.north, center.east, center.north);
-		//gpsView.setText(((int)distance)+"");
-		if (!linjeStatus.getValue().equals(Constants.STATUS_AVSLUTAD_OK) && myL !=null) 
-			refreshGPSInfo();
+		String info=refreshGPSInfo();
+		if (info!=null)
+			gpsView.setText(info);
 		else
-			gpsView.setText("GPS igång");
-
+			gpsView.setText("GPS är igång");
 	}
 
+	private void setStart(double east, double north) {
+		linjeStartEast.setValue(east+"");
+		linjeStartNorth.setValue(north+"");
+		center = new SweLocation(east,north);
+		startB.setBackgroundColor(Color.GREEN);
+		stopB.setBackgroundColor(Color.RED);
+		fieldListB.setVisibility(View.VISIBLE);
+		startB.setText("STARTAD");
+		linjeStatus.setValue(Constants.STATUS_STARTAD_MEN_INTE_KLAR);
+		myContext.registerEvent(new WF_Event_OnSave(LinjePortalId));
+		//Initialize LinjeView
+		String info=refreshGPSInfo();
+		if (info!=null)
+			gpsView.setText(info);
 
+	}
+	
 	boolean eastW,southW,northW,westW = false;
-
-	private void refreshGPSInfo() {
+	private String refreshGPSInfo() {
 
 		double x=0,y=0;
-		if (center!=null) {
+		String ret=null;
+		if (center!=null&&myL!=null) {
 			if (northW) {
 				x = myL.east-center.east;
 				y = myL.north-center.north;  //the more north, the lower the value.
@@ -572,12 +585,12 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 				y = center.east-myL.east;
 			}
 
-			gpsView.setText("FiS: "+((int)x)+" As:"+(int)y);
+			ret = "FiS: "+((int)x)+" As:"+(int)y;
 			//X should now be deviation from Line. Y is distance from Start.
 			linje.setUserPos((float)x,(float)y);
 			linje.invalidate();
-		} else
-			gpsView.setText("GPS Igång!");
+		} 
+		return ret;	
 	}
 
 
@@ -598,7 +611,8 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 	@Override
 	public void onStatusChanged(String provider, int status, Bundle extras) {
 		if (status == LocationProvider.AVAILABLE) {
-
+			if (gpsView.getText().equals("Söker.."))
+				gpsView.setText("GPS Igång!");
 		} else if (status == LocationProvider.TEMPORARILY_UNAVAILABLE) {
 			gpsView.setText("Söker..");
 
@@ -880,7 +894,7 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 	}
 
 
-	private static String ticker = "         Väntar på GPS...det kan ta upp till flera minuter på den här dosan. Kanske en kaffekopp?";
+	private static String ticker = "       ...Väntar på GPS...        ";
 
 
 	private int tStrLen = 10, curPos=0;

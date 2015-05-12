@@ -421,7 +421,7 @@ public class GlobalState  {
 
 	public Map<String,String> getCurrentKeyHash() {
 
-		Log.d("vortex",this.toString()+" getCurrentKeyHash returned "+myKeyHash);
+		//Log.d("vortex",this.toString()+" getCurrentKeyHash returned "+myKeyHash);
 		return myKeyHash==null?null:myKeyHash;
 	}
 

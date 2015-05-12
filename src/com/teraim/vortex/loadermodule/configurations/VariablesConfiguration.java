@@ -118,6 +118,7 @@ public class VariablesConfiguration extends CSVConfigurationModule {
 			if (r==null || r.length<Constants.VAR_PATTERN_ROW_LENGTH) {
 				o.addRow("");
 				o.addRedText("found null or too short row at "+currentRow+" in config file..skipping");
+				return new LoadResult(this,ErrorCode.ParseError,"Parse error, row: "+currentRow);
 			} else {	
 				for(int i=0;i<r.length;i++) {
 					if (r[i]!=null)

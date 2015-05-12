@@ -36,6 +36,10 @@ public class ListInputTemplate extends Executor {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
+		if (myContext == null) {
+			Log.e("vortex","No context, exit");
+			return null;
+		}
 		myContext.resetState();
 		myLayouts = new ArrayList<WF_Container>();
 		Log.d("nils","in onCreateView");

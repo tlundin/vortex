@@ -45,7 +45,10 @@ public class PageWithDelytaTemplate extends Executor {
 	
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-		if (myContext!=null) {
+		if (myContext == null) {
+			Log.e("vortex","No context, exit");
+			return null;
+		}
 		Log.d("nils","in onCreateView of Template PAGE with DELYTA");
 		v = inflater.inflate(R.layout.template_page_with_agg_wf, container, false);	
 		
@@ -66,7 +69,6 @@ public class PageWithDelytaTemplate extends Executor {
 		provytaViewPanel.addView(pyv);
 		pyv.showDelytor(dym.getDelytor(),true);
 		return v;
-		}
-		return super.onCreateView(inflater, container, savedInstanceState);
+		
 	}
 }

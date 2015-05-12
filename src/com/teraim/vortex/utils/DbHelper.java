@@ -1376,7 +1376,11 @@ public class DbHelper extends SQLiteOpenHelper {
 				s.selectionArgs,null,null,null,null);//"timestamp DESC","1");
 		return new DBColumnPicker(c);
 	}
-
+	public DBColumnPicker getLastVariableInstance(Selection s) {
+		Cursor c = db.query(TABLE_VARIABLES,null,s.selection,
+				s.selectionArgs,null,null,"timestamp DESC","1");
+		return new DBColumnPicker(c);
+	}
 	//Generates keychains for all instances.
 	public Set<Map<String,String>> getKeyChainsForAllVariableInstances(String varID,
 			Map<String, String> keyChain, String variatorColumn) {

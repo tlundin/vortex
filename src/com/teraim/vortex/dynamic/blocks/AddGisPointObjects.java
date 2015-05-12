@@ -1,31 +1,31 @@
 package com.teraim.vortex.dynamic.blocks;
 
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Paint;
+import android.graphics.Paint.Style;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
+import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.types.CHash;
 import com.teraim.vortex.dynamic.types.GisLayer;
-import com.teraim.vortex.dynamic.types.LatLong;
-import com.teraim.vortex.dynamic.types.Location;
 import com.teraim.vortex.dynamic.types.SweLocation;
 import com.teraim.vortex.dynamic.types.Variable;
+import com.teraim.vortex.dynamic.types.Variable.DataType;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.DynamicGisPoint;
+import com.teraim.vortex.dynamic.workflow_realizations.gis.FullGisObjectConfiguration;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisConstants;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisMultiPointObject;
-import com.teraim.vortex.dynamic.workflow_realizations.gis.GisMultiPointObject.Type;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisObject;
-import com.teraim.vortex.dynamic.workflow_realizations.gis.GisPointObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisPolygonObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.StaticGisPoint;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.WF_Gis_Map;
@@ -34,34 +34,33 @@ import com.teraim.vortex.utils.DbHelper.Selection;
 import com.teraim.vortex.utils.DbHelper.StoredVariableData;
 import com.teraim.vortex.utils.Tools;
 
-public class AddGisPointObjects extends Block {
+public class AddGisPointObjects extends Block implements FullGisObjectConfiguration {
 
-	/**
-	 * 
-	 */
+
 	private static final long serialVersionUID = 7979886099817953004L;
-	private String id, nName, label,
+	private String nName, label,
 	target, coordType,  locationVariables,
 	objContext,  imgSource,
 	refreshRate;
-	private Bitmap bitmap=null;
+	private Bitmap icon=null;
 	private boolean isVisible;
 	private GisObjectType myType;
 	public boolean loadDone=false;
-	public enum GisObjectType {
-		point,
-		multipoint,
-		polygon, linestring
-	}
+
+
 	private Set<GisObject> myGisObjects;
-	private String radius;
+	private float radius;
+	private String color;
+	private Paint.Style fillType;
+	private PolyType polyType;
+	
 
 
 	public AddGisPointObjects(String id, String nName, String label,
 			String target, String objContext,String coordType, String locationVars, 
-			String imgSource, String refreshRate, String radius, boolean isVisible, GisObjectType type) {
+			String imgSource, String refreshRate, String radius, boolean isVisible, GisObjectType type, String color, String polyType, String fillType) {
 		super();
-		this.id = id;
+		this.blockId = id;
 		this.nName = nName;
 		this.label = label;
 		this.target = target;
@@ -71,13 +70,28 @@ public class AddGisPointObjects extends Block {
 		this.imgSource = imgSource;
 		this.isVisible = isVisible;
 		this.refreshRate=refreshRate;
-		this.radius=radius;
+		
+		this.color=color;
 		myType = type;
-		if (this.coordType==null)
+		
+		if (coordType==null)
 			this.coordType=GisConstants.SWEREF;
-		Log.d("vortex","IMGURL: "+imgSource);
-
-
+		
+		setRadius(radius);
+		
+		this.fillType=Paint.Style.FILL;
+		if  (fillType !=null) {
+			if (fillType.equalsIgnoreCase("STROKE"))
+				this.fillType = Paint.Style.STROKE;
+			else if (fillType.equalsIgnoreCase("FILL_AND_STROKE"))
+				this.fillType = Paint.Style.FILL_AND_STROKE;
+		}
+		this.polyType=PolyType.circle;
+		if (polyType!=null) {
+			if (polyType.toUpperCase().equals("SQUARE")||polyType.equals("RECT")||polyType.equals("RECTANGLE"))
+			this.polyType=PolyType.rect;
+		}
+				
 	}
 
 	//Assumed that all blocks will deal with "current gis".
@@ -106,9 +120,9 @@ public class AddGisPointObjects extends Block {
 
 
 		//Need the key hash for the database.
-		CHash myKeyChain = 
+		CHash myKeyHash = 
 				GlobalState.getInstance().evaluateContext(this.objContext);
-		if (myKeyChain==null) {
+		if (myKeyHash==null) {
 			Log.e("vortex","keychain  null!!");
 			o.addRow("");
 			o.addYellowText("Missing object context in AddGisPointObjects. Potential error if variables have keychain");
@@ -120,11 +134,11 @@ public class AddGisPointObjects extends Block {
 			return;
 		}
 		String kc="null";
-		if (myKeyChain.keyHash!= null)
-			kc = myKeyChain.keyHash.toString();
+		if (myKeyHash.keyHash!= null)
+			kc = myKeyHash.keyHash.toString();
 		Log.d("vortex","In onCreate for AddGisP for type: "+myType+"with keychain: "+kc);
 		//Call to the database to get the objects.
-
+		
 		//Either one or two location variables. 
 		//If One, separate X,Y by comma
 		//If two, One for X & one for Y.
@@ -138,24 +152,37 @@ public class AddGisPointObjects extends Block {
 			return;
 		}
 		boolean twoVars = (locationVarArray.length==2);
-		
+
 		if(twoVars && myType.equals(GisObjectType.multipoint)) {
 			Log.e("vortex","Multivar on multipoint!");
 			o.addRow("");
 			o.addRedText("Multipoint can only have one Location variable with comma separated values, eg. GPSX_1,GPSY_1,...GPSX_n,GPSY_n");
 			return;
 		}
+		VariableConfiguration al = GlobalState.getInstance().getVariableConfiguration();
+
+
+
 		Selection coordVar1S,coordVar2S=null;
 		DBColumnPicker pickerLocation1,pickerLocation2=null;  
-		coordVar1S = GlobalState.getInstance().getDb().createSelection(myKeyChain.keyHash, locationVarArray[0]);
+		coordVar1S = GlobalState.getInstance().getDb().createSelection(myKeyHash.keyHash, locationVarArray[0]);
 		Log.d("vortex","selection: "+coordVar1S.selection);
 		Log.d("vortex","sel args: "+print(coordVar1S.selectionArgs));
-		pickerLocation1 = GlobalState.getInstance().getDb().getAllVariableInstances(coordVar1S);
+		DataType t1 = al.getnumType(al.getCompleteVariableDefinition(locationVarArray[0]));
+		if (t1!=DataType.array)
+			pickerLocation1 = GlobalState.getInstance().getDb().getAllVariableInstances(coordVar1S);
+		else
+			pickerLocation1 = GlobalState.getInstance().getDb().getLastVariableInstance(coordVar1S);
+
 		if (twoVars) {
-			coordVar2S = GlobalState.getInstance().getDb().createSelection(myKeyChain.keyHash, locationVarArray[1]);
+			DataType t2 = al.getnumType(al.getCompleteVariableDefinition(locationVarArray[0]));
+			coordVar2S = GlobalState.getInstance().getDb().createSelection(myKeyHash.keyHash, locationVarArray[1]);
 			Log.d("vortex","selection: "+coordVar2S.selection);
 			Log.d("vortex","sel args: "+print(coordVar2S.selectionArgs));
-			pickerLocation2 = GlobalState.getInstance().getDb().getAllVariableInstances(coordVar2S);
+			if (t2!=DataType.array)
+				pickerLocation2 = GlobalState.getInstance().getDb().getAllVariableInstances(coordVar2S);
+			else
+				pickerLocation2 = GlobalState.getInstance().getDb().getLastVariableInstance(coordVar2S);
 		}
 		//Static..we can generate a static GIS Point Object.
 		Log.d("vortex","refreshrate is "+refreshRate);
@@ -183,12 +210,12 @@ public class AddGisPointObjects extends Block {
 
 			do {
 				i++;
-				
+
 				storedVar1 = pickerLocation1.getVariable();
 				Log.d("vortex","Found "+storedVar1.value+" for "+storedVar1.name);
 				map1 = pickerLocation1.getKeyColumnValues();
 				Log.d("vortex","Found columns "+map1.toString()+" for "+storedVar1.name);
-				Log.d("vortex","bitmap null? "+(bitmap==null));
+				Log.d("vortex","bitmap null? "+(icon==null));
 				Variable v1=null,v2=null;
 				if (dynamic) 
 					v1 = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(pickerLocation1.getKeyColumnValues(),storedVar1.name);
@@ -201,11 +228,11 @@ public class AddGisPointObjects extends Block {
 						Log.e("vortex","key mismatch in db fetch: X key:"+map1.toString()+"\nY key: "+map2.toString());
 					} else {
 						if (!dynamic)
-							myGisObjects.add(new StaticGisPoint(storedVar2.name, new SweLocation(storedVar1.value,storedVar2.value)));
+							myGisObjects.add(new StaticGisPoint(this,map1, new SweLocation(storedVar1.value,storedVar2.value)));
 						else {
 							v2 = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(pickerLocation1.getKeyColumnValues(),storedVar2.name);
 							if (v1!=null && v2!=null) 
-								myGisObjects.add(new DynamicGisPoint(v1.getId()+"_"+v2.getId(), v1,v2));
+								myGisObjects.add(new DynamicGisPoint(this,map1, v1,v2));
 						}
 					}
 					if (!pickerLocation2.next())
@@ -213,20 +240,18 @@ public class AddGisPointObjects extends Block {
 				} else {
 					if (myType.equals(GisObjectType.point)) {
 						if (!dynamic)
-							myGisObjects.add(new StaticGisPoint(storedVar1.name, new SweLocation(storedVar1.value)));
+							myGisObjects.add(new StaticGisPoint(this,map1, new SweLocation(storedVar1.value)));
 						else
-							myGisObjects.add(new DynamicGisPoint(v1.getId(),v1));
+							myGisObjects.add(new DynamicGisPoint(this,map1,v1));
 					}
-					else if (myType.equals(GisObjectType.multipoint))
-						myGisObjects.add(new GisMultiPointObject(map1,GisObject.createListOfLocations(storedVar1.value,coordType),Type.MULTIPOINT));
-					else if (myType.equals(GisObjectType.linestring)) {
-						myGisObjects.add(new GisMultiPointObject(map1,GisObject.createListOfLocations(storedVar1.value,coordType),Type.LINESTRING));
-					}
+					else if (myType.equals(GisObjectType.multipoint)||myType.equals(GisObjectType.linestring))
+						myGisObjects.add(new GisMultiPointObject(this,map1,GisObject.createListOfLocations(storedVar1.value,coordType)));
+					
 					else if (myType.equals(GisObjectType.polygon))
 						myGisObjects.add(new GisPolygonObject(map1,storedVar1.value,coordType));
 				}
 				//Add these variables to bag 
-				
+
 			} while (pickerLocation1.next());
 			Log.d("vortex","Added "+myGisObjects.size()+" objects");
 			if (target!=null&&target.length()>0) {
@@ -234,36 +259,19 @@ public class AddGisPointObjects extends Block {
 				GisLayer myLayer=myContext.getCurrentGis().getGis().getLayer(target);
 				//Apply radius to all point objects, if any.
 				if (myLayer!=null) {
-					if (radius!=null) {
-						for (GisObject go:myGisObjects) {
-							if (go instanceof GisPointObject) 
-								((GisPointObject)go).setRadius(radius);
-						}
-					}
-
 					myLayer.addObjectBag(nName,myGisObjects,dynamic);
-					loadDone=true;
-					return;
-				} else
+
+				} else {
 					Log.e("vortex","Layer was null! "+target);
+
+				}
 			}
 		} else
 			Log.e("vortex","picker was null");
 
-
+		loadDone=true;
 	}
-
-
-
-	private String print(String[] selectionArgs) {
-		String res="";
-		for (String s:selectionArgs)
-			res+=s+",";
-		res = res.substring(0, res.length()-1);
-		return res;
-	}
-
-
+	
 	private class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
 
 		WF_Gis_Map gisB;
@@ -284,20 +292,97 @@ public class AddGisPointObjects extends Block {
 			return mIcon11;
 		}
 
-		protected void onPostExecute(Bitmap result) {
-			if(!loadDone) 
+		protected void onPostExecute(final Bitmap result) {
+			if(!loadDone) {
 				Log.e("vortex","not done loading objects!!");
+				final Handler handler = new Handler();
+				handler.postDelayed(new Runnable() {
+					@Override
+					public void run() {
+						onPostExecute(result);
+					}
+				}, 1000);
+			}
 			else {
-				Log.e("vortex","seting bitmaps!!");
-				for(GisObject g:myGisObjects) {
-					if (g instanceof GisPointObject)
-						((GisPointObject)g).setIcon(result);
+				Log.e("vortex","setting bitmaps!!");
+				icon=result;
+					if(gisB!=null)
+						gisB.getGis().invalidate();
 				}
-				if(gisB!=null)
-					gisB.getGis().invalidate();
 			}
 		}
+
+
+
+	public String getLabel() {
+		return label;
+	}
+
+	public boolean isVisible() {
+		return isVisible;
+	}
+
+	public float getRadius() {
+		return radius;
+	}
+
+	public String getColor() {
+		return color;
+	}
+	
+	public Bitmap getIcon() {
+		return icon;
+	}
+	
+	@Override
+	public GisObjectType getGisPolyType() {
+		return myType;
+	}
+	
+	
+	public void setRadius(String radius) {
+		if (!Tools.isNumeric(radius))
+			return;
+		this.radius = Float.parseFloat(radius);
+	}
+
+	private String print(String[] selectionArgs) {
+		String res="";
+		for (String s:selectionArgs)
+			res+=s+",";
+		res = res.substring(0, res.length()-1);
+		return res;
+	}
+	
+	public class PointConfiguration {
+		
+		String tag;
+		int radius;
+		String color;
 	}
 
 
+
+	@Override
+	public Style getFillType() {
+		return fillType;
+	}
+
+	@Override
+	public PolyType getShape() {
+		return polyType;
+	}
+
+
+
+
+
+
+
+
+
+
 }
+
+
+

@@ -12,19 +12,16 @@ public class GisPolygonObject extends GisObject {
 	
 	public GisPolygonObject(Map<String, String> keyChain,
 			Map<String, List<Location>> polygons) {
+		super(keyChain,null);
 		this.polygons=polygons;
-		this.keyChain=keyChain;
 	}
 	
 	public GisPolygonObject(Map<String, String> keyChain,
 			String polygons,String coordType) {
-		this.polygons=buildMap(polygons,coordType);
-		this.keyChain=keyChain;
+		super(keyChain,null);
+		this.polygons=buildMap(polygons,coordType);	
 	}
 
-
-
-	
 
 	private Map<String, List<Location>> buildMap(String polygons,String coordType) {
 		int i=1;

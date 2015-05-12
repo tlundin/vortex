@@ -1,7 +1,12 @@
 package com.teraim.vortex.dynamic.workflow_realizations.gis;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
 import android.util.Log;
 
+import com.teraim.vortex.dynamic.blocks.AddGisPointObjects;
 import com.teraim.vortex.dynamic.types.Location;
 import com.teraim.vortex.dynamic.types.SweLocation;
 import com.teraim.vortex.dynamic.types.Variable;
@@ -11,18 +16,14 @@ public class DynamicGisPoint extends GisPointObject {
 	boolean multivar = false;
 	Variable myXVar,myYVar,myXYVar;
 	
-	public DynamicGisPoint(String testLabel, Variable x, Variable y) {
-		super();
-		this.myLabel = testLabel;
-		dynamic = true;
+	public DynamicGisPoint(FullGisObjectConfiguration conf, Map<String, String> keyChain,Variable x, Variable y) {
+		super(conf,keyChain,null);
 		multivar=true;
 		myXVar=x;
 		myYVar=y;
 	}
-	public DynamicGisPoint(String testLabel, Variable v1) {
-		super();
-		this.myLabel = testLabel;
-		dynamic = true;
+	public DynamicGisPoint(FullGisObjectConfiguration conf, Map<String, String> keyChain,Variable v1) {
+		super(conf,keyChain,null);
 		multivar=false;
 		myXYVar=v1;
 	}
@@ -65,10 +66,8 @@ public class DynamicGisPoint extends GisPointObject {
 		String res="";
 		res+=" \nDynamic: yes";
 		res+="\nMultivar: "+(multivar?"yes":"no");
-		res+="\nLabel: "+myLabel;
-		if (dynamic) {
-			
-			res+="\nVariable values: xy, x, y";
+		res+="\nLabel: "+poc.getLabel();
+		res+="\nVariable values: xy, x, y";
 			if (myXYVar==null)
 				res+="null, ";
 				else 
@@ -81,7 +80,6 @@ public class DynamicGisPoint extends GisPointObject {
 				res+="null, ";
 			else
 				res+=myYVar.getValue();
-		}
 		return res;
 	}
 	

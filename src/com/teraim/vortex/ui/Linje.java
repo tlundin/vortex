@@ -234,7 +234,7 @@ public class Linje extends View {
 		}
 		
 		private boolean isInsideScreen() {
-			return x>-(w/2)&&x<(w/2)&&y>0&&y<h;
+			return x>=-(w/2)&&x<=(w/2)&&y>=0&&y<=h;
 			
 		}
 		

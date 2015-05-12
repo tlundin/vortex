@@ -64,7 +64,7 @@ public class Rule implements Serializable {
 		Expr result=null;
 		SubstiResult sr = re.substituteForValue(tokens,condition,false);
 		Log.d("nils","CONDITION: "+condition);
-		if (!sr.IamAString) {
+		if (!sr.iAmAString()) {
 			String subst = sr.result;
 			if (subst!=null) {
 				Log.d("nils","SUBST: "+subst+" isnull? "+(subst==null));		

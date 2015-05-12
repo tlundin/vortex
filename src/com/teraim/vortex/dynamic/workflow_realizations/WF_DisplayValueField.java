@@ -16,6 +16,7 @@ import com.teraim.vortex.dynamic.workflow_abstracts.Event.EventType;
 import com.teraim.vortex.dynamic.workflow_abstracts.EventListener;
 import com.teraim.vortex.utils.RuleExecutor;
 import com.teraim.vortex.utils.RuleExecutor.SubstiResult;
+import com.teraim.vortex.utils.RuleExecutor.TokenType;
 import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 import com.teraim.vortex.utils.Tools;
 
@@ -65,10 +66,13 @@ public class WF_DisplayValueField extends WF_Widget implements EventListener {
 		SubstiResult sr;
 		Log.d("nils","Got event in WF_DisplayValueField");	
 		sr = ruleExecutor.substituteForValue(myTokens,formula,false);
-		if (!sr.IamAString) {
+		if (!sr.iAmAString()) {
 			subst = sr.result;
-			if (Tools.isNumeric(subst)) 
+			if (Tools.isNumeric(subst)) {
+				//check if all tokens are boolean.
+				
 				strRes = subst;
+			}
 			else {
 				strRes = ruleExecutor.parseExpression(formula,subst);
 				if (strRes==null) {

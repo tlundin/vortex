@@ -13,8 +13,8 @@
 
    <ImageButton
        android:id="@+id/menuB"
-       android:layout_width="87dp"
-       android:layout_height="80dp"
+       android:layout_width="66dp"
+       android:layout_height="66dp"
        android:layout_gravity="top|right"
        android:layout_marginRight="40dp"
        android:layout_marginTop="40dp"

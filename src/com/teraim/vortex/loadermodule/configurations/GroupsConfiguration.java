@@ -54,7 +54,7 @@ public class GroupsConfiguration extends CSVConfigurationModule {
 
 	@Override
 	public LoadResult parse(String row, Integer currentRow) throws IOException {
-		Log.d("vortex","group parsing "+row);
+		//Log.d("vortex","group parsing "+row);
 		//if no header, abort.
 		if (scanHeader && row == null) {
 			o.addRow("");

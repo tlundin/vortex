@@ -2,6 +2,7 @@ package com.teraim.vortex.loadermodule.configurations;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,17 +18,12 @@ import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.types.Location;
 import com.teraim.vortex.dynamic.types.SweLocation;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisConstants;
-import com.teraim.vortex.dynamic.workflow_realizations.gis.GisMultiPointObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisObject;
-import com.teraim.vortex.dynamic.workflow_realizations.gis.GisPointObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisPolygonObject;
-import com.teraim.vortex.dynamic.workflow_realizations.gis.StaticGisPoint;
-import com.teraim.vortex.dynamic.workflow_realizations.gis.GisMultiPointObject.Type;
 import com.teraim.vortex.loadermodule.JSONConfigurationModule;
 import com.teraim.vortex.loadermodule.LoadResult;
 import com.teraim.vortex.loadermodule.LoadResult.ErrorCode;
 import com.teraim.vortex.log.LoggerI;
-import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.DbHelper;
 import com.teraim.vortex.utils.PersistenceHelper;
 
@@ -142,7 +138,7 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 				x = reader.nextDouble();
 				y = reader.nextDouble();
 				myLocation = new SweLocation(x, y);
-				myGisObjects.add(new StaticGisPoint("nolabel",keyChain,myLocation));
+				myGisObjects.add(new GisObject(keyChain,Arrays.asList(new Location[] {myLocation})));
 			} else if (mType.equals(GisConstants.MULTI_POINT)||(mType.equals(GisConstants.LINE_STRING))){
 				List<Location> myCoordinates = new ArrayList<Location>();
 				while (!reader.peek().equals(JsonToken.END_ARRAY)) {					
@@ -152,10 +148,7 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 					myCoordinates.add(new SweLocation(x, y));
 					reader.endArray();
 				}
-				GisMultiPointObject.Type gisObjectType = GisMultiPointObject.Type.MULTIPOINT;
-				if (mType!=null&& type.equals(GisConstants.LINE_STRING))				
-					gisObjectType = GisMultiPointObject.Type.LINESTRING;
-				myGisObjects.add(new GisMultiPointObject(keyChain,myCoordinates,gisObjectType));
+				myGisObjects.add(new GisObject(keyChain,myCoordinates));
 			}  else if (mType.equals(GisConstants.POLYGON)){
 				Map<String,List<Location>> polygons = null;
 				List<Location> myCoordinates=null; 
@@ -248,30 +241,8 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 		}
 		//Insert GIS variables into database
 		GisObject go = myGisObjects.get(counter);
-
-		boolean success=false;
-		if (go instanceof GisPointObject) {
-			Log.d("vortex","this is a point");
-			GisPointObject gop = (GisPointObject)go;
-			success = myDb.fastHistoricalInsert(gop.getKeyHash(),
-					GisConstants.Location,gop.getLocation().toString());
-		}
-		//Insert a comma separate list of all locations. 
-		else if (go instanceof GisMultiPointObject) {
-			Log.d("vortex","this is a multipoint, keyhash: "+go.getKeyHash().toString());//+" coords: "+go.coordsToString());
-			success = myDb.fastHistoricalInsert(go.getKeyHash(),
-					GisConstants.Location,go.coordsToString());			
-		}
-		else if (go instanceof GisPolygonObject) {
-			Log.d("vortex","this is a Polygon, keyhash: "+go.getKeyHash().toString());//+" coords: "+go.coordsToString());
-			success = myDb.fastHistoricalInsert(go.getKeyHash(),
-					GisConstants.Location,go.coordsToString());			
-		}
-		else {
-			Log.d("vortex","Unknown object type: "+(go.toString()));
-			Log.d("vortex","Counter is: "+counter);
-		}
-		if (!success) {
+		if (!myDb.fastHistoricalInsert(go.getKeyHash(),
+				GisConstants.Location,go.coordsToString())) {
 			o.addRow("");
 			o.addRedText("Row: "+counter+". Insert failed. Hash: "+go.getKeyHash().toString());
 		}

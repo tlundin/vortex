@@ -62,7 +62,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="30sp"
-            android:text="Grafisk vy>>" />
+            android:text="Grafisk vy»" />
 
         <ScrollView
             android:id="@+id/scrollView3"

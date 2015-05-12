@@ -42,7 +42,7 @@ public class ConditionalContinuationBlock extends Block {
 			int eval=STOP;
 			SubstiResult sr = re.substituteForValue(tokens,formula,false);
 			
-			if (sr.result!=null && !sr.IamAString) {
+			if (sr.result!=null && !sr.iAmAString()) {
 				String strRes = re.parseExpression(formula,sr.result);
 				if (strRes != null) {
 					if (Double.parseDouble(strRes)==1) {
@@ -56,7 +56,7 @@ public class ConditionalContinuationBlock extends Block {
 					eval=STOP;
 				}
 			} else {
-				Log.e("nils","Substitution failed for formula ["+formula+"]. Text type to blame? ["+sr.IamAString+"]");
+				Log.e("nils","Substitution failed for formula ["+formula+"]. Text type to blame? ["+sr.iAmAString()+"]");
 				eval=STOP;
 			}
 			
