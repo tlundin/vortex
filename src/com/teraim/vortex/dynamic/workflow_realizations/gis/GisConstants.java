@@ -11,5 +11,6 @@ public class GisConstants {
 	public static final String Location = "GPSCoord";
 	public static final String SWEREF = "sweref";
 	public static final String LATLONG= "latlong";
+	public static final Object RutaID = "Ruta";
 	
 }

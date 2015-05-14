@@ -305,8 +305,8 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				label = readText("label",parser);
 			} else if (name.equals("color")) {
 				color = readText("color",parser);
-			} else if (name.equals("fill_type")) {
-				fillType = readText("fill_type",parser);
+			} else if (name.equals("paint_style")) {
+				fillType = readText("paint_style",parser);
 			} else if (name.equals("poly_type")) {
 				polyType = readText("poly_type",parser);
 			} else if (name.equals("is_visible")) {
@@ -321,6 +321,8 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				objContext = readText("obj_context",parser);
 			} else if (name.equalsIgnoreCase("img_source")) {
 				imgSource = readText("img_source",parser);
+			} else if (name.equalsIgnoreCase("on_click")) {
+				imgSource = readText("on_click",parser);
 			} else if (name.equalsIgnoreCase("refresh_rate")) {
 				refreshRate = readText("refresh_rate",parser);
 			} else if (name.equalsIgnoreCase("radius")) {

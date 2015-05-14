@@ -3,6 +3,7 @@ package com.teraim.vortex.dynamic.workflow_realizations;
 import java.util.List;
 
 import android.graphics.Color;
+import android.text.TextUtils.StringSplitter;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.widget.LinearLayout;
@@ -27,6 +28,7 @@ public class WF_DisplayValueField extends WF_Widget implements EventListener {
 	protected Unit unit;
 	private List<TokenizedItem> myTokens;
 	RuleExecutor ruleExecutor;
+	private String format;
 
 	public WF_DisplayValueField(String id, String formula,WF_Context ctx, Unit unit, 
 			String label, boolean isVisible,String format,String bgColor, String textColor) {
@@ -52,7 +54,7 @@ public class WF_DisplayValueField extends WF_Widget implements EventListener {
 			o.addRow("");
 			o.addRedText("Parsing of formula for DisplayValueBlock failed. Formula: "+formula);
 		}
-		
+		this.format = format;
 		
 		this.onEvent(new WF_Event_OnSave("display_value_field"));
 	}
@@ -69,8 +71,7 @@ public class WF_DisplayValueField extends WF_Widget implements EventListener {
 		if (!sr.iAmAString()) {
 			subst = sr.result;
 			if (Tools.isNumeric(subst)) {
-				//check if all tokens are boolean.
-				
+				//check if all tokens are boolean.	
 				strRes = subst;
 			}
 			else {
@@ -85,7 +86,13 @@ public class WF_DisplayValueField extends WF_Widget implements EventListener {
 			}
 		} else
 			strRes = sr.result;
-
+		if (format!=null && format.equalsIgnoreCase("B")) {
+			if (strRes.equals("1"))
+					strRes = GlobalState.getInstance().getContext().getString(R.string.yes);
+			else if (strRes.equals("0"))
+				strRes = GlobalState.getInstance().getContext().getString(R.string.no);
+		}
+			
 		o.addRow("");
 		o.addText("Text in DisplayField "+label+" is [");o.addGreenText(strRes); o.addText("]");
 		((TextView)this.getWidget().findViewById(R.id.outputValueField)).setText(strRes);

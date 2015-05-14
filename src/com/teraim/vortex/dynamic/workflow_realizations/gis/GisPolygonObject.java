@@ -4,11 +4,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import android.graphics.Paint.Style;
+
+import com.teraim.vortex.dynamic.blocks.AddGisPointObjects;
 import com.teraim.vortex.dynamic.types.Location;
 
 public class GisPolygonObject extends GisObject {
 
 	Map<String, List<Location>> polygons;
+	private FullGisObjectConfiguration conf;
 	
 	public GisPolygonObject(Map<String, String> keyChain,
 			Map<String, List<Location>> polygons) {
@@ -16,10 +20,11 @@ public class GisPolygonObject extends GisObject {
 		this.polygons=polygons;
 	}
 	
-	public GisPolygonObject(Map<String, String> keyChain,
+	public GisPolygonObject(FullGisObjectConfiguration conf, Map<String, String> keyChain,
 			String polygons,String coordType) {
 		super(keyChain,null);
 		this.polygons=buildMap(polygons,coordType);	
+		this.conf=conf;
 	}
 
 
@@ -57,6 +62,14 @@ public class GisPolygonObject extends GisObject {
 
 	public Map<String, List<Location>> getPolygons() {
 		return polygons;
+	}
+
+	public String getColor() {
+		return conf.getColor();
+	}
+
+	public Style getStyle() {
+		return conf.getFillType();
 	}
 	
 	

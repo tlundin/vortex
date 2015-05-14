@@ -148,6 +148,9 @@ public class Tracker extends Service implements LocationListener {
 					myY.setValue(myL.getY()+"");					
 				} else 
 					Log.d("vortex","no change...diff was only (x,y)"+distx+","+disty);
+			} else {
+				myX.setValue(myL.getX()+"");
+				myY.setValue(myL.getY()+"");
 			}
 			
 		}

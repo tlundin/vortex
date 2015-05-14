@@ -74,4 +74,10 @@ public class GisObject {
 			return null;
 	}
 
+	public boolean isTouchedByClick(Location mapLocationForClick) {
+		return false;
+	}
+
+
+
 }

@@ -161,7 +161,8 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 						reader.beginArray();
 						x = reader.nextDouble();
 						y = reader.nextDouble();
-						z = reader.nextDouble();
+						if (!reader.peek().equals(JsonToken.END_ARRAY)) 
+							z = reader.nextDouble();
 						myCoordinates.add(new SweLocation(x, y));
 						reader.endArray();
 					}					
@@ -197,12 +198,19 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 			//end row
 			reader.endObject();
 			String uuid = attributes.get(GisConstants.GlobalID);
+			String rutaId = attributes.get(GisConstants.RutaID);
+			if (rutaId==null) {
+				Log.e("vortex","ingen ruta ID!!!!");
+				rutaId = "207";
+			}
+			
+				
 			if (uuid!=null)
 				keyChain.put("block",uuid);
 			else
 				keyChain.put("block",UUID.randomUUID().toString());
 			keyChain.put("år", VariableConfiguration.HISTORICAL_MARKER);
-			keyChain.put("ruta", "207");
+			keyChain.put("ruta", rutaId);
 			keyChain.put(GisConstants.TYPE_COLUMN, myType);
 
 

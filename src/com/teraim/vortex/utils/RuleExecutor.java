@@ -127,6 +127,8 @@ public class RuleExecutor {
 		getCurrentWeekNumber(function,0),
 		sum(function,-1),
 		getDelytaArea(function,1),
+		ja(function,1),
+		nej(function,1),
 		variable(null,-1),
 		text(variable,0),
 		numeric(variable,0),

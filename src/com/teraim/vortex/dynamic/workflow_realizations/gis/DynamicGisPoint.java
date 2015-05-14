@@ -55,9 +55,10 @@ public class DynamicGisPoint extends GisPointObject {
 			if (xys.length<2) {
 				Log.e("vortex","Strange value for GPS coord variable: "+xy);
 				return null;
-			} else
+			} else {
+				Log.d("vortex","returning new XY for user!!!");
 				return new SweLocation(xys[0],xys[1]);
-				
+			}
 		}
 	}
 	
@@ -82,5 +83,6 @@ public class DynamicGisPoint extends GisPointObject {
 				res+=myYVar.getValue();
 		return res;
 	}
+
 	
 }
