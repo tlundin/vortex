@@ -376,7 +376,7 @@ public class FotoTemplate extends Executor {
 	public void onActivityResult(int requestCode, int resultCode, Intent myI){
 		Log.d("nils","Gets to onActivityResult");
 
-		if (requestCode == ImageHandler.TAKE_PICTURE){
+		if (requestCode == Constants.TAKE_PICTURE){
 			if (resultCode == Activity.RESULT_OK) 
 			{
 				Log.d("Strand","picture was taken, result ok");

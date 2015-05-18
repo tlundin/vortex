@@ -69,7 +69,7 @@ public class CreateGisBlock extends Block {
 		gs = GlobalState.getInstance();
 		o = gs.getLogger();
 		Container myContainer = myContext.getContainer(containerId);
-		if (myContainer!=null) {
+		if (myContainer!=null && photoMetaData!=null) {
 		LayoutInflater li = LayoutInflater.from(myContext.getContext());
 		View mapView = li.inflate(R.layout.image_gis_layout, null);
 		WF_Gis_Map gis = new WF_Gis_Map(blockId, mapView, isVisible, picUrlorName,myContext,photoMetaData);
@@ -88,9 +88,16 @@ public class CreateGisBlock extends Block {
 			}
 		});
 		} else {
-			Log.e("vortex","Container null! Cannot add GisImageView!");
 			o.addRow("");
-			o.addRedText("Adding GisImageView to "+containerId+" failed. Container not configured");
+			if (photoMetaData ==null) {
+				Log.e("vortex","Photemetadata null! Cannot add GisImageView!");
+				o.addRedText("Adding GisImageView to "+containerId+" failed. Photometadata missing (the boundaries of the image on the map)");
+
+			}
+			else {
+				Log.e("vortex","Container null! Cannot add GisImageView!");
+				o.addRedText("Adding GisImageView to "+containerId+" failed. Container cannot be found in template");
+			}
 		}
 		
 	}
@@ -129,7 +136,7 @@ public class CreateGisBlock extends Block {
 					setMetaData(pm);
 				}
 				else
-					Log.d("vortex","Failed to parse image location. Errorcode "+res.errCode.name());
+					Log.e("vortex","Failed to parse image location. Errorcode "+res.errCode.name());
 			}
 			@Override
 			public void onFileLoaded(ErrorCode errCode, String version) {

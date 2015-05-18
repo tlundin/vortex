@@ -10,6 +10,7 @@ import android.util.Log;
 import com.teraim.vortex.dynamic.types.LatLong;
 import com.teraim.vortex.dynamic.types.Location;
 import com.teraim.vortex.dynamic.types.SweLocation;
+import com.teraim.vortex.utils.Tools;
 
 public class GisObject {
 
@@ -20,6 +21,7 @@ public class GisObject {
 	
 	public GisObject(Map<String, String> keyChain,List<Location> myCoordinates) {
 		this.keyChain=keyChain;this.myCoordinates=myCoordinates;
+		
 	}
 	
 	protected CoordinateType coordinateType = CoordinateType.sweref;
@@ -74,9 +76,15 @@ public class GisObject {
 			return null;
 	}
 
-	public boolean isTouchedByClick(Location mapLocationForClick) {
+	//Only implemented by Point object
+
+	public boolean isTouchedByClick(Location mapLocationForClick, double pxr,
+			double pyr) {
+		// TODO Auto-generated method stub
 		return false;
 	}
+
+
 
 
 

@@ -17,6 +17,8 @@ import android.gesture.Prediction;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.InputFilter;
+import android.text.Spanned;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
@@ -34,7 +36,6 @@ import android.widget.TableLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.internal.gv;
 import com.teraim.vortex.R;
 import com.teraim.vortex.dynamic.Executor;
 import com.teraim.vortex.dynamic.VariableConfiguration;
@@ -157,14 +158,14 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 
 		 */
 
-		calculateB = (Button)v.findViewById(R.id.redraw);
-		calculateB.setEnabled(false);
+//		calculateB = (Button)v.findViewById(R.id.redraw);
+//		calculateB.setEnabled(false);
 		nyUtlaggB = (Button)v.findViewById(R.id.rensa);
 		nyUtlaggB.setEnabled(gs.isMaster()||gs.isSolo());
 		sparaB = (Button)v.findViewById(R.id.spara);
 		sparaB.setEnabled(false);
 		gl.setEnabled(false);
-
+/*
 		calculateB.setOnClickListener(new OnClickListener() {			
 			@Override
 			public void onClick(View v) {
@@ -177,7 +178,7 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 
 
 		});
-
+*/
 		nyUtlaggB.setOnClickListener(new OnClickListener() {			
 			@Override
 			public void onClick(View v) {
@@ -197,11 +198,12 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 						Variable nyUtlagg = gs.getVariableConfiguration().getVariableUsingKey(gs.getVariableConfiguration().createProvytaKeyMap(), NamedVariables.NYUTLAGG);
 						nyUtlagg.setValue("1");
 						//init.
+						dym.clear();
 						dym.init();
 						//show default
 						pyv.showDelytor(dym.getDelytor(),false);
 						//nyUtlaggB.setEnabled(false);
-						calculateB.setEnabled(true);
+						//calculateB.setEnabled(true);
 						gl.setEnabled(true);
 					}
 				})
@@ -224,11 +226,12 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 				.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) { 
 						if(save()) {
-							sparaB.setEnabled(false);
-							calculateB.setEnabled(false);
-							nyUtlaggB.setEnabled(true);
-							fillTable();
+							//sparaB.setEnabled(false);
+							//calculateB.setEnabled(false);
+							//nyUtlaggB.setEnabled(true);
+							//fillTable();
 							gs.triggerTransfer();
+							myContext.getActivity().getFragmentManager().popBackStackImmediate();
 						}
 					}
 				})
@@ -414,13 +417,29 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 		}
 		final String origText = tagTextView.getText().toString();
 		//Open popup.
-		View popUpView = inflater.inflate(R.layout.tag_edit_popup, null);
+		View popUpView = inflater.inflate(R.layout.tag_edit_popup_with_rows, null);
 		final PopupWindow mpopup = new PopupWindow(popUpView, LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT, true); //Creation of popup
 		mpopup.setAnimationStyle(android.R.style.Animation_Dialog);   
 		Button avbryt = (Button)popUpView.findViewById(R.id.avbrytB);
-		Button sparaB = (Button)popUpView.findViewById(R.id.sparaB);
+		Button sparaLB = (Button)popUpView.findViewById(R.id.sparaB);
 		Button hundraB = (Button)popUpView.findViewById(R.id.hundraB);
 		Button rensaB = (Button)popUpView.findViewById(R.id.rensaB);
+		final EditText[] ETA = new EditText[10];
+		final EditText[] ETR = new EditText[10];
+		ETA[0] = (EditText)popUpView.findViewById(R.id.ETA1);
+		ETA[1] = (EditText)popUpView.findViewById(R.id.ETA2);
+		ETA[2] = (EditText)popUpView.findViewById(R.id.ETA3);
+		ETA[3] = (EditText)popUpView.findViewById(R.id.ETA4);
+		ETA[4] = (EditText)popUpView.findViewById(R.id.ETA5);
+		ETA[5] = (EditText)popUpView.findViewById(R.id.ETA6);
+		ETR[0] = (EditText)popUpView.findViewById(R.id.ETR1);
+		ETR[1] = (EditText)popUpView.findViewById(R.id.ETR2);
+		ETR[2] = (EditText)popUpView.findViewById(R.id.ETR3);
+		ETR[3] = (EditText)popUpView.findViewById(R.id.ETR4);
+		ETR[4] = (EditText)popUpView.findViewById(R.id.ETR5);
+		ETR[5] = (EditText)popUpView.findViewById(R.id.ETR6);
+
+		/*
 		final EditText tagE = (EditText)popUpView.findViewById(R.id.tagE);
 		avbryt.setOnClickListener(new OnClickListener() {			
 			@Override
@@ -428,63 +447,112 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 				mpopup.dismiss();
 				tagTextView.setText(origText);
 			}
-		});
-		sparaB.setOnClickListener(new OnClickListener() {
+		})
+		*/
+		InputFilter rFilter = new InputFilter() {
+		public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
+
+			// Remove the string out of destination that is to be replaced
+			String newVal = dest.toString().substring(0, dstart) + dest.toString().substring(dend, dest.toString().length());
+			// Add the new string in
+			newVal = newVal.substring(0, dstart) + source.toString() + newVal.substring(dstart, newVal.length());
+			if (isLegal(newVal))
+				return null;
+			return "";
+			}
+		
+		public boolean isLegal(String newVal) {
+			if (newVal.length()==0)
+				return false;
+			try {
+				int input = Integer.parseInt(newVal.trim());
+				return (input<=360);
+			} catch (NumberFormatException nfe) {Log.d("nils","this is no number"); }
+			return false;
+
+		}
+		};
+		InputFilter aFilter = new InputFilter() {
+		public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
+
+			// Remove the string out of destination that is to be replaced
+			String newVal = dest.toString().substring(0, dstart) + dest.toString().substring(dend, dest.toString().length());
+			// Add the new string in
+			newVal = newVal.substring(0, dstart) + source.toString() + newVal.substring(dstart, newVal.length());
+			if (isLegal(newVal))
+				return null;
+			return "";
+			}
+		
+		public boolean isLegal(String newVal) {
+			if (newVal.length()==0)
+				return false;
+			try {
+				int input = Integer.parseInt(newVal.trim());
+				return (input<=100);
+			} catch (NumberFormatException nfe) {Log.d("nils","this is no number"); }
+			return false;
+
+		}
+		};
+		
+		
+		
+		for (int i = 0; i<6;i++) {
+			ETA[i].setFilters(new InputFilter[] { aFilter });
+			ETR[i].setFilters(new InputFilter[] { rFilter });
+		}
+		sparaLB.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
-				String txt = tagE.getText().toString();
-				if (txt!=null) {
-					while (txt.endsWith(",")&& txt.length()>1)
-							txt = txt.substring(0,txt.length()-1);
-					txt.replaceAll(",,",",");
-					tagTextView.setText(txt);
+				String res="";
+				for (int i = 0; i<6;i++) {
+					Editable a = ETA[i].getText();
+					Editable r = ETR[i].getText();
+					if (a==null||r==null)
+						break;
+					if (a.toString().isEmpty()||r.toString().isEmpty())
+						break;
+					res+=a.toString()+","+r.toString()+",";
 				}
+				if (!res.isEmpty())
+					res = res.substring(0, res.length()-1);
+				tagTextView.setText(res);
+				createDelytorFromTable();
+				dym.analyze();
+				TagTemplate.this.updateAreaField();
+				pyv.showDelytor(dym.getDelytor(),false);
+				sparaB.setEnabled(true);
 				mpopup.dismiss();
 			}
 		});
-		hundraB.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				String ct = tagE.getText().toString();
-				if (ct.isEmpty())
-					tagE.setText("100,");
-				else {
-					if (!ct.endsWith(","))
-						ct+=",";
-					tagE.setText(ct+"100,");
-				}
-				tagE.setSelection(tagE.getText().length());
-			}
-		});
+		final TextView headerTxt = (TextView)popUpView.findViewById(R.id.headerT);
+		final TextView subHeaderTxt = (TextView)popUpView.findViewById(R.id.subHeaderT);
+
 		rensaB.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-					tagE.setText("");		
+				for (int i = 0; i<6;i++) {
+					ETA[i].setText("");
+					ETR[i].setText("");
+				}
+				subHeaderTxt.setText("");
 			}
 		});
-		tagE.addTextChangedListener(new TextWatcher(){
-			public void afterTextChanged(Editable s) {
-				tagTextView.setText(tagE.getText());
-			}
-			@Override
-			public void beforeTextChanged(CharSequence s, int start, int count,
-					int after) {}
-
-			@Override
-			public void onTextChanged(CharSequence s, int start, int before,
-					int count) {}
-		});
-		TextView headerTxt = (TextView)popUpView.findViewById(R.id.headerT);
-		TextView subHeaderTxt = (TextView)popUpView.findViewById(R.id.subHeaderT);
 		if (rawTag!=null) {
 			headerTxt.setText("Ändra tåg "+row);
-			tagE.setText(delyta.getTagCommaPrint());
+			int i=0;
+			for (Coord c:rawTag) {
+				ETA[i].setText(Integer.toString(c.getAvst()));
+				ETR[i].setText(Integer.toString(c.getRikt()));
+			}
 			subHeaderTxt.setText(delyta.getTagPrettyPrint());
 		}
 
 		else
 			headerTxt.setText("Skapa nytt tåg");
+		
 		mpopup.showAtLocation(popUpView, Gravity.TOP, 0, 0);
 	}
 

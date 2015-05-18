@@ -3,6 +3,8 @@ package com.teraim.vortex.dynamic.workflow_realizations.gis;
 import android.graphics.Bitmap;
 import android.graphics.Paint;
 
+import com.teraim.vortex.dynamic.types.CHash;
+
 
 //Subclass with interfaces that restricts access to all.
 
@@ -25,5 +27,7 @@ public interface FullGisObjectConfiguration extends GisObjectBaseAttributes {
 	public Bitmap getIcon();
 	public Paint.Style getFillType();
 	public PolyType getShape();
+	public String getClickFlow();
+	public CHash getCommonHash();
 	
 }

@@ -47,6 +47,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 	private boolean isVisible;
 	private GisObjectType myType;
 	public boolean loadDone=false;
+	private CHash myKeyHash;
 
 
 	private Set<GisObject> myGisObjects;
@@ -54,12 +55,14 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 	private String color;
 	private Paint.Style fillType;
 	private PolyType polyType;
+	private String onClick;
 
 
 
 	public AddGisPointObjects(String id, String nName, String label,
 			String target, String objContext,String coordType, String locationVars, 
-			String imgSource, String refreshRate, String radius, boolean isVisible, GisObjectType type, String color, String polyType, String fillType) {
+			String imgSource, String refreshRate, String radius, boolean isVisible, 
+			GisObjectType type, String color, String polyType, String fillType, String onClick) {
 		super();
 		this.blockId = id;
 		this.nName = nName;
@@ -71,7 +74,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 		this.imgSource = imgSource;
 		this.isVisible = isVisible;
 		this.refreshRate=refreshRate;
-
+		this.onClick = onClick;
 		this.color=color;
 		myType = type;
 
@@ -88,6 +91,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 				this.fillType = Paint.Style.FILL_AND_STROKE;
 		}
 		this.polyType=PolyType.circle;
+		this.radius=2.5f;
 		if (polyType!=null) {
 			if (polyType.toUpperCase().equals("SQUARE")||polyType.equals("RECT")||polyType.equals("RECTANGLE"))
 				this.polyType=PolyType.rect;
@@ -121,7 +125,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 
 
 		//Need the key hash for the database.
-		CHash myKeyHash = 
+		myKeyHash = 
 				GlobalState.getInstance().evaluateContext(this.objContext);
 		if (myKeyHash==null) {
 			Log.e("vortex","keychain  null!!");
@@ -294,6 +298,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 			}
 		}
 		loadDone=true;
+		
 	}
 
 	private class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
@@ -395,6 +400,16 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 	@Override
 	public PolyType getShape() {
 		return polyType;
+	}
+
+	@Override
+	public String getClickFlow() {
+		return onClick;
+	}
+
+	@Override
+	public CHash getCommonHash() {
+		return myKeyHash;
 	}
 
 

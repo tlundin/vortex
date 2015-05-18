@@ -1,6 +1,5 @@
 package com.teraim.vortex.utils;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -8,23 +7,18 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.StreamCorruptedException;
-import java.io.StringWriter;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -36,7 +30,6 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
@@ -48,13 +41,9 @@ import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.Start;
 import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.types.Numerable.Type;
-import com.teraim.vortex.dynamic.types.SpinnerDefinition;
-import com.teraim.vortex.dynamic.types.SpinnerDefinition.SpinnerElement;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.types.Workflow.Unit;
-import com.teraim.vortex.log.DummyLogger;
 import com.teraim.vortex.log.LoggerI;
-import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.DbHelper.Selection;
 
 public class Tools {
@@ -575,6 +564,29 @@ public class Tools {
 		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
 		context.startActivity(intent);
 		context.finish();		
+	}
+
+	public static String findKeyDifference(Map<String, String> longer,
+			Map<String, String> shorter) {
+		if (longer == null)
+			return null;
+		if (shorter == null && !longer.isEmpty())
+			return longer.keySet().iterator().next();
+		Set<String> sK = shorter.keySet();
+		for (String key:longer.keySet()) {
+			if (!sK.contains(key))
+				return key;
+		}
+		Log.e("vortex","no difference! Keys seems equal...!!");
+		return null;
+	}
+
+	public static boolean isURL(String source) {
+		if (source==null)
+			return false;
+		if (!source.startsWith("http")||source.startsWith("www"))
+			return false;
+		return true;
 	}
 
 

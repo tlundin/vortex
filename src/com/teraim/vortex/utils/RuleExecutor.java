@@ -69,7 +69,7 @@ public class RuleExecutor {
 			return myType == SubstiType.Boolean;
 		}
 	}
-	
+
 	public class TokenizedItem {
 
 		private String[] args;
@@ -86,6 +86,11 @@ public class RuleExecutor {
 			this.myType=TokenType.variable;
 			this.var = v;
 			this.original=v.getId();			
+		}
+		
+		public TokenizedItem(String s) {
+			this.myType=TokenType.literal;
+			this.original=s;			
 		}
 
 		//This is the string we found. 
@@ -155,6 +160,7 @@ public class RuleExecutor {
 		atan2(math_primitives,0),
 		max(math_primitives,0),
 		min(math_primitives,0),
+		literal(null,-1), 
 		unknown(null,-1), 
 		;
 		private TokenType parent = null;
@@ -400,9 +406,8 @@ public class RuleExecutor {
 								myFormulaTokens.add(new TokenizedItem(var));
 
 							} else {
-								Log.e("vortex","unrecognized token in formula: "+tokenName);
-								o.addRow("");
-								o.addRedText("unrecognized token in formula: "+tokenName);
+								myFormulaTokens.add(new TokenizedItem(tokenName));
+								o.addRow("Found literal "+tokenName);
 								continue;
 							}
 						}
@@ -528,7 +533,7 @@ public class RuleExecutor {
 					max =index;
 			}
 		}
-		boolean notDone = true;
+
 		TokenizedItem item;
 		while (max>0&&!lengthMap.isEmpty()) {
 			Log.d("vortex","MAX: "+max);
@@ -556,9 +561,18 @@ public class RuleExecutor {
 					Log.d("nils","After substitutionx: "+subst);
 					strRes=strRes+"null";
 				} else {
-					Log.d("nils","Substituting Variable: ["+st.getId()+"] with value "+st.getValue());
-					subst = subst.replace(st.getId().toLowerCase(), value);
-					Log.d("nils","After substitutiony: "+subst);
+					//Is the value non numeric? 
+					//Check if possible to substitute for logical value, eg. "foo" = "foo" = 1.
+					//If not possible, same string is returned.
+					if (!Tools.isNumeric(value)) {
+						Log.d("vortex","Non numeric value!");
+						subst = replaceIfStringCompare(st.getId().toLowerCase(),subst,value);
+												
+					} else {
+						Log.d("nils","Substituting Variable: ["+st.getId()+"] with value "+st.getValue());
+						subst = subst.replace(st.getId().toLowerCase(), value);
+						Log.d("nils","After substitutiony: "+subst);						
+					}
 					strRes=strRes+value;
 				}
 			}
@@ -566,489 +580,568 @@ public class RuleExecutor {
 		}
 
 		if (stringT) {
-				Log.d("vortex","string type returned with values substituted");
-				o.addRow("After substitution: "+strRes);
-				return new SubstiResult(strRes,SubstiType.String);
+			Log.d("vortex","string type returned with values substituted");
+			o.addRow("After substitution: "+strRes);
+			return new SubstiResult(strRes,SubstiType.String);
 		}
 
-			o.addRow("After substitution: "+subst);
-			return new SubstiResult(subst,null);
+		o.addRow("After substitution: "+subst);
+		return new SubstiResult(subst,null);
+	}
+
+	private String replaceIfStringCompare(String variableName, String expr,String value) {
+		Log.d("vortex","In replaceifstring with var "+variableName+" expr: "+expr+" val: ["+value+"]");
+		//find variable.
+		int index = expr.indexOf(variableName);
+		//Not found! Return same.
+		if (index==-1) {
+			Log.d("vortex","did not find variable "+variableName);
+			return expr;
 		}
-
-		private String substFormulas(String subst, List<TokenizedItem> myTokens) {
-			for (TokenizedItem item:myTokens) {
-				TokenType type = item.getType();
-				if (type.parent == TokenType.function) {
-					String funcEval = evalFunc(item);
-					Log.d("nils","Matching filter "+item.get()+" got result "+funcEval);
-					//Try to replace fn(x,y,z) with evaluated value.
-					String replaceThis = type.name()+"(";
-					String args[] = item.getArguments();
-					for (int i=0;i<args.length;i++) {
-						if (i < (args.length-1))
-							replaceThis+=args[i]+",";
-						else
-							replaceThis+=args[i];
-					}
-					replaceThis+=")";
-					subst = subst.replace(replaceThis.toLowerCase(), funcEval!=null?funcEval:"0");
-					Log.d("nils","Trying to substitute:["+replaceThis+"]. After Substitutionz: "+subst);
-
+		int startIndex = index;
+		//Scan for foo = foo.
+		//Look for = or <> first.
+		boolean eq = false; boolean neq = false;
+		String comp="";
+		for (int i = index+variableName.length();i<expr.length();i++) {
+			char c = expr.charAt(i);  
+			if (Character.isWhitespace(c))
+				continue;
+			//find value
+			if (c=='=') {
+				eq = true;
+				index = i+1;
+				break;
+			}
+			//If next char is not outside and this + next is either <> or ><...then...
+			if (((c+1)<expr.length()) && (c=='<'&&expr.charAt(i+1)=='>'||c=='>'&&expr.charAt(i+1)=='<')) {
+				neq = true;
+				//skip next
+				index = i+2;
+				break;
+			}
+		}
+		if (neq || eq) {
+			//we have found a string compare. Find the value.
+			boolean before=true;boolean spc =false;
+			String exprValue="";
+			for (int i = index;i<expr.length();i++) {
+				char c = expr.charAt(i);  
+				if (before && Character.isWhitespace(c))
+					continue;
+				if (c==')' || (!before && Character.isWhitespace(c))) {
+					//ok, break. i contains end.
+					index = i;
+					spc=true;
+					break;
+				} else {
+				before = false;
+				exprValue+=c;
 				}
 			}
-			return subst;
-		}
-
-		private String printTokens(List<TokenizedItem> myTokens) {
-			String res = "";
-			if (myTokens==null)
-				return null;
-			for (TokenizedItem t:myTokens) {
-				String args="";
-				if (t.args!=null&&t.args.length>0) {
-					for (String arg:t.args) {
-						args+=arg+",";
-					}
+			//Index is either = last char or first space -1.
+			if (!spc)
+				index = expr.length();
+			Log.d("vortex","Found value to string compare: "+exprValue);
+			if (!exprValue.isEmpty()) { 
+			boolean found = false;
+			if (eq) {
+				if (exprValue.equalsIgnoreCase(value)) {
+					Log.d("vortex","equals!");
+					found=true;
 				}
-				res+= "\ntoken: "+t.get()+" type: "+t.getType()+" args: "+args;
+			} else if (neq) {
+				if (!exprValue.equalsIgnoreCase(value)) {
+					Log.d("vortex","n_equals!");
+					found=true;
+				}
 			}
-			return res;
+			if (found) {
+				expr = expr.replace(expr.substring(startIndex, index), found?"1":"0");
+			}
+			} else {
+				Log.d("vortex","empty string!!");
+			}
+			
+		}
+		Log.d("vortex","Returning: "+expr);
+		return expr;
+	}
+
+	private String substFormulas(String subst, List<TokenizedItem> myTokens) {
+		for (TokenizedItem item:myTokens) {
+			TokenType type = item.getType();
+			if (type.parent == TokenType.function) {
+				String funcEval = evalFunc(item);
+				Log.d("nils","Matching filter "+item.get()+" got result "+funcEval);
+				//Try to replace fn(x,y,z) with evaluated value.
+				String replaceThis = type.name()+"(";
+				String args[] = item.getArguments();
+				for (int i=0;i<args.length;i++) {
+					if (i < (args.length-1))
+						replaceThis+=args[i]+",";
+					else
+						replaceThis+=args[i];
+				}
+				replaceThis+=")";
+				subst = subst.replace(replaceThis.toLowerCase(), funcEval!=null?funcEval:"0");
+				Log.d("nils","Trying to substitute:["+replaceThis+"]. After Substitutionz: "+subst);
+
+			}
+		}
+		return subst;
+	}
+
+	private String printTokens(List<TokenizedItem> myTokens) {
+		String res = "";
+		if (myTokens==null)
+			return null;
+		for (TokenizedItem t:myTokens) {
+			String args="";
+			if (t.args!=null&&t.args.length>0) {
+				for (String arg:t.args) {
+					args+=arg+",";
+				}
+			}
+			res+= "\ntoken: "+t.get()+" type: "+t.getType()+" args: "+args;
+		}
+		return res;
+	}
+
+	private String evalFunc(TokenizedItem item) {
+		Log.d("vortex","Evaluating function "+item.get()+"with arg "+print(item.getArguments()));
+		String value;	
+		String[] args = item.getArguments();
+		GlobalState gs = GlobalState.getInstance();
+		VariableConfiguration al = gs.getVariableConfiguration();
+		//Check if this is historical(x) function.
+		if (item.getType()==TokenType.historical) {
+			if (args!=null) {
+				if (args.length!=1) {
+					gs.getLogger().addRow("");
+					gs.getLogger().addRedText("historical() has more than one argument..will use first: "+args[0]);							
+				}
+				Variable var = GlobalState.getInstance().getVariableCache().getVariable(args[0]);
+				if (var != null) {
+					value = var.getHistoricalValue();
+					Log.d("nils","Found historical value "+value+" for variable "+item.get());
+					return value;				
+				} else {
+					Log.e("vortex","Variable not found: "+args[0]);
+					gs.getLogger().addRow("");
+					gs.getLogger().addRedText("Variable not found in historical: "+args[0]);							
+				}
+			} else {
+				Log.e("vortex","Historical() have no arguments. You must specify a variable!");
+				gs.getLogger().addRow("");
+				gs.getLogger().addRedText("Historical() have no arguments. You must specify a variable!");
+			}
+		}
+		else if (item.getType()==TokenType.getCurrentYear) {
+			Log.d("vortex","Returning current year!");
+			return Constants.getYear();
+		}
+		else if (item.getType()==TokenType.getCurrentMonth) {
+			return Constants.getMonth();
+		}
+		else if (item.getType()==TokenType.getCurrentDay) {
+			return Constants.getDayOfMonth();
+		}
+		else if (item.getType()==TokenType.getCurrentHour) {
+			return Constants.getHour();
+		}
+		else if (item.getType()==TokenType.getCurrentSecond) {
+			return Constants.getSecond();
+		}
+		else if (item.getType()==TokenType.getCurrentMinute) {
+			return Constants.getMinute();
+		}
+		else if (item.getType()==TokenType.getCurrentWeekNumber) {
+			return Constants.getWeekNumber();
 		}
 
-		private String evalFunc(TokenizedItem item) {
-			Log.d("vortex","Evaluating function "+item.get()+"with arg "+print(item.getArguments()));
-			String value;	
-			String[] args = item.getArguments();
-			GlobalState gs = GlobalState.getInstance();
-			VariableConfiguration al = gs.getVariableConfiguration();
-			//Check if this is historical(x) function.
-			if (item.getType()==TokenType.historical) {
-				if (args!=null) {
-					if (args.length!=1) {
-						gs.getLogger().addRow("");
-						gs.getLogger().addRedText("historical() has more than one argument..will use first: "+args[0]);							
-					}
-					Variable var = GlobalState.getInstance().getVariableCache().getVariable(args[0]);
-					if (var != null) {
-						value = var.getHistoricalValue();
-						Log.d("nils","Found historical value "+value+" for variable "+item.get());
-						return value;				
+		else if (item.getType()==TokenType.sum) {
+			float sum = 0;
+			if (args!=null) {
+				Log.d("vortex","Calculating sum!  ");
+				gs.getLogger().addRow("Calculating sum function...");
+				for (String arg:args) {
+					Log.d("vortex","arg: "+arg);
+					if (Tools.isNumeric(arg)) {
+						float argn = Float.parseFloat(arg);
+						Log.d("vortex","numeric argument: "+arg+" evaluates to "+argn);
+						sum+=argn;
 					} else {
-						Log.e("vortex","Variable not found: "+args[0]);
-						gs.getLogger().addRow("");
-						gs.getLogger().addRedText("Variable not found in historical: "+args[0]);							
-					}
-				} else {
-					Log.e("vortex","Historical() have no arguments. You must specify a variable!");
-					gs.getLogger().addRow("");
-					gs.getLogger().addRedText("Historical() have no arguments. You must specify a variable!");
-				}
-			}
-			else if (item.getType()==TokenType.getCurrentYear) {
-				Log.d("vortex","Returning current year!");
-				return Constants.getYear();
-			}
-			else if (item.getType()==TokenType.getCurrentMonth) {
-				return Constants.getMonth();
-			}
-			else if (item.getType()==TokenType.getCurrentDay) {
-				return Constants.getDayOfMonth();
-			}
-			else if (item.getType()==TokenType.getCurrentHour) {
-				return Constants.getHour();
-			}
-			else if (item.getType()==TokenType.getCurrentSecond) {
-				return Constants.getSecond();
-			}
-			else if (item.getType()==TokenType.getCurrentMinute) {
-				return Constants.getMinute();
-			}
-			else if (item.getType()==TokenType.getCurrentWeekNumber) {
-				return Constants.getWeekNumber();
-			}
-
-			else if (item.getType()==TokenType.sum) {
-				float sum = 0;
-				if (args!=null) {
-					Log.d("vortex","Calculating sum!  ");
-					gs.getLogger().addRow("Calculating sum function...");
-					for (String arg:args) {
-						Log.d("vortex","arg: "+arg);
-						if (Tools.isNumeric(arg)) {
-							float argn = Float.parseFloat(arg);
-							Log.d("vortex","numeric argument: "+arg+" evaluates to "+argn);
-							sum+=argn;
-						} else {
-							Variable v = gs.getVariableConfiguration().getVariableInstance(arg);
-							if (v==null) {
-								gs.getLogger().addRow("");
-								gs.getLogger().addRedText("Function has variable that does not exist in current context: "+arg);							
-							} else {
-								if (v.getType()!=DataType.numeric) {
-									Log.e("vortex","Function sum has non numeric argument: "+arg);
-									gs.getLogger().addRow("");
-									gs.getLogger().addRedText("Function sum has non numeric argument: "+arg);
-
-								} else {
-									String val = v.getValue();
-									Log.d("vortex","Value: "+val);
-									if (val == null) {
-										Log.d("vortex","skipping null value");
-
-									} else
-										sum+=Float.parseFloat(val);
-								}
-							}
-						}
-					}
-					gs.getLogger().addRow("Sum evaluates to "+sum);
-					Log.d("vortex","Sum evaluates to "+sum);
-					//TODO: Remove Round when going to float from integer.
-					return Float.toString(Math.round(sum));
-				} else {
-					Log.e("vortex","sum function without arguments");
-					gs.getLogger().addRow("");
-					gs.getLogger().addRedText("Sum Function without arguments. Evaluates to 0");
-					return "0";
-				}
-
-			}
-
-			else if (item.getType()==TokenType.getDelytaArea) {
-				Log.d("vortex","running getDelytaArea function");
-				DelyteManager dym = DelyteManager.getInstance();
-				if (dym==null) {
-					gs.getLogger().addRow("");
-					gs.getLogger().addRedText("Cannot calculate delyta area...no provyta selected");
-					return null;
-				}
-				if (args==null||args.length!=1) {
-					Log.e("vortex","no or too few arguments in hasSame");
-					gs.getLogger().addRow("");
-					gs.getLogger().addRedText("No or too few arguments in getDelytaArea");
-					return null;
-				}
-				//TODO This is wrong...variable arg should be tokenized.
-				String arg = args[0];
-				if (arg !=null && arg.length()>0) {
-
-				} else {
-					Log.e("vortex","no first argument in hasSame");
-					gs.getLogger().addRow("");
-					gs.getLogger().addRedText("Argument missing in getDelytaArea");
-					return null;
-				}
-				value=null;
-				if (!Tools.isNumeric(arg)) {
-					Variable v = al.getVariableInstance(arg);
-					if (v==null || v.getValue()==null) {
-						Log.e("vortex","variable or value null in getdelytaarea");
+						Variable v = gs.getVariableConfiguration().getVariableInstance(arg);
 						if (v==null) {
 							gs.getLogger().addRow("");
-							gs.getLogger().addRedText("Variable "+arg+" does not exist (in function getDelytaArea)");
-							return null;
-						} else
-							return null;
-					} else  
-						value = v.getValue();
-
-				} else
-					value = arg;
-
-				Delyta dy = dym.getDelyta(Integer.parseInt(value));
-				if (dy==null) {
-					Log.e("vortex","delyta null in getdelytaarea");
-					gs.getLogger().addRow("");
-					gs.getLogger().addRedText("Delyta "+args[0]+" does not exist (in function getDelytaArea)");
-					return null;
-				}
-				return Float.toString(dy.getArea()/100);
-			}
-
-			else if (item.getType()==TokenType.hasSame||item.getType()==TokenType.hasValue||item.getType()==TokenType.allHaveValue) {
-				String function = item.getType().name();
-				Log.d("vortex","running "+function);
-				if(args==null || args.length<3) {
-					Log.e("vortex","no or too few arguments in hasSame");
-					gs.getLogger().addRow("");
-					gs.getLogger().addRedText("No or too few arguments in "+function);
-				} else {
-					List<List<String>> rows;
-					//Get all variables in Functional Group x.
-					if (item.getType()==TokenType.hasSame)
-						rows= al.getTable().getRowsContaining(VariableConfiguration.Col_Functional_Group, args[0]);
-					else
-						rows = al.getTable().getRowsContaining(VariableConfiguration.Col_Variable_Name, args[0]);
-					if (rows == null||rows.size()==0) {
-						Log.e("vortex","no variables found for filter "+args[0]);
-					}
-					Log.d("vortex","found "+(rows.size()-1)+" variables for "+args[0]);
-					//Parse the expression. Find all references to Functional Group.
-					//Each argument need to either exist or not exist.
-					Map<String, String[]>values=new HashMap<String,String[]>();
-					boolean allNull = true;
-					for (List<String>row:rows) {
-						Log.d("vortex","Var name: "+al.getVarName(row));
-
-						if (item.getType()==TokenType.hasValue||
-								item.getType()==TokenType.allHaveValue) {
-
-							String operator = args[1];
-							String val = args[2];
-							String formula = al.getVarName(row)+operator+val;
-							Variable myVar = al.getVariableInstance(al.getVarName(row));
-							String res=null;
-							if (myVar.getValue()!=null) {
-								allNull = false;
-								res = parseExpression(formula, myVar.getValue()+operator+val);
-								if (!Tools.isNumeric(res)) {
-									Log.e("vortex", formula+" evaluates to null..something wrong");
-								} else {
-									int intRes = Integer.parseInt(res);
-									if (intRes==0 && item.getType()==TokenType.allHaveValue) {
-										gs.getLogger().addRow("");
-										gs.getLogger().addYellowText("allHaveValue failed on expression "+formula);
-										Log.e("vortex","allHaveValue failed on "+formula);
-										return "0";
-									} else {
-										if (intRes==0)
-											continue;
-										else {
-											if (item.getType()==TokenType.hasValue) {
-												gs.getLogger().addRow("");
-												gs.getLogger().addGreenText("hasvalue succeeded on expression "+formula);
-												Log.d("vortex","hasvalue succeeded on expression "+formula);
-												return("1");
-											}
-										}
-
-									}
-								}
-							} else {
-								Log.d("vortex","null value...skipping");
-							}
-
-						}
-						else if (item.getType()==TokenType.hasSame) {
-							for (int i = 1; i<args.length;i++) {
-								String[] varName = al.getVarName(row).split(Constants.VariableSeparator);
-								int size = varName.length;
-								if (size<3) {
-									gs.getLogger().addRow("");
-									gs.getLogger().addRedText("This variable has no Functional Group...cannot apply hasSame function. Variable id: "+varName);
-									Log.e("vortex","This is not a group variable...stopping.");
-									return null;
-								} else
-								{
-									String name = varName[size-1];
-									String art = varName[size-2];
-									String group = varName[0];
-									Log.d("vortex","name: "+name+" art: "+art+" group: "+group+" args["+i+"]: "+args[i]);
-									if (name.equalsIgnoreCase(args[i])) {
-										Log.d("vortex","found varname. Adding "+art);
-										Variable v = al.getVariableInstance(al.getVarName(row));
-										String varde = null;
-										if (v == null) {
-											Log.d("vortex","var was null!");
-
-										} else
-											varde = v.getValue();
-										String [] result;
-										if (values.get(art)==null) {
-											Log.d("vortex","empty..creating new val arr");
-											result = new String[args.length-1];
-											values.put(art, result);
-										} else 
-											result = values.get(art);
-										result[i-1]=varde;
-										break;
-									}
-								}
-							}
-						}
-					}
-					if (item.getType()==TokenType.hasSame) {
-						//now we should have an array containing all values for all variables.
-						Log.d("vortex","printing resulting map");
-						for (String key:values.keySet()) {
-							String vCompare = values.get(key)[0];
-							for (int i = 1;i<args.length-1;i++) {
-								String vz = values.get(key)[i];
-								if (vCompare==null && vz ==null ||vCompare!=null&&vz!=null)
-									continue;
-								else {
-									gs.getLogger().addRow("hasSame difference detected for "+key+". Stopping");
-									Log.e("vortex","Diffkey values for "+key+": "+(vCompare==null?"null":vCompare)+" "+(vz==null?"null":vz));
-									return "0";
-								}
-
-							}
-						}
-						Log.d("vortex","all values same. Success for hasSame!");
-						return "1";
-
-					} else if (item.getType()==TokenType.hasValue) {
-						//Hasvalue fails since none of the variables fullfilled the criteria
-						gs.getLogger().addRow("");
-						gs.getLogger().addYellowText("hasvalue failed to find any match");
-						Log.e("vortex","hasValue failed. No match found");
-						return "0";
-					} else {
-						if (!allNull) {
-							gs.getLogger().addRow("");
-							gs.getLogger().addYellowText("allHaveValue succeeded!");
-							Log.e("vortex","allHaveValue succeeded!");
-							return "1";		
+							gs.getLogger().addRedText("Function has variable that does not exist in current context: "+arg);							
 						} else {
-							gs.getLogger().addRow("");
-							gs.getLogger().addYellowText("allHaveValue failed - no values");
-							Log.e("vortex","allHaveValue failed on empty list");						
-						}
+							if (v.getType()!=DataType.numeric) {
+								Log.e("vortex","Function sum has non numeric argument: "+arg);
+								gs.getLogger().addRow("");
+								gs.getLogger().addRedText("Function sum has non numeric argument: "+arg);
 
+							} else {
+								String val = v.getValue();
+								Log.d("vortex","Value: "+val);
+								if (val == null) {
+									Log.d("vortex","skipping null value");
+
+								} else
+									sum+=Float.parseFloat(val);
+							}
+						}
 					}
 				}
-			}
-			else if (item.getType()==TokenType.has) {
-				if (args!=null) {
-					Variable v = gs.getVariableConfiguration().getVariableInstance(args[0]);
-					if (v==null||v.getValue()==null)
-						return "0";
-					return "1";
-				} else {
-					gs.getLogger().addRow("");
-					gs.getLogger().addRedText("HAS function is missing argument! ");
-					return "0";
-				}
-
-			} else if (item.getType().name().startsWith("has")){
-				Log.d("vortex","HASx function");
-				//Apply filter parameter <filter> on all variables in current table. Return those that match.
-				float failC=0;
-				//If any of the variables matching filter doesn't have a value, return 0. Otherwise 1.
-				List<List<String>> rows = al.getTable().getRowsContaining(VariableConfiguration.Col_Variable_Name, args[0]);
-				if (rows==null || rows.size()==0) {
-					gs.getLogger().addRow("");
-					gs.getLogger().addRedText("Filter returned emptylist in HASx construction. Filter: "+item.get());
-					gs.getLogger().addRow("");
-					gs.getLogger().addRedText("This is not good! A HASx function needs a list with something in. Check your rule!");
-
-					return null;
-				}
-				float rowC=rows.size();
-
-				for (List<String>row:rows) {
-					value = gs.getVariableConfiguration().getVariableValue(gs.getCurrentKeyHash(), al.getVarName(row));
-					if (value==null) {
-						if (item.getType()==TokenType.hasAll) {
-							gs.getLogger().addRow("");
-							gs.getLogger().addYellowText("hasAll filter stopped on variable "+al.getVarName(row)+" that is missing a value");
-							return "0";
-						}
-						else 
-							failC++;
-					} else 
-						if (item.getType()==TokenType.hasSome) {					
-							gs.getLogger().addRow("");
-							gs.getLogger().addYellowText("hasSome filter succeeded on variable "+al.getVarName(row)+" that has value "+value);
-							return "1";			
-						}
-				}
-				if (failC == rowC && item.getType()==TokenType.hasSome) {
-					gs.getLogger().addRow("");
-					gs.getLogger().addYellowText("hasSome filter failed. No variables with values found for "+((item.getArguments()!=null&&item.getArguments().length>0)?item.getArguments()[0]:""));
-					return "0";						
-				} 
-				if (item.getType()==TokenType.hasAll) {
-					gs.getLogger().addRow("");
-					gs.getLogger().addYellowText("hasAll filter succeeded.");
-					return "1";			
-				}
-				if (failC <= rowC/2) {
-					gs.getLogger().addRow("");
-					gs.getLogger().addYellowText("hasMost filter succeeded. Filled in: "+(int)((failC/rowC)*100f)+"%");
-					return "1";				
-				} 	
+				gs.getLogger().addRow("Sum evaluates to "+sum);
+				Log.d("vortex","Sum evaluates to "+sum);
+				//TODO: Remove Round when going to float from integer.
+				return Float.toString(Math.round(sum));
+			} else {
+				Log.e("vortex","sum function without arguments");
 				gs.getLogger().addRow("");
-				gs.getLogger().addYellowText("hasMost filter failed. Not filled in: "+(int)((failC/rowC)*100f)+"%");
+				gs.getLogger().addRedText("Sum Function without arguments. Evaluates to 0");
 				return "0";
 			}
-			gs.getLogger().addRow("");
-			gs.getLogger().addYellowText("Function evaluation failed for "+item.get()+". Returning 0");
-			return "0";		
+
 		}
 
-		private String print(String[] arguments) {
-			String ret="";
-			if (arguments == null)
-				return "null";
-			for (String a:arguments) {
-				ret+=a+",";
-			}
-			return ret;
-		}
-
-		public String parseExpression(String formula, String subst) {
-			if (subst==null)
+		else if (item.getType()==TokenType.getDelytaArea) {
+			Log.d("vortex","running getDelytaArea function");
+			DelyteManager dym = DelyteManager.getInstance();
+			if (dym==null) {
+				gs.getLogger().addRow("");
+				gs.getLogger().addRedText("Cannot calculate delyta area...no provyta selected");
 				return null;
-			Parser p = GlobalState.getInstance().getParser();
-			Expr exp=null;
-			LoggerI o = GlobalState.getInstance().getLogger();
-
-			try {
-				exp = p.parse(subst);
-			} catch (SyntaxException e1) {
-				o.addRow("");
-				o.addRedText("Syntax error for formula "+formula+" after substitution to "+subst);
-				e1.printStackTrace();
 			}
-			if (exp==null) 
-			{
-				o.addRow("");
-				o.addText("Parsing Expr "+formula+" evaluates to null");	
+			if (args==null||args.length!=1) {
+				Log.e("vortex","no or too few arguments in hasSame");
+				gs.getLogger().addRow("");
+				gs.getLogger().addRedText("No or too few arguments in getDelytaArea");
 				return null;
+			}
+			//TODO This is wrong...variable arg should be tokenized.
+			String arg = args[0];
+			if (arg !=null && arg.length()>0) {
+
 			} else {
-				return exp.value()==null?null:(exp.value().intValue()+"");
+				Log.e("vortex","no first argument in hasSame");
+				gs.getLogger().addRow("");
+				gs.getLogger().addRedText("Argument missing in getDelytaArea");
+				return null;
 			}
+			value=null;
+			if (!Tools.isNumeric(arg)) {
+				Variable v = al.getVariableInstance(arg);
+				if (v==null || v.getValue()==null) {
+					Log.e("vortex","variable or value null in getdelytaarea");
+					if (v==null) {
+						gs.getLogger().addRow("");
+						gs.getLogger().addRedText("Variable "+arg+" does not exist (in function getDelytaArea)");
+						return null;
+					} else
+						return null;
+				} else  
+					value = v.getValue();
+
+			} else
+				value = arg;
+
+			Delyta dy = dym.getDelyta(Integer.parseInt(value));
+			if (dy==null) {
+				Log.e("vortex","delyta null in getdelytaarea");
+				gs.getLogger().addRow("");
+				gs.getLogger().addRedText("Delyta "+args[0]+" does not exist (in function getDelytaArea)");
+				return null;
+			}
+			return Float.toString(dy.getArea()/100);
 		}
 
-
-		public CharSequence getRuleExecutionAsString(Map<String,Boolean> ruleResult) {
-			if (ruleResult==null)
-				return "";
-			CharSequence myTxt = new SpannableString("");
-			Set<String> keys = ruleResult.keySet();
-			Iterator<String> it = keys.iterator();
-			while (it.hasNext()) {
-				String rule = it.next();
-				Boolean res = ruleResult.get(rule);
-				if (it.hasNext())
-					rule +=",";
-				if (!res) {
-					Log.d("nils","I get here with string "+rule);
-					SpannableString s = new SpannableString(rule);
-					s.setSpan(new TextAppearanceSpan(GlobalState.getInstance().getContext(), R.style.RedStyle),0,s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-					myTxt = TextUtils.concat(myTxt, s);	 
-				}
+		else if (item.getType()==TokenType.hasSame||item.getType()==TokenType.hasValue||item.getType()==TokenType.allHaveValue) {
+			String function = item.getType().name();
+			Log.d("vortex","running "+function);
+			if(args==null || args.length<3) {
+				Log.e("vortex","no or too few arguments in hasSame");
+				gs.getLogger().addRow("");
+				gs.getLogger().addRedText("No or too few arguments in "+function);
+			} else {
+				List<List<String>> rows;
+				//Get all variables in Functional Group x.
+				if (item.getType()==TokenType.hasSame)
+					rows= al.getTable().getRowsContaining(VariableConfiguration.Col_Functional_Group, args[0]);
 				else
-					myTxt = TextUtils.concat(myTxt,rule);
+					rows = al.getTable().getRowsContaining(VariableConfiguration.Col_Variable_Name, args[0]);
+				if (rows == null||rows.size()==0) {
+					Log.e("vortex","no variables found for filter "+args[0]);
+				}
+				Log.d("vortex","found "+(rows.size()-1)+" variables for "+args[0]);
+				//Parse the expression. Find all references to Functional Group.
+				//Each argument need to either exist or not exist.
+				Map<String, String[]>values=new HashMap<String,String[]>();
+				boolean allNull = true;
+				for (List<String>row:rows) {
+					Log.d("vortex","Var name: "+al.getVarName(row));
 
+					if (item.getType()==TokenType.hasValue||
+							item.getType()==TokenType.allHaveValue) {
+
+						String operator = args[1];
+						String val = args[2];
+						String formula = al.getVarName(row)+operator+val;
+						Variable myVar = al.getVariableInstance(al.getVarName(row));
+						String res=null;
+						if (myVar.getValue()!=null) {
+							allNull = false;
+							res = parseExpression(formula, myVar.getValue()+operator+val);
+							if (!Tools.isNumeric(res)) {
+								Log.e("vortex", formula+" evaluates to null..something wrong");
+							} else {
+								int intRes = Integer.parseInt(res);
+								if (intRes==0 && item.getType()==TokenType.allHaveValue) {
+									gs.getLogger().addRow("");
+									gs.getLogger().addYellowText("allHaveValue failed on expression "+formula);
+									Log.e("vortex","allHaveValue failed on "+formula);
+									return "0";
+								} else {
+									if (intRes==0)
+										continue;
+									else {
+										if (item.getType()==TokenType.hasValue) {
+											gs.getLogger().addRow("");
+											gs.getLogger().addGreenText("hasvalue succeeded on expression "+formula);
+											Log.d("vortex","hasvalue succeeded on expression "+formula);
+											return("1");
+										}
+									}
+
+								}
+							}
+						} else {
+							Log.d("vortex","null value...skipping");
+						}
+
+					}
+					else if (item.getType()==TokenType.hasSame) {
+						for (int i = 1; i<args.length;i++) {
+							String[] varName = al.getVarName(row).split(Constants.VariableSeparator);
+							int size = varName.length;
+							if (size<3) {
+								gs.getLogger().addRow("");
+								gs.getLogger().addRedText("This variable has no Functional Group...cannot apply hasSame function. Variable id: "+varName);
+								Log.e("vortex","This is not a group variable...stopping.");
+								return null;
+							} else
+							{
+								String name = varName[size-1];
+								String art = varName[size-2];
+								String group = varName[0];
+								Log.d("vortex","name: "+name+" art: "+art+" group: "+group+" args["+i+"]: "+args[i]);
+								if (name.equalsIgnoreCase(args[i])) {
+									Log.d("vortex","found varname. Adding "+art);
+									Variable v = al.getVariableInstance(al.getVarName(row));
+									String varde = null;
+									if (v == null) {
+										Log.d("vortex","var was null!");
+
+									} else
+										varde = v.getValue();
+									String [] result;
+									if (values.get(art)==null) {
+										Log.d("vortex","empty..creating new val arr");
+										result = new String[args.length-1];
+										values.put(art, result);
+									} else 
+										result = values.get(art);
+									result[i-1]=varde;
+									break;
+								}
+							}
+						}
+					}
+				}
+				if (item.getType()==TokenType.hasSame) {
+					//now we should have an array containing all values for all variables.
+					Log.d("vortex","printing resulting map");
+					for (String key:values.keySet()) {
+						String vCompare = values.get(key)[0];
+						for (int i = 1;i<args.length-1;i++) {
+							String vz = values.get(key)[i];
+							if (vCompare==null && vz ==null ||vCompare!=null&&vz!=null)
+								continue;
+							else {
+								gs.getLogger().addRow("hasSame difference detected for "+key+". Stopping");
+								Log.e("vortex","Diffkey values for "+key+": "+(vCompare==null?"null":vCompare)+" "+(vz==null?"null":vz));
+								return "0";
+							}
+
+						}
+					}
+					Log.d("vortex","all values same. Success for hasSame!");
+					return "1";
+
+				} else if (item.getType()==TokenType.hasValue) {
+					//Hasvalue fails since none of the variables fullfilled the criteria
+					gs.getLogger().addRow("");
+					gs.getLogger().addYellowText("hasvalue failed to find any match");
+					Log.e("vortex","hasValue failed. No match found");
+					return "0";
+				} else {
+					if (!allNull) {
+						gs.getLogger().addRow("");
+						gs.getLogger().addYellowText("allHaveValue succeeded!");
+						Log.e("vortex","allHaveValue succeeded!");
+						return "1";		
+					} else {
+						gs.getLogger().addRow("");
+						gs.getLogger().addYellowText("allHaveValue failed - no values");
+						Log.e("vortex","allHaveValue failed on empty list");						
+					}
+
+				}
+			}
+		}
+		else if (item.getType()==TokenType.has) {
+			if (args!=null) {
+				Variable v = gs.getVariableConfiguration().getVariableInstance(args[0]);
+				if (v==null||v.getValue()==null)
+					return "0";
+				return "1";
+			} else {
+				gs.getLogger().addRow("");
+				gs.getLogger().addRedText("HAS function is missing argument! ");
+				return "0";
 			}
 
-			return myTxt;
+		} else if (item.getType().name().startsWith("has")){
+			Log.d("vortex","HASx function");
+			//Apply filter parameter <filter> on all variables in current table. Return those that match.
+			float failC=0;
+			//If any of the variables matching filter doesn't have a value, return 0. Otherwise 1.
+			List<List<String>> rows = al.getTable().getRowsContaining(VariableConfiguration.Col_Variable_Name, args[0]);
+			if (rows==null || rows.size()==0) {
+				gs.getLogger().addRow("");
+				gs.getLogger().addRedText("Filter returned emptylist in HASx construction. Filter: "+item.get());
+				gs.getLogger().addRow("");
+				gs.getLogger().addRedText("This is not good! A HASx function needs a list with something in. Check your rule!");
+
+				return null;
+			}
+			float rowC=rows.size();
+
+			for (List<String>row:rows) {
+				value = gs.getVariableConfiguration().getVariableValue(gs.getCurrentKeyHash(), al.getVarName(row));
+				if (value==null) {
+					if (item.getType()==TokenType.hasAll) {
+						gs.getLogger().addRow("");
+						gs.getLogger().addYellowText("hasAll filter stopped on variable "+al.getVarName(row)+" that is missing a value");
+						return "0";
+					}
+					else 
+						failC++;
+				} else 
+					if (item.getType()==TokenType.hasSome) {					
+						gs.getLogger().addRow("");
+						gs.getLogger().addYellowText("hasSome filter succeeded on variable "+al.getVarName(row)+" that has value "+value);
+						return "1";			
+					}
+			}
+			if (failC == rowC && item.getType()==TokenType.hasSome) {
+				gs.getLogger().addRow("");
+				gs.getLogger().addYellowText("hasSome filter failed. No variables with values found for "+((item.getArguments()!=null&&item.getArguments().length>0)?item.getArguments()[0]:""));
+				return "0";						
+			} 
+			if (item.getType()==TokenType.hasAll) {
+				gs.getLogger().addRow("");
+				gs.getLogger().addYellowText("hasAll filter succeeded.");
+				return "1";			
+			}
+			if (failC <= rowC/2) {
+				gs.getLogger().addRow("");
+				gs.getLogger().addYellowText("hasMost filter succeeded. Filled in: "+(int)((failC/rowC)*100f)+"%");
+				return "1";				
+			} 	
+			gs.getLogger().addRow("");
+			gs.getLogger().addYellowText("hasMost filter failed. Not filled in: "+(int)((failC/rowC)*100f)+"%");
+			return "0";
+		}
+		gs.getLogger().addRow("");
+		gs.getLogger().addYellowText("Function evaluation failed for "+item.get()+". Returning 0");
+		return "0";		
+	}
+
+	private String print(String[] arguments) {
+		String ret="";
+		if (arguments == null)
+			return "null";
+		for (String a:arguments) {
+			ret+=a+",";
+		}
+		return ret;
+	}
+
+	public String parseExpression(String formula, String subst) {
+		if (subst==null)
+			return null;
+		Parser p = GlobalState.getInstance().getParser();
+		Expr exp=null;
+		LoggerI o = GlobalState.getInstance().getLogger();
+
+		try {
+			exp = p.parse(subst);
+		} catch (SyntaxException e1) {
+			o.addRow("");
+			o.addRedText("Syntax error for formula "+formula+" after substitution to "+subst);
+			e1.printStackTrace();
+		}
+		if (exp==null) 
+		{
+			o.addRow("");
+			o.addText("Parsing Expr "+formula+" evaluates to null");	
+			return null;
+		} else {
+			return exp.value()==null?null:(exp.value().intValue()+"");
+		}
+	}
+
+
+	public CharSequence getRuleExecutionAsString(Map<String,Boolean> ruleResult) {
+		if (ruleResult==null)
+			return "";
+		CharSequence myTxt = new SpannableString("");
+		Set<String> keys = ruleResult.keySet();
+		Iterator<String> it = keys.iterator();
+		while (it.hasNext()) {
+			String rule = it.next();
+			Boolean res = ruleResult.get(rule);
+			if (it.hasNext())
+				rule +=",";
+			if (!res) {
+				Log.d("nils","I get here with string "+rule);
+				SpannableString s = new SpannableString(rule);
+				s.setSpan(new TextAppearanceSpan(GlobalState.getInstance().getContext(), R.style.RedStyle),0,s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+				myTxt = TextUtils.concat(myTxt, s);	 
+			}
+			else
+				myTxt = TextUtils.concat(myTxt,rule);
+
 		}
 
-		public void destroyCache() {
-			Log.d("vortex","destroying formulacache");
-			formulaCache.clear();
-		}
+		return myTxt;
+	}
 
-		/*
+	public void destroyCache() {
+		Log.d("vortex","destroying formulacache");
+		formulaCache.clear();
+	}
+
+	/*
 	public Boolean evaluate(String rule) {
 		String result = parseExpression(rule, substituteVariables(parseFormula(rule,null),rule,false));		
 		Log.d("nils","Evaluation of rule: "+rule+" returned "+result);
 		return (result!=null?result.equals("1"):null);
 	}
-		 */
+	 */
 
 
-	}
+}

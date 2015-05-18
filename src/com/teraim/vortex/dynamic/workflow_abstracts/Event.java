@@ -7,7 +7,7 @@ public abstract class Event {
 		onClick,
 		onRedraw,
 		onBluetoothMessageReceived,
-		onMasterChangedData, onAttach
+		onMasterChangedData, onAttach,onActivityResult
 	}
 	
 	private  String generatorId;

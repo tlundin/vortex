@@ -34,9 +34,10 @@ public class AddGisLayerBlock extends Block {
 	private String id, name, label,target;
 	private boolean isVisible, hasWidget;
 	private WF_Gis_Map myGis;
+	private boolean showLabels;
 	
 	public AddGisLayerBlock(String id, String name, String label,
-			String target, boolean isVisible, boolean hasWidget) {
+			String target, boolean isVisible, boolean hasWidget, boolean showLabels) {
 		super();
 		this.id = id;
 		this.name = name;
@@ -44,7 +45,7 @@ public class AddGisLayerBlock extends Block {
 		this.target = target;
 		this.isVisible = isVisible;
 		this.hasWidget = hasWidget;
-		
+		this.showLabels = showLabels;
 		
 	}
 	
@@ -53,17 +54,18 @@ public class AddGisLayerBlock extends Block {
 		Drawable gisMap = myContext.getDrawable(target);
 		if (gisMap!=null && gisMap instanceof WF_Gis_Map) {
 			myGis = ((WF_Gis_Map)gisMap);
-			final GisLayer gisLayer = new GisLayer(name,label,isVisible,hasWidget);		
+			final GisLayer gisLayer = new GisLayer(name,label,isVisible,hasWidget,showLabels);		
 			myGis.getGis().addLayer(gisLayer,name);
 			if (hasWidget) {
 				Log.d("vortex","Layer "+name+" has a widget");
 				LinearLayout layersL = (LinearLayout)myGis.getWidget().findViewById(R.id.LayersL);
-				//LayoutInflater li = LayoutInflater.from(myContext.getContext());
-				CheckBox lt = new CheckBox(myContext.getContext());
-				lt.setText(label);
-				lt.setTextSize(25);
-				lt.setChecked(isVisible);
-				lt.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+				LayoutInflater li = LayoutInflater.from(myContext.getContext());
+				View layersRow = li.inflate(R.layout.layers_row, null);
+				CheckBox lShow = (CheckBox)layersRow.findViewById(R.id.cbShow);
+				CheckBox lLabels = (CheckBox)layersRow.findViewById(R.id.cbLabels);
+				lShow.setChecked(isVisible);
+				lShow.setChecked(showLabels);
+				lShow.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 					
 					@Override
 					public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {						
@@ -71,7 +73,17 @@ public class AddGisLayerBlock extends Block {
 						myGis.getGis().invalidate();
 					}
 				});
-				layersL.addView(lt);
+				lShow.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+					
+					@Override
+					public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {						
+						gisLayer.setShowLabels(isChecked);
+						myGis.getGis().invalidate();
+					}
+				});
+				layersL.addView(layersRow);
+				
+				
 			}
 		}
 		

@@ -287,7 +287,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 	private Block readBlockAddGisPointObjects(XmlPullParser parser,GisObjectType type) throws IOException, XmlPullParserException {
 		o.addRow("Parsing block: block_add_gis_point_objects...");
 		String id=null,nName=null,target=null,label=null,coordType = null, color=null,polyType=null,fillType=null,
-				location=null,objContext=null,imgSource=null,refreshRate=null,radius="";
+				location=null,objContext=null,imgSource=null,refreshRate=null,radius=null,onClick=null;
 		boolean isVisible=true;
 
 		//parser.require(XmlPullParser.START_TAG, null,"block_add_gis_point_objects")
@@ -322,7 +322,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			} else if (name.equalsIgnoreCase("img_source")) {
 				imgSource = readText("img_source",parser);
 			} else if (name.equalsIgnoreCase("on_click")) {
-				imgSource = readText("on_click",parser);
+				onClick = readText("on_click",parser);
 			} else if (name.equalsIgnoreCase("refresh_rate")) {
 				refreshRate = readText("refresh_rate",parser);
 			} else if (name.equalsIgnoreCase("radius")) {
@@ -335,14 +335,14 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 		}
 
 		checkForNull("block_ID",id,"target",target,"location",location);
-		return new AddGisPointObjects(id,nName,label,target,objContext,coordType,location,imgSource,refreshRate,radius,isVisible,type,color,polyType,fillType);
+		return new AddGisPointObjects(id,nName,label,target,objContext,coordType,location,imgSource,refreshRate,radius,isVisible,type,color,polyType,fillType,onClick);
 
 	}
 
 	private Block readBlockAddGisLayer(XmlPullParser parser) throws IOException, XmlPullParserException {
 		o.addRow("Parsing block: block_add_gis_layer...");
 		String id=null,nName=null,target=null,label=null;
-		boolean isVisible=true,hasWidget=true;
+		boolean isVisible=true,hasWidget=true,showLabels=false;
 
 		parser.require(XmlPullParser.START_TAG, null,"block_add_gis_layer");
 		Log.d("vortex","In block block_add_gis_layer!!");
@@ -357,6 +357,8 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				target = readText("target",parser);
 			} else if (name.equals("label")) {
 				label = readText("label",parser);
+			} else if (name.equals("show_labels")) {
+				showLabels = readText("show_labels",parser).equals("true");
 			} else if (name.equals("is_visible")) {
 				isVisible = readText("is_visible",parser).equals("true");
 			}else if (name.equalsIgnoreCase("name")) {
@@ -371,7 +373,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 		}
 
 		checkForNull("block_ID",id,"target",target);
-		return new AddGisLayerBlock(id,nName,label,target,isVisible,hasWidget);
+		return new AddGisLayerBlock(id,nName,label,target,isVisible,hasWidget,showLabels);
 
 	}
 
@@ -1243,8 +1245,8 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			String name = parser.getName();
 			if (name.equals("block_ID")) {
 				id = readText("block_ID",parser);
-			} else if (name.equals("onClick")) {
-				onClick = readText("onClick",parser);
+			} else if (name.equals("on_click")) {
+				onClick = readText("on_click",parser);
 			}
 			else if (name.equals("type")) {
 				type = readText("type",parser);
@@ -1330,7 +1332,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			o.addRedText("Error reading startblock. Workflowname missing");
 			throw new XmlPullParserException("Parameter missing");
 		}
-		checkForNull("block_ID",id,"Context",context,"workflowname",workflowName);
+		checkForNull("block_ID",id,"workflowname",workflowName);
 
 		return new StartBlock(id,args,workflowName,context);
 	}

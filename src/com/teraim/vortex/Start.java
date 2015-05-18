@@ -21,6 +21,8 @@ import android.view.MenuItem;
 import com.teraim.vortex.dynamic.templates.LinjePortalTemplate;
 import com.teraim.vortex.dynamic.types.CHash;
 import com.teraim.vortex.dynamic.types.Workflow;
+import com.teraim.vortex.dynamic.workflow_abstracts.Event.EventType;
+import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnActivityResult;
 import com.teraim.vortex.loadermodule.LoadResult;
 import com.teraim.vortex.log.Logger;
 import com.teraim.vortex.log.LoggerI;
@@ -28,7 +30,6 @@ import com.teraim.vortex.ui.DrawerMenu;
 import com.teraim.vortex.ui.LoginConsoleFragment;
 import com.teraim.vortex.ui.MenuActivity;
 import com.teraim.vortex.utils.PersistenceHelper;
-import com.teraim.vortex.utils.Tools;
 
 public class Start extends MenuActivity {
 
@@ -148,13 +149,14 @@ public class Start extends MenuActivity {
 		GlobalState gs = GlobalState.getInstance();
 		String label = wf.getLabel();
 		String template = wf.getTemplate();
+		String context = wf.getContext();
 		//Set context.
 		Log.e("vortex","change page called with wf "+wf.getName());
-		Log.d("noob","Context ["+wf.getContext()+"]");
-		debugLogger.addRow("Context ["+wf.getContext()+"]");
-		CHash cHash = gs.evaluateContext(wf.getContext());
+		Log.d("noob","Context ["+context+"]");
+		debugLogger.addRow("Context ["+context+"]");
+		CHash cHash = gs.evaluateContext(context);
 		//if Ok err is null.
-		if (cHash.err==null) {
+		if (cHash.err==null || context == null) {
 			debugLogger.addRow("Context [");
 			debugLogger.addGreenText("OK");
 			debugLogger.addText("]");
@@ -223,6 +225,7 @@ public class Start extends MenuActivity {
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		Log.d("nils","GETZZZZ");
+		GlobalState.getInstance().getCurrentContext().registerEvent(new WF_Event_OnActivityResult("Start",EventType.onActivityResult));
 		// TODO Auto-generated method stub
 		super.onActivityResult(requestCode, resultCode, data);
 	}

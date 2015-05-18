@@ -31,7 +31,7 @@ import com.teraim.vortex.utils.PersistenceHelper;
 
 public class Constants {
 
-	public final static float VORTEX_VERSION = 1.094f;
+	public final static float VORTEX_VERSION = 1.102f;
 
 
 	//String constants
@@ -185,6 +185,9 @@ public class Constants {
 
 
 	public static final String WILD_CARD_MARKER = "%";
+
+
+	public final static int TAKE_PICTURE = 133;
 
 
 

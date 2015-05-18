@@ -1,12 +1,17 @@
 package com.teraim.vortex.dynamic.blocks;
 
+import java.io.File;
 import java.util.Map;
 import java.util.Set;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Color;
+import android.net.Uri;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -407,7 +412,7 @@ public  class ButtonBlock extends Block {
 										btnText = "Ok";
 									}
 									//Context was broken
-								} else {
+								}  else {
 									msg = "Export failed. export_context contain errors. Error: "+r.err;
 									btnText= "Ok";
 								}
@@ -420,6 +425,15 @@ public  class ButtonBlock extends Block {
 								})			    
 								.setIcon(android.R.drawable.ic_dialog_alert)
 								.show();
+							} else if (onClick.equals("Start_Camera")) {
+								Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+								File file = new File(Constants.PIC_ROOT_DIR, target);
+								Uri outputFileUri = Uri.fromFile(file);
+								intent.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri);
+								//				intent.putExtra(Strand.KEY_PIC_NAME, name);
+								((Activity) ctx).startActivityForResult(intent, Constants.TAKE_PICTURE);
+
+								
 							}
 							else {
 								o.addRow("");

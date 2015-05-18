@@ -208,11 +208,13 @@ public abstract class Executor extends Fragment {
 				o.addRow("");
 				o.addRow("");
 				o.addRow("*******EXECUTING: "+name);
-				myHash = gs.evaluateContext(wf.getContext());
-				gs.setCurrentContext(myContext);		
-				gs.setKeyHash(myHash.keyHash);
-				gs.setRawHash(myHash.rawHash);
-
+				String wfContext = wf.getContext();
+				if (wfContext!=null) {
+					myHash = gs.evaluateContext(wfContext);
+					gs.setCurrentContext(myContext);		
+					gs.setKeyHash(myHash.keyHash);
+					gs.setRawHash(myHash.rawHash);
+				}
 			}
 		}
 		return wf;
@@ -224,14 +226,15 @@ public abstract class Executor extends Fragment {
 	 */
 	protected void run() {
 		try {
+			if (myHash!=null)  {
 			Log.d("vortex"," currentKeyHash before: "+gs.getCurrentKeyHash());
-
+			Log.d("vortex","GS: "+gs+" myContext: "+myContext);
 			gs.setCurrentContext(myContext);		
 			gs.setKeyHash(myHash.keyHash);
 			gs.setRawHash(myHash.rawHash);
 			gs.sendEvent(MenuActivity.REDRAW);
 			Log.d("vortex"," currentKeyHash after: "+gs.getCurrentKeyHash());
-
+			}
 			visiVars = new HashSet<Variable>();
 			//LinearLayout my_root = (LinearLayout) findViewById(R.id.myRoot);		
 			List<Block>blocks = wf.getCopyOfBlocks();

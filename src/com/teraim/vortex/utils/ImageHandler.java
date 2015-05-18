@@ -71,7 +71,7 @@ public class ImageHandler {
 	
 
 	public boolean drawButton(ImageButton b, String name, int divisor,boolean historical) {
-
+		
 		//Try to load pic from disk, if any.
 		//To avoid memory issues, we need to figure out how big bitmap to allocate, approximately
 		//Picture is in landscape & should be approx half the screen width, and 1/5th of the height.
@@ -167,7 +167,7 @@ public class ImageHandler {
 
 				intent.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri);
 				//				intent.putExtra(Strand.KEY_PIC_NAME, name);
-				c.startActivityForResult(intent, TAKE_PICTURE);
+				c.startActivityForResult(intent, Constants.TAKE_PICTURE);
 
 			}
 
@@ -180,7 +180,7 @@ public class ImageHandler {
 
 
 
-	public final static int TAKE_PICTURE = 133;
+	
 
 	private String currSaving=null;
 

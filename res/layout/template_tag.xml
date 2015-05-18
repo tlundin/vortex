@@ -39,15 +39,6 @@
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal" >
-
-    <Button
-        android:id="@+id/redraw"
-        android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-         android:layout_toLeftOf="@+id/rensa"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="15dp"
-        android:text="Kalkylera delytor" />
     
     <Button
         android:id="@+id/rensa"
@@ -65,7 +56,7 @@
         android:layout_alignParentRight="true"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="15dp"
-        android:text="Spara ändringar" />
+        android:text="Spara och gå ut" />
 </RelativeLayout>
     
 </LinearLayout>

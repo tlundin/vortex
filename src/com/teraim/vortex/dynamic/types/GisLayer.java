@@ -14,14 +14,16 @@ public class GisLayer {
 	String name, label;
 	private boolean isVisible, hasWidget,hasDynamic=false;
 	Map<String,Set<GisObject>> myObjects;
+	private boolean showLabels;
 	
 	public GisLayer(String name, String label, boolean isVisible,
-			boolean hasWidget) {
+			boolean hasWidget, boolean showLabels) {
 		super();
 		this.name = name;
 		this.label = label;
 		this.isVisible = isVisible;
 		this.hasWidget = hasWidget;
+		this.showLabels=showLabels;
 		myObjects = new HashMap<String,Set<GisObject>>();
 	}
 
@@ -30,6 +32,7 @@ public class GisLayer {
 		Log.d("vortex","added "+myGisObjects.size()+" gisObjects to Layer: "+name+" of type "+key);
 		if (dynamic)
 			this.hasDynamic = true;
+		
 	}
 
 	public Map<String,Set<GisObject>> getGisBags() {
@@ -40,12 +43,20 @@ public class GisLayer {
 		this.isVisible=isVisible;
 	}
 	
+	public void setShowLabels(boolean show) {
+		showLabels=show;
+	}
+	
 	public boolean hasDynamic() {
 		return hasDynamic;
 	}
 	
 	public boolean isVisible() {
 		return isVisible;
+	}
+
+	public boolean showLabels() {
+		return showLabels;
 	}
 
 }
