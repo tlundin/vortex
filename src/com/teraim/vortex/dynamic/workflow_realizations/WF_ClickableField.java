@@ -835,7 +835,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 											if (firstSpinner.isShown())
 												firstSpinner.performClick(); 
 										}
-									}, 250);
+									}, 1000);
 								}
 							}).start();
 

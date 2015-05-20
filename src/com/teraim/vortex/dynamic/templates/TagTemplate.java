@@ -15,11 +15,11 @@ import android.gesture.GestureOverlayView;
 import android.gesture.GestureOverlayView.OnGesturePerformedListener;
 import android.gesture.Prediction;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.Spanned;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -405,27 +405,21 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 
 
 	}
+	EditText focusedView = null;
 
 	private void openEditor(int row, final TextView tagTextView) {
 		//check if there is data for this one.
-		List<Coord> rawTag = null;
-		Delyta delyta = null;
-		if (row<=delytor.size()) {			
-			delyta = delytor.get(row-1);
-			rawTag = delyta.getRawTag();
-
-		}
-		final String origText = tagTextView.getText().toString();
+		final String rawTag = tagTextView.getText().toString();
 		//Open popup.
 		View popUpView = inflater.inflate(R.layout.tag_edit_popup_with_rows, null);
 		final PopupWindow mpopup = new PopupWindow(popUpView, LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT, true); //Creation of popup
 		mpopup.setAnimationStyle(android.R.style.Animation_Dialog);   
-		Button avbryt = (Button)popUpView.findViewById(R.id.avbrytB);
+		Button avbrytB = (Button)popUpView.findViewById(R.id.avbrytB);
 		Button sparaLB = (Button)popUpView.findViewById(R.id.sparaB);
 		Button hundraB = (Button)popUpView.findViewById(R.id.hundraB);
 		Button rensaB = (Button)popUpView.findViewById(R.id.rensaB);
-		final EditText[] ETA = new EditText[10];
-		final EditText[] ETR = new EditText[10];
+		final EditText[] ETA = new EditText[MAX_DELPUNKTER];
+		final EditText[] ETR = new EditText[MAX_DELPUNKTER];
 		ETA[0] = (EditText)popUpView.findViewById(R.id.ETA1);
 		ETA[1] = (EditText)popUpView.findViewById(R.id.ETA2);
 		ETA[2] = (EditText)popUpView.findViewById(R.id.ETA3);
@@ -439,6 +433,30 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 		ETR[4] = (EditText)popUpView.findViewById(R.id.ETR5);
 		ETR[5] = (EditText)popUpView.findViewById(R.id.ETR6);
 
+		
+
+		
+		final OnFocusChangeListener focusListener = new OnFocusChangeListener(){
+			      public void onFocusChange(View v, boolean hasFocus){
+			                if(hasFocus){
+			                focusedView = (EditText)v;
+			              } else {
+			                  focusedView  = null;
+			            }
+			        }
+			 };
+		for (EditText eta: ETA){
+			   eta.setOnFocusChangeListener(focusListener);
+			};
+		
+		hundraB.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				if (focusedView!=null)
+					focusedView.setText("100");
+			}
+		});
 		/*
 		final EditText tagE = (EditText)popUpView.findViewById(R.id.tagE);
 		avbryt.setOnClickListener(new OnClickListener() {			
@@ -502,12 +520,20 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 			ETA[i].setFilters(new InputFilter[] { aFilter });
 			ETR[i].setFilters(new InputFilter[] { rFilter });
 		}
+		avbrytB.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				mpopup.dismiss();				
+			}
+		});
+		
 		sparaLB.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
 				String res="";
-				for (int i = 0; i<6;i++) {
+				for (int i = 0; i<MAX_DELPUNKTER;i++) {
 					Editable a = ETA[i].getText();
 					Editable r = ETR[i].getText();
 					if (a==null||r==null)
@@ -519,6 +545,7 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 				if (!res.isEmpty())
 					res = res.substring(0, res.length()-1);
 				tagTextView.setText(res);
+				Log.d("vortex","SETTTING TEXT TO "+res);
 				createDelytorFromTable();
 				dym.analyze();
 				TagTemplate.this.updateAreaField();
@@ -533,21 +560,31 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 		rensaB.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				for (int i = 0; i<6;i++) {
+				for (int i = 0; i<MAX_DELPUNKTER;i++) {
 					ETA[i].setText("");
 					ETR[i].setText("");
 				}
 				subHeaderTxt.setText("");
 			}
 		});
-		if (rawTag!=null) {
+		if (rawTag!=null&&!rawTag.isEmpty()&&!rawTag.startsWith("L")) {
 			headerTxt.setText("Ändra tåg "+row);
-			int i=0;
-			for (Coord c:rawTag) {
-				ETA[i].setText(Integer.toString(c.getAvst()));
-				ETR[i].setText(Integer.toString(c.getRikt()));
-			}
-			subHeaderTxt.setText(delyta.getTagPrettyPrint());
+			int i=0;			
+			String[] rawTA = rawTag.split(",");
+			Log.d("vortex","rawTA has "+rawTA.length+" elements" );
+				boolean avst=true;
+				for (String s:rawTA) {
+					if (avst) {
+						ETA[i].setText(s);
+					} else {
+						ETR[i].setText(s);
+						i++;
+					}
+					avst=!avst;
+						
+				}
+			subHeaderTxt.setText(rawTag);
+
 		}
 
 		else
@@ -581,8 +618,15 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 				} 
 				TextView header = (TextView)tagView.findViewById(R.id.tagHeader);				
 				row++;
-				header.setText("Tåg "+row);				
-				((TextView)tagView.findViewById(R.id.tagBody)).setText(tag);
+				header.setText("Tåg "+row);
+				String errorTxt="";
+				if (errorArray[row-1]!=null) {
+					((TextView)tagView.findViewById(R.id.tagBody)).setTextColor(Color.RED);
+					errorTxt = "["+errorArray[row-1]+"]";
+				}  else
+					((TextView)tagView.findViewById(R.id.tagBody)).setTextColor(gs.getContext().getResources().getColor(R.color.blue_background));
+				((TextView)tagView.findViewById(R.id.tagBody)).setText(tag+errorTxt);
+
 			}
 
 		}
@@ -605,19 +649,31 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 
 	}
 	 */	 
-
+	private String[] errorArray = new String[MAX_TÅG];
+	
 	private void createDelytorFromTable() {
 		//Empty existing. 
 		dym.clear();
 		List<Coord> tagCoordinateList = new ArrayList<Coord>();
-		for (int row=0;row<=MAX_TÅG;row++) {
+		for (int row=0;row<MAX_TÅG;row++) {
+			errorArray[row]=null;
 			LinearLayout tagView = (LinearLayout)gl.getChildAt(row);
-			if (tagView == null)
+			if (tagView == null) {
+				Log.e("vortex","tagview was null for row "+row);
 				break;
+			}
+			final TextView tagTextView = ((TextView)tagView.findViewById(R.id.tagBody));
 			
-			String tagT = ((TextView)tagView.findViewById(R.id.tagBody)).getText().toString();
-			if (tagT==null||tagT.length()==0||tagT.startsWith("L"))
+			String tagT = tagTextView.getText().toString();
+			if (tagT==null||tagT.length()==0) {
+				tagTextView.setText("Lägg till tåg");
+				Log.d("vortex","lenght 0 or null for row "+row);
 				continue;
+			}
+			if (tagT.startsWith("L")) {
+				Log.d("vortex","started with L!! "+row);
+				continue;
+			}
 			//parse...find x,y
 			String avst,rikt;
 			int start = 0,co=0;
@@ -626,6 +682,7 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 				co = tagT.indexOf(',', start);
 				if (co==-1) {
 					err=true;
+					errorArray[row]=", syntax error (avst)";
 					break;
 				}
 				avst = tagT.substring(start,co);
@@ -634,8 +691,11 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 				co = tagT.indexOf(',', start);
 				if (co==-1) {
 					rikt = tagT.substring(start,tagT.length());
-					if (rikt.length()==0 && rikt.length()>3)
+					if (rikt.length()==0 && rikt.length()>3) {
 						err=true;
+						errorArray[row]=", syntax error (rikt)";
+						break;
+					}
 					else
 						tagCoordinateList.add(new Coord(Integer.parseInt(avst),Integer.parseInt(rikt)));
 					break;
@@ -645,15 +705,25 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 				start = co+1;
 				tagCoordinateList.add(new Coord(Integer.parseInt(avst),Integer.parseInt(rikt)));
 			}
+			Log.d("vortex","tåg "+row+" ErrorCode "+errorArray[row]);
 			
-			
-			if (tagCoordinateList.size()>1 && !err) {
-				DelyteManager.ErrCode ec = dym.addUnknownTag(tagCoordinateList);
-				if (ec == null||ec!=DelyteManager.ErrCode.ok)
-					Toast.makeText(getActivity(), "Tåg i rad "+row+" är vajsing!", Toast.LENGTH_LONG).show();
+			if (tagCoordinateList.size()<=1) {
+				err=true;
+				errorArray[row]=", för kort!";
 			}
-			if (err) 
-				Toast.makeText(getActivity(), "Tåg i rad "+row+" har fel syntax eller är tomt!", Toast.LENGTH_SHORT).show();
+				
+				if(!err) {
+				DelyteManager.ErrCode ec = dym.addUnknownTag(tagCoordinateList);
+				if (ec == null||ec!=DelyteManager.ErrCode.ok) {
+					err=true;
+					errorArray[row]=", "+ec.name();
+				}
+			}
+			if (errorArray[row]!=null) {
+				tagTextView.setTextColor(Color.RED);
+				tagTextView.setText(tagT+errorArray[row]);
+			} else 
+				tagTextView.setTextColor(gs.getContext().getResources().getColor(R.color.blue_background));
 			tagCoordinateList.clear();
 		}
 		//Check if no delyta. In that case, add default.
@@ -766,8 +836,8 @@ private void drawTrains() {
 		if (!dym.save()) {
 			new AlertDialog.Builder(TagTemplate.this.getActivity())
 			.setTitle("Fel")
-			.setMessage("En småprovyta tycks ligga utanför. Kanske är ditt tåg lite konstigt? (det ska gå MEDURS!). Om du känner dig tvärsäker att du visst har rätt: rapportera bugg!")
-			.setPositiveButton("Ok, jag flyttar!", new DialogInterface.OnClickListener() {
+			.setMessage("Det finns fel i dina tåg. Symptomet är att åtminstone en småprovyta ligger utanför alla delytor. Om du anser att dina tåg är korrekta, rapportera bugg.")
+			.setPositiveButton("Ok!", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) { 
 
 				}

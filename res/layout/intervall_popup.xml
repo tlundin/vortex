@@ -4,7 +4,7 @@
     android:layout_height="fill_parent" >
 
     <TextView
-        android:id="@+id/textView1"
+        android:id="@+id/filterName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="15dp"
@@ -13,8 +13,8 @@
 
     <EditText
         android:id="@+id/avgrStart"
-        android:layout_alignLeft="@+id/textView1"
-        android:layout_below="@+id/textView1"
+        android:layout_alignLeft="@+id/filterName"
+        android:layout_below="@+id/filterName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:ems="3"

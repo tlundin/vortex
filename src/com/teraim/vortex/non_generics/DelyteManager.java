@@ -112,6 +112,8 @@ public class DelyteManager {
 	}
 
 	private boolean updateSmaProvToDelytaAssociations() {
+		Variable nyUtlagg = gs.getVariableConfiguration().getVariableUsingKey(gs.getVariableConfiguration().createProvytaKeyMap(), NamedVariables.NYUTLAGG);
+		//Only do the association if nyutlägg.
 		Map<String, String> key;
 		DbHelper db = gs.getDb();
 		final int[] b = (Constants.isAbo(myPyID)?new int[]{1,2,4,8,16,32,64,128,256}:new int[]{1,2,4});
@@ -143,11 +145,19 @@ public class DelyteManager {
 					Log.d("nils","adding Delyta ID "+d.getId()+" to småprovyta "+(i+1));
 					key = al.createProvytaKeyMap();
 					key.put("smaprovyta", (i+1)+"");
-					db.fastInsert(key, "Delyta", d.getId()+"");					
+					db.fastInsert(key, NamedVariables.BeraknadInomDelyta, d.getId()+"");					
+					if (nyUtlagg.getValue()!=null) {
+						db.fastInsert(key, NamedVariables.InomDelyta, d.getId()+"");
+						
+					}
+						
+
 				}
 		}
 
+		
 		return true;
+		
 
 	}
 
@@ -187,7 +197,8 @@ public class DelyteManager {
 					Log.d("nils","Start less: "+nyR);
 
 				Log.d("nils","DIST: "+dist);
-				Coord m = new Coord(85,nyR);
+				Coord m;
+				m = new Coord(85,nyR);
 
 				d.setNumberPos(m.x,m.y);
 			} else {

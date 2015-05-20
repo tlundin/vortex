@@ -80,7 +80,8 @@ public class Polygon
 		 */
 		public Builder close()
 		{
-			validate();
+			if (!validate())
+				return null;
 
 			// add last Line
 			_sides.add(new Line(_vertexes.get(_vertexes.size() - 1), _vertexes.get(0)));
@@ -96,7 +97,8 @@ public class Polygon
 		 */
 		public Polygon build()
 		{
-			validate();
+			if (!validate())
+				return null;
 
 			// in case you forgot to close
 			if (!_isClosed)
@@ -149,12 +151,10 @@ public class Polygon
 			}
 		}
 
-		private void validate()
+		private boolean validate()
 		{
-			if (_vertexes.size() < 3)
-			{
-				throw new RuntimeException("Polygon must have at least 3 points");
-			}
+			return (_vertexes.size() >= 3);
+			
 		}
 	}
 

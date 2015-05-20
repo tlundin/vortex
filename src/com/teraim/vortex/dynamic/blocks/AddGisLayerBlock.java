@@ -31,7 +31,11 @@ import com.teraim.vortex.utils.PersistenceHelper;
 public class AddGisLayerBlock extends Block {
 
 	
-	private String id, name, label,target;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4149408006972701777L;
+	private String name, label,target;
 	private boolean isVisible, hasWidget;
 	private WF_Gis_Map myGis;
 	private boolean showLabels;
@@ -39,7 +43,7 @@ public class AddGisLayerBlock extends Block {
 	public AddGisLayerBlock(String id, String name, String label,
 			String target, boolean isVisible, boolean hasWidget, boolean showLabels) {
 		super();
-		this.id = id;
+		this.blockId = id;
 		this.name = name;
 		this.label = label;
 		this.target = target;
@@ -64,20 +68,22 @@ public class AddGisLayerBlock extends Block {
 				CheckBox lShow = (CheckBox)layersRow.findViewById(R.id.cbShow);
 				CheckBox lLabels = (CheckBox)layersRow.findViewById(R.id.cbLabels);
 				lShow.setChecked(isVisible);
-				lShow.setChecked(showLabels);
+				lLabels.setChecked(showLabels);
 				lShow.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 					
 					@Override
 					public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {						
 						gisLayer.setVisible(isChecked);
+						isVisible=isChecked;
 						myGis.getGis().invalidate();
 					}
 				});
-				lShow.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+				lLabels.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 					
 					@Override
 					public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {						
 						gisLayer.setShowLabels(isChecked);
+						showLabels=isChecked;
 						myGis.getGis().invalidate();
 					}
 				});

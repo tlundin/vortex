@@ -24,6 +24,7 @@ import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
 import com.teraim.vortex.bluetooth.BluetoothConnectionService;
 import com.teraim.vortex.dynamic.blocks.AddEntryToFieldListBlock;
+import com.teraim.vortex.dynamic.blocks.AddGisFilter;
 import com.teraim.vortex.dynamic.blocks.AddGisLayerBlock;
 import com.teraim.vortex.dynamic.blocks.AddGisPointObjects;
 import com.teraim.vortex.dynamic.blocks.AddRuleBlock;
@@ -562,6 +563,10 @@ public abstract class Executor extends Fragment {
 				}
 				else if (b instanceof AddGisPointObjects) {
 					((AddGisPointObjects) b).create(myContext);
+				}
+				
+				else if (b instanceof AddGisFilter) {
+					((AddGisFilter) b).create(myContext);
 				}
 				
 				String cId = b.getBlockId();

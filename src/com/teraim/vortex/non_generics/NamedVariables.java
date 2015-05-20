@@ -24,7 +24,7 @@ public class NamedVariables {
 	public static final String STATUS_LINJE = "status_linje";
 	public static final String STATUS_FOTO = "status_foto";
 	public static final String TransportledTyp = "Väg:TransportLedTyp";
-
+	public static final String BeraknadInomDelyta = "inomDelytaBeraknad";
 
 
 	public static final String[] FIXPUNKT_VARS = new String[] {"fixpunkter:FixPunkt1:avstand",
@@ -60,6 +60,10 @@ public class NamedVariables {
 	public static final String WF_SMAPROV_INMATNING_ABO_YTTRE = "wf_ÄBO_småprovyta_yttre";
 	public static final String WF_SMAPROV_INMATNING_ABO_INRE = "wf_ÄBO_småprovyta_inre";
 	public static final String WF_DELYTE_INMATNING_ABO = "wf_ÄBO_delyta";
+
+	public static final String InomDelyta = "inomDelyta";
+
+	
 
 
 	

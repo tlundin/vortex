@@ -70,6 +70,9 @@ public class MasterMessageHandler extends MessageHandler {
 				gs.sendEvent(BluetoothConnectionService.SYNK_DATA_RECEIVED);
 			}
 
+		} else {
+			Log.e("vortex","Discarded message..");	
+			o.addRow("[BT MESSAGE --> Discarded message!]");
 		}
 
 	}

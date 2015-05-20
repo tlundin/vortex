@@ -24,10 +24,15 @@ public class GisObject {
 		
 	}
 	
+	public GisObject(Map<String, String> keyChain,
+			List<Location> myCoordinates, Map<String, String> attributes) {
+		this.keyChain=keyChain;this.myCoordinates=myCoordinates;this.attributes=attributes;
+	}
+
 	protected CoordinateType coordinateType = CoordinateType.sweref;
 	protected List<Location> myCoordinates = new ArrayList<Location>();
 	protected Map<String, String> keyChain = new HashMap<String,String>();
-
+	protected Map<String, String> attributes;
 	
 
 
@@ -37,6 +42,10 @@ public class GisObject {
 	
 	public Map<String, String> getKeyHash() {
 		return keyChain;
+	}
+	
+	public Map<String, String> getAttributes() {
+		return attributes;
 	}
 	
 	public static List<Location> createListOfLocations(String value, String coordType) {

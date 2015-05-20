@@ -258,8 +258,12 @@ public class RuleExecutor {
 
 	}
 
-
-	public List<TokenizedItem>findTokens(String formula,String mainVar) {		
+	public List<TokenizedItem>findTokens(String formula,String mainVar) {
+		return findTokens(formula,mainVar,GlobalState.getInstance().getCurrentKeyHash());
+	}
+	
+	public List<TokenizedItem>findTokens(String formula,String mainVar, Map<String,String> keyHash) {	
+		
 		Log.d("vortex","In findTokens for formula "+formula);
 		List<TokenizedItem> cached = formulaCache.get(formula);
 		if (cached !=null) {
@@ -400,7 +404,7 @@ public class RuleExecutor {
 						//}
 						//check for variable match if no function match,
 						if (tokenType == SimpleTokenType.eitherfuncorvar && function == null) {
-							Variable var = GlobalState.getInstance().getVariableConfiguration().getVariableInstance(tokenName);
+							Variable var = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(keyHash,tokenName);
 							if (var!=null) {
 								Log.d("vortex","Found variable match for "+tokenName+" in formula");
 								myFormulaTokens.add(new TokenizedItem(var));

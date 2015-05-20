@@ -28,6 +28,13 @@ public class GisPolygonObject extends GisObject {
 	}
 
 
+	public GisPolygonObject(Map<String, String> keyChain,
+			Map<String, List<Location>> polygons,
+			Map<String, String> attributes) {
+		super(keyChain,null,attributes);
+		this.polygons=polygons;	
+	}
+
 	private Map<String, List<Location>> buildMap(String polygons,String coordType) {
 		int i=1;
 		if (polygons==null) 

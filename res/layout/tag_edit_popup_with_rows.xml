@@ -354,6 +354,12 @@
                 android:layout_height="wrap_content"
                 android:text="Rensa" />
 
+            <Button
+                android:id="@+id/hundraB"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="100" />
+
             </LinearLayout>
         <LinearLayout
             android:id="@+id/buttons"

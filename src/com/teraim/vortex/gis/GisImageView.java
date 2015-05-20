@@ -2,7 +2,6 @@ package com.teraim.vortex.gis;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -21,7 +20,6 @@ import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
-import android.view.View.OnClickListener;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.Start;
@@ -31,15 +29,15 @@ import com.teraim.vortex.dynamic.types.PhotoMeta;
 import com.teraim.vortex.dynamic.types.Point;
 import com.teraim.vortex.dynamic.types.SweLocation;
 import com.teraim.vortex.dynamic.types.Workflow;
+import com.teraim.vortex.dynamic.workflow_realizations.gis.GisFilter;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisMultiPointObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisPointObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisPolygonObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.WF_Gis_Map;
-import com.teraim.vortex.dynamic.workflow_realizations.gis.WF_MapLayer;
-import com.teraim.vortex.loadermodule.configurations.GisPolygonConfiguration;
-import com.teraim.vortex.loadermodule.configurations.GisPolygonConfiguration.GisBlock;
-import com.teraim.vortex.loadermodule.configurations.GisPolygonConfiguration.SweRefCoordinate;
+import com.teraim.vortex.utils.RuleExecutor;
+import com.teraim.vortex.utils.RuleExecutor.SubstiResult;
+import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 
 public class GisImageView extends GestureImageView {
 
@@ -60,7 +58,7 @@ public class GisImageView extends GestureImageView {
 
 	private int colorCount = 0;
 	private int[] myColors = {Color.BLUE,Color.YELLOW,Color.RED,Color.GREEN,Color.WHITE,Color.CYAN};
-	private List<WF_MapLayer> mapLayers;
+	//private List<WF_MapLayer> mapLayers;
 	private PhotoMeta photoMetaData;
 	private Paint rCursorPaint;
 	private Paint blCursorPaint;
@@ -516,9 +514,11 @@ public class GisImageView extends GestureImageView {
 				this.startDynamicRedraw();
 			}
 			Map<String, Set<GisObject>> bags = layerO.getGisBags();
+			Map<String, Set<GisFilter>> filterMap = layerO.getFilters();
 			if (!bags.isEmpty()) {
 				GisPointObject touchedGop = null;
 				for (String key:bags.keySet()) {
+					Set<GisFilter> filters = filterMap.get(key);
 					Set<GisObject> gisObjects = bags.get(key);
 					Log.d("vortex","Found "+gisObjects.size()+" objects");
 					for (GisObject go:gisObjects) {
@@ -535,22 +535,45 @@ public class GisImageView extends GestureImageView {
 									Log.e("vortex","xy null for pointobject: "+gop.toString());
 									continue;
 								}
-								Bitmap bitmap = gop.getIcon();
-								Rect r = new Rect();
 								if (mapLocationForClick!=null && touchedGop ==null && gop.isTouchedByClick(mapLocationForClick,pXR,pYR)) {
 									touchedGop = gop;
 									isTouched=true;
 								}
+								Bitmap bitmap = gop.getIcon();
+								float radius = gop.getRadius();
+								String color = gop.getColor();
+								Style style = gop.getStyle();
+								boolean isCircle = gop.isCircle();
+								if (!filters.isEmpty()) {
+									RuleExecutor ruleExecutor = RuleExecutor.getInstance(getContext());
+									for (GisFilter filter:filters) {	
+										if (filter.isActive()) {
+										List<TokenizedItem> myTokens = ruleExecutor.findTokens(filter.getExpression(),null, gop.getKeyHash());
+										SubstiResult substR = ruleExecutor.substituteForValue(myTokens, filter.getExpression(),false);
+										String result = ruleExecutor.parseExpression(filter.getExpression(),substR.result);
+										if (result!=null&&!result.equals("0")) {
+											Log.d("vortex","FILTER MATCH FOR FILTER: "+filter.getLabel());
+											bitmap = filter.getBitmap();
+											radius = filter.getRadius();
+											color = filter.getColor();
+											style = filter.getStyle();
+											isCircle = filter.isCircle();
+										}
+										}
+									}
+								}
+								Rect r = new Rect();
+								
 								if (bitmap!=null) {
 									r.set(xy[0]-32, xy[1]-32, xy[0], xy[1]);
 									canvas.drawBitmap(bitmap, null, r, null);
 								} //circular?
-								else if(gop.isCircle()) {
-									canvas.drawCircle(xy[0], xy[1], gop.getRadius(), !isTouched?createPaint(gop.getColor(),gop.getStyle()):rCursorPaint);
+								else if(isCircle) {
+									canvas.drawCircle(xy[0], xy[1], radius, !isTouched?createPaint(color,style):rCursorPaint);
 								} //no...square.
 								else {									
 									r.set(xy[0]-5, xy[1]-5, xy[0]+5, xy[1]+5);
-									canvas.drawRect(r, createPaint(gop.getColor(),gop.getStyle()));
+									canvas.drawRect(r, createPaint(color,style));
 								}
 								if (layerO.showLabels()&&!isTouched) {
 									String mLabel = gop.getLabel();
@@ -563,7 +586,7 @@ public class GisImageView extends GestureImageView {
 								}
 								
 								isTouched=false;
-								
+																
 							}
 						} else if (go instanceof GisMultiPointObject) {
 							//Log.d("vortex","Drawing multipoint!!");

@@ -101,11 +101,16 @@ public class Delyta {
 		//avst to smaprov is always 6 meters.
 		int i=0;
 		Polygon.Builder builder = Polygon.Builder();
+		
 
 		for (Coord c:delytePolygon) {
 			builder.addVertex(new Point(c.x,c.y));
 		}
 		Polygon p = builder.build();
+		if (p==null) { 
+			Log.e("vortex","Couldnt build polygon...something wrong with tåg");
+			return;
+		}
 		i = 0;
 		containsSmaProv=0;
 		for (int avst:avstA) {

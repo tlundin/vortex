@@ -12,6 +12,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import android.util.Log;
 
 import com.teraim.vortex.dynamic.blocks.AddEntryToFieldListBlock;
+import com.teraim.vortex.dynamic.blocks.AddGisFilter;
 import com.teraim.vortex.dynamic.blocks.AddGisLayerBlock;
 import com.teraim.vortex.dynamic.blocks.AddGisPointObjects;
 import com.teraim.vortex.dynamic.blocks.AddRuleBlock;
@@ -242,6 +243,8 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 					blocks.add(readBlockAddGisPointObjects(parser,GisObjectType.polygon));
 				else if (name.equals("block_add_gis_linestring_objects"))
 					blocks.add(readBlockAddGisPointObjects(parser,GisObjectType.linestring));
+				else if (name.equals("block_add_gis_filter"))
+					blocks.add(readBlockAddGisFilter(parser));
 				else {			
 					skip(name,parser,o);
 				}
@@ -268,6 +271,56 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 		o.addRow("");
 		o.addGreenText("No duplicate block IDs");
 		return blocks;
+	}
+	
+	
+	private Block readBlockAddGisFilter(XmlPullParser parser) throws IOException, XmlPullParserException {
+		o.addRow("Parsing block: block_add_gis_filter...");
+		String id=null,nName=null,targetName=null,targetLayer=null,label=null, color=null,polyType=null,fillType=null,
+				imgSource=null,radius=null,expression=null;
+		boolean hasWidget = true;
+
+		parser.require(XmlPullParser.START_TAG, null,"block_add_gis_filter");
+		Log.d("vortex","In block_add_gis_filter!!");
+		while (parser.next() != XmlPullParser.END_TAG) {
+			if (parser.getEventType() != XmlPullParser.START_TAG) {
+				continue;
+			}
+			String name= parser.getName();
+			if (name.equals("block_ID")) {
+				id = readText("block_ID",parser);
+			} else if (name.equals("target_name")) {
+				targetName = readText("target_name",parser);
+			} else if (name.equals("target_layer")) {
+				targetLayer = readText("target_layer",parser);
+			} else if (name.equals("label")) {
+				label = readText("label",parser);
+			} else if (name.equals("color")) {
+				color = readText("color",parser);
+			} else if (name.equals("paint_style")) {
+				fillType = readText("paint_style",parser);
+			} else if (name.equals("poly_type")) {
+				polyType = readText("poly_type",parser);
+			} else if (name.equalsIgnoreCase("name")) {
+				nName = readText("name",parser);			
+			}  else if (name.equalsIgnoreCase("expression")) {
+				expression = readText("expression",parser);
+			} else if (name.equalsIgnoreCase("img_source")) {
+				imgSource = readText("img_source",parser);
+			} else if (name.equalsIgnoreCase("radius")) {
+				radius= readText("radius",parser);
+			} else if (name.equalsIgnoreCase("has_widget")) {
+				hasWidget = readText("has_widget",parser).equalsIgnoreCase("true");
+			}
+			else {
+				Log.e("vortex","Skipped "+name);
+				skip(name,parser);
+			}
+		}
+
+		checkForNull("block_ID",id,"targetName",targetName,"targetLayer",targetLayer,"expression",expression);
+		return new AddGisFilter(id,nName,label,targetName,targetLayer,expression,imgSource,radius,color,polyType,fillType,hasWidget);
+
 	}
 
 /*

@@ -130,6 +130,7 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 			reader.beginArray();
 			double x,y,z;
 			Map<String,String>keyChain = new HashMap<String,String>();
+			Map<String,String> attributes = new HashMap<String,String>();
 			String mType = type.trim().toLowerCase();
 			if (mType.equals(GisConstants.POINT)) {
 				//Log.d("vortex","parsing point object.");
@@ -148,7 +149,7 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 					myCoordinates.add(new SweLocation(x, y));
 					reader.endArray();
 				}
-				myGisObjects.add(new GisObject(keyChain,myCoordinates));
+				myGisObjects.add(new GisObject(keyChain,myCoordinates,attributes));
 			}  else if (mType.equals(GisConstants.POLYGON)){
 				Map<String,List<Location>> polygons = null;
 				List<Location> myCoordinates=null; 
@@ -172,7 +173,7 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 				}
 
 				if (polygons!=null&&!polygons.isEmpty())
-					myGisObjects.add(new GisPolygonObject(keyChain,polygons));
+					myGisObjects.add(new GisPolygonObject(keyChain,polygons,attributes));
 
 			} else {
 				o.addRow("");
@@ -188,7 +189,6 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 			//Properties
 			reader.nextName();
 			reader.beginObject();
-			Map<String,String> attributes = new HashMap<String,String>();
 			while(reader.hasNext()) {
 				attributes.put(reader.nextName(),this.getAttribute(reader));
 			}
@@ -197,18 +197,18 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 			reader.endObject();
 			//end row
 			reader.endObject();
-			String uuid = attributes.get(GisConstants.GlobalID);
-			String rutaId = attributes.get(GisConstants.RutaID);
+			String uuid = attributes.remove(GisConstants.GlobalID);
+			String rutaId = attributes.remove(GisConstants.RutaID);
 			if (rutaId==null) {
 				Log.e("vortex","ingen ruta ID!!!!");
-				rutaId = "207";
+				rutaId = "666";
 			}
 			
 				
 			if (uuid!=null)
-				keyChain.put("block",uuid);
+				keyChain.put("uid",uuid);
 			else
-				keyChain.put("block",UUID.randomUUID().toString());
+				keyChain.put("uid",UUID.randomUUID().toString());
 			keyChain.put("år", VariableConfiguration.HISTORICAL_MARKER);
 			keyChain.put("ruta", rutaId);
 			keyChain.put(GisConstants.TYPE_COLUMN, myType);
@@ -243,17 +243,28 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 			firstCall = false;
 			Log.d("vortex","keyhash for first: "+myGisObjects.get(0).getKeyHash().toString());
 		}
-		if (this.freezeSteps==(counter+1)) {
-			Log.d("vortex","Transaction ends");
-			myDb.endTransaction();
-		}
+	
 		//Insert GIS variables into database
 		GisObject go = myGisObjects.get(counter);
 		if (!myDb.fastHistoricalInsert(go.getKeyHash(),
 				GisConstants.Location,go.coordsToString())) {
 			o.addRow("");
-			o.addRedText("Row: "+counter+". Insert failed. Hash: "+go.getKeyHash().toString());
+			o.addRedText("Row: "+counter+". Insert failed for "+GisConstants.Location+". Hash: "+go.getKeyHash().toString());
 		}
+		Map<String, String> attr = go.getAttributes();
+		
+		for (String key:attr.keySet()) {
+			String val = attr.get(key);
+			if (!myDb.fastHistoricalInsert(go.getKeyHash(),key,val)) {
+				o.addRow("");
+				o.addRedText("Row: "+counter+". Insert failed for "+key+". Hash: "+go.getKeyHash().toString());;
+			}
+		}
+		if (this.freezeSteps==(counter+1)) {
+			Log.d("vortex","Transaction ends");
+			myDb.endTransaction();
+		}
+		
 		return true;
 
 	}

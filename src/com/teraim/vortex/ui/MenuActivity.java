@@ -247,6 +247,7 @@ public class MenuActivity extends Activity {
 			mnu[c].setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);	
 
 		}
+		mnu[1].setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
 		mnu[mnu.length-1]=menu.add(0,mnu.length-1,mnu.length-1,"");
 		mnu[mnu.length-1].setIcon(android.R.drawable.ic_menu_preferences);
 		mnu[mnu.length-1].setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
@@ -287,12 +288,12 @@ public class MenuActivity extends Activity {
 		mnu[3].setTitle("SYNK "+gs.getSyncStatusS());
 		//mnu[c++].setTitle("Användare: "+gs.getPersistence().get(PersistenceHelper.USER_ID_KEY));
 		//mnu[c++].setTitle("Typ: "+gs.getDeviceType());
-
-		mnu[0].setVisible(globalPh.getB(PersistenceHelper.SYNC_FEATURE));	
+		boolean hasSynk = globalPh.getB(PersistenceHelper.SYNC_FEATURE)&&!gs.isSolo();
+		mnu[0].setVisible(hasSynk);	
 		//If (title is empty, don't show r-p-d-l status
-		mnu[1].setVisible(mContextH!=null && mContextH.length()!=0);		
-		mnu[2].setVisible(globalPh.getB(PersistenceHelper.DEVELOPER_SWITCH));
-		mnu[3].setVisible(globalPh.getB(PersistenceHelper.SYNC_FEATURE));
+		mnu[1].setVisible(globalPh.getB(PersistenceHelper.SHOW_CONTEXT)&&mContextH!=null && mContextH.length()!=0);		
+		mnu[2].setVisible(globalPh.getB(PersistenceHelper.DEVELOPER_SWITCH));	
+		mnu[3].setVisible(hasSynk);
 		
 	}
 

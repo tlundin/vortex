@@ -66,13 +66,20 @@ public class SlaveMessageHandler extends MessageHandler {
 					initializationDone=true;
 				} else 
 					Log.e("nils","received extra master ping");
-			} else {
-				Log.e("vortex","Discarded message..init not done");	
-				o.addRow("[BT MESSAGE --> Discarded message. Init not done!]");
-			}
-		} else {
-
+			} else if (message instanceof SlavePing) {
+					o.addRow("");
+					o.addRedText("Got Slave Ping. Both devices configured as slaves");
+					gs.sendEvent(BluetoothConnectionService.SAME_SAME_SYNDROME);
+				}
+			else {
+				Log.e("vortex","Discarded message..not a ping (init not done)");	
+				o.addRow("[BT MESSAGE --> Discarded message (no ping). Init not done!]");
+			} 
+			
+		
+		} else 	{ 
 			if (message instanceof SyncEntry[]) {
+		
 				SyncEntry[] ses = (SyncEntry[])message;
 				o.addRow("[BT MESSAGE -->Recieved "+ses.length+" rows of data]");				
 				Log.d("nils","[BT MESSAGE -->Recieved "+ses.length+" rows of data]");	
@@ -85,17 +92,16 @@ public class SlaveMessageHandler extends MessageHandler {
 				o.addRow("Trying to send my data to Master.");
 				gs.triggerTransfer();
 
+			} else {
+				Log.e("vortex","Discarded message..");	
+				o.addRow("[BT MESSAGE --> Discarded message!]");
 			}
-
-			else if (message instanceof SlavePing) {
-				o.addRow("");
-				o.addRedText("Got Slave Ping. Both devices configured as slaves");
-				gs.sendEvent(BluetoothConnectionService.SAME_SAME_SYNDROME);
-			}
-
-
 
 		}
+
+
+
+		
 
 	}
 }

@@ -397,7 +397,7 @@ public class Tools {
 		VariableConfiguration al = gs.getVariableConfiguration();
 		LoggerI o = gs.getLogger();
 		List<String >listValues = al.getListElements(variable.getBackingDataSet());
-		Log.d("nils","Found dynamic list definition..parsing");
+		Log.d("nils","Found dynamic list definition for variable "+variable.getId());
 
 		if (listValues!=null&&listValues.size()>0) {
 			String [] columnSelector = listValues.get(0).split("=");
@@ -454,8 +454,14 @@ public class Tools {
 								return Integer.parseInt(a)-Integer.parseInt(b);
 							}}						                         
 								);
-						for (int i = 0; i<values.size();i++) 
-							ss.add(values.get(i)[0]);
+						String S;
+						for (int i = 0; i<values.size();i++) {
+							S = values.get(i)[0];
+							if (Tools.isNumeric(S))
+									ss.add(S);
+							else
+								Log.e("vortex","NonNumeric value found: ["+S+"]");
+						}
 						opt = new String[ss.size()];
 						int i = 0; 
 						Iterator<String> it = ss.iterator();
