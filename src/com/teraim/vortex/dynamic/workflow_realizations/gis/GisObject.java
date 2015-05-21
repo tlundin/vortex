@@ -73,7 +73,6 @@ public class GisObject {
 	
 	public String coordsToString() {
 		StringBuilder sb = new StringBuilder();
-		Log.d("vortex","Size of myC: "+myCoordinates.size());
 		for (Location l:myCoordinates) {
 			
 			sb.append(l.toString());

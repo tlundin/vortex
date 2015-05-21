@@ -63,6 +63,13 @@ public class SlaveMessageHandler extends MessageHandler {
 
 					Log.d("nils","Got MasterPing..waiting for sync data.");	
 					o.addRow("[BT MESSAGE --> Got MasterPing. Now expecting sync data]");
+					
+					if (mp.requestAll()) {
+						gs.getPreferences().put(PersistenceHelper.TIME_OF_LAST_SYNC,PersistenceHelper.UNDEFINED);
+						Log.d("vortex","Resetting DB Counter!");
+						o.addRow("");
+						o.addGreenText("Partner db empty. Resetting my DB Counter");
+					}
 					initializationDone=true;
 				} else 
 					Log.e("nils","received extra master ping");

@@ -118,7 +118,8 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 	@Override
 	public void onCreate() {
 		
-		gs = GlobalState.getInstance();		
+		gs = GlobalState.getInstance();	
+		if (gs!=null) {
 		o = gs.getLogger();
 		Log.d("NILS","Service on create");
 		o.addRow("BlueTooth service starting up");
@@ -206,7 +207,7 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 				ping();
 			}
 			
-	
+		}
 	}
 
 
@@ -219,7 +220,8 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 		myLag = gs.getGlobalPreferences().get(PersistenceHelper.LAG_ID_KEY);
 		bundleVersion = gs.getPreferences().get(PersistenceHelper.CURRENT_VERSION_OF_WF_BUNDLE);
 		softwareVersion = Float.toString(gs.getGlobalPreferences().getF(PersistenceHelper.CURRENT_VERSION_OF_PROGRAM));
-		send(gs.isMaster()?new MasterPing(myName,myLag,bundleVersion,softwareVersion):new SlavePing(myName,myLag,bundleVersion,softwareVersion));
+		boolean requestAll = gs.getPreferences().get(PersistenceHelper.TIME_OF_LAST_SYNC).equals(PersistenceHelper.UNDEFINED);
+		send(gs.isMaster()?new MasterPing(myName,myLag,bundleVersion,softwareVersion,requestAll):new SlavePing(myName,myLag,bundleVersion,softwareVersion,requestAll));
 	}
 
 

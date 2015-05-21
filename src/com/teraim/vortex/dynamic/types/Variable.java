@@ -337,9 +337,11 @@ public class Variable implements Serializable {
 	}
 
 	public void invalidate() {
-		Log.d("nils","calling invalidate on "+this.getId());
+		Log.d("vortex","Invalidating variable: "+this.getId());
 		unknown=true;
 		usingDefault = false;
+		//Log.d("vortex","Test - getValue returns: "+this.getValue());
+		//Log.d("vortex","My keychain is: "+this.getKeyChain().toString());
 
 	}
 

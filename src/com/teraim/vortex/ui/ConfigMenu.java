@@ -143,6 +143,12 @@ public class ConfigMenu extends PreferenceActivity {
 				}
 				
 			}
+			
+			//force redraw of menuactivity.
+			GlobalState gs = GlobalState.getInstance();
+			if (gs!=null) {
+				gs.sendEvent(MenuActivity.REDRAW);
+			}
 			/*
 			else if (pref instanceof CheckBoxPreference) {
 				CheckBoxPreference cpref = (CheckBoxPreference)pref;

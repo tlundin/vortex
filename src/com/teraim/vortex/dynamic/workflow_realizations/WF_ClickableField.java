@@ -218,7 +218,6 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 		sd = gs.getSpinnerDefinitions();
 		al = gs.getVariableConfiguration();
 		o = gs.getLogger();
-		firstSpinner=null;
 		//SpannableString content = new SpannableString(headerT);
 		//content.setSpan(new UnderlineSpan(), 0, content.length(), 0);
 		inputContainer = new LinearLayout(context.getContext());
@@ -334,6 +333,9 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 		String[] opt=null;
 		String[] val=null;
 		boolean spin = false;
+		
+		firstSpinner=null;
+		
 		if (showHistorical) 
 			hist = var.getHistoricalValue();
 
@@ -835,7 +837,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 											if (firstSpinner.isShown())
 												firstSpinner.performClick(); 
 										}
-									}, 1000);
+									}, 500);
 								}
 							}).start();
 

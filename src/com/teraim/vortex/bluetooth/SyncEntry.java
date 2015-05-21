@@ -36,8 +36,7 @@ public class SyncEntry extends SyncMessage {
 			Log.e("nils","Unknown type of Sync action!: "+a);
 			mType = Type.unknown;
 		}
-		if(!isDeleteDelytor() && !isDeleteProvyta()) {	
-			//This is totally foolish. Comma cannot be used as separator.
+		if(!isDeleteDelytor() && !isDeleteProvyta()&&!isDelete()) {	
 			String[] tmp = changes.split("_\\$_");
 			if (tmp==null||tmp.length!=2) 
 				Log.e("nils","something wrong with syncentry with changes: ["+changes+"]");

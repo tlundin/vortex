@@ -45,6 +45,12 @@ public class MasterMessageHandler extends MessageHandler {
 			o.addRow("[BT MESSAGE--->PING]");				
 			gs.setMyPartner(sp.getPartner());
 			initializationDone=true;
+			if (sp.requestAll()) {
+				gs.getPreferences().put(PersistenceHelper.TIME_OF_LAST_SYNC,PersistenceHelper.UNDEFINED);
+				Log.d("vortex","Resetting DB Counter!");
+				o.addRow("");
+				o.addGreenText("Partner db empty. Resetting my DB Counter");
+			}
 			gs.triggerTransfer();
 			} else 
 				Log.e("nils","received extra slave ping");

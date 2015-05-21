@@ -139,7 +139,7 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 				x = reader.nextDouble();
 				y = reader.nextDouble();
 				myLocation = new SweLocation(x, y);
-				myGisObjects.add(new GisObject(keyChain,Arrays.asList(new Location[] {myLocation})));
+				myGisObjects.add(new GisObject(keyChain,Arrays.asList(new Location[] {myLocation}),attributes));
 			} else if (mType.equals(GisConstants.MULTI_POINT)||(mType.equals(GisConstants.LINE_STRING))){
 				List<Location> myCoordinates = new ArrayList<Location>();
 				while (!reader.peek().equals(JsonToken.END_ARRAY)) {					
@@ -192,7 +192,7 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 			while(reader.hasNext()) {
 				attributes.put(reader.nextName(),this.getAttribute(reader));
 			}
-			//Log.d("vortex",attributes.toString());
+			Log.d("vortex",attributes.toString());
 			//end attributes
 			reader.endObject();
 			//end row
@@ -252,7 +252,7 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 			o.addRedText("Row: "+counter+". Insert failed for "+GisConstants.Location+". Hash: "+go.getKeyHash().toString());
 		}
 		Map<String, String> attr = go.getAttributes();
-		
+
 		for (String key:attr.keySet()) {
 			String val = attr.get(key);
 			if (!myDb.fastHistoricalInsert(go.getKeyHash(),key,val)) {
@@ -260,6 +260,7 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 				o.addRedText("Row: "+counter+". Insert failed for "+key+". Hash: "+go.getKeyHash().toString());;
 			}
 		}
+		
 		if (this.freezeSteps==(counter+1)) {
 			Log.d("vortex","Transaction ends");
 			myDb.endTransaction();

@@ -202,10 +202,10 @@ public class VarCache {
 			for (Variable v:vl)
 				v.invalidate();
 		} else {
-			Log.d("nils","Could not find variable "+varId);
-			Log.d("nils","Current key SET: ");
-			for (String s: cache.keySet())
-				Log.d("nils"," KEY: "+s);
+//			Log.d("nils","Could not find variable "+varId);
+//			Log.d("nils","Current key SET: ");
+//			for (String s: cache.keySet())
+//				Log.d("nils"," KEY: "+s);
 		}
 
 	}

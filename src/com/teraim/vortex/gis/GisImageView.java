@@ -544,7 +544,7 @@ public class GisImageView extends GestureImageView {
 								String color = gop.getColor();
 								Style style = gop.getStyle();
 								boolean isCircle = gop.isCircle();
-								if (!filters.isEmpty()) {
+								if (filters!=null&&!filters.isEmpty()) {
 									RuleExecutor ruleExecutor = RuleExecutor.getInstance(getContext());
 									for (GisFilter filter:filters) {	
 										if (filter.isActive()) {
