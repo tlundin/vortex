@@ -31,7 +31,6 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 
 	private LoggerI o;
 	private DbHelper myDb;
-	private static GisObjectConfiguration singleton;
 	private List<GisObject> myGisObjects = new ArrayList<GisObject>();
 	private String myType;
 
@@ -40,7 +39,6 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 		this.o = debugConsole;
 		this.myDb = myDb;
 		//isDatabaseModule=true;
-		this.singleton=this;
 		this.hasSimpleVersion=true;
 		this.isDatabaseModule=true;
 		this.myType = fileName;
@@ -272,8 +270,5 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 
 
 
-	public static GisObjectConfiguration getSingleton() {
-		return singleton;
-	}
 
 }

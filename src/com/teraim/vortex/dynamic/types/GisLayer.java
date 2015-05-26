@@ -45,6 +45,7 @@ public class GisLayer {
 		
 		setOfFilters.add(f);
 		Log.d("vortex","added filter "+name+" of type "+key);
+		myFilters.put(key, setOfFilters);
 
 	}
 

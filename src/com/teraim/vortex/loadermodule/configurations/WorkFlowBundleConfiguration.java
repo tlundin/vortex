@@ -479,7 +479,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 
 
 		checkForNull("block_ID",id,"name",nName,"container_name",container,"source",source);
-		return new CreateGisBlock(id,nName,container,isVisible,source,N,E,S,W,ph,globalPh);
+		return new CreateGisBlock(id,nName,container,isVisible,source,N,E,S,W);
 
 	}
 
@@ -1289,7 +1289,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 		//o.addRow("Parsing block: block_button...");
 		String label=null,onClick=null,myname=null,containerName=null,
 				target=null,type=null,id=null,statusVariable=null,exportContextS=null,exportFormat=null;
-		boolean isVisible = true;
+		boolean isVisible = true, enabled=false;
 		parser.require(XmlPullParser.START_TAG, null,"block_button");
 		while (parser.next() != XmlPullParser.END_TAG) {
 			if (parser.getEventType() != XmlPullParser.START_TAG) {
@@ -1322,8 +1322,11 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			else if (name.equals("target")) {
 				target = readText("target",parser);
 			}
+			else if (name.equals("enabled")) {
+				enabled = readText("enabled",parser).equals("true");;
+			}
 			else if (name.equals("is_visible")) {
-				isVisible = !readText("is_visible",parser).equals("false");
+				isVisible = readText("is_visible",parser).equals("true");
 			} 
 			else if (name.equals("status_variable"))
 				statusVariable = readText("status_variable",parser);
@@ -1333,7 +1336,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 		checkForNull("block_ID",id,"type",type,"name",myname,"label",label,"container_name",
 				containerName,"target",target);
 
-		return new ButtonBlock(id,label,onClick,myname,containerName,target,type,statusVariable,isVisible,exportContextS,exportFormat);
+		return new ButtonBlock(id,label,onClick,myname,containerName,target,type,statusVariable,isVisible,exportContextS,exportFormat,enabled);
 	}
 
 

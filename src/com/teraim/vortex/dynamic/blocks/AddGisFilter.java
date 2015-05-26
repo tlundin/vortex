@@ -130,8 +130,7 @@ public class AddGisFilter extends Block implements GisFilter {
 
 	@Override
 	public float getRadius() {
-		// TODO Auto-generated method stub
-		return 0;
+		return radius;
 	}
 
 	@Override

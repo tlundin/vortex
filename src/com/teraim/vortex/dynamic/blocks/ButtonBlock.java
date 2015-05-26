@@ -50,7 +50,7 @@ import com.teraim.vortex.utils.PersistenceHelper;
 /**
  * buttonblock
  * 
- * name is ID for now..
+ * Class for all created Buttons
  * 
  * @author Terje
  *
@@ -78,6 +78,7 @@ public  class ButtonBlock extends Block {
 	private String exportContextS;
 	private String exportFormat;
 	private String exportFileName = null;
+	private boolean enabled;
 
 
 	enum Type {
@@ -95,11 +96,11 @@ public  class ButtonBlock extends Block {
 	//Function used with buttons that need to attach customized actions after click
 	public ButtonBlock(String id,String lbl,String action, String name,String container,String target, String type, String statusVariable,boolean isVisible,
 			OnclickExtra onclickExtra,Map<String,String> buttonContext, int dummy) {		
-		this(id,lbl,action,name,container,target,type,statusVariable,isVisible,null,null);
+		this(id,lbl,action,name,container,target,type,statusVariable,isVisible,null,null,true);
 		extraActionOnClick = onclickExtra;
 		this.buttonContext=buttonContext;
 	}
-	public ButtonBlock(String id,String lbl,String action, String name,String container,String target, String type, String statusVariable,boolean isVisible,String exportContextS, String exportFormat) {
+	public ButtonBlock(String id,String lbl,String action, String name,String container,String target, String type, String statusVariable,boolean isVisible,String exportContextS, String exportFormat,boolean enabled) {
 		Log.d("NILS","BUTTONBLOCK type Action. Action is set to "+action);
 		this.blockId=id;
 		this.text = lbl;
@@ -111,6 +112,7 @@ public  class ButtonBlock extends Block {
 		this.isVisible = isVisible;
 		this.statusVar = statusVariable;
 		this.buttonContext=null;
+		this.enabled=enabled;
 		//Set null
 		if (statusVar!=null&&statusVar.length()==0)
 			this.statusVar=null;
@@ -454,7 +456,7 @@ public  class ButtonBlock extends Block {
 				//ToggleButton toggleB = new ToggleButton(ctx);
 				toggleB.setTextOn(text);
 				toggleB.setTextOff(text);
-				toggleB.setChecked(false);
+				toggleB.setChecked(enabled);
 				LayoutParams params = new LayoutParams();
 				params.width = LayoutParams.MATCH_PARENT;
 				params.height = LayoutParams.WRAP_CONTENT;

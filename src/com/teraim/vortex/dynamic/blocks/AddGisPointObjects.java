@@ -91,10 +91,15 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 				this.fillType = Paint.Style.FILL_AND_STROKE;
 		}
 		this.polyType=PolyType.circle;
-		this.radius=2.5f;
+		this.radius=0;
 		if (polyType!=null) {
 			if (polyType.toUpperCase().equals("SQUARE")||polyType.equals("RECT")||polyType.equals("RECTANGLE"))
 				this.polyType=PolyType.rect;
+		}
+		
+		if (Tools.isNumeric(radius)) {
+			this.radius=Float.parseFloat(radius);
+			
 		}
 
 	}

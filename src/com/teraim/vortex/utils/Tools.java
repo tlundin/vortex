@@ -572,21 +572,39 @@ public class Tools {
 		context.finish();		
 	}
 
-	public static String findKeyDifference(Map<String, String> longer,
+	public static Map<String,String> findKeyDifferences(Map<String, String> longer,
 			Map<String, String> shorter) {
-		if (longer == null)
+		Map<String,String> res = new HashMap<String,String>();
+		if (shorter!=null && longer!=null){
+			Log.d("vortex","Longer: "+longer.toString());
+			Log.d("vortex","shorter: "+shorter.toString());
+		}
+		if (longer == null) 
 			return null;
 		if (shorter == null && !longer.isEmpty())
-			return longer.keySet().iterator().next();
+			return copyKeyHash(longer);
 		Set<String> sK = shorter.keySet();
 		for (String key:longer.keySet()) {
-			if (!sK.contains(key))
-				return key;
+			if (!sK.contains(key)) {
+				Log.d("vortex","KEY DIFFERENT:"+key);
+				res.put(key, longer.get(key));
+			}
 		}
-		Log.e("vortex","no difference! Keys seems equal...!!");
-		return null;
+		if (res.isEmpty())
+			return null;
+		return res;
 	}
 
+	public static Map<String,String> copyKeyHash(Map<String,String> orig) {
+		if (orig==null)
+			return null;
+		Map<String,String> res = new HashMap<String,String>();
+		for (String key:orig.keySet()) {
+			res.put(key, orig.get(key));		
+		}
+		return res;
+	}
+	
 	public static boolean isURL(String source) {
 		if (source==null)
 			return false;

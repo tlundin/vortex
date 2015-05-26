@@ -232,25 +232,27 @@ public class GisImageView extends GestureImageView {
 		double imgWReal = photoMetaData.E-photoMetaData.W;
 		double mapDistX = l.getX()-photoMetaData.W;
 		if (mapDistX <=imgWReal && mapDistX>=0)
-			;//	Log.d("vortex","Distance X in meter: "+mapDistX+" [inside]");
+			;//Log.d("vortex","Distance X in meter: "+mapDistX+" [inside]");
 		else {
+			/*
 			Log.e("vortex","Distance X in meter: "+mapDistX+" [outside!]");
 			Log.d("vortex","w h of gis image. w h of image ("+photoMetaData.getWidth()+","+photoMetaData.getHeight()+") ("+this.getScaledWidth()+","+this.getScaledHeight()+")");
 			Log.d("vortex","photo (X) "+photoMetaData.W+"-"+photoMetaData.E);
 			Log.d("vortex","photo (Y) "+photoMetaData.S+"-"+photoMetaData.N);
 			Log.d("vortex","object X,Y: "+l.getX()+","+l.getY());
+			*/
 			return null;
 		}
 		double mapDistY = l.getY()-photoMetaData.S;
 		if (mapDistY <=imgHReal && mapDistY>=0)
 			;//Log.d("vortex","Distance Y in meter: "+mapDistY+" [inside]");
-		else {
+		else {/*
 			Log.e("vortex","Distance Y in meter: "+mapDistY+" [outside!]");
 			Log.d("vortex","w h of gis image. w h of image ("+photoMetaData.getWidth()+","+photoMetaData.getHeight()+") ("+this.getScaledWidth()+","+this.getScaledHeight()+")");
 			Log.d("vortex","photo (X) "+photoMetaData.W+"-"+photoMetaData.E);
 			Log.d("vortex","photo (Y) "+photoMetaData.S+"-"+photoMetaData.N);
 			Log.d("vortex","object X,Y: "+l.getX()+","+l.getY());
-
+*/			return null;
 		}
 		pXR = this.getImageWidth()/photoMetaData.getWidth();
 		pYR = this.getImageHeight()/photoMetaData.getHeight();
@@ -258,7 +260,7 @@ public class GisImageView extends GestureImageView {
 		//		Log.d("vortex","px, py"+pXR+","+pYR);
 		double pixDX = mapDistX*pXR;
 		double pixDY = mapDistY*pYR;
-		//		Log.d("vortex","distance on map (in pixel no scale): x,y "+pixDX+","+pixDY);
+		//Log.d("vortex","distance on map (in pixel no scale): x,y "+pixDX+","+pixDY);
 		float rX = ((float)pixDX)-this.getImageWidth()/2;
 		float rY = this.getImageHeight()/2-((float)pixDY);
 		//float rX = calcX(sX);
@@ -532,7 +534,6 @@ public class GisImageView extends GestureImageView {
 								//Log.d("vortex","drawing pointobject: "+gop.toString());
 								int[] xy = translateMapToRealCoordinates(adjustedScale,l);
 								if (xy==null) {
-									Log.e("vortex","xy null for pointobject: "+gop.toString());
 									continue;
 								}
 								if (mapLocationForClick!=null && touchedGop ==null && gop.isTouchedByClick(mapLocationForClick,pXR,pYR)) {
@@ -545,9 +546,11 @@ public class GisImageView extends GestureImageView {
 								Style style = gop.getStyle();
 								boolean isCircle = gop.isCircle();
 								if (filters!=null&&!filters.isEmpty()) {
+									Log.d("vortex","has filter!");
 									RuleExecutor ruleExecutor = RuleExecutor.getInstance(getContext());
 									for (GisFilter filter:filters) {	
 										if (filter.isActive()) {
+											Log.d("vortex","Filter active!");
 										List<TokenizedItem> myTokens = ruleExecutor.findTokens(filter.getExpression(),null, gop.getKeyHash());
 										SubstiResult substR = ruleExecutor.substituteForValue(myTokens, filter.getExpression(),false);
 										String result = ruleExecutor.parseExpression(filter.getExpression(),substR.result);
@@ -559,19 +562,23 @@ public class GisImageView extends GestureImageView {
 											style = filter.getStyle();
 											isCircle = filter.isCircle();
 										}
-										}
+										} else
+											Log.d("vortex","Filter turned off!");
 									}
-								}
+								} 
 								Rect r = new Rect();
 								
 								if (bitmap!=null) {
+									//Log.d("vortex","bitmap!");
 									r.set(xy[0]-32, xy[1]-32, xy[0], xy[1]);
 									canvas.drawBitmap(bitmap, null, r, null);
 								} //circular?
 								else if(isCircle) {
+									Log.d("vortex","x,y,r"+xy[0]+","+xy[1]+","+radius);
 									canvas.drawCircle(xy[0], xy[1], radius, !isTouched?createPaint(color,style):rCursorPaint);
 								} //no...square.
-								else {									
+								else {
+									//Log.d("vortex","rect!");
 									r.set(xy[0]-5, xy[1]-5, xy[0]+5, xy[1]+5);
 									canvas.drawRect(r, createPaint(color,style));
 								}
@@ -580,9 +587,9 @@ public class GisImageView extends GestureImageView {
 									Rect bounds = new Rect();
 									txtPaint.getTextBounds(mLabel, 0, mLabel.length(), bounds);
 									bounds.set(bounds.left-2,bounds.top-2,bounds.right+2,bounds.bottom+2);
-									bounds.offset((int)xy[0]-bounds.width()/2,(int)xy[1]-bounds.height()/2);
+									bounds.offset((int)xy[0]-bounds.width()/2,(int)xy[1]-(bounds.height()/2+(int)radius));
 									canvas.drawRect(bounds, bCursorPaint);
-									canvas.drawText(mLabel, bounds.centerX(), bounds.bottom,txtPaint);								
+									canvas.drawText(mLabel, xy[0], (int)xy[1]-(bounds.height()/2+(int)radius),txtPaint);								
 								}
 								
 								isTouched=false;
@@ -665,11 +672,11 @@ public class GisImageView extends GestureImageView {
 					
 					Rect bbounds = new Rect();
 					btnTxt.getTextBounds(btnT, 0, btnT.length(), bbounds);
-					bbounds.offset((int)xy[0]-bbounds.width()/2,(int)(xy[1]+touchedGop.getRadius()*5));
+					bbounds.offset((int)xy[0]-bbounds.width()/2,(int)(xy[1]+touchedGop.getRadius()*3));
 					bbounds.set(bbounds.left-2,bbounds.top-2, bbounds.right+2,bbounds.bottom+2);
 					this.setButtonLocation(bbounds,touchedGop);
 					canvas.drawRect(bbounds, blCursorPaint);
-					canvas.drawText(btnT, xy[0], xy[1]+touchedGop.getRadius()*4, btnTxt);
+					canvas.drawText(btnT, xy[0], xy[1]+touchedGop.getRadius()*3, btnTxt);
 
 				}
 			}
@@ -688,7 +695,7 @@ public class GisImageView extends GestureImageView {
 	private Paint createPaint(String color, Paint.Style style) {
 		
 		Paint p = new Paint();
-		p.setColor(color!=null?Color.parseColor(color):Color.WHITE);
+		p.setColor(color!=null?Color.parseColor(color):Color.YELLOW);
 		p.setStyle(style!=null?style:Paint.Style.FILL);
 		return p;
 	}

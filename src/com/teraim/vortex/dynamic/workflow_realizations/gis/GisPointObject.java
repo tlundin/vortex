@@ -7,23 +7,25 @@ import android.graphics.Bitmap;
 import android.graphics.Paint.Style;
 import android.util.Log;
 
+import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.types.Location;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.FullGisObjectConfiguration.PolyType;
+import com.teraim.vortex.utils.RuleExecutor;
+import com.teraim.vortex.utils.RuleExecutor.SubstiResult;
+import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 import com.teraim.vortex.utils.Tools;
 
 
 public abstract class GisPointObject extends GisObject {
 
-	protected FullGisObjectConfiguration poc;
-	private String uniqueKey,uniqueValue;
+	protected FullGisObjectConfiguration poc; 
+	private Map<String, String> uniqueKeys;
 	
 	public GisPointObject(FullGisObjectConfiguration poc,Map<String, String> keyChain,List<Location> myCoordinates) {
 		super(keyChain,myCoordinates);
 		this.poc=poc;
 		if (poc.getCommonHash()!=null)
-			uniqueKey = Tools.findKeyDifference(keyChain, poc.getCommonHash().keyHash);
-		if (uniqueKey !=null)
-			uniqueValue = keyChain.get(uniqueKey);
+			uniqueKeys = Tools.findKeyDifferences(keyChain, poc.getCommonHash().keyHash);
 	}
 	public abstract Location getLocation();
 	public Bitmap getIcon() {
@@ -79,7 +81,16 @@ public abstract class GisPointObject extends GisObject {
 	}
 	
 	public String getLabel() {
-		return poc.getLabel()+(uniqueValue!=null?" "+uniqueValue:"");
+		String label = poc.getLabel();
+		if (label==null)
+			return "";
+		if (label.startsWith("@")) {
+			String key = label.substring(1, label.length());
+			if (key.length()>0) {
+				return key+" "+keyChain.get(key);
+			}
+		}
+		return poc.getLabel();
 	}
 
 

@@ -70,7 +70,7 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 	private StatusHandler statusHandler;
 	private Button tagSidaB;
 	private boolean isAbo;
-	private ButtonBlock spillning;
+	//private ButtonBlock spillning;
 
 	@Override
 	public View onCreateView(final LayoutInflater inflater, ViewGroup container,
@@ -165,11 +165,11 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 			}
 		});
 		
-		taBild = new ButtonBlock("_tabild","Foto","Start_Workflow", "fotobutton","Field_List_panel_1",NamedVariables.WF_FOTO,"action", "status_foto",true,null,null);
+		taBild = new ButtonBlock("_tabild","Foto","Start_Workflow", "fotobutton","Field_List_panel_1",NamedVariables.WF_FOTO,"action", "status_foto",true,null,null,true);
 		
-		fixPunkter = new ButtonBlock("_","Fixpunkter","Start_Workflow", "fixpunktbutton","Field_List_panel_1",NamedVariables.WF_FIXPUNKTER,"action", "status_fixpunkter",true,null,null);
+		fixPunkter = new ButtonBlock("_","Fixpunkter","Start_Workflow", "fixpunktbutton","Field_List_panel_1",NamedVariables.WF_FIXPUNKTER,"action", "status_fixpunkter",true,null,null,true);
 
-		spillning = new ButtonBlock("_s","Spillning","Start_Workflow", "spillningbutton","Field_List_panel_1",NamedVariables.WF_SPILLNING,"action","status_spillning",true,null,null);
+		//spillning = new ButtonBlock("_s","Spillning","Start_Workflow", "spillningbutton","Field_List_panel_1",NamedVariables.WF_SPILLNING,"action","status_spillning",true,null,null,true);
 
 		for (int i=0; i<DelyteManager.MAX_DELYTEID;i++) {
 			final int I = i;
@@ -299,8 +299,8 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 		if (gs.isSolo()||gs.isMaster())
 			fieldListPanel.addView(tagSidaB);
 		fixPunkter.create(myContext);
-		if (!isAbo)
-			spillning.create(myContext);
+		//if (!isAbo)
+		//	spillning.create(myContext);
 
 		Set<Integer> dys = new TreeSet<Integer>();
 		//gs.setKeyHash(al.createDelytaKeyMap());

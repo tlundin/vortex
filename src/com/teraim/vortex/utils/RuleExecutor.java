@@ -114,6 +114,7 @@ public class RuleExecutor {
 
 	public enum TokenType {
 		function(null,-1),
+		getColumnValue(function,1),
 		has(function,1),
 		hasAll(function,1),
 		hasMore(function,1),
@@ -182,6 +183,10 @@ public class RuleExecutor {
 		}
 		public TokenType[] getChildren() {
 			return children.toArray(new TokenType[children.size()]);
+		}
+		
+		public TokenType getParent() {
+			return parent;
 		}
 
 		public TokenType[] allChildren() {
@@ -516,7 +521,6 @@ public class RuleExecutor {
 		TokenType type;
 		Variable st;
 		String var;
-		String strRes = "";
 		int max=-1;
 		LoggerI o = GlobalState.getInstance().getLogger();
 		Map<Integer,TokenizedItem> lengthMap = new HashMap<Integer,TokenizedItem>();
@@ -550,20 +554,12 @@ public class RuleExecutor {
 				if (st.getType()==DataType.text) 
 					stringT=true;
 
-				//Stringtype is true if either any individual variable is text type or the result variable is a text
-				//If string type, just concatenate. Dont evaluate..
-				if (stringT) {
-					if (value!=null) {
-						strRes=strRes+value;
-						Log.d("vortex","string concatenation "+strRes);
-					}
-				} else if (value==null) {
+				if (value==null) {
 					o.addRow("");
 					o.addRow("Variable value for "+var+" in formula ["+formula+"] is null.");
 					Log.d("nils","Before substitution of: "+st.getId()+": "+subst);
 					subst = subst.replace(st.getId().toLowerCase(), "null");	
 					Log.d("nils","After substitutionx: "+subst);
-					strRes=strRes+"null";
 				} else {
 					//Is the value non numeric? 
 					//Check if possible to substitute for logical value, eg. "foo" = "foo" = 1.
@@ -577,7 +573,6 @@ public class RuleExecutor {
 						subst = subst.replace(st.getId().toLowerCase(), value);
 						Log.d("nils","After substitutiony: "+subst);						
 					}
-					strRes=strRes+value;
 				}
 			}
 			max--;			
@@ -585,8 +580,8 @@ public class RuleExecutor {
 
 		if (stringT) {
 			Log.d("vortex","string type returned with values substituted");
-			o.addRow("After substitution: "+strRes);
-			return new SubstiResult(strRes,SubstiType.String);
+			o.addRow("After substitution: "+subst);
+			return new SubstiResult(subst,SubstiType.String);
 		}
 
 		o.addRow("After substitution: "+subst);
@@ -762,6 +757,19 @@ public class RuleExecutor {
 		}
 		else if (item.getType()==TokenType.getCurrentWeekNumber) {
 			return Constants.getWeekNumber();
+		}
+		else if (item.getType()==TokenType.getColumnValue) {
+			if (args!=null && args.length!=0) {
+				Log.d("vortex","Getting current value for column "+args[0]);
+				Map<String, String> kh = GlobalState.getInstance().getCurrentKeyHash();
+				Log.d("vortex","keyhash "+kh.toString());
+				if (kh==null)
+					return null;
+				else {
+					Log.d("votex","value for column is "+kh.get(args[0]));
+					return kh.get(args[0]);
+				}
+			}
 		}
 
 		else if (item.getType()==TokenType.sum) {

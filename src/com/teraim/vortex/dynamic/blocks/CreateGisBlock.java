@@ -1,5 +1,7 @@
 package com.teraim.vortex.dynamic.blocks;
 
+import java.util.List;
+
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,6 +11,7 @@ import android.widget.ImageButton;
 import com.teraim.vortex.FileLoadedCb;
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
+import com.teraim.vortex.dynamic.AsyncResumeExecutorI;
 import com.teraim.vortex.dynamic.types.PhotoMeta;
 import com.teraim.vortex.dynamic.types.Workflow.Unit;
 import com.teraim.vortex.dynamic.workflow_abstracts.Container;
@@ -20,8 +23,12 @@ import com.teraim.vortex.loadermodule.FileLoader;
 import com.teraim.vortex.loadermodule.LoadResult;
 import com.teraim.vortex.loadermodule.LoadResult.ErrorCode;
 import com.teraim.vortex.loadermodule.configurations.AirPhotoMetaData;
+import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.PersistenceHelper;
+import com.teraim.vortex.utils.RuleExecutor;
+import com.teraim.vortex.utils.RuleExecutor.SubstiResult;
+import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 
 public class CreateGisBlock extends Block {
 
@@ -36,11 +43,13 @@ public class CreateGisBlock extends Block {
 	String format;
 	private String picUrlorName;
 	private String N,E,S,W;
-	private PhotoMeta photoMetaData;
+	
 	private boolean menuUp = false;
+	private WF_Context myContext;
+	private LoggerI o;
 	
 	public CreateGisBlock(String id,String name, 
-			String containerId,boolean isVisible,String source,String N,String E, String S,String W, PersistenceHelper ph, PersistenceHelper globalPh) {
+			String containerId,boolean isVisible,String source,String N,String E, String S,String W) {
 		super();
 		
 		this.id = name;
@@ -52,10 +61,41 @@ public class CreateGisBlock extends Block {
 		this.E=E;
 		this.S=S;
 		this.W=W;
-		
+	}
+
+	
+	private String parseString(String varString) {
+
+		RuleExecutor re = RuleExecutor.getInstance(GlobalState.getInstance().getContext());
+		List<TokenizedItem> tokenized = re.findTokens(varString, null);
+		SubstiResult x=null;
+		if (tokenized!=null)
+			x = re.substituteForValue(tokenized, varString, true);
+		if (x!=null) {
+			String res = x.result;
+			res = res.replace("<", "");
+			res = res.replace(">", "");
+			return res;
+		}
+		else
+			return varString;
+	}
+
+	//Callback after image has loaded.
+	AsyncResumeExecutorI cb;
+	
+	public void create(WF_Context myContext,AsyncResumeExecutorI cb) {
+		gs = GlobalState.getInstance();
+		o = gs.getLogger();
+		this.cb=cb;
+		this.myContext = myContext;
+		PersistenceHelper ph = gs.getPreferences();
+		PersistenceHelper globalPh = gs.getGlobalPreferences();
 		if(picUrlorName!=null) {
 			if (!picUrlorName.startsWith("/"))
 				picUrlorName="/"+picUrlorName;
+				picUrlorName = parseString(picUrlorName);
+				Log.d("vortex","ParseString result: "+picUrlorName);
 				loadImageMetaData(ph,globalPh);
 		} else {
 			Log.e("vortex","Pic url null! GisImageView will not load");
@@ -63,11 +103,8 @@ public class CreateGisBlock extends Block {
 			o.addRedText("Adding GisImageView failed. No picture defined!");
 		}
 	}
-
 	
-	public void create(WF_Context myContext) {
-		gs = GlobalState.getInstance();
-		o = gs.getLogger();
+	public void createAfterLoad(PhotoMeta photoMetaData) {
 		Container myContainer = myContext.getContainer(containerId);
 		if (myContainer!=null && photoMetaData!=null) {
 		LayoutInflater li = LayoutInflater.from(myContext.getContext());
@@ -97,9 +134,10 @@ public class CreateGisBlock extends Block {
 			else {
 				Log.e("vortex","Container null! Cannot add GisImageView!");
 				o.addRedText("Adding GisImageView to "+containerId+" failed. Container cannot be found in template");
+				cb.abortExecution("Missing container for GisImageView: "+containerId);
 			}
 		}
-		
+		cb.continueExecution();
 	}
 
 	private void loadImageMetaData(PersistenceHelper ph, PersistenceHelper globalPh) {		
@@ -109,11 +147,11 @@ public class CreateGisBlock extends Block {
 			loadImageMetaFromFile(ph,globalPh);
 		else {
 			Log.e("vortex","Found tags for photo meta");
-			setMetaData(new PhotoMeta(N,E,S,W));
+			createAfterLoad(new PhotoMeta(N,E,S,W));
 		}
 	}
 	
-	private void loadImageMetaFromFile(PersistenceHelper ph, PersistenceHelper globalPh) {
+	private void loadImageMetaFromFile(PersistenceHelper ph, final PersistenceHelper globalPh) {
 		
 		String tmp[] = picUrlorName.split("/");
 		if (tmp.length>0) {
@@ -121,11 +159,11 @@ public class CreateGisBlock extends Block {
 			String[]tmp2 = tmp[tmp.length-1].split("\\.");
 
 		if (tmp2!=null && tmp2.length!=0) {
-			String metaFileName = tmp2[0];
-			String metaFolder = picUrlorName.substring(0, picUrlorName.length()-tmp[tmp.length-1].length());
+			final String metaFileName = tmp2[0];
+			final String metaFolder = picUrlorName.substring(0, picUrlorName.length()-tmp[tmp.length-1].length());
 			Log.d("vortex","metafilename: "+metaFileName+" metaFolder"+metaFolder);
 			final ConfigurationModule meta = new AirPhotoMetaData(globalPh,ph,Source.file,
-				Constants.VORTEX_ROOT_DIR+globalPh.get(PersistenceHelper.BUNDLE_NAME)+"/"+metaFolder,metaFileName,""); 
+				Constants.VORTEX_ROOT_DIR+globalPh.get(PersistenceHelper.BUNDLE_NAME)+metaFolder,metaFileName,""); 
 		new FileLoader(null, null, new FileLoadedCb(){
 			@Override
 			public void onFileLoaded(LoadResult res) {
@@ -133,10 +171,14 @@ public class CreateGisBlock extends Block {
 				if (res.errCode==ErrorCode.frozen) {
 					PhotoMeta pm = (PhotoMeta)meta.getEssence();
 					Log.d("vortex","img N, W, S, E "+pm.N+","+pm.W+","+pm.S+","+pm.E);
-					setMetaData(pm);
+					createAfterLoad(pm);
 				}
-				else
+				else {
+					o.addRow("");
+					o.addRedText("Could not find GIS image "+metaFileName);
 					Log.e("vortex","Failed to parse image location. Errorcode "+res.errCode.name());
+					cb.abortExecution("Could not find GIS Image file ["+metaFileName+"], length "+metaFileName.length()+" PATH: "+Constants.VORTEX_ROOT_DIR+globalPh.get(PersistenceHelper.BUNDLE_NAME)+metaFolder);
+				}
 			}
 			@Override
 			public void onFileLoaded(ErrorCode errCode, String version) {
@@ -150,10 +192,7 @@ public class CreateGisBlock extends Block {
 		}
 	}
 
-	protected void setMetaData(PhotoMeta photoMeta) {
-		
-		photoMetaData=photoMeta;
-	}
+
 
 
 

@@ -334,8 +334,6 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 		String[] val=null;
 		boolean spin = false;
 		
-		firstSpinner=null;
-		
 		if (showHistorical) 
 			hist = var.getHistoricalValue();
 
@@ -380,7 +378,6 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 			myVars.put(var,view);
 			break;
 		case list:
-			Log.d("nils","Adding spinner for label "+label);
 			//o.addRow("Adding spinner field for dy-variable with label "+label+", name "+varId+", type "+var.getType().name()+" and unit "+unit.name());
 			LinearLayout sl = (LinearLayout)LayoutInflater.from(myContext.getContext()).inflate(R.layout.edit_field_spinner, null);
 			final TextView sHeader = (TextView) sl.findViewById(R.id.header);
@@ -389,9 +386,12 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 			ArrayAdapter<String> adapter = new ArrayAdapter<String>(myContext.getContext(), android.R.layout.simple_spinner_dropdown_item,new ArrayList<String>() );		
 			spinner.setAdapter(adapter);
 			inputContainer.addView(sl);			
+			Log.d("nils","Adding spinner for label "+label);
+			if (firstSpinner == null && myVars.isEmpty())
+				firstSpinner=spinner;
+
 			myVars.put(var,sl);
-			if (firstSpinner==null)
-				firstSpinner = spinner;
+			
 
 			sHeader.setText(varLabel+(hist!=null?" ("+hist+")":""));
 			String listValues = al.getTable().getElement("List Values", var.getBackingDataSet());

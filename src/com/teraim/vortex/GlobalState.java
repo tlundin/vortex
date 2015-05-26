@@ -37,6 +37,9 @@ import com.teraim.vortex.ui.MenuActivity;
 import com.teraim.vortex.utils.DbHelper;
 import com.teraim.vortex.utils.PersistenceHelper;
 import com.teraim.vortex.utils.RuleExecutor;
+import com.teraim.vortex.utils.RuleExecutor.SubstiResult;
+import com.teraim.vortex.utils.RuleExecutor.TokenType;
+import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 
 
 /**
@@ -642,8 +645,6 @@ public class GlobalState  {
 		Log.d("noob","In evaluate Context!!");
 		if (cContext==null||cContext.isEmpty()) {
 			Log.d("nils","No context!!");
-			o.addRow("");
-			o.addRow("Empty or missing context. This is a potential error");
 			err=null;
 		} else {
 			keyHash = new HashMap<String, String>();
@@ -691,13 +692,46 @@ public class GlobalState  {
 										Log.d("vortex","Historical!");
 										keyHash.put(arg,val);
 									} else {
-										//Variable. need to evaluate first..
-										Variable v = getVariableConfiguration().getVariableInstance(val);
-										String varVal;
-										if (v==null) {
-											//Assume it is a string value.
-											Log.d("vortex","found no variable for string "+val);
-											varVal = val;
+										//Variable or function. need to evaluate first..
+										Variable v=null;// = getVariableConfiguration().getVariableInstance(val);
+										String varVal=null;
+										//if (v==null) {
+											//Parse value..either constant, function or variable.
+											RuleExecutor re = RuleExecutor.getInstance(this.getContext());
+											List<TokenizedItem> tokens = re.findTokens(val, null);
+											if (tokens!=null) {										
+												TokenizedItem firstToken = tokens.get(0);
+												if (firstToken.getType()==TokenType.variable) {
+													Log.d("vortex","Found variable!");
+													v = firstToken.getVariable();
+													varVal = v.getValue();
+													if (varVal==null) {
+													o.addRow("");
+													o.addRedText("One of the variables used in current context("+v.getId()+") has no value in database");
+													Log.e("nils","var was null or empty: "+v.getId());
+													}
+												} else if (firstToken.getType().getParent()==TokenType.function) {
+													Log.d("vortex","Found function!");
+													SubstiResult subsRes = re.substituteForValue(tokens, val, false);
+													if (subsRes!=null) {
+														varVal = subsRes.result;
+													} else {
+														Log.e("vortex","subsresult was null for function"+val+" in evalContext");
+														contextError=true;
+													}
+												} else if (firstToken.getType()==TokenType.literal) {
+													Log.d("vortex","Found literal!");
+													varVal = val;
+												} else
+													Log.e("vortex","Could not find "+firstToken.getType().name());
+
+											} else {
+												o.addRow("");
+												o.addRedText("Could not evaluate expression "+val+" in context");
+												
+											}
+											
+											
 											/*
 											contextError=true;
 											o.addRow("");
@@ -707,18 +741,10 @@ public class GlobalState  {
 											break;
 											 */
 
-										} else 
-											varVal = v.getValue();
+										//} else 
+										//	varVal = v.getValue();
 
-										if(varVal==null||varVal.isEmpty()) {
-											contextError=true;
-											err = "Context missing value for (at least): "+val;
-											o.addRow("");
-											o.addRedText("One of the variables used in current context("+v.getId()+") has no value in database");
-											Log.e("nils","var was null or empty: "+v.getId());
-											break;
-										} else {
-
+										if(!contextError) {
 											keyHash.put(arg, varVal);
 											rawHash.put(arg,v);
 											Log.d("nils","Added "+arg+","+varVal+" to current context");
@@ -744,7 +770,7 @@ public class GlobalState  {
 			return new CHash(keyHash,rawHash);
 		}
 		else
-			return new CHash(err);
+			return new CHash(myKeyHash,myRawHash);
 
 	}
 

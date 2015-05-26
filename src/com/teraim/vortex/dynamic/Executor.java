@@ -11,9 +11,12 @@ import java.util.Map;
 import java.util.Set;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.Fragment;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
@@ -81,7 +84,7 @@ import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
  */
 
 
-public abstract class Executor extends Fragment {
+public abstract class Executor extends Fragment implements AsyncResumeExecutorI {
 
 
 	public static final String STOP_ID = "STOP";
@@ -115,6 +118,10 @@ public abstract class Executor extends Fragment {
 
 	private CHash myHash;
 
+	private int savedBlockPointer=-1;
+
+	private List<Block> blocks;
+
 	
 
 	@Override
@@ -132,10 +139,6 @@ public abstract class Executor extends Fragment {
 		wf = getFlow();
 		al = gs.getVariableConfiguration();
 
-
-		
-		
-		
 		ifi = new IntentFilter();
 		ifi.addAction(BluetoothConnectionService.SYNK_DATA_RECEIVED);
 		ifi.addAction(BluetoothConnectionService.BLUETOOTH_MESSAGE_RECEIVED);
@@ -226,7 +229,7 @@ public abstract class Executor extends Fragment {
 	 * Execute the workflow.
 	 */
 	protected void run() {
-		try {
+
 			if (myHash!=null)  {
 			Log.d("vortex"," currentKeyHash before: "+gs.getCurrentKeyHash());
 			Log.d("vortex","GS: "+gs+" myContext: "+myContext);
@@ -238,13 +241,22 @@ public abstract class Executor extends Fragment {
 			}
 			visiVars = new HashSet<Variable>();
 			//LinearLayout my_root = (LinearLayout) findViewById(R.id.myRoot);		
-			List<Block>blocks = wf.getCopyOfBlocks();
-
+			blocks = wf.getCopyOfBlocks();
+			execute(0);
+	}
+	private void execute(int blockP) {
+			
 			boolean notDone = true;
-			int blockP = 0;
 			Set<Variable>blockVars;
 			boolean hasDrawer=false;
+
+			try {
+				
 			while(notDone) {
+				if (blockP>=blocks.size()) {
+					notDone=false;
+					break;
+				}
 				Block b = blocks.get(blockP);
 				if (b instanceof PageDefineBlock) {
 					PageDefineBlock bl = (PageDefineBlock)b;
@@ -553,8 +565,11 @@ public abstract class Executor extends Fragment {
 					
 				}
 				else if (b instanceof CreateGisBlock) {
-					((CreateGisBlock) b).create(myContext);
-					
+					savedBlockPointer = blockP+1;
+					//Will callback to this object after image is loaded.
+					((CreateGisBlock) b).create(myContext,this);
+					//exit for now.
+					return;
 				}
 				
 				else if (b instanceof AddGisLayerBlock) {
@@ -579,8 +594,7 @@ public abstract class Executor extends Fragment {
 				} else
 					blockP++;
 
-				if (blockP>=blocks.size())
-					notDone=false;
+
 			}
 			Container root = myContext.getContainer("root");
 			if (root==null && myContext.hasContainers()) {
@@ -656,4 +670,30 @@ public abstract class Executor extends Fragment {
 		return visiVars;
 	}
 
+	
+	@Override
+	public void continueExecution() {
+		if (savedBlockPointer!=-1)
+			this.execute(savedBlockPointer);
+		else
+			Log.e("vortex","No saved block pointer...aborting execution");
+	}
+
+	@Override
+	public void abortExecution(String reason) {
+		Log.e("vortex","Execution aborted.");
+		new AlertDialog.Builder(myContext.getContext())
+		.setTitle("Execution aborted")
+		.setMessage(reason) 
+		.setIcon(android.R.drawable.ic_dialog_alert)
+		.setCancelable(false)
+		.setNeutralButton("Ok",new Dialog.OnClickListener() {				
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				// TODO Auto-generated method stub
+
+			}
+		} )
+		.show();
+	}
 }
