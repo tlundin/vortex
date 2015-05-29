@@ -41,6 +41,7 @@ public class MenuActivity extends Activity {
 	private GlobalState gs;
 	private PersistenceHelper globalPh;
 	private AlertDialog x;
+	private android.content.DialogInterface.OnClickListener dialogClickListener;
 	
 	public final static String REDRAW = "com.teraim.vortex.menu_redraw";
 	public static final String INITDONE = "com.teraim.vortex.init_done";
@@ -196,6 +197,57 @@ public class MenuActivity extends Activity {
 		this.registerReceiver(brr, filter);
 		//Listen for Service started/stopped event.
 
+		
+		dialogClickListener = new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				switch (which){
+				case DialogInterface.BUTTON_POSITIVE:
+					//Turn off bluetooth if running
+					//This will also turn off the server as a side effect.
+					//Intent intent = new Intent();
+					//intent.setAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+					Intent intent = new Intent(getBaseContext(),BluetoothConnectionService.class);
+					if (gs.getSyncStatus()==BluetoothConnectionService.SYNK_STOPPED) {
+						//Check that synk can start.
+						ErrorCode err = gs.checkSyncPreconditions();
+						if (err == ErrorCode.ok) {
+							Log.d("nils","Trying to start bt-service");
+							startService(intent);
+						}
+						else {							
+							new AlertDialog.Builder(MenuActivity.this)
+							.setTitle("Synkning kan inte genomföras just nu.")
+							.setMessage("Felkod: "+err.name()) 
+							.setIcon(android.R.drawable.ic_dialog_alert)
+							.setCancelable(false)
+							.setPositiveButton(R.string.iunderstand, new DialogInterface.OnClickListener() {						
+								@Override
+								public void onClick(DialogInterface dialog, int which)  {
+									btInitDone();
+								}
+
+							})				 
+							.show();							
+						}
+						//Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+						//startActivity(enableBtIntent);
+						//intent.putExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.STATE_OFF);
+					}
+
+					else {
+						stopService(intent);
+						//intent.putExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.STATE_ON);
+					}
+					//getBaseContext().sendBroadcast(intent);
+					break;
+
+				case DialogInterface.BUTTON_NEGATIVE:
+					btInitDone();
+					break;
+				}
+			}
+		};
 	}
 
 
@@ -241,13 +293,14 @@ public class MenuActivity extends Activity {
 	private boolean initdone=false;
 	private void CreateMenu(Menu menu)
 	{
-
+		
 		for(int c=0;c<mnu.length-1;c++) {
 			mnu[c]=menu.add(0,c,c,"");
-			mnu[c].setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);	
+			mnu[c].setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM|MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);	
 
 		}
-		mnu[1].setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+		mnu[1].setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+		//mnu[1].setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM|MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 		mnu[mnu.length-1]=menu.add(0,mnu.length-1,mnu.length-1,"");
 		mnu[mnu.length-1].setIcon(android.R.drawable.ic_menu_preferences);
 		mnu[mnu.length-1].setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
@@ -304,61 +357,25 @@ public class MenuActivity extends Activity {
 
 	private boolean MenuChoice(MenuItem item) {
 
-
-		DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				switch (which){
-				case DialogInterface.BUTTON_POSITIVE:
-					//Turn off bluetooth if running
-					//This will also turn off the server as a side effect.
-					//Intent intent = new Intent();
-					//intent.setAction(BluetoothAdapter.ACTION_STATE_CHANGED);
-					Intent intent = new Intent(getBaseContext(),BluetoothConnectionService.class);
-					if (gs.getSyncStatus()==BluetoothConnectionService.SYNK_STOPPED) {
-						//Check that synk can start.
-						ErrorCode err = gs.checkSyncPreconditions();
-						if (err == ErrorCode.ok) {
-							Log.d("nils","Trying to start bt-service");
-							startService(intent);
-						}
-						else {							
-							new AlertDialog.Builder(MenuActivity.this)
-							.setTitle("Synkning kan inte genomföras just nu.")
-							.setMessage("Felkod: "+err.name()) 
-							.setIcon(android.R.drawable.ic_dialog_alert)
-							.setCancelable(false)
-							.setPositiveButton(R.string.iunderstand, new DialogInterface.OnClickListener() {						
-								@Override
-								public void onClick(DialogInterface dialog, int which)  {
-									btInitDone();
-								}
-
-							})				 
-							.show();							
-						}
-						//Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-						//startActivity(enableBtIntent);
-						//intent.putExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.STATE_OFF);
-					}
-
-					else {
-						stopService(intent);
-						//intent.putExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.STATE_ON);
-					}
-					//getBaseContext().sendBroadcast(intent);
-					break;
-
-				case DialogInterface.BUTTON_NEGATIVE:
-					btInitDone();
-					break;
-				}
-			}
-		};
-
 		switch (item.getItemId()) {
 		case 0:
 		case 1:
+			Map<String, String> hash = gs.getCurrentKeyHash();
+			String dialogText="";
+			if (hash!=null)
+				dialogText = hash.toString();
+			new AlertDialog.Builder(this)
+			.setTitle("Context")
+			.setMessage(dialogText) 
+			.setIcon(android.R.drawable.ic_dialog_alert)
+			.setCancelable(false)
+			.setNeutralButton("Ok",new Dialog.OnClickListener() {				
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					
+				}
+			} )
+			.show();
 			break;
 
 		case 2:

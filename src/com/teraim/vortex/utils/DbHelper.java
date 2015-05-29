@@ -83,7 +83,10 @@ public class DbHelper extends SQLiteOpenHelper {
 				col = keyColM.get(key);
 				if (col==null)
 					col=key;
-				ret.put(key, pick(col));
+				if (pick(col)==null)
+					continue;
+				else
+					ret.put(key, pick(col));
 			}
 			//Log.d("nils","getKeyColumnValues returns "+ret.toString());
 			return ret; 

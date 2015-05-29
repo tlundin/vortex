@@ -214,7 +214,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 		super(label,descriptionT,context,view,isVisible);	
 		//Log.e("nils ","Creating WF_ClickableField: "+label+" "+id);
 		gs = GlobalState.getInstance();
-		ruleExecutor = RuleExecutor.getInstance(gs.getContext());
+		ruleExecutor = gs.getRuleExecutor();
 		sd = gs.getSpinnerDefinitions();
 		al = gs.getVariableConfiguration();
 		o = gs.getLogger();
@@ -528,7 +528,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 						if (varId!=null) {
 							for(Variable v:myVars.keySet()) {
 								Log.d("vortex","Comparing with "+v.getId());
-								if (v.getId().equals(varId.trim()))  {
+								if (v.getId().equalsIgnoreCase(varId.trim()))  {
 									Log.d("vortex","Match! "+v.getId());
 									View gView = myVars.get(v);
 									gView.setVisibility(mode?View.VISIBLE:View.GONE);

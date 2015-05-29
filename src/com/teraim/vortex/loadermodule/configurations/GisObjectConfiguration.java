@@ -129,7 +129,7 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 			double x,y,z;
 			Map<String,String>keyChain = new HashMap<String,String>();
 			Map<String,String> attributes = new HashMap<String,String>();
-			String mType = type.trim().toLowerCase();
+			String mType = type.trim();
 			if (mType.equals(GisConstants.POINT)) {
 				//Log.d("vortex","parsing point object.");
 				//coordinates
@@ -210,6 +210,9 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 			keyChain.put("år", VariableConfiguration.HISTORICAL_MARKER);
 			keyChain.put("ruta", rutaId);
 			keyChain.put(GisConstants.TYPE_COLUMN, myType);
+			
+			//Add geotype to attributes so that the correct object can be used at export.
+			attributes.put(GisConstants.Geo_Type, mType);
 
 
 

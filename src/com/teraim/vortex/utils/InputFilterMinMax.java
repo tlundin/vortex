@@ -33,13 +33,13 @@ public class InputFilterMinMax implements TextFilter {
 	}
 
 	private boolean isInRange(int a, int b, int c) {
-		Log.d("nils","Testing range for a: "+a+" b: "+b+" c:"+c);
+		//Log.d("nils","Testing range for a: "+a+" b: "+b+" c:"+c);
 		return b > a ? c >= a && c <= b : c >= b && c <= a;
 	}
 
 
 	public boolean isLegal(String newVal) {
-		Log.d("nils","String to test: "+newVal);
+		//Log.d("nils","String to test: "+newVal);
 		if (newVal.length()==0)
 			return false;
 		try {

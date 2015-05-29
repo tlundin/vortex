@@ -48,7 +48,7 @@ public class Rule implements Serializable {
 	}
 
 	public void init(GlobalState gs) {
-		re = RuleExecutor.getInstance(gs.getContext());
+		re = gs.getRuleExecutor();
 		tokens = re.findTokens(condition,null);
 		initDone=true;
 		if (o==null)

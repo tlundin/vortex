@@ -386,7 +386,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 					o.addRow("");
 					o.addYellowText("SetValueBlock "+b.getBlockId()+" ["+bl.getMyVariable()+"]");
 					o.addRow("Formula: "+bl.getFormula());
-					final List<TokenizedItem> tokens = RuleExecutor.getInstance(gs.getContext()).findTokens(bl.getFormula(),null);
+					final List<TokenizedItem> tokens = gs.getRuleExecutor().findTokens(bl.getFormula(),null);
 					if (bl.getBehavior()!=ExecutionBehavior.constant) {
 						EventListener tiva = new EventListener() {
 							@Override
@@ -484,7 +484,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 					o.addYellowText("ConditionalContinuationBlock found");
 					final ConditionalContinuationBlock bl = (ConditionalContinuationBlock)b;
 					final String formula = bl.getFormula();
-					final List<TokenizedItem> vars = RuleExecutor.getInstance(gs.getContext()).findTokens(formula,null);
+					final List<TokenizedItem> vars = gs.getRuleExecutor().findTokens(formula,null);
 					if (vars!=null) {
 						EventListener tiva = new EventListener() {
 							@Override

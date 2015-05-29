@@ -124,6 +124,8 @@ public class GlobalState  {
 		//GPS listener service
 		myTracker = new Tracker();
 		
+		myExecutor = new RuleExecutor(this);
+		
 	}
 
 
@@ -190,6 +192,10 @@ public class GlobalState  {
 
 	public Context getContext() {
 		return myC;
+	}
+	
+	public RuleExecutor getRuleExecutor() {
+		return myExecutor;
 	}
 
 	public VariableConfiguration getVariableConfiguration() {
@@ -422,6 +428,9 @@ public class GlobalState  {
 	private Map<String, Variable> myRawHash;
 
 
+	private RuleExecutor myExecutor;
+
+
 	public Map<String,String> getCurrentKeyHash() {
 
 		//Log.d("vortex",this.toString()+" getCurrentKeyHash returned "+myKeyHash);
@@ -431,7 +440,7 @@ public class GlobalState  {
 
 	public void  setKeyHash(Map<String,String> h) { 	
 		//artLista.destroyCache();
-		RuleExecutor.getInstance(getContext()).destroyCache();
+		myExecutor.destroyCache();
 		myKeyHash=h;
 		Log.d("vortex","SetKeyHash was called with "+h+" on this "+this.toString());
 	}
@@ -697,22 +706,23 @@ public class GlobalState  {
 										String varVal=null;
 										//if (v==null) {
 											//Parse value..either constant, function or variable.
-											RuleExecutor re = RuleExecutor.getInstance(this.getContext());
-											List<TokenizedItem> tokens = re.findTokens(val, null);
-											if (tokens!=null) {										
+											
+											List<TokenizedItem> tokens = myExecutor.findTokens(val, null);
+											if (tokens!=null && !tokens.isEmpty()) {										
 												TokenizedItem firstToken = tokens.get(0);
 												if (firstToken.getType()==TokenType.variable) {
 													Log.d("vortex","Found variable!");
 													v = firstToken.getVariable();
 													varVal = v.getValue();
 													if (varVal==null) {
-													o.addRow("");
-													o.addRedText("One of the variables used in current context("+v.getId()+") has no value in database");
-													Log.e("nils","var was null or empty: "+v.getId());
+														o.addRow("");
+														o.addRedText("One of the variables used in current context("+v.getId()+") has no value in database");
+														Log.e("nils","var was null or empty: "+v.getId());
+														contextError=true;
 													}
 												} else if (firstToken.getType().getParent()==TokenType.function) {
 													Log.d("vortex","Found function!");
-													SubstiResult subsRes = re.substituteForValue(tokens, val, false);
+													SubstiResult subsRes = myExecutor.substituteForValue(tokens, val, false);
 													if (subsRes!=null) {
 														varVal = subsRes.result;
 													} else {
@@ -728,7 +738,7 @@ public class GlobalState  {
 											} else {
 												o.addRow("");
 												o.addRedText("Could not evaluate expression "+val+" in context");
-												
+												contextError=true;
 											}
 											
 											

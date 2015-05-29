@@ -196,7 +196,7 @@ public class Parser {
 	}
 	case Token.TT_NULL: {
 		nextToken();
-		System.out.println("Parsefactor found token null");
+		//System.out.println("Parsefactor found token null");
 		return null;
 	}
 	case Token.TT_WORD: {

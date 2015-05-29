@@ -1,5 +1,7 @@
 package com.teraim.vortex.dynamic.blocks;
 
+import java.util.List;
+
 import android.graphics.Bitmap;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
@@ -19,6 +21,7 @@ import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.FullGisObjectConfiguration.PolyType;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisFilter;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.WF_Gis_Map;
+import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 import com.teraim.vortex.utils.Tools;
 
 public class AddGisFilter extends Block implements GisFilter {
@@ -151,6 +154,22 @@ public class AddGisFilter extends Block implements GisFilter {
 	@Override
 	public boolean isActive() {
 		return isActive;
+	}
+
+	private List<TokenizedItem> myT = null;
+	@Override
+	public boolean hasCachedFilterResult() {
+		return myT!=null;
+	}
+
+	@Override
+	public void setTokens(List<TokenizedItem> myTokens) {
+		myT=myTokens;
+	}
+
+	@Override
+	public List<TokenizedItem> getTokens() {
+		return myT;
 	}
 	
 	

@@ -34,13 +34,14 @@ public class CreateImageBlock extends Block implements EventListener {
 	 * 
 	 */
 	private static final long serialVersionUID = 5781622495945524716L;
-	private String name;
-	private String container;
-	private String source;
-	private String scale;
+	private final String name;
+	private final String container;
+	private final String source;
+	private final String scale;
 	private ImageView img = null;
 	private WF_Context myContext;
 	private boolean isVisible;
+	private String dynImgName;
 
 	public CreateImageBlock(String id, String nName, String container,
 			String source, String scale, boolean isVisible) {
@@ -50,29 +51,31 @@ public class CreateImageBlock extends Block implements EventListener {
 		this.source=source;
 		this.scale = scale;
 		this.isVisible = isVisible;
-		Log.d("vortex","Create image block with source "+source);
+		
 	}
-	
-	
+
+
 	public void create(WF_Context myContext) {
 		this.myContext = myContext;
 		o = GlobalState.getInstance().getLogger();
 		WF_Container myContainer = (WF_Container)myContext.getContainer(container);
+		Log.d("vortex","Source name is "+source);
 		if (myContainer != null && source!=null) {
-		ScaleType scaleT=ScaleType.FIT_XY;
-		img = new ImageView(myContext.getContext());
-		if (Tools.isURL(source)) {
-			new DownloadImageTask(img).execute(source);
-		} else {
-			setImageFromFile(myContext);
-		}
-		Log.d("vortex","Source is "+source);
-		if (scale!=null || scale.length()>0)
-			scaleT = ScaleType.valueOf(scale);
-		img.setScaleType(scaleT);
-		WF_Widget myWidget= new WF_Widget(blockId,img,isVisible,myContext);	
-		myContainer.add(myWidget);
-		myContext.addEventListener(this, EventType.onActivityResult);
+			dynImgName = Tools.parseString(source);
+			ScaleType scaleT=ScaleType.FIT_XY;
+			img = new ImageView(myContext.getContext());
+			if (Tools.isURL(dynImgName)) {
+				new DownloadImageTask(img).execute(dynImgName);
+			} else {
+				setImageFromFile(myContext);
+			}
+			Log.d("vortex","Dynamic name is "+dynImgName);
+			if (scale!=null || scale.length()>0)
+				scaleT = ScaleType.valueOf(scale.toUpperCase());
+			img.setScaleType(scaleT);
+			WF_Widget myWidget= new WF_Widget(blockId,img,isVisible,myContext);	
+			myContainer.add(myWidget);
+			myContext.addEventListener(this, EventType.onActivityResult);
 		} else {
 			if (source==null) {
 				o.addRow("");
@@ -82,14 +85,17 @@ public class CreateImageBlock extends Block implements EventListener {
 			o.addRedText("Failed to add image with block id "+blockId+" - missing container "+container);
 		}
 	}
-	
 
-	
+
+
 	private void setImageFromFile(WF_Context myContext) {
+		if (dynImgName==null) {
+			Log.e("vortex","no dynimage name in createimageblock... exit");
+		}
 		final int divisor = 1;
 		final BitmapFactory.Options options = new BitmapFactory.Options();
 		options.inJustDecodeBounds=true;
-		Bitmap bip = BitmapFactory.decodeFile(Constants.PIC_ROOT_DIR+source,options);		
+		Bitmap bip = BitmapFactory.decodeFile(Constants.PIC_ROOT_DIR+dynImgName,options);		
 		int realW = options.outWidth;
 		int realH = options.outHeight;
 		if (realW>0) {
@@ -102,39 +108,39 @@ public class CreateImageBlock extends Block implements EventListener {
 			int tHeight = (int) (tWidth*ratio);
 			options.inSampleSize = Tools.calculateInSampleSize(options, (int)tWidth, tHeight);
 			options.inJustDecodeBounds = false;
-			bip = BitmapFactory.decodeFile(Constants.PIC_ROOT_DIR+source,options);
+			bip = BitmapFactory.decodeFile(Constants.PIC_ROOT_DIR+dynImgName,options);
 			img.setImageBitmap(bip);
 		}
 		else {
-			Log.d("nils","Did not find picture "+source);
+			Log.d("nils","Did not find picture "+dynImgName);
 		}
 	}
 
 
 
 	class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
-	    ImageView bmImage;
+		ImageView bmImage;
 
-	    public DownloadImageTask(ImageView bmImage) {
-	        this.bmImage = bmImage;
-	    }
+		public DownloadImageTask(ImageView bmImage) {
+			this.bmImage = bmImage;
+		}
 
-	    protected Bitmap doInBackground(String... urls) {
-	        String urldisplay = urls[0];
-	        Bitmap mIcon11 = null;
-	        try {
-	            InputStream in = new java.net.URL(urldisplay).openStream();
-	            mIcon11 = BitmapFactory.decodeStream(in);
-	        } catch (Exception e) {
-	            Log.e("Error", e.getMessage());
-	            e.printStackTrace();
-	        }
-	        return mIcon11;
-	    }
+		protected Bitmap doInBackground(String... urls) {
+			String urldisplay = urls[0];
+			Bitmap mIcon11 = null;
+			try {
+				InputStream in = new java.net.URL(urldisplay).openStream();
+				mIcon11 = BitmapFactory.decodeStream(in);
+			} catch (Exception e) {
+				Log.e("Error", e.getMessage());
+				e.printStackTrace();
+			}
+			return mIcon11;
+		}
 
-	    protected void onPostExecute(Bitmap result) {
-	        bmImage.setImageBitmap(result);
-	    }
+		protected void onPostExecute(Bitmap result) {
+			bmImage.setImageBitmap(result);
+		}
 	}
 
 

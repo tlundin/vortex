@@ -35,7 +35,7 @@ public class GisPolygonObject extends GisObject {
 		this.polygons=polygons;	
 	}
 
-	private Map<String, List<Location>> buildMap(String polygons,String coordType) {
+	public static Map<String, List<Location>> buildMap(String polygons,String coordType) {
 		int i=1;
 		if (polygons==null) 
 			return null;
@@ -43,6 +43,7 @@ public class GisPolygonObject extends GisObject {
 		Map<String, List<Location>> ret = new HashMap<String, List<Location>>();
 		for (String poly:polys) {
 			ret.put("Poly "+i, GisObject.createListOfLocations(poly, coordType));
+			i++;
 		}
 		return ret;
 	}

@@ -73,7 +73,7 @@ public abstract class Expr {
 		 System.out.println("Makeapp2: both args null!");
 		 return null;
 	 }
-	 System.out.println("In makeApp2 with rator "+rator+" rand0: "+rand0+" rand1: "+rand1);
+	 //System.out.println("In makeApp2 with rator "+rator+" rand0: "+rand0+" rand1: "+rand1);
 	Expr app = new BinaryExpr(rator, rand0, rand1);
 	return rand0 instanceof LiteralExpr && rand1 instanceof LiteralExpr
 	    ? new LiteralExpr(app.value()) 
@@ -158,7 +158,7 @@ class BinaryExpr extends Expr {
 	 
 	 //If one part is null, keep checking.
 	 if (rator != OR && (rand0 == null || rand1 == null)) {
-		 System.out.println("Binary expression evaluates to null for rator "+rator);
+		 //System.out.println("Binary expression evaluates to null for rator "+rator);
 		 return null;
 	 }
 	 if (rator == OR && (rand0== null || rand1 == null)) {

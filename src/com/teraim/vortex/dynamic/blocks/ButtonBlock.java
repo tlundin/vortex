@@ -45,6 +45,7 @@ import com.teraim.vortex.utils.Exporter;
 import com.teraim.vortex.utils.Exporter.ExportReport;
 import com.teraim.vortex.utils.Exporter.Report;
 import com.teraim.vortex.utils.PersistenceHelper;
+import com.teraim.vortex.utils.Tools;
 
 
 /**
@@ -74,11 +75,11 @@ public  class ButtonBlock extends Block {
 	private GlobalState gs;
 	private Map<String, String> buttonContext;
 	private PopupWindow mpopup=null;
-	private Map<String,String> exportContext;
 	private String exportContextS;
 	private String exportFormat;
 	private String exportFileName = null;
 	private boolean enabled;
+	private String buttonContextS;
 
 
 	enum Type {
@@ -96,11 +97,12 @@ public  class ButtonBlock extends Block {
 	//Function used with buttons that need to attach customized actions after click
 	public ButtonBlock(String id,String lbl,String action, String name,String container,String target, String type, String statusVariable,boolean isVisible,
 			OnclickExtra onclickExtra,Map<String,String> buttonContext, int dummy) {		
-		this(id,lbl,action,name,container,target,type,statusVariable,isVisible,null,null,true);
+		this(id,lbl,action,name,container,target,type,statusVariable,isVisible,null,null,true,null);
 		extraActionOnClick = onclickExtra;
-		this.buttonContext=buttonContext;
+		this.buttonContext = buttonContext;
 	}
-	public ButtonBlock(String id,String lbl,String action, String name,String container,String target, String type, String statusVariable,boolean isVisible,String exportContextS, String exportFormat,boolean enabled) {
+	
+	public ButtonBlock(String id,String lbl,String action, String name,String container,String target, String type, String statusVariable,boolean isVisible,String exportContextS, String exportFormat,boolean enabled, String buttonContextS) {
 		Log.d("NILS","BUTTONBLOCK type Action. Action is set to "+action);
 		this.blockId=id;
 		this.text = lbl;
@@ -110,14 +112,14 @@ public  class ButtonBlock extends Block {
 		this.target=target;
 		this.type=type.equals("toggle")?Type.toggle:Type.action;
 		this.isVisible = isVisible;
-		this.statusVar = statusVariable;
-		this.buttonContext=null;
+		this.statusVar = statusVariable;		
 		this.enabled=enabled;
 		//Set null
 		if (statusVar!=null&&statusVar.length()==0)
 			this.statusVar=null;
 		this.exportContextS = exportContextS;
 		this.exportFormat = exportFormat;
+		this.buttonContextS=buttonContextS;
 
 	}
 
@@ -143,11 +145,18 @@ public  class ButtonBlock extends Block {
 		if (myContainer!=null) {
 			final Context ctx = myContext.getContext();
 			
-
-			if (extraActionOnClick==null) {
-				Log.d("nils","Buttoncontext set to: "+gs.getCurrentKeyHash()+" for button: "+getText());
-				buttonContext = gs.getCurrentKeyHash();
-			}
+			//If buttoncontext already prepared, do nothing. Else, if a buttoncontext descriptor exist, compile it. Else, use current context.
+			if (buttonContext==null) {
+				if (buttonContextS==null)
+					buttonContext = gs.getCurrentKeyHash();
+				else {
+					buttonContext = gs.evaluateContext(buttonContextS).keyHash;
+				}
+			} 
+				
+			Log.d("nils","Buttoncontext set to: "+buttonContext.toString()+" for button: "+getText());
+				
+			
 			WF_Widget misu = null;
 			if (type == Type.action) {
 				LayoutInflater inflater = (LayoutInflater)ctx.getSystemService
@@ -379,6 +388,7 @@ public  class ButtonBlock extends Block {
 											myContext.registerEvent(new WF_Event_OnSave(ButtonBlock.this.getBlockId()));
 										}
 									}
+									gs.setKeyHash(buttonContext);
 									Start.singleton.changePage(wf,statusVar);
 									//final FragmentTransaction ft = myContext.getActivity().getFragmentManager().beginTransaction(); 
 									//ft.replace(myContext.getRootContainer(), f);
@@ -401,7 +411,7 @@ public  class ButtonBlock extends Block {
 									if (exportFormat  == null) 
 										exportFormat = "csv";
 									exportFormat = exportFormat.toLowerCase();
-									Report jRep = gs.getDb().export(exportContext, Exporter.getInstance(ctx, exportFormat), exportFileName);
+									Report jRep = gs.getDb().export(r.keyHash, Exporter.getInstance(ctx, exportFormat), exportFileName);
 									if (jRep.er == ExportReport.OK) {
 										msg = jRep.noOfVars+" variables exported to file: "+exportFileName+"."+exportFormat+"\n";
 										msg+= "You can find this file under "+Constants.EXPORT_FILES_DIR+" on your device";
@@ -429,7 +439,7 @@ public  class ButtonBlock extends Block {
 								.show();
 							} else if (onClick.equals("Start_Camera")) {
 								Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-								File file = new File(Constants.PIC_ROOT_DIR, target);
+								File file = new File(Constants.PIC_ROOT_DIR, Tools.parseString(target));
 								Uri outputFileUri = Uri.fromFile(file);
 								intent.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri);
 								//				intent.putExtra(Strand.KEY_PIC_NAME, name);

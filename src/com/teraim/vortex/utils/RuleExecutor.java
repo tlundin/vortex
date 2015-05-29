@@ -41,9 +41,12 @@ import com.teraim.vortex.non_generics.DelyteManager;
 
 public class RuleExecutor {
 
-
+	GlobalState gs;
+	
+	public RuleExecutor(GlobalState gs) {
+		this.gs = gs;
+	}
 	private static Map<String,List<TokenizedItem>> formulaCache = new HashMap<String,List<TokenizedItem>>();
-	private static RuleExecutor singleton=null;
 
 
 	//Rather complex enum for all token types.
@@ -106,6 +109,9 @@ public class RuleExecutor {
 
 		public Variable getVariable() {
 			return var;
+		}
+		public void setVariable(Variable variableUsingKey) {
+			var= variableUsingKey;
 		}
 
 	}
@@ -205,20 +211,6 @@ public class RuleExecutor {
 	}
 
 
-
-
-
-
-	public static RuleExecutor getInstance(Context ctx) {
-		if (singleton==null) {
-			Log.e("vortex","CREATED NEW RULE EXECUTOR");
-			singleton = new RuleExecutor();
-
-		}
-		return singleton;
-
-	}
-
 	public void propagateRuleToDependants(String varId) {
 		Log.d("nils","In propagaterule for "+varId);
 		Set<String> dependants = relations.get(varId);
@@ -229,7 +221,7 @@ public class RuleExecutor {
 		Variable v;
 		for (String dVarId:dependants) {
 			Log.d("nils","refreshing rule state for "+dVarId);
-			v = GlobalState.getInstance().getVariableConfiguration().getVariableInstance(dVarId);
+			v = gs.getVariableConfiguration().getVariableInstance(dVarId);
 			v.refreshRuleState();
 			Log.d("nils","Indirectly refreshed "+v.getId());
 		}
@@ -264,23 +256,23 @@ public class RuleExecutor {
 	}
 
 	public List<TokenizedItem>findTokens(String formula,String mainVar) {
-		return findTokens(formula,mainVar,GlobalState.getInstance().getCurrentKeyHash());
+		List<TokenizedItem> cached = formulaCache.get(formula);
+		if (cached !=null) {
+			//Log.d("vortex","FormulaCache returned "+ printTokens(cached) );
+			return cached;
+		}
+		return findTokens(formula,mainVar,gs.getCurrentKeyHash());
 	}
 	
 	public List<TokenizedItem>findTokens(String formula,String mainVar, Map<String,String> keyHash) {	
 		
-		Log.d("vortex","In findTokens for formula "+formula);
-		List<TokenizedItem> cached = formulaCache.get(formula);
-		if (cached !=null) {
-			Log.d("vortex","FormulaCache returned "+ printTokens(cached) );
-			return cached;
-		}
-		Log.d("vortex","No cached formula. parsing ["+formula+"]");
+		//Log.d("vortex","In findTokens for formula "+formula);
+		//Log.d("vortex","No cached formula. parsing ["+formula+"]");
 		List<Token> potVars = new ArrayList<Token>();
-		LoggerI o = GlobalState.getInstance().getLogger();
+		LoggerI o = gs.getLogger();
 		//Try parsing the formula.
-		String pattern = "<>=+-*/().0123456789,";
-		String inPattern = "<>=+-*/(),";
+		String pattern = "[]=+-*/().0123456789,";
+		String inPattern = "[]=+-*/(),";
 		boolean in = false,parseFunctionParameters=false;
 		String curToken = "";
 		List<TokenizedItem> myFormulaTokens =null;
@@ -296,7 +288,7 @@ public class RuleExecutor {
 					//next argument.
 					if (c==','|| c== ')') {	
 						if (curToken.length()>0) {
-							Log.d("nils","Adding functional argument: "+curToken);
+							//Log.d("nils","Adding functional argument: "+curToken);
 							potVars.add(new Token(curToken,SimpleTokenType.arg));
 							curToken = "";
 						}
@@ -331,13 +323,13 @@ public class RuleExecutor {
 								//		+(c == inPattern.charAt(j)?inPattern.charAt(j):"<spc>")+"]");
 								//fail.
 								in = false;
-								System.out.println("Found token: "+curToken);
+								//System.out.println("Found token: "+curToken);
 								if (parseFunctionParameters) {
-									Log.d("vortex","This is a function");
+									//Log.d("vortex","This is a function");
 									potVars.add(new Token(curToken,SimpleTokenType.func));
 								}
 								else {
-									Log.d("vortex","This is a function or variable");
+									//Log.d("vortex","This is a function or variable");
 									potVars.add(new Token(curToken,SimpleTokenType.eitherfuncorvar));								
 								}
 								curToken="";
@@ -391,7 +383,7 @@ public class RuleExecutor {
 						function = null;
 						for (TokenType token:functions) {
 							if (tokenName.equalsIgnoreCase(token.name())) {
-								Log.d("vortex", "found Function match:" +token.name());
+								//Log.d("vortex", "found Function match:" +token.name());
 								function = token;
 								break;
 							}
@@ -399,7 +391,7 @@ public class RuleExecutor {
 						if (function == null) {
 							for (TokenType token:math_primitives) {
 								if (tokenName.equalsIgnoreCase(token.name())) {
-									Log.d("vortex", "found math_primitives match:" +token.name()); 
+									//Log.d("vortex", "found math_primitives match:" +token.name()); 
 									function = token;
 									break ;
 								}
@@ -409,14 +401,14 @@ public class RuleExecutor {
 						//}
 						//check for variable match if no function match,
 						if (tokenType == SimpleTokenType.eitherfuncorvar && function == null) {
-							Variable var = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(keyHash,tokenName);
+							Variable var = gs.getVariableConfiguration().getVariableUsingKey(keyHash,tokenName);
 							if (var!=null) {
 								Log.d("vortex","Found variable match for "+tokenName+" in formula");
 								myFormulaTokens.add(new TokenizedItem(var));
 
 							} else {
 								myFormulaTokens.add(new TokenizedItem(tokenName));
-								o.addRow("Found literal "+tokenName);
+								//o.addRow("Found literal "+tokenName);
 								continue;
 							}
 						}
@@ -429,13 +421,13 @@ public class RuleExecutor {
 							o.addRedText("Found argument, but no function! Argument: "+tokenName);
 						} else {
 							if (args == null) {
-								Log.d("vortex","found first arg. will create list");
+								//Log.d("vortex","found first arg. will create list");
 								args = new ArrayList<String>();
 								argCount = function.cardinality();	
 								hasCardinality = argCount>=0;
 							}
 							args.add(cToken.token);
-							Log.d("vortex",function+" had argument "+cToken.token);
+							//Log.d("vortex",function+" had argument "+cToken.token);
 							if (hasCardinality) {
 								argCount--;
 
@@ -460,12 +452,11 @@ public class RuleExecutor {
 					Log.d("vortex","Added arguments for function: "+args.toString());
 					myFormulaTokens.add(new TokenizedItem(function.name(),function,args.toArray(new String[args.size()])));
 				}
-			}
+			} else
+				Log.e("vortex","Potvars empty");
 		} else 
 			Log.e("vortex","formula was null!!");
-		if (myFormulaTokens == null) {
-			Log.d("vortex","Found no variables in formula "+formula+". Variables starts with a..zA..z");
-		} else
+		if (myFormulaTokens != null) 
 			formulaCache.put(formula, myFormulaTokens);
 		return myFormulaTokens;
 
@@ -502,9 +493,9 @@ public class RuleExecutor {
 	}
 
 	public SubstiResult substituteForValue(List<TokenizedItem> myTokens,String formula,Boolean stringT) {
-		LoggerI o = GlobalState.getInstance().getLogger();
-		o.addRow("Before substitution: "+formula);
-		Log.d("vortex","in substituteforValue with formula "+formula+" and tokens "+printTokens(myTokens));
+		LoggerI o = gs.getLogger();
+		//o.addRow("Before substitution: "+formula);
+		//Log.d("vortex","in substituteforValue with formula "+formula+" and tokens "+printTokens(myTokens));
 		if (formula ==null)
 			return null;
 		//No tokens to substitute? Then formula is ok as is.
@@ -522,7 +513,7 @@ public class RuleExecutor {
 		Variable st;
 		String var;
 		int max=-1;
-		LoggerI o = GlobalState.getInstance().getLogger();
+		LoggerI o = gs.getLogger();
 		Map<Integer,TokenizedItem> lengthMap = new HashMap<Integer,TokenizedItem>();
 		//Throw away functions.
 		for (TokenizedItem item:myTokens) {
@@ -544,7 +535,7 @@ public class RuleExecutor {
 
 		TokenizedItem item;
 		while (max>0&&!lengthMap.isEmpty()) {
-			Log.d("vortex","MAX: "+max);
+			//Log.d("vortex","MAX: "+max);
 			item = lengthMap.remove(max);
 			if (item!=null) {
 				type = item.getType();
@@ -557,21 +548,21 @@ public class RuleExecutor {
 				if (value==null) {
 					o.addRow("");
 					o.addRow("Variable value for "+var+" in formula ["+formula+"] is null.");
-					Log.d("nils","Before substitution of: "+st.getId()+": "+subst);
+					//Log.d("nils","Before substitution of: "+st.getId()+": "+subst);
 					subst = subst.replace(st.getId().toLowerCase(), "null");	
-					Log.d("nils","After substitutionx: "+subst);
+					//Log.d("nils","After substitutionx: "+subst);
 				} else {
 					//Is the value non numeric? 
 					//Check if possible to substitute for logical value, eg. "foo" = "foo" = 1.
 					//If not possible, same string is returned.
 					if (!Tools.isNumeric(value)) {
-						Log.d("vortex","Non numeric value!");
+						//Log.d("vortex","Non numeric value!");
 						subst = replaceIfStringCompare(st.getId().toLowerCase(),subst,value);
 												
 					} else {
-						Log.d("nils","Substituting Variable: ["+st.getId()+"] with value "+st.getValue());
+						//Log.d("nils","Substituting Variable: ["+st.getId()+"] with value "+st.getValue());
 						subst = subst.replace(st.getId().toLowerCase(), value);
-						Log.d("nils","After substitutiony: "+subst);						
+						//Log.d("nils","After substitutiony: "+subst);						
 					}
 				}
 			}
@@ -589,7 +580,7 @@ public class RuleExecutor {
 	}
 
 	private String replaceIfStringCompare(String variableName, String expr,String value) {
-		Log.d("vortex","In replaceifstring with var "+variableName+" expr: "+expr+" val: ["+value+"]");
+		//Log.d("vortex","In replaceifstring with var "+variableName+" expr: "+expr+" val: ["+value+"]");
 		//find variable.
 		int index = expr.indexOf(variableName);
 		//Not found! Return same.
@@ -641,17 +632,17 @@ public class RuleExecutor {
 			//Index is either = last char or first space -1.
 			if (!spc)
 				index = expr.length();
-			Log.d("vortex","Found value to string compare: "+exprValue);
+			//Log.d("vortex","Found value to string compare: "+exprValue);
 			if (!exprValue.isEmpty()) { 
 			boolean found = false;
 			if (eq) {
 				if (exprValue.equalsIgnoreCase(value)) {
-					Log.d("vortex","equals!");
+					//Log.d("vortex","equals!");
 					found=true;
 				}
 			} else if (neq) {
 				if (!exprValue.equalsIgnoreCase(value)) {
-					Log.d("vortex","n_equals!");
+					//Log.d("vortex","n_equals!");
 					found=true;
 				}
 			}
@@ -672,7 +663,7 @@ public class RuleExecutor {
 			TokenType type = item.getType();
 			if (type.parent == TokenType.function) {
 				String funcEval = evalFunc(item);
-				Log.d("nils","Matching filter "+item.get()+" got result "+funcEval);
+				//Log.d("nils","Matching filter "+item.get()+" got result "+funcEval);
 				//Try to replace fn(x,y,z) with evaluated value.
 				String replaceThis = type.name()+"(";
 				String args[] = item.getArguments();
@@ -684,7 +675,7 @@ public class RuleExecutor {
 				}
 				replaceThis+=")";
 				subst = subst.replace(replaceThis.toLowerCase(), funcEval!=null?funcEval:"0");
-				Log.d("nils","Trying to substitute:["+replaceThis+"]. After Substitutionz: "+subst);
+				//Log.d("nils","Trying to substitute:["+replaceThis+"]. After Substitutionz: "+subst);
 
 			}
 		}
@@ -711,7 +702,7 @@ public class RuleExecutor {
 		Log.d("vortex","Evaluating function "+item.get()+"with arg "+print(item.getArguments()));
 		String value;	
 		String[] args = item.getArguments();
-		GlobalState gs = GlobalState.getInstance();
+
 		VariableConfiguration al = gs.getVariableConfiguration();
 		//Check if this is historical(x) function.
 		if (item.getType()==TokenType.historical) {
@@ -720,7 +711,7 @@ public class RuleExecutor {
 					gs.getLogger().addRow("");
 					gs.getLogger().addRedText("historical() has more than one argument..will use first: "+args[0]);							
 				}
-				Variable var = GlobalState.getInstance().getVariableCache().getVariable(args[0]);
+				Variable var = gs.getVariableCache().getVariable(args[0]);
 				if (var != null) {
 					value = var.getHistoricalValue();
 					Log.d("nils","Found historical value "+value+" for variable "+item.get());
@@ -761,7 +752,7 @@ public class RuleExecutor {
 		else if (item.getType()==TokenType.getColumnValue) {
 			if (args!=null && args.length!=0) {
 				Log.d("vortex","Getting current value for column "+args[0]);
-				Map<String, String> kh = GlobalState.getInstance().getCurrentKeyHash();
+				Map<String, String> kh = gs.getCurrentKeyHash();
 				Log.d("vortex","keyhash "+kh.toString());
 				if (kh==null)
 					return null;
@@ -903,7 +894,7 @@ public class RuleExecutor {
 						String formula = al.getVarName(row)+operator+val;
 						Variable myVar = al.getVariableInstance(al.getVarName(row));
 						String res=null;
-						if (myVar.getValue()!=null) {
+						if (myVar!=null && myVar.getValue()!=null) {
 							allNull = false;
 							res = parseExpression(formula, myVar.getValue()+operator+val);
 							if (!Tools.isNumeric(res)) {
@@ -1095,9 +1086,9 @@ public class RuleExecutor {
 	public String parseExpression(String formula, String subst) {
 		if (subst==null)
 			return null;
-		Parser p = GlobalState.getInstance().getParser();
+		Parser p = gs.getParser();
 		Expr exp=null;
-		LoggerI o = GlobalState.getInstance().getLogger();
+		LoggerI o = gs.getLogger();
 
 		try {
 			exp = p.parse(subst);
@@ -1131,7 +1122,7 @@ public class RuleExecutor {
 			if (!res) {
 				Log.d("nils","I get here with string "+rule);
 				SpannableString s = new SpannableString(rule);
-				s.setSpan(new TextAppearanceSpan(GlobalState.getInstance().getContext(), R.style.RedStyle),0,s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+				s.setSpan(new TextAppearanceSpan(gs.getContext(), R.style.RedStyle),0,s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 				myTxt = TextUtils.concat(myTxt, s);	 
 			}
 			else
@@ -1143,7 +1134,7 @@ public class RuleExecutor {
 	}
 
 	public void destroyCache() {
-		Log.d("vortex","destroying formulacache");
+		Log.d("vortex","destroying formulacache on "+this);
 		formulaCache.clear();
 	}
 

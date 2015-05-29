@@ -57,7 +57,7 @@ public class SetValueBlock extends Block {
 	public String evaluate(GlobalState gs,String formula,
 			List<TokenizedItem> tokens, boolean stringT) {
 		//assume fail
-		re = RuleExecutor.getInstance(gs.getContext());
+		re = GlobalState.getInstance().getRuleExecutor();
 		//substitute any variables or functions.
 		SubstiResult sr = re.substituteForValue(tokens,formula,stringT);
 		String subst = sr.result;

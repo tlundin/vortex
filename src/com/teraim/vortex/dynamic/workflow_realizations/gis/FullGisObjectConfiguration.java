@@ -29,5 +29,6 @@ public interface FullGisObjectConfiguration extends GisObjectBaseAttributes {
 	public PolyType getShape();
 	public String getClickFlow();
 	public CHash getCommonHash();
+	public String getStatusVariable();
 	
 }

@@ -46,6 +46,9 @@ public abstract class Exporter {
 		else
 			if (type.equalsIgnoreCase("json"))
 				return new JSONExporter(ctx);
+			else
+				if (type.equalsIgnoreCase("geojson"))
+					return new GeoJSONExporter(ctx);
 		return null;
 	}
 	protected Exporter(Context ctx) {

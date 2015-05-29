@@ -1,5 +1,6 @@
 package com.teraim.vortex.dynamic.workflow_realizations.gis;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -7,25 +8,21 @@ import android.graphics.Bitmap;
 import android.graphics.Paint.Style;
 import android.util.Log;
 
-import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.types.Location;
+import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.FullGisObjectConfiguration.PolyType;
-import com.teraim.vortex.utils.RuleExecutor;
-import com.teraim.vortex.utils.RuleExecutor.SubstiResult;
-import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 import com.teraim.vortex.utils.Tools;
 
 
 public abstract class GisPointObject extends GisObject {
 
 	protected FullGisObjectConfiguration poc; 
-	private Map<String, String> uniqueKeys;
+	private Variable statusVar=null;
 	
-	public GisPointObject(FullGisObjectConfiguration poc,Map<String, String> keyChain,List<Location> myCoordinates) {
+	public GisPointObject(FullGisObjectConfiguration poc,Map<String, String> keyChain,List<Location> myCoordinates, Variable statusVar) {
 		super(keyChain,myCoordinates);
 		this.poc=poc;
-		if (poc.getCommonHash()!=null)
-			uniqueKeys = Tools.findKeyDifferences(keyChain, poc.getCommonHash().keyHash);
+		this.statusVar=statusVar;
 	}
 	public abstract Location getLocation();
 	public Bitmap getIcon() {
@@ -48,11 +45,14 @@ public abstract class GisPointObject extends GisObject {
 		return poc.getClickFlow();
 	}
 	
+	public Variable getStatusVariable() {
+		return statusVar;
+	}
+	
 
 
 	@Override
 	public boolean isTouchedByClick(Location mapLocationForClick,double pxr,double pyr) {
-		Log.d("vortex","In touchclick");
 		Location myLocation = this.getLocation();
 		if (myLocation==null) {
 			Log.d("vortex","No location found for object "+this.getLabel());
@@ -73,7 +73,7 @@ public abstract class GisPointObject extends GisObject {
 			Log.d("vortex","found friend!");
 			return true;
 		}
-		Log.d("vortex", "Dist x  y  tresh: "+xD+","+yD+","+touchThresh);
+		//Log.d("vortex", "Dist x  y  tresh: "+xD+","+yD+","+touchThresh);
 		return false;
 	}
 	public Style getStyle() {
@@ -91,6 +91,19 @@ public abstract class GisPointObject extends GisObject {
 			}
 		}
 		return poc.getLabel();
+	}
+	
+	private Map<GisFilter,Boolean> filterCache = new HashMap<GisFilter,Boolean>();
+	
+	public boolean hasCachedFilterResult(GisFilter filter) {
+		return filterCache.get(filter)!=null;
+	}
+	public void setCachedFilterResult(GisFilter filter, boolean b) {
+		filterCache.put(filter, b);
+		
+	}
+	public boolean getCachedFilterResult(GisFilter filter) {
+		return filterCache.get(filter);
 	}
 
 

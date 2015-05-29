@@ -14,6 +14,7 @@ import com.teraim.vortex.dynamic.workflow_abstracts.Drawable;
 import com.teraim.vortex.dynamic.workflow_abstracts.Event;
 import com.teraim.vortex.dynamic.workflow_abstracts.EventListener;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
+import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnSave;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Widget;
 import com.teraim.vortex.gis.GisImageView;
 import com.teraim.vortex.non_generics.Constants;
@@ -35,6 +36,7 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener {
 	private String gisDir;
 	private GisImageView gisImageView;
 	private LinearLayout filtersC,layersC;
+	private final WF_Context myContext;
 	
 	public WF_Gis_Map(String id, View mapView, boolean isVisible, String picUrlorName,
 			WF_Context myContext, PhotoMeta photoMeta) {
@@ -49,7 +51,7 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener {
 		gisImageView.setImageBitmap(bmp);
 		gisImageView.initialize(this,photoMeta);
 		myContext.addGis(id,this);
-		
+		this.myContext=myContext;
 		
 	}
 
@@ -66,6 +68,11 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener {
 	public void onEvent(Event e) {
 		
 		Log.d("vortex","In GIS_Map Event Handler");
+	}
+
+	//Relay event to myContext without exposing context to caller.
+	public void registerEvent(Event event) {
+		myContext.registerEvent(event);
 	}
 
 

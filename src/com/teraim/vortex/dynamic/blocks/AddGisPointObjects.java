@@ -1,6 +1,7 @@
 package com.teraim.vortex.dynamic.blocks;
 
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,7 @@ import com.teraim.vortex.dynamic.workflow_realizations.gis.GisObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisPolygonObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.StaticGisPoint;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.WF_Gis_Map;
+import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.DbHelper.DBColumnPicker;
 import com.teraim.vortex.utils.DbHelper.Selection;
 import com.teraim.vortex.utils.DbHelper.StoredVariableData;
@@ -56,13 +58,13 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 	private Paint.Style fillType;
 	private PolyType polyType;
 	private String onClick;
-
+	private String statusVariable;
 
 
 	public AddGisPointObjects(String id, String nName, String label,
 			String target, String objContext,String coordType, String locationVars, 
 			String imgSource, String refreshRate, String radius, boolean isVisible, 
-			GisObjectType type, String color, String polyType, String fillType, String onClick) {
+			GisObjectType type, String color, String polyType, String fillType, String onClick, String statusVariable) {
 		super();
 		this.blockId = id;
 		this.nName = nName;
@@ -76,6 +78,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 		this.refreshRate=refreshRate;
 		this.onClick = onClick;
 		this.color=color;
+		this.statusVariable=statusVariable;
 		myType = type;
 
 		if (coordType==null)
@@ -173,8 +176,21 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 
 
 
-		Selection coordVar1S,coordVar2S=null;
-		DBColumnPicker pickerLocation1,pickerLocation2=null;  
+		Selection coordVar1S=null,coordVar2S=null,statusVarS = null;
+		DBColumnPicker pickerLocation1,pickerLocation2=null,pickerStatusVars=null;  
+		if (this.getStatusVariable()!=null) {
+			//Map<String, String> statusHash = Tools.createKeyMapCopy(myKeyHash.keyHash);
+			//if (statusHash!=null) {
+			//if (statusHash.get("år")!=null);
+			//statusHash.put("år", Constants.getYear());
+			statusVarS = GlobalState.getInstance().getDb().createSelection(myKeyHash.keyHash, this.getStatusVariable());
+			pickerStatusVars = GlobalState.getInstance().getDb().getAllVariableInstances(statusVarS);
+		//	Log.d("vortex","stat selection: "+statusVarS.selection);
+		//	Log.d("vortex","stat sel args: "+print(statusVarS.selectionArgs));
+
+		}
+		//}
+			
 		coordVar1S = GlobalState.getInstance().getDb().createSelection(myKeyHash.keyHash, locationVarArray[0]);
 		Log.d("vortex","selection: "+coordVar1S.selection);
 		Log.d("vortex","sel args: "+print(coordVar1S.selectionArgs));
@@ -219,12 +235,13 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 			if (!pickerLocation1.moveToFirst()) {
 				if (myKeyHash.keyHash==null) {
 					Log.d("vortex","Global with no value!");
+					//TODO: Statusvariable missing for this special case.
 					Variable v1 = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(null, locationVarArray[0]);
 					if (twoVars) {
 						Variable v2 = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(null, locationVarArray[1]);
-						myGisObjects.add(new DynamicGisPoint(this,null, v1,v2));
+						myGisObjects.add(new DynamicGisPoint(this,null, v1,v2,null));
 					} else
-						myGisObjects.add(new DynamicGisPoint(this,null, v1));
+						myGisObjects.add(new DynamicGisPoint(this,null, v1,null));
 				} else
 					Log.e("vortex","no variable instances found for keychain");
 			} else {
@@ -238,6 +255,21 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 
 				
 				int i=0;
+				Map <String,Variable> statusVarM=null;
+				boolean foundStatusVar = false;
+				if (pickerStatusVars!=null)
+					foundStatusVar=pickerStatusVars.moveToFirst();
+				
+				while (foundStatusVar) {
+					String value  = pickerStatusVars.getVariable().value;
+					Variable statusVar = GlobalState.getInstance().getVariableConfiguration().getCheckedVariable(pickerStatusVars.getKeyColumnValues(),pickerStatusVars.getVariable().name,value,true);
+					if (statusVarM == null) 
+						statusVarM = new HashMap<String,Variable>();
+						statusVarM.put(statusVar.getKeyChain().get("uid"), statusVar);
+						Log.d("vortex","added statusvar");
+						foundStatusVar = pickerStatusVars.next();
+				}
+				
 
 				do {
 					i++;
@@ -246,9 +278,18 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 					map1 = pickerLocation1.getKeyColumnValues();
 					Log.d("vortex","Found columns "+map1.toString()+" for "+storedVar1.name);
 					Log.d("vortex","bitmap null? "+(icon==null));
-					Variable v1=null,v2=null;
-					if (dynamic) 
-						v1 = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(pickerLocation1.getKeyColumnValues(),storedVar1.name);
+					Variable v1=null,v2=null,statusVar=null;
+					//If status variable has a value in database, use it. 
+					if (statusVarM!=null) 
+						statusVar = statusVarM.get(pickerLocation1.getKeyColumnValues().get("uid"));
+					//if there is a statusvariable defined, but no value found, create a new empty variable.
+					if (statusVariable !=null && statusVar == null)
+						statusVar = GlobalState.getInstance().getVariableConfiguration().getCheckedVariable(pickerLocation1.getKeyColumnValues(),statusVariable,"0",true);
+					
+					if (dynamic) {
+						String value = pickerLocation1.getVariable().value;
+						v1 = GlobalState.getInstance().getVariableConfiguration().getCheckedVariable(pickerLocation1.getKeyColumnValues(),storedVar1.name,value,true);
+					}
 					if (twoVars) {
 						storedVar2 = pickerLocation2.getVariable();
 						Log.d("vortex","Found "+storedVar2.value+" for "+storedVar2.name);
@@ -257,12 +298,14 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 						if (!Tools.sameKeys(map1, map2)) {
 							Log.e("vortex","key mismatch in db fetch: X key:"+map1.toString()+"\nY key: "+map2.toString());
 						} else {
-							if (!dynamic)
-								myGisObjects.add(new StaticGisPoint(this,map1, new SweLocation(storedVar1.value,storedVar2.value)));
+							if (!dynamic) {
+								myGisObjects.add(new StaticGisPoint(this,map1, new SweLocation(storedVar1.value,storedVar2.value),statusVar));
+							}
 							else {
-								v2 = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(pickerLocation1.getKeyColumnValues(),storedVar2.name);
+								String value = pickerLocation2.getVariable().value;
+								v2 = GlobalState.getInstance().getVariableConfiguration().getCheckedVariable(pickerLocation1.getKeyColumnValues(),storedVar2.name,value,true);
 								if (v1!=null && v2!=null) 
-									myGisObjects.add(new DynamicGisPoint(this,map1, v1,v2));
+									myGisObjects.add(new DynamicGisPoint(this,map1, v1,v2,statusVar));
 							}
 						}
 						if (!pickerLocation2.next())
@@ -270,9 +313,9 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 					} else {
 						if (myType.equals(GisObjectType.point)) {
 							if (!dynamic)
-								myGisObjects.add(new StaticGisPoint(this,map1, new SweLocation(storedVar1.value)));
+								myGisObjects.add(new StaticGisPoint(this,map1, new SweLocation(storedVar1.value),statusVar));
 							else
-								myGisObjects.add(new DynamicGisPoint(this,map1,v1));
+								myGisObjects.add(new DynamicGisPoint(this,map1,v1,statusVar));
 						}
 						else if (myType.equals(GisObjectType.multipoint)||myType.equals(GisObjectType.linestring))
 							myGisObjects.add(new GisMultiPointObject(this,map1,GisObject.createListOfLocations(storedVar1.value,coordType)));
@@ -415,6 +458,10 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 	@Override
 	public CHash getCommonHash() {
 		return myKeyHash;
+	}
+	
+	public String getStatusVariable() {
+		return statusVariable;
 	}
 
 

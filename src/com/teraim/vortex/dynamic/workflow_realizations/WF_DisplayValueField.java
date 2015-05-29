@@ -42,7 +42,7 @@ public class WF_DisplayValueField extends WF_Widget implements EventListener {
 		if (textColor!=null)
 			header.setTextColor(Color.parseColor(textColor));
 		gs = GlobalState.getInstance();
-		ruleExecutor = RuleExecutor.getInstance(gs.getContext());
+		ruleExecutor = gs.getRuleExecutor();
 		o = gs.getLogger();
 		this.formula = formula;
 		Log.d("nils","In WF_DisplayValueField Create");	

@@ -67,10 +67,10 @@ public abstract class WF_List extends WF_Widget implements Sortable,Filterable {
 	int intC=0;
 	boolean drawActive = false;
 	public void draw() {
-		Log.e("draw","DRAW CALLED "+ (++intC)+" times from list"+this.getId());
-		Log.d("nils","DrawActive "+drawActive);
+		Log.d("draw","DRAW CALLED "+ (++intC)+" times from list"+this.getId());
+		//Log.d("nils","DrawActive "+drawActive);
 		if (!drawActive) {
-			Log.d("nils","Settingdrawactive to true from list"+this.getId());
+			//Log.d("nils","Settingdrawactive to true from list"+this.getId());
 			drawActive = true;
 			new Handler().postDelayed(new Runnable() {
 				public void run() {
@@ -82,15 +82,15 @@ public abstract class WF_List extends WF_Widget implements Sortable,Filterable {
 						}
 						filteredList = listx;
 					}
-					Log.d("nils","before sorter: "+System.currentTimeMillis());
+					//Log.d("nils","before sorter: "+System.currentTimeMillis());
 					if (mySorters != null) {
 						for (Sorter s:mySorters) {
 							filteredList = s.sort(filteredList);
 						}
 					}
-					Log.d("nils","After sorter: "+System.currentTimeMillis());
+					//Log.d("nils","After sorter: "+System.currentTimeMillis());
 
-					Log.d("nils","in redraw...");
+					//Log.d("nils","in redraw...");
 					myWidget.removeAllViews();
 					for (Listable l:filteredList) {
 						//l.refreshInputFields();
@@ -98,7 +98,7 @@ public abstract class WF_List extends WF_Widget implements Sortable,Filterable {
 						//Everything is WF_Widgets, so this is safe!					
 						myWidget.addView(((WF_Widget)l).getWidget());
 					} 
-					Log.d("nils","Settingdrawactive to false");
+					//Log.d("nils","Settingdrawactive to false");
 					drawActive = false;
 				}
 			}, 0);

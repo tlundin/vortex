@@ -1,0 +1,168 @@
+package com.teraim.vortex.utils;
+
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Map;
+
+import android.content.Context;
+import android.util.JsonWriter;
+import android.util.Log;
+
+import com.teraim.vortex.dynamic.workflow_realizations.gis.GisConstants;
+import com.teraim.vortex.utils.DbHelper.DBColumnPicker;
+import com.teraim.vortex.utils.Exporter.Report;
+
+public class GeoJSONExporter extends Exporter {
+
+	private StringWriter sw;
+	private JsonWriter writer;
+	
+	protected GeoJSONExporter(Context ctx) {
+		super(ctx);
+
+	}
+
+	@Override
+	public Report writeVariables(DBColumnPicker cp) {
+		int varC=0;
+		sw = new StringWriter();
+		writer = new JsonWriter(sw);	
+
+		try {
+			if (cp.moveToFirst()) {
+				writer.setIndent("  ");
+				//Begin main obj
+				writer.beginObject();
+				Log.d("nils","Writing header");
+				write("name","Export");
+				write("type","FeatureCollection");
+				writer.name("crs");
+					writer.beginObject();
+				write("type","name");
+				writer.name("properties");
+						writer.beginObject();
+				write("name","EPSG:3006");
+						writer.endObject();
+				//end header
+					writer.endObject();
+				writer.name("features");
+				writer.beginArray();
+				Map<String,String> currentKeys;
+
+				Map<String,Map<String,String>> gisObjects=new HashMap<String,Map<String,String>>();
+				String uid;
+				Map<String, String> gisObjM;
+				do {
+					//Count number of geoobj exported
+					varC++;
+					currentKeys = cp.getKeyColumnValues();
+					uid = currentKeys.get("uid");
+					if (uid==null)
+						Log.e("vortex","missing uid!!!");
+					else {
+						gisObjM = gisObjects.get(uid);
+						if (gisObjM==null) { 
+							gisObjM = new HashMap<String,String>();
+							gisObjects.put(uid, gisObjM);
+						}
+						gisObjM.put(cp.getVariable().name, cp.getVariable().value);
+
+						Log.d("vortex","Current keys: "+currentKeys.toString());
+					}
+				} while (cp.next());
+				Log.d("vortex","now inserting into json.");
+					//For each gis object...
+					for (String key:gisObjects.keySet()) {
+						Log.d("vortex","variables under "+key);
+						gisObjM = gisObjects.get(key);
+						
+						String geoType = gisObjM.remove(GisConstants.Geo_Type);
+						if (geoType==null)
+							geoType = "point";
+						String coordinates = gisObjM.remove(GisConstants.GPS_Coord_Var_Name);
+						if (coordinates==null) {
+							Log.e("vortex","Object "+key+" is missing GPS Coordinates!!!");
+							coordinates = "0,0";
+						}
+						
+						//Beg of line.
+						writer.beginObject();
+						write("type", "Feature");
+						writer.name("geometry");
+						writer.beginObject();
+						write("type",geoType);
+						writer.name("coordinates");
+									
+						String[] polygons;
+						boolean p = false;
+						if (!geoType.equals("Polygon")) {
+							Log.d("vortex","POINT!!!");
+							Log.d("geotype",geoType);
+							polygons = new String[] {coordinates};
+						}
+						else {
+							p=true;
+							Log.d("vortex","POLYGON!!!");
+							polygons = coordinates.split("|");
+							writer.beginArray();
+						}
+						for (String polygon:polygons) {
+							if (p)
+								writer.beginArray();
+							String[] coords = polygon.split(",");
+							writer.beginArray();
+							for (int i =0;i<coords.length;i++)
+								writer.value(Float.parseFloat(coords[i]));
+							writer.endArray();
+							if (p)
+								writer.endArray();
+						}
+						if (p)
+							writer.endArray();
+						//End geometry.
+						writer.endObject();
+						writer.name("properties");
+								writer.beginObject();						
+						for (String mKey:gisObjM.keySet()) {
+							write(mKey,gisObjM.get(mKey));
+							Log.d("vortex","var, value: "+mKey+","+gisObjM.get(mKey));
+						}
+								writer.endObject();
+								
+							//eol
+						writer.endObject();
+					}
+				
+				//End of array.
+				writer.endArray();
+				//End of all.
+				writer.endObject();
+				
+				Log.d("nils","finished writing JSON");
+				Log.d("nils", sw.toString());
+				return new Report(sw.toString(),varC);
+			}else
+				Log.e("vortex","EMPTY!!!");
+		} catch (IOException e) {
+			e.printStackTrace();
+			cp.close();
+		} finally {
+			cp.close();
+		}
+
+		return null;	}
+
+	@Override
+	public String getType() {
+		return "json";
+	}
+
+	private void write(String name,String value) throws IOException {
+		String val = (value==null||value.length()==0)?"NULL":value;
+		writer.name(name).value(val);
+	}
+
+
+
+}

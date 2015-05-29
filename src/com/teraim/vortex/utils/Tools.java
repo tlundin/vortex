@@ -45,6 +45,8 @@ import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.types.Workflow.Unit;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.utils.DbHelper.Selection;
+import com.teraim.vortex.utils.RuleExecutor.SubstiResult;
+import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 
 public class Tools {
 
@@ -575,10 +577,10 @@ public class Tools {
 	public static Map<String,String> findKeyDifferences(Map<String, String> longer,
 			Map<String, String> shorter) {
 		Map<String,String> res = new HashMap<String,String>();
-		if (shorter!=null && longer!=null){
-			Log.d("vortex","Longer: "+longer.toString());
-			Log.d("vortex","shorter: "+shorter.toString());
-		}
+		//if (shorter!=null && longer!=null){
+		//	Log.d("vortex","Longer: "+longer.toString());
+		//	Log.d("vortex","shorter: "+shorter.toString());
+		//}
 		if (longer == null) 
 			return null;
 		if (shorter == null && !longer.isEmpty())
@@ -586,7 +588,7 @@ public class Tools {
 		Set<String> sK = shorter.keySet();
 		for (String key:longer.keySet()) {
 			if (!sK.contains(key)) {
-				Log.d("vortex","KEY DIFFERENT:"+key);
+				//Log.d("vortex","KEY DIFFERENT:"+key);
 				res.put(key, longer.get(key));
 			}
 		}
@@ -611,6 +613,22 @@ public class Tools {
 		if (!source.startsWith("http")||source.startsWith("www"))
 			return false;
 		return true;
+	}
+	
+	public static String parseString(String varString) {
+		RuleExecutor re = GlobalState.getInstance().getRuleExecutor();
+		List<TokenizedItem> tokenized = re.findTokens(varString, null);
+		SubstiResult x=null;
+		if (tokenized!=null)
+			x = re.substituteForValue(tokenized, varString, true);
+		if (x!=null) {
+			String res = x.result;
+			res = res.replace("[", "");
+			res = res.replace("]", "");
+			return res;
+		}
+		else
+			return varString;
 	}
 
 

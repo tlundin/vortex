@@ -5,11 +5,12 @@ import java.util.Map;
 
 import com.teraim.vortex.dynamic.blocks.AddGisPointObjects;
 import com.teraim.vortex.dynamic.types.Location;
+import com.teraim.vortex.dynamic.types.Variable;
 
 public class StaticGisPoint extends GisPointObject {
 	
-	public StaticGisPoint(FullGisObjectConfiguration conf, Map<String, String> keyChain,Location myLocation) {
-		super(conf,keyChain,Arrays.asList(new Location[]{myLocation}));
+	public StaticGisPoint(FullGisObjectConfiguration conf, Map<String, String> keyChain,Location myLocation, Variable statusVar) {
+		super(conf,keyChain,Arrays.asList(new Location[]{myLocation}),statusVar);
 	}
 
 

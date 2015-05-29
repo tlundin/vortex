@@ -38,7 +38,7 @@ public class ConditionalContinuationBlock extends Block {
 	public boolean evaluate(GlobalState gs,String formula,
 				List<TokenizedItem> tokens) {
 			//assume fail
-			re = RuleExecutor.getInstance(gs.getContext());
+			re = gs.getRuleExecutor();
 			int eval=STOP;
 			SubstiResult sr = re.substituteForValue(tokens,formula,false);
 			

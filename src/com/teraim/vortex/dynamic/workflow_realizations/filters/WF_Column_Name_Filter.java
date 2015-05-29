@@ -23,17 +23,21 @@ public class WF_Column_Name_Filter extends WF_Filter {
 	@Override
 	public List<? extends Listable> filter(List<? extends Listable> list) {
 		String key;
-		Iterator<? extends Listable> it = list.iterator();
+		Iterator<? extends Listable> it = list.iterator();		
 		while(it.hasNext()) {
 			Listable l = it.next();
 			key = l.getSortableField(columnToMatch);
-			if (key==null || key.length()==0) {
-				Log.e("nils","Key was null or 0 length in filter");
+			if (key==null) {
+				Log.e("nils","Key was null in filter");
 				continue;
 			}				
 			boolean match = false;
-
+			//Log.d("vortex","matching "+key+" with "+myPrefix);
 			if (filterType == FilterType.prefix) {
+				if (key.isEmpty()) {
+					match=false;					
+				}
+					
 				for (int i=0;i<myPrefix.length();i++) {
 					if (Character.toLowerCase(key.charAt(0))==Character.toLowerCase(myPrefix.charAt(i))) {
 						match = true;
@@ -43,8 +47,9 @@ public class WF_Column_Name_Filter extends WF_Filter {
 			} else {
 				if (filterType == FilterType.exact) {
 					match = true;
-					if (myPrefix.length()!=key.length())
+					if (myPrefix.length()!=key.length()) {
 						match = false;
+					}
 					else {
 						for (int i=0;i<myPrefix.length();i++) {
 							if (Character.toLowerCase(key.charAt(i))!=Character.toLowerCase(myPrefix.charAt(i))) {

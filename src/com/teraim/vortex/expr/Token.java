@@ -27,7 +27,7 @@ class Token {
 	
 	int count = 0;
 	
-	Log.d("PARSER","Found token: "+sval);
+	//Log.d("PARSER","Found token: "+sval);
 	if (sval.length()==1) {
 		if (Character.isLetter(sval.charAt(0)))
 			Log.d("PARSER","...and this is a letter");

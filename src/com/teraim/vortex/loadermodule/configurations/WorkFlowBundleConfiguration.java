@@ -272,8 +272,8 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 		o.addGreenText("No duplicate block IDs");
 		return blocks;
 	}
-	
-	
+
+
 	private Block readBlockAddGisFilter(XmlPullParser parser) throws IOException, XmlPullParserException {
 		o.addRow("Parsing block: block_add_gis_filter...");
 		String id=null,nName=null,targetName=null,targetLayer=null,label=null, color=null,polyType=null,fillType=null,
@@ -323,7 +323,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 
 	}
 
-/*
+	/*
 	 <block_add_gis_point_object>
 	 <block_ID>2145</block_ID>
 	 <name>Rutor</name>
@@ -334,13 +334,13 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 	 <obj_context>år=?,ruta=?</obj_context>
 	 <label>RUTA @ruta</label>
 	 </block_add_gis_point_object>
-*/
-	
-	
+	 */
+
+
 	private Block readBlockAddGisPointObjects(XmlPullParser parser,GisObjectType type) throws IOException, XmlPullParserException {
 		o.addRow("Parsing block: block_add_gis_point_objects...");
 		String id=null,nName=null,target=null,label=null,coordType = null, color=null,polyType=null,fillType=null,
-				location=null,objContext=null,imgSource=null,refreshRate=null,radius=null,onClick=null;
+				location=null,objContext=null,imgSource=null,refreshRate=null,radius=null,onClick=null,statusVariable = null;
 		boolean isVisible=true;
 
 		//parser.require(XmlPullParser.START_TAG, null,"block_add_gis_point_objects")
@@ -380,7 +380,10 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				refreshRate = readText("refresh_rate",parser);
 			} else if (name.equalsIgnoreCase("radius")) {
 				radius= readText("radius",parser);
+			} else if (name.equalsIgnoreCase("status_variable")) {
+				statusVariable = readText("status_variable",parser);
 			}
+
 			else {
 				Log.e("vortex","Skipped "+name);
 				skip(name,parser);
@@ -388,7 +391,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 		}
 
 		checkForNull("block_ID",id,"target",target,"location",location);
-		return new AddGisPointObjects(id,nName,label,target,objContext,coordType,location,imgSource,refreshRate,radius,isVisible,type,color,polyType,fillType,onClick);
+		return new AddGisPointObjects(id,nName,label,target,objContext,coordType,location,imgSource,refreshRate,radius,isVisible,type,color,polyType,fillType,onClick,statusVariable);
 
 	}
 
@@ -1036,7 +1039,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 	private CreateEntryFieldBlock readBlockCreateEntryField(XmlPullParser parser)throws IOException, XmlPullParserException {
 		//o.addRow("Parsing block: block_create_entry_field...");
 		boolean isVisible = true,showHistorical = false;
-		String namn=null,containerId=null,postLabel="",format=null,id=null,initialValue=null;
+		String namn=null,containerId=null,postLabel="",format=null,id=null,initialValue=null,label=null;
 		Unit unit = Unit.nd;		
 		parser.require(XmlPullParser.START_TAG, null,"block_create_entry_field");
 		while (parser.next() != XmlPullParser.END_TAG) {
@@ -1049,6 +1052,9 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				id = readText("block_ID",parser);
 			} else if (name.equals("name")) {
 				namn = readText("name",parser);
+			}
+			else if (name.equals("label")) {
+				label= readText("label",parser);
 			} else if (name.equals("container_name")) {
 				containerId = readText("container_name",parser);
 			} 
@@ -1066,7 +1072,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				skip(name,parser,o);
 		}
 		checkForNull("block_ID",id,"name",namn,"container_name",containerId,"format",format);
-		return new CreateEntryFieldBlock(id,namn, containerId,isVisible,format,showHistorical,initialValue);
+		return new CreateEntryFieldBlock(id,namn, containerId,isVisible,format,showHistorical,initialValue,label);
 	}
 
 	/**
@@ -1288,7 +1294,8 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 	private ButtonBlock readBlockButton(XmlPullParser parser) throws IOException, XmlPullParserException {
 		//o.addRow("Parsing block: block_button...");
 		String label=null,onClick=null,myname=null,containerName=null,
-				target=null,type=null,id=null,statusVariable=null,exportContextS=null,exportFormat=null;
+				target=null,type=null,id=null,statusVariable=null,exportContextS=null,
+				exportFormat=null,buttonContext=null;
 		boolean isVisible = true, enabled=false;
 		parser.require(XmlPullParser.START_TAG, null,"block_button");
 		while (parser.next() != XmlPullParser.END_TAG) {
@@ -1328,6 +1335,9 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			else if (name.equals("is_visible")) {
 				isVisible = readText("is_visible",parser).equals("true");
 			} 
+			else if (name.equals("button_context")) {
+				buttonContext = readText("button_context",parser);
+			}
 			else if (name.equals("status_variable"))
 				statusVariable = readText("status_variable",parser);
 			else
@@ -1336,7 +1346,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 		checkForNull("block_ID",id,"type",type,"name",myname,"label",label,"container_name",
 				containerName,"target",target);
 
-		return new ButtonBlock(id,label,onClick,myname,containerName,target,type,statusVariable,isVisible,exportContextS,exportFormat,enabled);
+		return new ButtonBlock(id,label,onClick,myname,containerName,target,type,statusVariable,isVisible,exportContextS,exportFormat,enabled,buttonContext);
 	}
 
 

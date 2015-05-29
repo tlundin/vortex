@@ -55,7 +55,7 @@ public class CombinedRangeAndListFilter implements TextFilter {
 		//Set if default filter triggers.
 		mVar.setOutOfRange(false);
 		for (TextFilter filter:myFilters) {
-			Log.d("nils","checking filter "+c+" hasdefault: "+hasDefault);
+			//Log.d("nils","checking filter "+c+" hasdefault: "+hasDefault);
 			if (filter.filter(source, start, end,dest, dstart, dend)==null){
 				if (hasDefault && c==0) {
 //					Log.d("nils","Default triggered!");

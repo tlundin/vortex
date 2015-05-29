@@ -16,14 +16,14 @@ public class DynamicGisPoint extends GisPointObject {
 	boolean multivar = false;
 	Variable myXVar,myYVar,myXYVar;
 	
-	public DynamicGisPoint(FullGisObjectConfiguration conf, Map<String, String> keyChain,Variable x, Variable y) {
-		super(conf,keyChain,null);
+	public DynamicGisPoint(FullGisObjectConfiguration conf, Map<String, String> keyChain,Variable x, Variable y, Variable statusVar) {
+		super(conf,keyChain,null,statusVar);
 		multivar=true;
 		myXVar=x;
 		myYVar=y;
 	}
-	public DynamicGisPoint(FullGisObjectConfiguration conf, Map<String, String> keyChain,Variable v1) {
-		super(conf,keyChain,null);
+	public DynamicGisPoint(FullGisObjectConfiguration conf, Map<String, String> keyChain,Variable v1,Variable statusVar) {
+		super(conf,keyChain,null,statusVar);
 		multivar=false;
 		myXYVar=v1;
 	}

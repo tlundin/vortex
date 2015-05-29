@@ -25,8 +25,9 @@ public class CreateEntryFieldBlock extends Block {
 	boolean isVisible = false,showHistorical;
 	String format;
 
+
 	public CreateEntryFieldBlock(String id,String name, 
-			String containerId,boolean isVisible,String format,boolean showHistorical,String initialValue) {
+			String containerId,boolean isVisible,String format,boolean showHistorical,String initialValue, String label) {
 		super();
 		this.name = name;
 		this.containerId=containerId;
@@ -35,7 +36,7 @@ public class CreateEntryFieldBlock extends Block {
 		this.blockId=id;
 		this.initialValue=initialValue;
 		this.showHistorical=showHistorical;
-
+		this.label=label;
 	}
 
 	/**
@@ -74,7 +75,7 @@ public class CreateEntryFieldBlock extends Block {
 
 				o.addRedText("Current keyChain: ["+gs.getCurrentKeyHash()+"]");
 			} else	{	
-				WF_ClickableField_Selection myField = new WF_ClickableField_Selection_OnSave(v.getLabel(),
+				WF_ClickableField_Selection myField = new WF_ClickableField_Selection_OnSave(label==null||label.equals("")?v.getLabel():label,
 						al.getDescription(v.getBackingDataSet()),myContext,name,isVisible);
 				Log.d("nils", "In CreateEntryField. Description: "+al.getDescription(v.getBackingDataSet()));
 				Log.d("nils","Backing data: "+v.getBackingDataSet().toString());

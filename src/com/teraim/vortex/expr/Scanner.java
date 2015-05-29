@@ -130,7 +130,7 @@ class Scanner {
     	 
          ++i;
     if (s.substring(from, i).equalsIgnoreCase("null")) {
-    	Log.d("nils","FOUND NULL IN FORMULA");
+    	//Log.d("nils","FOUND NULL IN FORMULA");
     	tokens.addElement(new Token(Token.TT_NULL, 0, s, from, i));
     }
     else
