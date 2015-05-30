@@ -90,7 +90,9 @@ public abstract class GisPointObject extends GisObject {
 				return key+" "+keyChain.get(key);
 			}
 		}
-		return poc.getLabel();
+		Log.d("vortex","Herzz");
+		return (Tools.parseString(poc.getLabel(),keyChain));
+		
 	}
 	
 	private Map<GisFilter,Boolean> filterCache = new HashMap<GisFilter,Boolean>();
@@ -105,7 +107,12 @@ public abstract class GisPointObject extends GisObject {
 	public boolean getCachedFilterResult(GisFilter filter) {
 		return filterCache.get(filter);
 	}
-
+	public double getX() {
+		return super.getCoordinates().get(0).getX();
+	}
+	public double getY() {
+		return super.getCoordinates().get(0).getY();
+	}
 
 
 

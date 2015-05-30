@@ -560,7 +560,7 @@ public class RuleExecutor {
 						subst = replaceIfStringCompare(st.getId().toLowerCase(),subst,value);
 												
 					} else {
-						//Log.d("nils","Substituting Variable: ["+st.getId()+"] with value "+st.getValue());
+						Log.d("nils","Substituting Variable: ["+st.getId()+"] with value "+st.getValue());
 						subst = subst.replace(st.getId().toLowerCase(), value);
 						//Log.d("nils","After substitutiony: "+subst);						
 					}
@@ -570,8 +570,9 @@ public class RuleExecutor {
 		}
 
 		if (stringT) {
-			Log.d("vortex","string type returned with values substituted");
+			//Log.d("vortex","string type returned with values substituted");
 			o.addRow("After substitution: "+subst);
+			//Log.d("vortex","After substitution: "+subst);
 			return new SubstiResult(subst,SubstiType.String);
 		}
 
@@ -753,10 +754,10 @@ public class RuleExecutor {
 			if (args!=null && args.length!=0) {
 				Log.d("vortex","Getting current value for column "+args[0]);
 				Map<String, String> kh = gs.getCurrentKeyHash();
-				Log.d("vortex","keyhash "+kh.toString());
 				if (kh==null)
 					return null;
 				else {
+					Log.d("vortex","keyhash "+kh.toString());
 					Log.d("votex","value for column is "+kh.get(args[0]));
 					return kh.get(args[0]);
 				}
@@ -780,7 +781,7 @@ public class RuleExecutor {
 							gs.getLogger().addRow("");
 							gs.getLogger().addRedText("Function has variable that does not exist in current context: "+arg);							
 						} else {
-							if (v.getType()!=DataType.numeric) {
+							if (!Tools.isNumeric(v.getValue())) {
 								Log.e("vortex","Function sum has non numeric argument: "+arg);
 								gs.getLogger().addRow("");
 								gs.getLogger().addRedText("Function sum has non numeric argument: "+arg);

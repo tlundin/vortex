@@ -567,7 +567,7 @@ public class DelyteManager {
 				if (rawTag!=null && rawTag.length()>0) {
 					Log.d("nils","Found historical tåg under delyteID "+delyteID+" :"+rawTag);
 					//Save under this year.
-					v.setValue(rawTag);
+					v.setValueNoSync(rawTag);
 					rawTags.add(rawTag);
 				}
 

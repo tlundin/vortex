@@ -5,14 +5,14 @@ public class GisConstants {
 	public static final String MULTI_POINT = "Multipoint";
 	public static final String LINE_STRING = "Linestring";
 	public static final String POLYGON = "Polygon";
-	public static final Object GlobalID = "GlobalID";
+	public static final String GlobalID = "globalid";
 	public static final String SKYDDSVART = "skyddsvärt";
 	public static final String TYPE_COLUMN = "gistyp";
-	public static final String Geo_Type = "GeoType";
-	public static final String Location = "GPSCoord";
+	public static final String Geo_Type = "geotype";
+	public static final String Location = "gpscoord";
 	public static final String SWEREF = "sweref";
 	public static final String LATLONG= "latlong";
-	public static final Object RutaID = "Ruta";
-	public static final Object GPS_Coord_Var_Name = "GPSCoord";
+	public static final String RutaID = "ruta";
+	public static final String GPS_Coord_Var_Name = "gpscoord";
 	
 }

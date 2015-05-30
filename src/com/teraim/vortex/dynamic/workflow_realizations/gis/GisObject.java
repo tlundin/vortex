@@ -48,6 +48,7 @@ public class GisObject {
 		return attributes;
 	}
 	
+
 	public static List<Location> createListOfLocations(String value, String coordType) {
 		if (value==null) {
 			return null;

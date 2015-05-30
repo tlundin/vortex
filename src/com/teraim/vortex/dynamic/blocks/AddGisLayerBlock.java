@@ -7,26 +7,13 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
-import com.teraim.vortex.FileLoadedCb;
-import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
 import com.teraim.vortex.dynamic.types.GisLayer;
-import com.teraim.vortex.dynamic.types.PhotoMeta;
-import com.teraim.vortex.dynamic.types.Workflow.Unit;
-import com.teraim.vortex.dynamic.workflow_abstracts.Container;
 import com.teraim.vortex.dynamic.workflow_abstracts.Drawable;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.WF_Gis_Map;
-import com.teraim.vortex.gis.GisImageView;
-import com.teraim.vortex.loadermodule.ConfigurationModule;
-import com.teraim.vortex.loadermodule.FileLoader;
-import com.teraim.vortex.loadermodule.LoadResult;
-import com.teraim.vortex.loadermodule.ConfigurationModule.Source;
-import com.teraim.vortex.loadermodule.LoadResult.ErrorCode;
-import com.teraim.vortex.loadermodule.configurations.AirPhotoMetaData;
-import com.teraim.vortex.non_generics.Constants;
-import com.teraim.vortex.utils.PersistenceHelper;
 
 public class AddGisLayerBlock extends Block {
 
@@ -65,8 +52,10 @@ public class AddGisLayerBlock extends Block {
 				LinearLayout layersL = (LinearLayout)myGis.getWidget().findViewById(R.id.LayersL);
 				LayoutInflater li = LayoutInflater.from(myContext.getContext());
 				View layersRow = li.inflate(R.layout.layers_row, null);
+				TextView filterNameT = (TextView)layersRow.findViewById(R.id.filterName);
 				CheckBox lShow = (CheckBox)layersRow.findViewById(R.id.cbShow);
 				CheckBox lLabels = (CheckBox)layersRow.findViewById(R.id.cbLabels);
+				filterNameT.setText(label);
 				lShow.setChecked(isVisible);
 				lLabels.setChecked(showLabels);
 				lShow.setOnCheckedChangeListener(new OnCheckedChangeListener() {

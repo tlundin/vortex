@@ -647,14 +647,15 @@ public class GlobalState  {
 
 	public CHash evaluateContext(String cContext) {
 		boolean contextError=false;
-		String err = "undefined error";
-		HashMap<String, String> keyHash = null;
-		HashMap<String, Variable> rawHash = null;
+		String err = null;
+		Map<String, String> keyHash = null;
+		Map<String, Variable> rawHash = null;
 		LoggerI o = getLogger();
 		Log.d("noob","In evaluate Context!!");
 		if (cContext==null||cContext.isEmpty()) {
 			Log.d("nils","No context!!");
-			err=null;
+			keyHash = this.getCurrentKeyHash();
+			rawHash = this.myRawHash;
 		} else {
 			keyHash = new HashMap<String, String>();
 			rawHash = new HashMap<String, Variable>();
@@ -718,6 +719,7 @@ public class GlobalState  {
 														o.addRow("");
 														o.addRedText("One of the variables used in current context("+v.getId()+") has no value in database");
 														Log.e("nils","var was null or empty: "+v.getId());
+														err = "One of the variables used in current context("+v.getId()+") has no value in database";
 														contextError=true;
 													}
 												} else if (firstToken.getType().getParent()==TokenType.function) {
@@ -728,17 +730,22 @@ public class GlobalState  {
 													} else {
 														Log.e("vortex","subsresult was null for function"+val+" in evalContext");
 														contextError=true;
+														err = "subsresult was null for function"+val+" in evalContext";
 													}
 												} else if (firstToken.getType()==TokenType.literal) {
 													Log.d("vortex","Found literal!");
 													varVal = val;
-												} else
+												} else {
 													Log.e("vortex","Could not find "+firstToken.getType().name());
+													contextError=true;
+													err = "Could not find "+firstToken.getType().name();
+												}
 
 											} else {
 												o.addRow("");
 												o.addRedText("Could not evaluate expression "+val+" in context");
 												contextError=true;
+												err="Could not evaluate expression "+val+" in context";
 											}
 											
 											
@@ -768,8 +775,11 @@ public class GlobalState  {
 								}
 							}
 						}
-					} else
+					} else {
 						Log.d("nils","Found empty or null pair");
+						contextError=true;
+						err="Found empty or null pair";
+					}
 				} 
 
 			}
@@ -780,7 +790,7 @@ public class GlobalState  {
 			return new CHash(keyHash,rawHash);
 		}
 		else
-			return new CHash(myKeyHash,myRawHash);
+			return new CHash(err);
 
 	}
 

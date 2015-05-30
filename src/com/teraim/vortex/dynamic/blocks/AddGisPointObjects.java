@@ -49,9 +49,6 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 	private boolean isVisible;
 	private GisObjectType myType;
 	public boolean loadDone=false;
-	private CHash myKeyHash;
-
-
 	private Set<GisObject> myGisObjects;
 	private float radius;
 	private String color;
@@ -59,6 +56,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 	private PolyType polyType;
 	private String onClick;
 	private String statusVariable;
+	private CHash objKeyHash;
 
 
 	public AddGisPointObjects(String id, String nName, String label,
@@ -94,15 +92,15 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 				this.fillType = Paint.Style.FILL_AND_STROKE;
 		}
 		this.polyType=PolyType.circle;
-		this.radius=0;
+		this.radius=10;
 		if (polyType!=null) {
-			if (polyType.toUpperCase().equals("SQUARE")||polyType.equals("RECT")||polyType.equals("RECTANGLE"))
+			if (polyType.toUpperCase().equals("SQUARE")||polyType.toUpperCase().equals("RECT")||polyType.toUpperCase().equals("RECTANGLE"))
 				this.polyType=PolyType.rect;
 		}
-		
+
 		if (Tools.isNumeric(radius)) {
 			this.radius=Float.parseFloat(radius);
-			
+
 		}
 
 	}
@@ -133,9 +131,15 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 
 
 		//Need the key hash for the database.
-		myKeyHash = 
+		objKeyHash = 
 				GlobalState.getInstance().evaluateContext(this.objContext);
-		if (myKeyHash==null) {
+
+		//Use current year for statusvar.
+		Map<String, String> currYearH = Tools.copyKeyHash(objKeyHash.keyHash);
+		currYearH.put("år",Constants.getYear());
+		Log.d("vortex","CURRYEARRGGG "+currYearH.toString());
+
+		if (objKeyHash==null) {
 			Log.e("vortex","keychain  null!!");
 			o.addRow("");
 			o.addYellowText("Missing object context in AddGisPointObjects. Potential error if variables have keychain");
@@ -147,15 +151,15 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 			return;
 		}
 		String kc="null";
-		if (myKeyHash.keyHash!= null)
-			kc = myKeyHash.keyHash.toString();
+		if (objKeyHash.keyHash!= null)
+			kc = objKeyHash.keyHash.toString();
 		Log.d("vortex","In onCreate for AddGisP for type: "+myType+"with keychain: "+kc);
 		//Call to the database to get the objects.
 
 		//Either one or two location variables. 
 		//If One, separate X,Y by comma
 		//If two, One for X & one for Y.
-		Log.d("vortex","Location variables: "+locationVariables);
+		//Log.d("vortex","Location variables: "+locationVariables);
 		//Try split.
 		String[] locationVarArray = locationVariables.split(",");
 		if (locationVarArray.length>2){
@@ -179,19 +183,12 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 		Selection coordVar1S=null,coordVar2S=null,statusVarS = null;
 		DBColumnPicker pickerLocation1,pickerLocation2=null,pickerStatusVars=null;  
 		if (this.getStatusVariable()!=null) {
-			//Map<String, String> statusHash = Tools.createKeyMapCopy(myKeyHash.keyHash);
-			//if (statusHash!=null) {
-			//if (statusHash.get("år")!=null);
-			//statusHash.put("år", Constants.getYear());
-			statusVarS = GlobalState.getInstance().getDb().createSelection(myKeyHash.keyHash, this.getStatusVariable());
+			statusVarS = GlobalState.getInstance().getDb().createSelection(currYearH, this.getStatusVariable());
 			pickerStatusVars = GlobalState.getInstance().getDb().getAllVariableInstances(statusVarS);
-		//	Log.d("vortex","stat selection: "+statusVarS.selection);
-		//	Log.d("vortex","stat sel args: "+print(statusVarS.selectionArgs));
-
 		}
-		//}
-			
-		coordVar1S = GlobalState.getInstance().getDb().createSelection(myKeyHash.keyHash, locationVarArray[0]);
+
+
+		coordVar1S = GlobalState.getInstance().getDb().createSelection(objKeyHash.keyHash, locationVarArray[0]);
 		Log.d("vortex","selection: "+coordVar1S.selection);
 		Log.d("vortex","sel args: "+print(coordVar1S.selectionArgs));
 		List<String> row = al.getCompleteVariableDefinition(locationVarArray[0]);
@@ -209,7 +206,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 
 		if (twoVars) {
 			DataType t2 = al.getnumType(al.getCompleteVariableDefinition(locationVarArray[0]));
-			coordVar2S = GlobalState.getInstance().getDb().createSelection(myKeyHash.keyHash, locationVarArray[1]);
+			coordVar2S = GlobalState.getInstance().getDb().createSelection(objKeyHash.keyHash, locationVarArray[1]);
 			Log.d("vortex","selection: "+coordVar2S.selection);
 			Log.d("vortex","sel args: "+print(coordVar2S.selectionArgs));
 			if (t2!=DataType.array)
@@ -233,7 +230,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 			myGisObjects = new HashSet<GisObject> ();
 			//If empty, might be global & no value. Check this.
 			if (!pickerLocation1.moveToFirst()) {
-				if (myKeyHash.keyHash==null) {
+				if (objKeyHash.keyHash==null) {
 					Log.d("vortex","Global with no value!");
 					//TODO: Statusvariable missing for this special case.
 					Variable v1 = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(null, locationVarArray[0]);
@@ -253,23 +250,25 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 					return;
 				}
 
-				
+
 				int i=0;
 				Map <String,Variable> statusVarM=null;
 				boolean foundStatusVar = false;
-				if (pickerStatusVars!=null)
+				if (pickerStatusVars!=null) 
 					foundStatusVar=pickerStatusVars.moveToFirst();
-				
+					
+				 
 				while (foundStatusVar) {
 					String value  = pickerStatusVars.getVariable().value;
 					Variable statusVar = GlobalState.getInstance().getVariableConfiguration().getCheckedVariable(pickerStatusVars.getKeyColumnValues(),pickerStatusVars.getVariable().name,value,true);
 					if (statusVarM == null) 
 						statusVarM = new HashMap<String,Variable>();
-						statusVarM.put(statusVar.getKeyChain().get("uid"), statusVar);
-						Log.d("vortex","added statusvar");
-						foundStatusVar = pickerStatusVars.next();
-				}
+					statusVarM.put(statusVar.getKeyChain().get("uid"), statusVar);
+					Log.d("vortex","added statusvar");
+					foundStatusVar = pickerStatusVars.next();
+				} 
 				
+
 
 				do {
 					i++;
@@ -283,9 +282,10 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 					if (statusVarM!=null) 
 						statusVar = statusVarM.get(pickerLocation1.getKeyColumnValues().get("uid"));
 					//if there is a statusvariable defined, but no value found, create a new empty variable.
-					if (statusVariable !=null && statusVar == null)
-						statusVar = GlobalState.getInstance().getVariableConfiguration().getCheckedVariable(pickerLocation1.getKeyColumnValues(),statusVariable,"0",true);
-					
+					if (statusVariable !=null && statusVar == null) {
+						currYearH.put("uid", pickerLocation1.getKeyColumnValues().get("uid"));
+						statusVar = GlobalState.getInstance().getVariableConfiguration().getCheckedVariable(currYearH,statusVariable,"0",true);
+					}
 					if (dynamic) {
 						String value = pickerLocation1.getVariable().value;
 						v1 = GlobalState.getInstance().getVariableConfiguration().getCheckedVariable(pickerLocation1.getKeyColumnValues(),storedVar1.name,value,true);
@@ -324,7 +324,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 							Log.d("vortex","Adding polygon");
 							myGisObjects.add(new GisPolygonObject(this,map1,storedVar1.value,coordType));
 						}
-						}
+					}
 					//Add these variables to bag 
 
 				} while (pickerLocation1.next());
@@ -346,7 +346,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 			}
 		}
 		loadDone=true;
-		
+
 	}
 
 	private class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
@@ -393,6 +393,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 
 	public String getLabel() {
 		return label;
+
 	}
 
 	public boolean isVisible() {
@@ -456,10 +457,10 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 	}
 
 	@Override
-	public CHash getCommonHash() {
-		return myKeyHash;
+	public CHash getObjectKeyHash() {
+		return objKeyHash;
 	}
-	
+
 	public String getStatusVariable() {
 		return statusVariable;
 	}

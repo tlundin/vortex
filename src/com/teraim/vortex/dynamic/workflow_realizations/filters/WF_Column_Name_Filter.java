@@ -5,6 +5,7 @@ import java.util.List;
 
 import android.util.Log;
 
+import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.workflow_abstracts.Listable;
 
 //Specialized filter. Will filter a list on Prefix.
@@ -14,6 +15,7 @@ public class WF_Column_Name_Filter extends WF_Filter {
 	String filterColumn;
 	private String columnToMatch;
 	private FilterType filterType;
+	private boolean totMatch=false;
 
 	public enum FilterType{
 		exact,
@@ -32,7 +34,7 @@ public class WF_Column_Name_Filter extends WF_Filter {
 				continue;
 			}				
 			boolean match = false;
-			//Log.d("vortex","matching "+key+" with "+myPrefix);
+			
 			if (filterType == FilterType.prefix) {
 				if (key.isEmpty()) {
 					match=false;					
@@ -65,8 +67,16 @@ public class WF_Column_Name_Filter extends WF_Filter {
 				it.remove();
 				//Log.d("nils","filter removes element "+key+" because "+key.charAt(0)+" doesn't match "+myPrefix);
 			}
+			else 
+				totMatch=true;
 
 		}
+		if (!totMatch) {
+			o = GlobalState.getInstance().getLogger();
+			o.addRow("");
+			o.addYellowText("No matches found in Column filter. Column used: ["+columnToMatch+"]");
+		}
+			
 		return list;
 	}
 

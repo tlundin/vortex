@@ -12,7 +12,7 @@ import com.teraim.vortex.dynamic.workflow_realizations.gis.GisObject;
 
 public class GisLayer {
 
-	String name, label;
+	private String name, label;
 	private boolean isVisible, hasWidget,hasDynamic=false;
 	Map<String,Set<GisObject>> myObjects;
 	private boolean showLabels;
@@ -75,6 +75,10 @@ public class GisLayer {
 
 	public boolean showLabels() {
 		return showLabels;
+	}
+	
+	public String getLabel() {
+		return label;
 	}
 
 }

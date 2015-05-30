@@ -116,8 +116,6 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 
 	protected VariableConfiguration al;
 
-	private CHash myHash;
-
 	private int savedBlockPointer=-1;
 
 	private List<Block> blocks;
@@ -173,8 +171,10 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 		Log.d("vortex","in Executor onResume");
 		activity.registerReceiver(brr, ifi);
 		gs = GlobalState.getInstance();
-		if (gs!=null&&myContext!=null&&myContext.hasGPSTracker())
-			gs.getTracker().startScan(gs.getContext());
+		if (gs!=null) {
+			if(myContext!=null&&myContext.hasGPSTracker())
+				gs.getTracker().startScan(gs.getContext());
+		}
 		super.onResume();
 	}
 
@@ -208,18 +208,8 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 				o.addRow("");
 				o.addYellowText("Workflow "+name+" NOT found!");
 				return null;
-			} else {
-				o.addRow("");
-				o.addRow("");
-				o.addRow("*******EXECUTING: "+name);
-				String wfContext = wf.getContext();
-				if (wfContext!=null) {
-					myHash = gs.evaluateContext(wfContext);
-					gs.setCurrentContext(myContext);		
-					gs.setKeyHash(myHash.keyHash);
-					gs.setRawHash(myHash.rawHash);
-				}
-			}
+			} 
+			
 		}
 		return wf;
 	}
@@ -229,19 +219,23 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 	 * Execute the workflow.
 	 */
 	protected void run() {
-
-			if (myHash!=null)  {
-			Log.d("vortex"," currentKeyHash before: "+gs.getCurrentKeyHash());
-			Log.d("vortex","GS: "+gs+" myContext: "+myContext);
+			o.addRow("");
+			o.addRow("");
+			o.addRow("*******EXECUTING: "+wf.getLabel());
+			String wfContext = wf.getContext();
+			myContext.setHash(gs.evaluateContext(wfContext));
 			gs.setCurrentContext(myContext);		
-			gs.setKeyHash(myHash.keyHash);
-			gs.setRawHash(myHash.rawHash);
+			gs.setKeyHash(myContext.getKeyHash());
+			gs.setRawHash(myContext.getRawHash());
 			gs.sendEvent(MenuActivity.REDRAW);
-			Log.d("vortex"," currentKeyHash after: "+gs.getCurrentKeyHash());
-			}
 			visiVars = new HashSet<Variable>();
 			//LinearLayout my_root = (LinearLayout) findViewById(R.id.myRoot);		
 			blocks = wf.getCopyOfBlocks();
+			Log.d("vortex","*******EXECUTING: "+wf.getLabel());
+			String mh=null;
+			if (myContext.getKeyHash()!=null)
+				mh = myContext.getKeyHash().toString();
+			Log.d("vortex","myHash: "+mh);
 			execute(0);
 	}
 	private void execute(int blockP) {

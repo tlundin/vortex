@@ -22,7 +22,9 @@ import android.util.Log;
 
 import com.teraim.vortex.dynamic.EventBroker;
 import com.teraim.vortex.dynamic.Executor;
+import com.teraim.vortex.dynamic.types.CHash;
 import com.teraim.vortex.dynamic.types.Rule;
+import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.workflow_abstracts.Container;
 import com.teraim.vortex.dynamic.workflow_abstracts.Drawable;
 import com.teraim.vortex.dynamic.workflow_abstracts.Event;
@@ -48,6 +50,7 @@ public class WF_Context {
 	private WF_Gis_Map currentGis;
 	private List<WF_Gis_Map> gisses;
 	private boolean hasGPSTracker = false;
+	private CHash myHash;
 
 
 
@@ -273,6 +276,28 @@ public class WF_Context {
 	}
 	public void enableGPS() {
 		hasGPSTracker = true;
+	}
+	public void setHash(CHash myHash) {
+		this.myHash=myHash;
+	}
+	public CHash getHash() {
+		return myHash;
+	}
+	public Map<String, String> getKeyHash() {
+		if (myHash!=null)
+			return myHash.keyHash;
+		else {
+			Log.e("vortex", "myhash was null i getKeyHash, context!!");
+			return null;
+		}
+	}
+	public Map<String, Variable> getRawHash() {
+		if (myHash!=null)
+			return myHash.rawHash;
+		else {
+			Log.e("vortex", "myhash was null i getRawHash, context!!");
+			return null;
+		}
 	}
 
 

@@ -73,13 +73,14 @@ public  class ButtonBlock extends Block {
 	private String statusVar=null;
 	private OnclickExtra extraActionOnClick=null;
 	private GlobalState gs;
-	private Map<String, String> buttonContext;
+	private Map<String, String> buttonContext=null;
 	private PopupWindow mpopup=null;
 	private String exportContextS;
 	private String exportFormat;
 	private String exportFileName = null;
 	private boolean enabled;
 	private String buttonContextS;
+	private Map<String, String> buttonContextOld=null;
 
 
 	enum Type {
@@ -99,7 +100,7 @@ public  class ButtonBlock extends Block {
 			OnclickExtra onclickExtra,Map<String,String> buttonContext, int dummy) {		
 		this(id,lbl,action,name,container,target,type,statusVariable,isVisible,null,null,true,null);
 		extraActionOnClick = onclickExtra;
-		this.buttonContext = buttonContext;
+		this.buttonContextOld = buttonContext;
 	}
 	
 	public ButtonBlock(String id,String lbl,String action, String name,String container,String target, String type, String statusVariable,boolean isVisible,String exportContextS, String exportFormat,boolean enabled, String buttonContextS) {
@@ -143,19 +144,17 @@ public  class ButtonBlock extends Block {
 		Log.d("nils","In CREATE for BUTTON "+getText());
 		Container myContainer = myContext.getContainer(containerId);
 		if (myContainer!=null) {
-			final Context ctx = myContext.getContext();
-			
-			//If buttoncontext already prepared, do nothing. Else, if a buttoncontext descriptor exist, compile it. Else, use current context.
-			if (buttonContext==null) {
-				if (buttonContextS==null)
-					buttonContext = gs.getCurrentKeyHash();
-				else {
+			if (buttonContextOld!=null)
+				buttonContext=buttonContextOld;
+			else {
+				Log.d("vortex","ButtonContextS: "+buttonContextS);
+				buttonContext = myContext.getKeyHash();
+				if (buttonContextS!=null&&!buttonContextS.isEmpty())
 					buttonContext = gs.evaluateContext(buttonContextS).keyHash;
-				}
-			} 
-				
+			}
 			Log.d("nils","Buttoncontext set to: "+buttonContext.toString()+" for button: "+getText());
 				
+			final Context ctx = myContext.getContext();
 			
 			WF_Widget misu = null;
 			if (type == Type.action) {

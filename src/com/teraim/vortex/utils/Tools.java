@@ -616,15 +616,47 @@ public class Tools {
 	}
 	
 	public static String parseString(String varString) {
-		RuleExecutor re = GlobalState.getInstance().getRuleExecutor();
-		List<TokenizedItem> tokenized = re.findTokens(varString, null);
+		return parseString(varString, GlobalState.getInstance().getCurrentKeyHash());
+	}
+	
+	public static String parseString(String varString, Map<String,String> keyHash) {
+
+		if (varString == null||varString.isEmpty())
+			return "";
+		if (!varString.contains("["))
+			return varString;
+		if (keyHash!=null)
+			Log.d("vortex","Keyhash: "+keyHash.toString());
+		int cIndex=0;
+		String res="";
+		do {
+			int hakeS = varString.indexOf('[', cIndex)+1;
+			if (hakeS==0)
+				break;
+			int hakeE = varString.indexOf(']', hakeS);
+			if (hakeE==-1) {
+				Log.e("vortex","missing end bracket in parseString: "+varString);
+				GlobalState.getInstance().getLogger().addRow("");
+				GlobalState.getInstance().getLogger().addRedText("missing end bracket in parseString: "+varString);
+				break;
+			}
+			Log.e("vortex","PARSESTRING: "+varString.substring(hakeS, hakeE));
+			String interPS = interpret(varString.substring(hakeS, hakeE),keyHash);
+			String preS = varString.substring(cIndex, hakeS-1);
+			res = preS+interPS;
+			cIndex=hakeE+1;
+		} while(cIndex<varString.length());
+		String postS = varString.substring(cIndex,varString.length());
+		return res+postS;
+	}
+	private static String interpret(String varString, Map<String,String> keyHash) {
+		final RuleExecutor re = GlobalState.getInstance().getRuleExecutor();
+		List<TokenizedItem> tokenized = re.findTokens(varString, null, keyHash);
 		SubstiResult x=null;
 		if (tokenized!=null)
 			x = re.substituteForValue(tokenized, varString, true);
 		if (x!=null) {
 			String res = x.result;
-			res = res.replace("[", "");
-			res = res.replace("]", "");
 			return res;
 		}
 		else

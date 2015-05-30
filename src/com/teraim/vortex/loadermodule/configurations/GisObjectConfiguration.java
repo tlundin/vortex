@@ -188,7 +188,7 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 			reader.nextName();
 			reader.beginObject();
 			while(reader.hasNext()) {
-				attributes.put(reader.nextName(),this.getAttribute(reader));
+				attributes.put(reader.nextName().toLowerCase(),this.getAttribute(reader));
 			}
 			Log.d("vortex",attributes.toString());
 			//end attributes

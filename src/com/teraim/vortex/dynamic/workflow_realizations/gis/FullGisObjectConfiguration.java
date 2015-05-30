@@ -28,7 +28,7 @@ public interface FullGisObjectConfiguration extends GisObjectBaseAttributes {
 	public Paint.Style getFillType();
 	public PolyType getShape();
 	public String getClickFlow();
-	public CHash getCommonHash();
+	public CHash getObjectKeyHash();
 	public String getStatusVariable();
 	
 }

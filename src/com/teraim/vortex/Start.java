@@ -38,7 +38,6 @@ public class Start extends MenuActivity {
 
 	//	private ArrayList<String> rutItems;
 	//	private ArrayList<String> wfItems;
-	private enum State {INITIAL, HISTORICAL_LOADED,WF_LOADED, CONF_LOADED, VALIDATE,POST_INIT, GIS_LOADED};
 	private LoginConsoleFragment loginFragment;
 	private AsyncTask<GlobalState, Integer, LoadResult> histT=null;
 	public static Start singleton;
@@ -156,7 +155,7 @@ public class Start extends MenuActivity {
 		debugLogger.addRow("Context ["+context+"]");
 		CHash cHash = gs.evaluateContext(context);
 		//if Ok err is null.
-		if (cHash.err==null || context == null) {
+		if (cHash.err==null) {
 			debugLogger.addRow("Context [");
 			debugLogger.addGreenText("OK");
 			debugLogger.addText("]");

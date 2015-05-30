@@ -1463,8 +1463,8 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				id = readText("block_ID",parser);
 			} else if (name.equals("type")) {
 				pageType = readText("type",parser);				
-			} else if (name.equals("gps_tracker")) {
-				hasGPS = readText("gps_tracker",parser).equals("on");				
+			} else if (name.equals("gps_on")) {
+				hasGPS = readText("gps_on",parser).equals("true");				
 			} else if (name.equals("label")) {
 				label = readText("label",parser);
 				o.addRow("Parsing workflow "+label);

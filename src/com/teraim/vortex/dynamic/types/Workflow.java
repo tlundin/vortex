@@ -10,6 +10,7 @@ import android.util.Log;
 import com.teraim.vortex.dynamic.blocks.Block;
 import com.teraim.vortex.dynamic.blocks.PageDefineBlock;
 import com.teraim.vortex.dynamic.blocks.StartBlock;
+import com.teraim.vortex.utils.Tools;
 
 //Workflow
 public class Workflow implements Serializable {
@@ -84,7 +85,7 @@ public class Workflow implements Serializable {
 			if (blocks!=null && blocks.size()>1 && blocks.get(1) instanceof PageDefineBlock)
 					label = ((PageDefineBlock)blocks.get(1)).getPageLabel();
 		}
-		return label;
+		return Tools.parseString(label);
 	}
 
 	
