@@ -31,7 +31,7 @@ import com.teraim.vortex.utils.PersistenceHelper;
 
 public class Constants {
 
-	public final static float VORTEX_VERSION = 1.124f;
+	public final static float VORTEX_VERSION = 1.127f;
 
 
 	//String constants
@@ -227,6 +227,7 @@ public class Constants {
 	private static List<String> getAllConfigurationFileNames(String folderName) {
 		List<String> ret = new ArrayList<String>();
 		File folder = new File(folderName);
+		folder.mkdir();
 		File[] listOfFiles = folder.listFiles();
 		if (listOfFiles!=null) {
 		for (File f:listOfFiles) {

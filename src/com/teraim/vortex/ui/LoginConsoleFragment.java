@@ -275,7 +275,6 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		if(!folder.mkdirs())
 			Log.e("NILS","Failed to create export folder");
 
-
 		//Set defaults if none.
 		if (globalPh.get(PersistenceHelper.SERVER_URL).equals(PersistenceHelper.UNDEFINED))
 			globalPh.put(PersistenceHelper.SERVER_URL, "www.teraim.com");
@@ -285,6 +284,11 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 			globalPh.put(PersistenceHelper.DEVELOPER_SWITCH, false);
 		if (globalPh.get(PersistenceHelper.VERSION_CONTROL_SWITCH_OFF).equals(PersistenceHelper.UNDEFINED))
 			globalPh.put(PersistenceHelper.VERSION_CONTROL_SWITCH_OFF, false);
+
+		
+		folder = new File(Constants.VORTEX_ROOT_DIR+globalPh.get(PersistenceHelper.BUNDLE_NAME)+Constants.AIR_PHOTO_FILE_DIR);
+		if(!folder.mkdirs())
+			Log.e("NILS","Failed to create gis image folder");		
 
 		globalPh.put(PersistenceHelper.FIRST_TIME_KEY,"Initialized");
 

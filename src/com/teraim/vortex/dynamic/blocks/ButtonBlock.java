@@ -126,7 +126,7 @@ public  class ButtonBlock extends Block {
 
 
 	public String getText() {
-		return text;
+		return Tools.parseString(text);
 	}
 
 
@@ -152,7 +152,8 @@ public  class ButtonBlock extends Block {
 				if (buttonContextS!=null&&!buttonContextS.isEmpty())
 					buttonContext = gs.evaluateContext(buttonContextS).keyHash;
 			}
-			Log.d("nils","Buttoncontext set to: "+buttonContext.toString()+" for button: "+getText());
+			String bx = buttonContext==null?null:buttonContext.toString();
+			Log.d("nils","Buttoncontext set to: "+bx+" for button: "+getText());
 				
 			final Context ctx = myContext.getContext();
 			

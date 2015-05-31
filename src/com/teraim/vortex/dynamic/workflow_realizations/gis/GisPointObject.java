@@ -90,7 +90,6 @@ public abstract class GisPointObject extends GisObject {
 				return key+" "+keyChain.get(key);
 			}
 		}
-		Log.d("vortex","Herzz");
 		return (Tools.parseString(poc.getLabel(),keyChain));
 		
 	}

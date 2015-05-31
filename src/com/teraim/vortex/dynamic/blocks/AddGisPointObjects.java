@@ -133,11 +133,11 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 		//Need the key hash for the database.
 		objKeyHash = 
 				GlobalState.getInstance().evaluateContext(this.objContext);
-
+		Log.d("vortex","OBJ KEYHASH "+objKeyHash.keyHash.toString());
 		//Use current year for statusvar.
 		Map<String, String> currYearH = Tools.copyKeyHash(objKeyHash.keyHash);
 		currYearH.put("år",Constants.getYear());
-		Log.d("vortex","CURRYEARRGGG "+currYearH.toString());
+		Log.d("vortex","Curryear HASH "+currYearH.toString());
 
 		if (objKeyHash==null) {
 			Log.e("vortex","keychain  null!!");
@@ -169,7 +169,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 			return;
 		}
 		boolean twoVars = (locationVarArray.length==2);
-
+		Log.d("vortex","Twovars is "+twoVars+" gisvars are: "+(twoVars?" ["+locationVarArray[0]+","+locationVarArray[1]:locationVarArray[0])+"]");
 		if(twoVars && myType.equals(GisObjectType.multipoint)) {
 			Log.e("vortex","Multivar on multipoint!");
 			o.addRow("");
@@ -228,30 +228,38 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 
 		if (pickerLocation1 !=null ) {
 			myGisObjects = new HashSet<GisObject> ();
-			//If empty, might be global & no value. Check this.
-			if (!pickerLocation1.moveToFirst()) {
-				if (objKeyHash.keyHash==null) {
-					Log.d("vortex","Global with no value!");
-					//TODO: Statusvariable missing for this special case.
-					Variable v1 = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(null, locationVarArray[0]);
+			boolean hasValues = pickerLocation1.moveToFirst();
+			//No values! A dynamic variable can create new ones, so create object anyway.
+			if (!hasValues&&dynamic) {
+					Log.e("vortex","no X,Y instances found for keychain..creating empty");
+					Variable v1 = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(objKeyHash.keyHash, locationVarArray[0]);
+					if (v1==null){
+						Log.e("vortex", locationVarArray[0]+" does not exist. Check your configuration!");
+						o.addRow("");
+						o.addRedText("Cannot find variable "+locationVarArray[0]);
+						return;
+					}
 					if (twoVars) {
-						Variable v2 = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(null, locationVarArray[1]);
+						Variable v2 = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(objKeyHash.keyHash, locationVarArray[1]);
+						if (v2==null){
+							Log.e("vortex", locationVarArray[1]+" does not exist. Check your configuration!");
+							o.addRow("");
+							o.addRedText("Cannot find variable "+locationVarArray[1]);
+							return;
+						}
 						myGisObjects.add(new DynamicGisPoint(this,null, v1,v2,null));
 					} else
 						myGisObjects.add(new DynamicGisPoint(this,null, v1,null));
-				} else
-					Log.e("vortex","no variable instances found for keychain");
 			} else {
-
-				if (pickerLocation2!=null && !pickerLocation2.moveToFirst()) {
-					Log.e("vortex","Missing Y Variables!");
+				if (!hasValues||(pickerLocation2!=null && !pickerLocation2.moveToFirst())) {
+					Log.d("vortex","Missing values for static");
 					o.addRow("");
-					o.addRedText("Cannot find any instances of "+locationVarArray[1]);
+					o.addYellowText("Cannot find any instances of "+myType);
 					return;
 				}
+			 
 
-
-				int i=0;
+				
 				Map <String,Variable> statusVarM=null;
 				boolean foundStatusVar = false;
 				if (pickerStatusVars!=null) 
@@ -271,7 +279,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 
 
 				do {
-					i++;
+					
 					storedVar1 = pickerLocation1.getVariable();
 					Log.d("vortex","Found "+storedVar1.value+" for "+storedVar1.name);
 					map1 = pickerLocation1.getKeyColumnValues();
@@ -306,6 +314,10 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 								v2 = GlobalState.getInstance().getVariableConfiguration().getCheckedVariable(pickerLocation1.getKeyColumnValues(),storedVar2.name,value,true);
 								if (v1!=null && v2!=null) 
 									myGisObjects.add(new DynamicGisPoint(this,map1, v1,v2,statusVar));
+								else {
+									Log.e("vortex","cannot create dyna 2 gis obj. One or both vars is null: "+v1+","+v2);
+									continue;
+								}
 							}
 						}
 						if (!pickerLocation2.next())

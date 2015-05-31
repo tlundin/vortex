@@ -21,7 +21,6 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 
-import com.google.android.gms.analytics.o;
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.Start;
 import com.teraim.vortex.dynamic.types.GisLayer;
@@ -38,6 +37,8 @@ import com.teraim.vortex.dynamic.workflow_realizations.gis.GisObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisPointObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisPolygonObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.WF_Gis_Map;
+import com.teraim.vortex.log.LoggerI;
+import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.non_generics.NamedVariables;
 import com.teraim.vortex.utils.Geomatte;
 import com.teraim.vortex.utils.RuleExecutor;
@@ -70,6 +71,8 @@ public class GisImageView extends GestureImageView {
 	private Paint blCursorPaint;
 	private Paint btnTxt,vtnTxt;
 	private Paint grCursorPaint;
+	private final Map<String,String>YearKeyHash = new HashMap<String,String>();
+	
 
 	public GisImageView(Context context) {
 		super(context);
@@ -87,6 +90,8 @@ public class GisImageView extends GestureImageView {
 	}
 
 	private void init(Context ctx) {
+		YearKeyHash.clear();
+		YearKeyHash.put("år", Constants.getYear());
 		this.ctx=ctx;
 		//used for cursor blink.
 		calendar.setTime(new Date());
@@ -774,16 +779,22 @@ public class GisImageView extends GestureImageView {
 		canvas.restore();
 	}
 	//0 = distance, 1=riktning.
+	
+
+
 	private int[] getDistanceAndDirectionToUser(GisPointObject go) {
+		
 		GlobalState gs = GlobalState.getInstance();
-		Variable myX = GlobalState.getInstance().getVariableCache().getVariable(NamedVariables.MY_GPS_LAT);
-		Variable myY = GlobalState.getInstance().getVariableCache().getVariable(NamedVariables.MY_GPS_LONG);
+		final LoggerI o = gs.getLogger();
+		Variable myX = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(YearKeyHash, NamedVariables.MY_GPS_LAT);
+		Variable myY = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(YearKeyHash, NamedVariables.MY_GPS_LONG);
 		if (myX==null||myY==null) {
-			Log.e("vortex","location variables for user does not exist.");
+			Log.e("vortex","location variables for user does not exist.");			
 			return null;
 		} 
 		if (myX.getValue()==null ||myY.getValue()==null) {
 			Log.e("vortex","myX or myY saknar värde");
+			o.addRow("myX or myY saknar värde");
 			return null;
 		}
 		double mX = Double.parseDouble(myX.getValue());

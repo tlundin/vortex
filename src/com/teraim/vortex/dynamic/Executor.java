@@ -257,8 +257,11 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 					Log.d("vortex","Found pagedefine!");
 					if (bl.hasGPS()) {
 						myContext.enableGPS();
+						o.addRow("GPS scanning started");
 						Log.d("vortex","GPS scanning started");
+						
 						Tracker.ErrorCode code = gs.getTracker().startScan(gs.getContext());
+						o.addRow("GPS SCANNER RETURNS: "+code.name());
 						Log.d("vortex","got "+code.name());
 					}
 	

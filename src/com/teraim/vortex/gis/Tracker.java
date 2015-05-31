@@ -1,5 +1,8 @@
 package com.teraim.vortex.gis;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -13,8 +16,10 @@ import android.util.Log;
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.types.SweLocation;
 import com.teraim.vortex.dynamic.types.Variable;
+import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.non_generics.NamedVariables;
 import com.teraim.vortex.utils.Geomatte;
+import com.teraim.vortex.utils.Tools;
 
 
 public class Tracker extends Service implements LocationListener {
@@ -34,22 +39,23 @@ public class Tracker extends Service implements LocationListener {
 	double longitude; // longitude
 
 	// The minimum distance to change Updates in meters
-	private static final float MIN_DISTANCE_CHANGE_FOR_UPDATES = 10; // 10 meters
+	private static final float MIN_DISTANCE_CHANGE_FOR_UPDATES = 1; // 1 meters
 
 	// The minimum time between updates in milliseconds
-	private static final long MIN_TIME_BW_UPDATES = 1000 * 60 * 1; // 1 minute
+	private static final long MIN_TIME_BW_UPDATES = 1000 * 5; // 1 minute
 
-	private static final double Threshold = 3;
 
 	// Declaring a Location Manager
 	protected LocationManager locationManager;
 
 	private final Variable myX,myY;
 
+	private final Map<String,String>YearKeyHash = new HashMap<String,String>();
+	
 	public Tracker() {
-		
-		myX = GlobalState.getInstance().getVariableCache().getVariable(NamedVariables.MY_GPS_LAT);
-		myY = GlobalState.getInstance().getVariableCache().getVariable(NamedVariables.MY_GPS_LONG);
+		YearKeyHash.put("år", Constants.getYear());
+		myX = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(YearKeyHash, NamedVariables.MY_GPS_LAT);
+		myY = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(YearKeyHash, NamedVariables.MY_GPS_LONG);
 
 	}
 
@@ -79,8 +85,9 @@ public class Tracker extends Service implements LocationListener {
 							.isProviderEnabled(LocationManager.GPS_PROVIDER);
 
 					// getting network status
-					isNetworkEnabled = locationManager
-							.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+					isNetworkEnabled = false; 
+					//locationManager
+					//		.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
 					if (!isGPSEnabled && !isNetworkEnabled) {
 						return ErrorCode.GPS_NOT_ENABLED;
@@ -142,12 +149,10 @@ public class Tracker extends Service implements LocationListener {
 				double oldYd = Double.parseDouble(oldY);
 				double distx = Math.abs(oldXd-myL.getX());
 				double disty = Math.abs(oldYd-myL.getY());
-				if (distx>Threshold || disty>Threshold) {
-					Log.d("vortex","Measured distance in Tracker: (x,y) "+distx+","+disty);
-					myX.setValue(myL.getX()+"");
-					myY.setValue(myL.getY()+"");					
-				} else 
-					Log.d("vortex","no change...diff was only (x,y)"+distx+","+disty);
+				
+				Log.d("vortex","Distance between mesaurements in Tracker: (x,y) "+distx+","+disty);
+				myX.setValue(myL.getX()+"");
+				myY.setValue(myL.getY()+"");								
 			} else {
 				myX.setValue(myL.getX()+"");
 				myY.setValue(myL.getY()+"");
