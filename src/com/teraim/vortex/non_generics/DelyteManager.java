@@ -145,10 +145,14 @@ public class DelyteManager {
 					Log.d("nils","adding Delyta ID "+d.getId()+" to småprovyta "+(i+1));
 					key = al.createProvytaKeyMap();
 					key.put("smaprovyta", (i+1)+"");
-					db.fastInsert(key, NamedVariables.BeraknadInomDelyta, d.getId()+"");					
+					Variable tmp = al.getVariableUsingKey(key, NamedVariables.BeraknadInomDelyta);
+					if (tmp!=null)
+						tmp.setValue(d.getId()+"");				
+					//db.fastInsert(key, NamedVariables.BeraknadInomDelyta, d.getId()+"");					
 					if (nyUtlagg.getValue()!=null) {
-						db.fastInsert(key, NamedVariables.InomDelyta, d.getId()+"");
-						
+						tmp = al.getVariableUsingKey(key, NamedVariables.InomDelyta);
+						if (tmp!=null)
+							tmp.setValue(d.getId()+"");
 					}
 						
 

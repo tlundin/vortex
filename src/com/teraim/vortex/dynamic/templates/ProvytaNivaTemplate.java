@@ -164,10 +164,10 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 				Start.singleton.changePage(new TagTemplate(), "Delningsskärm");
 			}
 		});
+		String xContext = "år = getCurrentYear(), ruta = getColumnValue(ruta), provyta = getColumnValue(provyta)";
+		taBild = new ButtonBlock("_tabild","Foto","Start_Workflow", "fotobutton","Field_List_panel_1",NamedVariables.WF_FOTO,"action", "status_foto",true,null,null,true,xContext);
 		
-		taBild = new ButtonBlock("_tabild","Foto","Start_Workflow", "fotobutton","Field_List_panel_1",NamedVariables.WF_FOTO,"action", "status_foto",true,null,null,true,null);
-		
-		fixPunkter = new ButtonBlock("_","Fixpunkter","Start_Workflow", "fixpunktbutton","Field_List_panel_1",NamedVariables.WF_FIXPUNKTER,"action", "status_fixpunkter",true,null,null,true,null);
+		fixPunkter = new ButtonBlock("_","Fixpunkter","Start_Workflow", "fixpunktbutton","Field_List_panel_1",NamedVariables.WF_FIXPUNKTER,"action", "status_fixpunkter",true,null,null,true,xContext);
 
 		//spillning = new ButtonBlock("_s","Spillning","Start_Workflow", "spillningbutton","Field_List_panel_1",NamedVariables.WF_SPILLNING,"action","status_spillning",true,null,null,true);
 

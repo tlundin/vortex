@@ -7,31 +7,38 @@ package com.teraim.vortex.non_generics;
  * For now, persistence implemented via SharedPreferences only.
  */
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
 
+import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
 
 import com.teraim.vortex.dynamic.types.Table;
 import com.teraim.vortex.loadermodule.ConfigurationModule;
+import com.teraim.vortex.loadermodule.ConfigurationModule.Source;
 import com.teraim.vortex.loadermodule.configurations.GisObjectConfiguration;
-import com.teraim.vortex.loadermodule.configurations.GisPolygonConfiguration;
 import com.teraim.vortex.loadermodule.configurations.GroupsConfiguration;
 import com.teraim.vortex.loadermodule.configurations.ImportDataConfiguration;
 import com.teraim.vortex.loadermodule.configurations.SpinnerConfiguration;
 import com.teraim.vortex.loadermodule.configurations.VariablesConfiguration;
 import com.teraim.vortex.loadermodule.configurations.WorkFlowBundleConfiguration;
 import com.teraim.vortex.log.LoggerI;
+import com.teraim.vortex.ui.AsyncLoadDoneCb;
 import com.teraim.vortex.utils.DbHelper;
 import com.teraim.vortex.utils.PersistenceHelper;
 
 public class Constants {
 
-	public final static float VORTEX_VERSION = 1.127f;
+	public final static float VORTEX_VERSION = 1.131f;
 
 
 	//String constants
@@ -190,6 +197,12 @@ public class Constants {
 	public final static int TAKE_PICTURE = 133;
 
 
+	private static final String GPS_LIST_FILE_NAME = "content.txt";
+
+
+	private static final String GPS_CONFIG_WEB_FOLDER = "gis_objects";
+
+
 
 
 	public static List<ConfigurationModule> getCurrentlyKnownModules(PersistenceHelper globalPh,PersistenceHelper ph,String server, String bundle, LoggerI debugConsole) {
@@ -205,23 +218,56 @@ public class Constants {
 		return ret;
 	}
 
-	public static List<ConfigurationModule> getDBImportModules(
-			PersistenceHelper globalPh, PersistenceHelper ph, String server,
-			String bundle, LoggerI debugConsole,DbHelper db, Table t) {
-		List<ConfigurationModule> ret = new ArrayList<ConfigurationModule>();
+	public static void getDBImportModules(
+			final PersistenceHelper globalPh, final PersistenceHelper ph, final String server,
+			final String bundle, final LoggerI debugConsole,final DbHelper db, final Table t, final AsyncLoadDoneCb asyncLoadDoneCb) {
+		final List<ConfigurationModule> ret = new ArrayList<ConfigurationModule>();
 		//Workflow xml. Named same as bundle.		
 		//ret.add(new GisPolygonConfiguration(globalPh,ph,VORTEX_ROOT_DIR+bundle+AIR_PHOTO_FILE_DIR,debugConsole,db));
 		ret.add(new ImportDataConfiguration(globalPh,ph,server,bundle,debugConsole,db,t));
 
-		String gisConfDir = VORTEX_ROOT_DIR+bundle+GIS_FILE_DIR;
-		List<String> fileNames = getAllConfigurationFileNames(gisConfDir);
-		if (!fileNames.isEmpty()) {
-			for (String file:fileNames) 
-				ret.add(new GisObjectConfiguration(globalPh,ph,gisConfDir,file,debugConsole,db));
+		final String fileFolder = VORTEX_ROOT_DIR+bundle+GIS_FILE_DIR;
+		final String serverFolder = server+bundle.toLowerCase()+"/"+Constants.GPS_CONFIG_WEB_FOLDER+"/";
+
+		new DownloadFileTask(new WebLoaderCb() {
+
+			@Override
+			public void loaded(List<String> fileNames) {
+				if (fileNames!=null)
+					Log.d("vortex","loadresult is "+fileNames.toString());
+				getAllConfigurationFileNamesFromWebOrFile(fileNames, serverFolder,fileFolder,asyncLoadDoneCb,globalPh,ph,debugConsole,db,ret);				
+			}
+		})
+		.execute(serverFolder+Constants.GPS_LIST_FILE_NAME);	
+		//Try server.
+
+	}
+
+	private static void getAllConfigurationFileNamesFromWebOrFile(List<String> fileNames,
+			String serverFolder, String fileFolder, AsyncLoadDoneCb asyncLoadDoneCb, PersistenceHelper globalPh,PersistenceHelper ph, LoggerI debugConsole,DbHelper db, List<ConfigurationModule> modules) {
+
+		boolean loadFromWeb=false;
+		//look for contents.txt file on net.
+		if (fileNames!=null) {
+			Log.d("vortex","found GIS files list.");
+			loadFromWeb = true;
+		} else 
+			fileNames = getAllConfigurationFileNames(fileFolder);
+		if (fileNames!=null && !fileNames.isEmpty()) {
+			for (String file:fileNames) {
+				if (!loadFromWeb)
+					modules.add(new GisObjectConfiguration(globalPh,ph,Source.file,fileFolder,file,debugConsole,db));
+				else
+					modules.add(new GisObjectConfiguration(globalPh,ph,Source.internet,serverFolder,file,debugConsole,db));
+			}
 		} else 
 			Log.d("vortex","found no GIS configuration files.");
-		return ret;
+
+
+		asyncLoadDoneCb.onLoadSuccesful(modules);
 	}
+
+
 
 
 	private static List<String> getAllConfigurationFileNames(String folderName) {
@@ -230,11 +276,11 @@ public class Constants {
 		folder.mkdir();
 		File[] listOfFiles = folder.listFiles();
 		if (listOfFiles!=null) {
-		for (File f:listOfFiles) {
-			Log.d("vortex","scanning "+f.getName());
-			if (f.isFile() && f.getName().endsWith(".json"))
-				ret.add(f.getName().substring(0, f.getName().length()-".json".length()));
-		}
+			for (File f:listOfFiles) {
+				Log.d("vortex","scanning "+f.getName());
+				if (f.isFile() && f.getName().endsWith(".json"))
+					ret.add(f.getName().substring(0, f.getName().length()-".json".length()));
+			}
 		}
 		return ret;
 	}
@@ -245,9 +291,49 @@ public class Constants {
 	}
 
 
+	private interface WebLoaderCb {
 
+		public void loaded(List<String> result);
+	}
 
+	private static class DownloadFileTask extends AsyncTask<String, Void, List<String>> {
+		WebLoaderCb cb;
 
+		public DownloadFileTask(WebLoaderCb cb) {
+			this.cb=cb;
+		}
+
+		protected List<String> doInBackground(String... url) {
+		    String inputLine;
+		    URL website=null;
+		    BufferedReader in;
+		    List<String> fileNames = null;
+		    try {
+		    	website = new URL(url[0]);
+		    } catch (MalformedURLException e) {
+		        e.printStackTrace();
+		    }
+		    try {
+		        in = new BufferedReader(new InputStreamReader(website.openStream()));
+		        
+		        while ((inputLine = in.readLine()) != null) {
+		        	if (fileNames==null)
+		        		fileNames = new ArrayList<String>();
+		        	fileNames.add(inputLine);
+		        }
+		        in.close();
+
+		    } catch (IOException e) {
+		        e.printStackTrace();
+		    }
+		    return fileNames;
+		}
+
+		protected void onPostExecute(List<String> fileNames) {
+			
+			cb.loaded(fileNames);
+		}
+	}
 
 
 

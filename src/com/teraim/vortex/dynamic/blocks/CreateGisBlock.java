@@ -92,11 +92,14 @@ public class CreateGisBlock extends Block {
 		if (myContainer!=null && photoMetaData!=null) {
 		LayoutInflater li = LayoutInflater.from(myContext.getContext());
 		View mapView = li.inflate(R.layout.image_gis_layout, null);
-		WF_Gis_Map gis = new WF_Gis_Map(blockId, mapView, isVisible, picUrlorName,myContext,photoMetaData);
+		final View avstriktF = mapView.findViewById(R.id.avstriktF);
+		WF_Gis_Map gis = new WF_Gis_Map(blockId, mapView, isVisible, picUrlorName,myContext,photoMetaData,avstriktF);
 		myContainer.add(gis);
 		myContext.addDrawable(name,gis);
 		final View menuL = mapView.findViewById(R.id.menuL);
+		
 		menuL.setVisibility(View.INVISIBLE);
+		avstriktF.setVisibility(View.INVISIBLE);
 		final ImageButton menuB = (ImageButton)mapView.findViewById(R.id.menuB);
 		
 		menuB.setOnClickListener(new OnClickListener() {

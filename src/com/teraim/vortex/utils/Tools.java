@@ -1,5 +1,6 @@
 package com.teraim.vortex.utils;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -12,6 +13,8 @@ import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.StreamCorruptedException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -34,6 +37,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.AsyncTask;
 import android.util.DisplayMetrics;
 import android.util.Log;
 
@@ -663,5 +667,117 @@ public class Tools {
 			return varString;
 	}
 
+	public static void cacheImage(final String url, final String folder) {
+		
+		(new DownloadTask(new WebLoaderCb(){@Override
+		public void loaded(Boolean result) {
+			if (result)
+				Log.d("vortex","Cached "+url);
+		}})).execute(url,url,folder); 
+
+		
+	}
+	
+	private interface WebLoaderCb {
+
+		public void loaded(Boolean result);
+	}
+	
+	
+	private static class DownloadTask extends AsyncTask<String, Void, Boolean> {
+		WebLoaderCb cb;
+
+		public DownloadTask(WebLoaderCb cb) {
+			this.cb=cb;
+		}
+
+		protected Boolean doInBackground(String... fileNameAndUrl) {
+			final String protoH = "http://";	
+			if (fileNameAndUrl==null||fileNameAndUrl.length<3) {
+				Log.e("vortex","filename or url name corrupt in downloadtask");
+				return false;
+			}
+			String fileName = fileNameAndUrl[0];
+			String url = fileNameAndUrl[1];
+			String folder = fileNameAndUrl[2];
+			if (!url.startsWith(protoH))
+				url=protoH+url;
+			//If url is used as name, remove protocol.
+			if (fileName.startsWith(protoH))
+				fileName = fileName.replace(protoH, "");
+			if (fileName.contains("|")) {
+				Log.e("vortex","Illegal filename, cannot cache: "+fileName);
+				return false;
+			}
+				
+			fileName = fileName.replace("/", "|");
+			fileName = folder+fileName;
+			File file = new File(fileName);
+			
+			//File already cached
+			if(file.exists()) {
+				Log.d("vortex","NO cache - file exists");
+				return true;
+			}
+				
+			Tools.createFoldersIfMissing(new File(fileName));
+			
+				
+			try {
+				saveUrl(fileName,url);
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+				return false;
+			} catch (IOException e) {
+				e.printStackTrace();
+				return false;
+			}
+			return true;
+		}
+
+		protected void onPostExecute(Boolean result) {
+			
+			cb.loaded(result);
+		}
+	}
+
+	
+	public static void saveUrl(final String filename, final String urlString)
+	        throws MalformedURLException, IOException {
+	    BufferedInputStream in = null;
+	    FileOutputStream fout = null;
+	    try {
+	        in = new BufferedInputStream(new URL(urlString).openStream());
+	        fout = new FileOutputStream(filename);
+
+	        final byte data[] = new byte[1024];
+	        int count;
+	        while ((count = in.read(data, 0, 1024)) != -1) {
+	            fout.write(data, 0, count);
+	        }
+	    } finally {
+	        if (in != null) {
+	            in.close();
+	        }
+	        if (fout != null) {
+	            fout.close();
+	        }
+	    }
+	}
+	
+	public static File getCachedFile(String fileName, String folder) {
+		final String protoH = "http://";	
+		fileName = fileName.replace("protoH", "");
+		fileName = fileName.replace("|", "/");
+		fileName = folder+fileName;
+		File f = new File(fileName);
+		Log.d("vortex", "getCached: "+fileName);
+		if (f.exists()) {
+			
+			return f;
+		}
+		else 
+			return null;
+	}
 
 }

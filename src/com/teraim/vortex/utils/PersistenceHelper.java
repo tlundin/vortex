@@ -164,7 +164,8 @@ public class PersistenceHelper {
 	        System.out.println("Could not write backup file! Filename: "+exportFileName);
 	        e.printStackTrace();
 	        try {
-				outWriter.close();
+				if (outWriter!=null)
+					outWriter.close();
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();

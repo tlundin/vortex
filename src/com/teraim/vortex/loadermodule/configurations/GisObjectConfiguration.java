@@ -20,6 +20,7 @@ import com.teraim.vortex.dynamic.types.SweLocation;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisConstants;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisPolygonObject;
+import com.teraim.vortex.loadermodule.ConfigurationModule;
 import com.teraim.vortex.loadermodule.JSONConfigurationModule;
 import com.teraim.vortex.loadermodule.LoadResult;
 import com.teraim.vortex.loadermodule.LoadResult.ErrorCode;
@@ -34,8 +35,8 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 	private List<GisObject> myGisObjects = new ArrayList<GisObject>();
 	private String myType;
 
-	public GisObjectConfiguration(PersistenceHelper globalPh,PersistenceHelper ph,String fileLocation, String fileName,LoggerI debugConsole,DbHelper myDb) {
-		super(globalPh,ph, Source.file,fileLocation, fileName, fixedLength(fileName));
+	public GisObjectConfiguration(PersistenceHelper globalPh,PersistenceHelper ph,Source source,String fileLocation, String fileName,LoggerI debugConsole,DbHelper myDb) {
+		super(globalPh,ph, source,fileLocation, fileName, fixedLength(fileName));
 		this.o = debugConsole;
 		this.myDb = myDb;
 		//isDatabaseModule=true;

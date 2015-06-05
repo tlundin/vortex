@@ -1,5 +1,6 @@
 package com.teraim.vortex;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +32,7 @@ import com.teraim.vortex.expr.Parser;
 import com.teraim.vortex.gis.Tracker;
 import com.teraim.vortex.loadermodule.Configuration;
 import com.teraim.vortex.log.LoggerI;
+import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.non_generics.StatusHandler;
 import com.teraim.vortex.ui.DrawerMenu;
 import com.teraim.vortex.ui.MenuActivity;
@@ -40,6 +42,7 @@ import com.teraim.vortex.utils.RuleExecutor;
 import com.teraim.vortex.utils.RuleExecutor.SubstiResult;
 import com.teraim.vortex.utils.RuleExecutor.TokenType;
 import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
+import com.teraim.vortex.utils.Tools;
 
 
 /**
@@ -744,6 +747,7 @@ public class GlobalState  {
 											} else {
 												o.addRow("");
 												o.addRedText("Could not evaluate expression "+val+" in context");
+												Log.e("vortex","Could not evaluate expression "+val+" in context");
 												contextError=true;
 												err="Could not evaluate expression "+val+" in context";
 											}
@@ -780,6 +784,7 @@ public class GlobalState  {
 						contextError=true;
 						err="Found empty or null pair";
 					}
+					
 				} 
 
 			}
@@ -810,7 +815,9 @@ public class GlobalState  {
 		return myTracker;
 	}
 
-
+	public File getCachedFileFromUrl(String url) {
+		return Tools.getCachedFile(url, Constants.VORTEX_ROOT_DIR+globalPh.get(PersistenceHelper.BUNDLE_NAME)+"/cache/");
+	}
 
 
 

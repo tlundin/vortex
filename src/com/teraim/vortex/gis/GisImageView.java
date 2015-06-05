@@ -1,5 +1,7 @@
 package com.teraim.vortex.gis;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -20,6 +22,7 @@ import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.Start;
@@ -72,7 +75,7 @@ public class GisImageView extends GestureImageView {
 	private Paint btnTxt,vtnTxt;
 	private Paint grCursorPaint;
 	private final Map<String,String>YearKeyHash = new HashMap<String,String>();
-	
+
 
 	public GisImageView(Context context) {
 		super(context);
@@ -253,13 +256,13 @@ public class GisImageView extends GestureImageView {
 		if (mapDistX <=imgWReal && mapDistX>=0)
 			;//Log.d("vortex","Distance X in meter: "+mapDistX+" [inside]");
 		else {
-			
+
 			Log.e("vortex","Distance X in meter: "+mapDistX+" [outside!]");
 			Log.d("vortex","w h of gis image. w h of image ("+photoMetaData.getWidth()+","+photoMetaData.getHeight()+") ("+this.getScaledWidth()+","+this.getScaledHeight()+")");
 			Log.d("vortex","photo (X) "+photoMetaData.W+"-"+photoMetaData.E);
 			Log.d("vortex","photo (Y) "+photoMetaData.S+"-"+photoMetaData.N);
 			Log.d("vortex","object X,Y: "+l.getX()+","+l.getY());
-			 
+
 			return null;
 		}
 		double mapDistY = l.getY()-photoMetaData.S;
@@ -271,7 +274,7 @@ public class GisImageView extends GestureImageView {
 			Log.d("vortex","photo (X) "+photoMetaData.W+"-"+photoMetaData.E);
 			Log.d("vortex","photo (Y) "+photoMetaData.S+"-"+photoMetaData.N);
 			Log.d("vortex","object X,Y: "+l.getX()+","+l.getY());
-		 			return null;
+			return null;
 		}
 		pXR = this.getImageWidth()/photoMetaData.getWidth();
 		pYR = this.getImageHeight()/photoMetaData.getHeight();
@@ -389,15 +392,15 @@ public class GisImageView extends GestureImageView {
 					statusVarS = statusVariable.getId();
 					String valS = statusVariable.getValue();
 					if (valS==null || valS.equals("0")) {
-							Log.d("vortex","Setting status variable to 1");
-							statusVariable.setValue("1");
-						} else
-							Log.d("vortex","NOT Setting status variable to 1...current val: "+statusVariable.getValue());
-						myMap.registerEvent(new WF_Event_OnSave("Gis"));
-					
+						Log.d("vortex","Setting status variable to 1");
+						statusVariable.setValue("1");
+					} else
+						Log.d("vortex","NOT Setting status variable to 1...current val: "+statusVariable.getValue());
+					myMap.registerEvent(new WF_Event_OnSave("Gis"));
+
 				} else
 					Log.e("vortex","statusvariable missing!!");
-				
+
 				Start.singleton.changePage(wf,statusVarS);
 
 			}
@@ -533,12 +536,13 @@ public class GisImageView extends GestureImageView {
 		super.dispatchDraw(canvas);
 		canvas.save();
 		//scale and adjust.
-
+try {
 		float adjustedScale = scale * scaleAdjust;
 		canvas.translate(x, y);
 		if(adjustedScale != 1.0f) {
 			canvas.scale(adjustedScale, adjustedScale);
 		}
+		GisPointObject touchedGop = null;
 		for (String layer:myLayers.keySet()) {
 			Log.d("vortex","drawing layer "+layer);
 			//get all objects that should be drawn on this layer.
@@ -554,7 +558,6 @@ public class GisImageView extends GestureImageView {
 			Map<String, Set<GisObject>> bags = layerO.getGisBags();
 			Map<String, Set<GisFilter>> filterMap = layerO.getFilters();
 			if (!bags.isEmpty()) {
-				GisPointObject touchedGop = null;
 				for (String key:bags.keySet()) {
 					Set<GisFilter> filters = filterMap.get(key);
 					Set<GisObject> gisObjects = bags.get(key);
@@ -574,13 +577,15 @@ public class GisImageView extends GestureImageView {
 								if (mapLocationForClick!=null && touchedGop ==null && gop.isTouchedByClick(mapLocationForClick,pXR,pYR)) {
 									touchedGop = gop;
 									isTouched=true;
-								}
+									myMap.setVisibleAvstRikt(true);
+								} 
+
 								Bitmap bitmap = gop.getIcon();
 								float radius = gop.getRadius();
 								String color = gop.getColor();
 								Style style = gop.getStyle();
 								boolean isCircle = gop.isCircle();
-								
+
 								Variable statusVar = gop.getStatusVariable();
 								if (statusVar!=null ) {
 									String value = statusVar.getValue();
@@ -594,7 +599,7 @@ public class GisImageView extends GestureImageView {
 										color = "green";
 									}
 								}
-								
+
 								if (filters!=null&&!filters.isEmpty()) {
 									//Log.d("vortex","has filter!");
 									RuleExecutor ruleExecutor = GlobalState.getInstance().getRuleExecutor();
@@ -732,19 +737,21 @@ public class GisImageView extends GestureImageView {
 					String btnT = "Kör flöde >>";
 					Rect boundsR = new Rect(),distR = null,riktR=null,bothR;
 					btnTxt.getTextBounds(mLabel, 0, mLabel.length(), boundsR);
-					
-					int[] dr = getDistanceAndDirectionToUser(touchedGop);
-					if (dr!=null) {
+
+					displayDistanceAndDirection(touchedGop);
+					/*
+					 * if (dr!=null) {
+					 
 						int distance = dr[0];
 						int rikt = dr[1];
 						String distS="Distans: "+Integer.toString(distance);
 						String riktS="Riktning: "+Integer.toString(rikt);
 						distR = new Rect();
 						riktR = new Rect();
-						
+
 						vtnTxt.getTextBounds(riktS, 0, riktS.length(), riktR);
 						btnTxt.getTextBounds(distS, 0, distS.length(), distR);
-						
+
 
 						int left=riktR.left,right=riktR.right;
 						if (distR.width()>riktR.width()) {
@@ -759,7 +766,8 @@ public class GisImageView extends GestureImageView {
 						canvas.drawText(riktS, bothR.centerX(), xy[1]-(int)(bothR.height()+touchedGop.getRadius()), vtnTxt);
 						canvas.drawText(distS, bothR.centerX(), xy[1]-(int)(bothR.height()/2+touchedGop.getRadius()), btnTxt);
 					}
-					
+					*/
+
 					boundsR.offset((int)xy[0]-boundsR.width()/2,(int)xy[1]);
 					//canvas.drawRect(bounds, blCursorPaint);
 					canvas.drawText(mLabel, boundsR.left, boundsR.top, txtPaint);
@@ -772,39 +780,51 @@ public class GisImageView extends GestureImageView {
 					canvas.drawRect(bbounds, blCursorPaint);
 					canvas.drawText(btnT, xy[0], xy[1]+touchedGop.getRadius()*3, btnTxt);
 
+				} else {
+					myMap.setVisibleAvstRikt(false);
 				}
 			}
 		}
+} catch(Exception e) {
+	LoggerI o = GlobalState.getInstance().getLogger();
+	o.addRow("");
+	StringWriter sw = new StringWriter();
+	PrintWriter pw = new PrintWriter(sw);
+	e.printStackTrace(pw);		
+	o.addRedText(sw.toString());
+	e.printStackTrace();
+}
 
 		canvas.restore();
 	}
 	//0 = distance, 1=riktning.
-	
 
 
-	private int[] getDistanceAndDirectionToUser(GisPointObject go) {
-		
+
+	private void displayDistanceAndDirection(GisPointObject go) {
+		TextView tv = myMap.getAvstRiktView();
 		GlobalState gs = GlobalState.getInstance();
 		final LoggerI o = gs.getLogger();
 		Variable myX = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(YearKeyHash, NamedVariables.MY_GPS_LAT);
 		Variable myY = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(YearKeyHash, NamedVariables.MY_GPS_LONG);
 		if (myX==null||myY==null) {
-			Log.e("vortex","location variables for user does not exist.");			
-			return null;
-		} 
-		if (myX.getValue()==null ||myY.getValue()==null) {
+			tv.setText("!No X,Y VARs!");
+		} else if (myX.getValue()==null ||myY.getValue()==null) {
 			Log.e("vortex","myX or myY saknar värde");
 			o.addRow("myX or myY saknar värde");
-			return null;
+			tv.setText("NO GPS...");
+
+		} else {
+			double mX = Double.parseDouble(myX.getValue());
+			double mY = Double.parseDouble(myY.getValue());
+			double gX = go.getX();
+			double gY = go.getY();
+
+			int dist = (int)Geomatte.sweDist(mY,mX,gY,gX);
+			int rikt = (int)(Geomatte.getRikt2(mY, mX, gY, gX)*57.2957795);
+			tv.setText("Dist: "+(dist>9999?">10km":(dist+"m"))+"\nRikt: "+rikt);
 		}
-		double mX = Double.parseDouble(myX.getValue());
-		double mY = Double.parseDouble(myY.getValue());
-		double gX = go.getX();
-		double gY = go.getY();
-		
-		int dist = (int)Geomatte.sweDist(mY,mX,gY,gX);
-		int rikt = (int)(Geomatte.getRikt2(mY, mX, gY, gX)*57.2957795);
-		return new int[]{dist,rikt};
+		//return new int[]{dist,rikt};
 	}
 
 	private Paint newTextPaint(int height) {

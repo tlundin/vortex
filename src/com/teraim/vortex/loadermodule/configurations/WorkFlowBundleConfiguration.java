@@ -56,10 +56,13 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 
 	private String myApplication;
 	private LoggerI o;
+	private String cacheFolder;
+	
 	public WorkFlowBundleConfiguration(PersistenceHelper globalPh,PersistenceHelper ph,
 			String server, String bundle,LoggerI debugConsole) {
 		super(globalPh,ph, Source.internet, server+bundle.toLowerCase()+"/", bundle,"Workflow bundle       ");
 		this.o=debugConsole;
+		cacheFolder = Constants.VORTEX_ROOT_DIR+globalPh.get(PersistenceHelper.BUNDLE_NAME)+"/cache/";
 	}
 
 	@Override
@@ -389,8 +392,10 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				skip(name,parser);
 			}
 		}
-
+		
 		checkForNull("block_ID",id,"target",target,"location",location);
+		if (imgSource!=null&&!imgSource.isEmpty())
+			Tools.cacheImage(imgSource,cacheFolder);
 		return new AddGisPointObjects(id,nName,label,target,objContext,coordType,location,imgSource,refreshRate,radius,isVisible,type,color,polyType,fillType,onClick,statusVariable);
 
 	}

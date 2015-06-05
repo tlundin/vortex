@@ -1382,8 +1382,6 @@ public class DbHelper extends SQLiteOpenHelper {
 	}
 
 
-
-
 	public boolean deleteHistory() {
 		try {
 			Log.d("nils","deleting all historical values");
@@ -1493,7 +1491,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
 
 
-	public Map<String, String> preFetchValue(Map<String,String> keyChain, String namePrefix) {		
+	public Map<String, String> preFetchValuesForAllMatchingKey(Map<String,String> keyChain, String namePrefix) {		
 
 		String query = "SELECT "+VARID+",value FROM "+TABLE_VARIABLES+
 				" WHERE "+VARID+" LIKE '"+namePrefix+"%'";

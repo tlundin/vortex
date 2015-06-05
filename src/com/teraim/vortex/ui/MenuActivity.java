@@ -299,7 +299,7 @@ public class MenuActivity extends Activity {
 			mnu[c].setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM|MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);	
 
 		}
-		mnu[1].setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+		mnu[1].setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 		//mnu[1].setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM|MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 		mnu[mnu.length-1]=menu.add(0,mnu.length-1,mnu.length-1,"");
 		mnu[mnu.length-1].setIcon(android.R.drawable.ic_menu_preferences);
@@ -332,19 +332,20 @@ public class MenuActivity extends Activity {
 		did= gs.getVariableConfiguration().getVariableValue(null, "Current_Delyta");
 		*/
 		mnu[0].setTitle("Osynkat: "+gs.getDb().getNumberOfUnsyncedEntries());
-		String mContextH = null;
+		String mContextH = "Context: []";
 		Map<String, String> hash = gs.getCurrentKeyHash();
 		if (hash!=null)
 			mContextH = hash.toString();
 		mnu[1].setTitle(mContextH);
 		
 		mnu[3].setTitle("SYNK "+gs.getSyncStatusS());
+		
 		//mnu[c++].setTitle("Användare: "+gs.getPersistence().get(PersistenceHelper.USER_ID_KEY));
 		//mnu[c++].setTitle("Typ: "+gs.getDeviceType());
 		boolean hasSynk = globalPh.getB(PersistenceHelper.SYNC_FEATURE)&&!gs.isSolo();
 		mnu[0].setVisible(hasSynk);	
 		//If (title is empty, don't show r-p-d-l status
-		mnu[1].setVisible(globalPh.getB(PersistenceHelper.SHOW_CONTEXT)&&mContextH!=null && mContextH.length()!=0);		
+		mnu[1].setVisible(globalPh.getB(PersistenceHelper.SHOW_CONTEXT));		
 		mnu[2].setVisible(globalPh.getB(PersistenceHelper.DEVELOPER_SWITCH));	
 		mnu[3].setVisible(hasSynk);
 		
@@ -359,6 +360,7 @@ public class MenuActivity extends Activity {
 
 		switch (item.getItemId()) {
 		case 0:
+			break;
 		case 1:
 			Map<String, String> hash = gs.getCurrentKeyHash();
 			String dialogText="";

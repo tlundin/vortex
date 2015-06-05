@@ -134,7 +134,7 @@ public  class ButtonBlock extends Block {
 		return name;
 	}
 	public String getTarget() {
-		return target;
+		return Tools.parseString(target);
 	}
 
 
@@ -405,7 +405,7 @@ public  class ButtonBlock extends Block {
 								if (r.err==null) {
 									exportFileName = gs.getGlobalPreferences().get(PersistenceHelper.BUNDLE_NAME)+"_";
 									if (target!=null)
-										exportFileName += target+"_";
+										exportFileName += getTarget()+"_";
 									exportFileName+=Constants.getTimeStamp();
 
 									if (exportFormat  == null) 

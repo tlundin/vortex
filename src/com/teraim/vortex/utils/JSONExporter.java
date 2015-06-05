@@ -140,8 +140,10 @@ public class JSONExporter extends Exporter {
 	private void writeSubHeader(Map<String,String> currentKeys) throws IOException {
 		//subheader.
 		Set<String> keys = currentKeys.keySet();
-		for (String key:keys) 
-			write(key,currentKeys.get(key));	
+		
+		for (String key:keys) {
+			write(key,currentKeys.get(key));
+		}
 	}
 
 	public void writeHeader() throws IOException {

@@ -10,6 +10,7 @@ import android.util.JsonWriter;
 import android.util.Log;
 
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisConstants;
+import com.teraim.vortex.non_generics.NamedVariables;
 import com.teraim.vortex.utils.DbHelper.DBColumnPicker;
 import com.teraim.vortex.utils.Exporter.Report;
 
@@ -17,7 +18,7 @@ public class GeoJSONExporter extends Exporter {
 
 	private StringWriter sw;
 	private JsonWriter writer;
-	
+
 	protected GeoJSONExporter(Context ctx) {
 		super(ctx);
 
@@ -38,14 +39,14 @@ public class GeoJSONExporter extends Exporter {
 				write("name","Export");
 				write("type","FeatureCollection");
 				writer.name("crs");
-					writer.beginObject();
+				writer.beginObject();
 				write("type","name");
 				writer.name("properties");
-						writer.beginObject();
+				writer.beginObject();
 				write("name","EPSG:3006");
-						writer.endObject();
+				writer.endObject();
 				//end header
-					writer.endObject();
+				writer.endObject();
 				writer.name("features");
 				writer.beginArray();
 				Map<String,String> currentKeys;
@@ -66,79 +67,98 @@ public class GeoJSONExporter extends Exporter {
 							gisObjM = new HashMap<String,String>();
 							gisObjects.put(uid, gisObjM);
 						}
-						gisObjM.put(cp.getVariable().name, cp.getVariable().value);
+						//Hack for multiple SPY1 variables.
+						String name = cp.getVariable().name;
+						String spy = cp.getKeyColumnValues().get("spy");
+						if (spy!=null) {String hname = null;
+						if (name.endsWith(NamedVariables.FINNS_I_SPY+"1")) {
+							hname = NamedVariables.FINNS_I_SPY+spy;
+
+						} else if (name.endsWith(NamedVariables.number_of_selections+"1")) {
+							hname = NamedVariables.number_of_selections+spy;
+						}
+						if (hname!=null) { 
+							name = name.replace(NamedVariables.FINNS_I_SPY+"1", hname);
+							Log.d("vortex","new hacked name is: "+name);
+						}
+						} 
+						gisObjM.put(name, cp.getVariable().value);
 
 						Log.d("vortex","Current keys: "+currentKeys.toString());
 					}
 				} while (cp.next());
 				Log.d("vortex","now inserting into json.");
-					//For each gis object...
-					for (String key:gisObjects.keySet()) {
-						Log.d("vortex","variables under "+key);
-						gisObjM = gisObjects.get(key);
-						
-						String geoType = gisObjM.remove(GisConstants.Geo_Type);
-						if (geoType==null)
-							geoType = "point";
-						String coordinates = gisObjM.remove(GisConstants.GPS_Coord_Var_Name);
-						if (coordinates==null) {
-							Log.e("vortex","Object "+key+" is missing GPS Coordinates!!!");
-							coordinates = "0,0";
-						}
-						
-						//Beg of line.
-						writer.beginObject();
-						write("type", "Feature");
-						writer.name("geometry");
-						writer.beginObject();
-						write("type",geoType);
-						writer.name("coordinates");
-									
-						String[] polygons;
-						boolean p = false;
-						if (!geoType.equals("Polygon")) {
-							Log.d("vortex","POINT!!!");
-							Log.d("geotype",geoType);
-							polygons = new String[] {coordinates};
-						}
-						else {
-							p=true;
-							Log.d("vortex","POLYGON!!!");
-							polygons = coordinates.split("|");
+				//For each gis object...
+				for (String key:gisObjects.keySet()) {
+					Log.d("vortex","variables under "+key);
+					gisObjM = gisObjects.get(key);
+
+					String geoType = gisObjM.remove(GisConstants.Geo_Type);
+					if (geoType==null)
+						geoType = "point";
+					String coordinates = gisObjM.remove(GisConstants.GPS_Coord_Var_Name);
+					if (coordinates==null) {
+						Log.e("vortex","Object "+key+" is missing GPS Coordinates!!!");
+						coordinates = "0,0";
+					}
+
+					//Beg of line.
+					writer.beginObject();
+					write("type", "Feature");
+					writer.name("geometry");
+					writer.beginObject();
+					write("type",geoType);
+					writer.name("coordinates");
+
+					String[] polygons;
+					boolean p = false;
+					if (!geoType.equals("Polygon")) {
+						Log.d("vortex","POINT!!!");
+						Log.d("geotype",geoType);
+						polygons = new String[] {coordinates};
+					}
+					else {
+						p=true;
+						Log.d("vortex","POLYGON!!!");
+						polygons = coordinates.split("|");
+						writer.beginArray();
+					}
+					for (String polygon:polygons) {
+						if (p)
 							writer.beginArray();
-						}
-						for (String polygon:polygons) {
-							if (p)
-								writer.beginArray();
-							String[] coords = polygon.split(",");
-							writer.beginArray();
-							for (int i =0;i<coords.length;i++)
-								writer.value(Float.parseFloat(coords[i]));
-							writer.endArray();
-							if (p)
-								writer.endArray();
-						}
+						String[] coords = polygon.split(",");
+						writer.beginArray();
+						for (int i =0;i<coords.length;i++)
+							writer.value(Float.parseFloat(coords[i]));
+						writer.endArray();
 						if (p)
 							writer.endArray();
-						//End geometry.
-						writer.endObject();
-						writer.name("properties");
-								writer.beginObject();						
-						for (String mKey:gisObjM.keySet()) {
-							write(mKey,gisObjM.get(mKey));
-							Log.d("vortex","var, value: "+mKey+","+gisObjM.get(mKey));
-						}
-								writer.endObject();
-								
-							//eol
-						writer.endObject();
 					}
-				
+					if (p)
+						writer.endArray();
+					//End geometry.
+					writer.endObject();
+					writer.name("properties");
+					writer.beginObject();	
+					//Add the UUID
+					write("GlobalID",uid);
+					for (String mKey:gisObjM.keySet()) {
+
+
+						write(mKey,gisObjM.get(mKey));
+						Log.d("vortex","var, value: "+mKey+","+gisObjM.get(mKey));
+					}
+					writer.endObject();
+
+					//eol
+					writer.endObject();
+				}
+
 				//End of array.
 				writer.endArray();
 				//End of all.
 				writer.endObject();
-				
+
 				Log.d("nils","finished writing JSON");
 				Log.d("nils", sw.toString());
 				return new Report(sw.toString(),varC);

@@ -83,17 +83,17 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		bundleName = globalPh.get(PersistenceHelper.BUNDLE_NAME);
 		if (bundleName == null || bundleName.length()==0)
 			bundleName = "Vortex";
-		
+
 		ph	 = new PersistenceHelper(this.getActivity().getSharedPreferences(globalPh.get(PersistenceHelper.BUNDLE_NAME), Context.MODE_PRIVATE));
 		oldV= ph.get(PersistenceHelper.CURRENT_VERSION_OF_WF_BUNDLE);
 		//appTxt.setText("Running application "+bundleName+" ["+oldV+"]");
-		
+
 		Log.d("imgul",  server()+bundleName+"logo.png");
 		new DownloadImageTask((ImageView) view.findViewById(R.id.logo))
-        .execute(server()+bundleName.toLowerCase()+"/logo.png");
+		.execute(server()+bundleName.toLowerCase()+"/logo.png");
 
-		
-		
+
+
 		loginConsole = new Logger(this.getActivity(),"INITIAL");
 		loginConsole.setOutputView(log);
 		debugConsole = Start.singleton.getLogger();
@@ -285,7 +285,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		if (globalPh.get(PersistenceHelper.VERSION_CONTROL_SWITCH_OFF).equals(PersistenceHelper.UNDEFINED))
 			globalPh.put(PersistenceHelper.VERSION_CONTROL_SWITCH_OFF, false);
 
-		
+
 		folder = new File(Constants.VORTEX_ROOT_DIR+globalPh.get(PersistenceHelper.BUNDLE_NAME)+Constants.AIR_PHOTO_FILE_DIR);
 		if(!folder.mkdirs())
 			Log.e("NILS","Failed to create gis image folder");		
@@ -335,7 +335,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 			loginConsole.addRow("");
 			//			loginConsole.addGreenText("All modules loaded...preparing database");
 			loginConsole.draw();
-			
+
 			//Create or update database from Table object.
 			ConfigurationModule m = myModules.getModule(VariablesConfiguration.NAME);
 
@@ -343,11 +343,21 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 				Log.d("vortex","name "+m.getFileName());
 				Table t = (Table)m.getEssence();
 				myDb = new DbHelper(this.getActivity().getApplicationContext(),t, globalPh,ph,bundleName);
-				Configuration dbModules = new Configuration(Constants.getDBImportModules(globalPh, ph, server(), bundleName, debugConsole, myDb,t));
+				//Load configuration files asynchronously.
+				Constants.getDBImportModules(globalPh, ph, server(), bundleName, debugConsole, myDb,t, new AsyncLoadDoneCb() {
+					public void onLoadSuccesful(List<ConfigurationModule> modules) {
+						Configuration dbModules = new Configuration(modules);
+						if (modules!=null) {
+							myDBLoader = new ModuleLoader("dbloader",dbModules,loginConsole,globalPh,debugConsole,LoginConsoleFragment.this,LoginConsoleFragment.this.getActivity());
+							loginConsole.addRow("Defaults & GIS modules");			
+							myDBLoader.loadModules();
+						} else 
+							Log.e("vortex","null returned from getDBImportModules");
+					}
+				});
+				//Configuration dbModules = new Configuration(Constants.getDBImportModules(globalPh, ph, server(), bundleName, debugConsole, myDb,t));
 				//Import historical data to database. 
-				myDBLoader = new ModuleLoader("dbloader",dbModules,loginConsole,globalPh,debugConsole,this,this.getActivity());
-				loginConsole.addRow("Defaults & GIS modules");			
-				myDBLoader.loadModules();
+
 
 			} 
 		} else {
@@ -360,39 +370,42 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 			List<Workflow> workflows = (List<Workflow>)(myModules.getModule(bundleName).getEssence());
 			Table t = (Table)(myModules.getModule(VariablesConfiguration.NAME).getEssence());
 			SpinnerDefinition sd = (SpinnerDefinition)(myModules.getModule(SpinnerConfiguration.NAME).getEssence());
-			
-			GlobalState gs = 
-			GlobalState.createInstance(this.getActivity().getApplicationContext(),globalPh,ph,debugConsole,myDb, workflows, t,sd);
+			if (this.getActivity()!=null) {
+				GlobalState gs = 
+						GlobalState.createInstance(this.getActivity().getApplicationContext(),globalPh,ph,debugConsole,myDb, workflows, t,sd);
 
-			//drawermenu
-			gs.setDrawerMenu(Start.singleton.getDrawerMenu());
+				//drawermenu
+				gs.setDrawerMenu(Start.singleton.getDrawerMenu());
 
-			//Change to main.
-			//execute main workflow if it exists.
-			Workflow wf = gs.getWorkflow("Main");
-			if (wf == null) {
-				String[] x = gs.getWorkflowNames();
-				debugConsole.addRow("");
-				debugConsole.addRedText("workflow main not found. These are available:");
-				for (String n:x) 
-					debugConsole.addRow(n);
-			}
-			if (wf!=null) {
-				Start.singleton.getDrawerMenu().closeDrawer();
-				Start.singleton.getDrawerMenu().clear();
-				gs.sendEvent(MenuActivity.INITDONE);
-				String newV = ph.get(PersistenceHelper.CURRENT_VERSION_OF_WF_BUNDLE);
-				if (!newV.equals(oldV))
-					appTxt.setText("Running application "+bundleName+" --New Version! ["+newV+"]");
-				else
-					appTxt.setText("Running application "+bundleName+" ["+newV+"]");
-				Start.singleton.changePage(wf,null);
-				Log.d("vortex","executing workflow main!");
-				gs.setModules(myModules);
+				//Change to main.
+				//execute main workflow if it exists.
+				Workflow wf = gs.getWorkflow("Main");
+				if (wf == null) {
+					String[] x = gs.getWorkflowNames();
+					debugConsole.addRow("");
+					debugConsole.addRedText("workflow main not found. These are available:");
+					for (String n:x) 
+						debugConsole.addRow(n);
+				}
+				if (wf!=null) {
+					Start.singleton.getDrawerMenu().closeDrawer();
+					Start.singleton.getDrawerMenu().clear();
+					gs.sendEvent(MenuActivity.INITDONE);
+					String newV = ph.get(PersistenceHelper.CURRENT_VERSION_OF_WF_BUNDLE);
+					if (!newV.equals(oldV))
+						appTxt.setText("Running application "+bundleName+" --New Version! ["+newV+"]");
+					else
+						appTxt.setText("Running application "+bundleName+" ["+newV+"]");
+					Start.singleton.changePage(wf,null);
+					Log.d("vortex","executing workflow main!");
+					gs.setModules(myModules);
 
+				} else {
+					loginConsole.addRow("");
+					loginConsole.addRedText("Found no workflow 'Main'. Exiting..");
+				}
 			} else {
-				loginConsole.addRow("");
-				loginConsole.addRedText("Found no workflow 'Main'. Exiting..");
+				Log.e("vortex","No activity.");
 			}
 		}
 
@@ -405,27 +418,27 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 
 
 	private static class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
-	    ImageView bmImage;
+		ImageView bmImage;
 
-	    public DownloadImageTask(ImageView bmImage) {
-	        this.bmImage = bmImage;
-	    }
+		public DownloadImageTask(ImageView bmImage) {
+			this.bmImage = bmImage;
+		}
 
-	    protected Bitmap doInBackground(String... urls) {
-	        String urldisplay = urls[0];
-	        Bitmap mIcon11 = null;
-	        try {
-	            InputStream in = new java.net.URL(urldisplay).openStream();
-	            mIcon11 = BitmapFactory.decodeStream(in);
-	        } catch (Exception e) {
-	           
-	        }
-	        return mIcon11;
-	    }
+		protected Bitmap doInBackground(String... urls) {
+			String urldisplay = urls[0];
+			Bitmap mIcon11 = null;
+			try {
+				InputStream in = new java.net.URL(urldisplay).openStream();
+				mIcon11 = BitmapFactory.decodeStream(in);
+			} catch (Exception e) {
 
-	    protected void onPostExecute(Bitmap result) {
-	        bmImage.setImageBitmap(result);
-	    }
+			}
+			return mIcon11;
+		}
+
+		protected void onPostExecute(Bitmap result) {
+			bmImage.setImageBitmap(result);
+		}
 	}
 
 

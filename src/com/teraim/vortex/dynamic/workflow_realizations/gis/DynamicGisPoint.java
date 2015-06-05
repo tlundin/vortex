@@ -18,7 +18,7 @@ public class DynamicGisPoint extends GisPointObject {
 	
 	public DynamicGisPoint(FullGisObjectConfiguration conf, Map<String, String> keyChain,Variable x, Variable y, Variable statusVar) {
 		super(conf,keyChain,null,statusVar);
-		Log.d("vortex","Creating dyna gis with variable x y "+x.getLabel()+","+y.getLabel());
+		Log.d("vortex","Creating dyna gis with variable x y "+x.getId()+","+y.getId());
 		multivar=true;
 		myXVar=x;
 		myYVar=y;

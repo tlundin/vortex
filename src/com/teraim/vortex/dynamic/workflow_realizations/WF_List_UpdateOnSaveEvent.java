@@ -41,7 +41,7 @@ public class WF_List_UpdateOnSaveEvent extends WF_Static_List implements EventLi
 		super(id, ctx,rows,isVisible);
 		String namePrefix = al.getFunctionalGroup(rows.get(0));
 		Log.d("nils","SkarmGrupp: "+namePrefix);
-		varValueMap = gs.getDb().preFetchValue(gs.getCurrentKeyHash(), namePrefix);
+		varValueMap = gs.getDb().preFetchValuesForAllMatchingKey(gs.getCurrentKeyHash(), namePrefix);
 		ctx.addEventListener(this, EventType.onSave);
 		o = GlobalState.getInstance().getLogger();
 

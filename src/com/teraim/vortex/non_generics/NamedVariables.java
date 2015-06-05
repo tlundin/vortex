@@ -63,6 +63,10 @@ public class NamedVariables {
 
 	public static final String InomDelyta = "inomDelyta";
 
+	public static final String FINNS_I_SPY = "FinnsiSPY";
+
+	public static String number_of_selections = "number_of_selections";
+
 	
 
 

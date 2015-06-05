@@ -18,11 +18,13 @@ public abstract class GisPointObject extends GisObject {
 
 	protected FullGisObjectConfiguration poc; 
 	private Variable statusVar=null;
+	private String label;
 	
 	public GisPointObject(FullGisObjectConfiguration poc,Map<String, String> keyChain,List<Location> myCoordinates, Variable statusVar) {
 		super(keyChain,myCoordinates);
 		this.poc=poc;
 		this.statusVar=statusVar;
+		this.label = Tools.parseString(poc.getLabel(),keyChain);
 	}
 	public abstract Location getLocation();
 	public Bitmap getIcon() {
@@ -81,7 +83,7 @@ public abstract class GisPointObject extends GisObject {
 	}
 	
 	public String getLabel() {
-		String label = poc.getLabel();
+		
 		if (label==null)
 			return "";
 		if (label.startsWith("@")) {
@@ -90,7 +92,7 @@ public abstract class GisPointObject extends GisObject {
 				return key+" "+keyChain.get(key);
 			}
 		}
-		return (Tools.parseString(poc.getLabel(),keyChain));
+		return (label);
 		
 	}
 	

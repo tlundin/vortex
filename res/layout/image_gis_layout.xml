@@ -18,7 +18,7 @@
        android:layout_height="66dp"
        android:layout_gravity="top|right"
        android:layout_marginRight="40dp"
-       android:layout_marginTop="40dp"
+       android:layout_marginTop="60dp"
        android:background="#0000"
        android:scaleType="fitCenter"
        android:src="@drawable/gis_menu_button" />
@@ -75,5 +75,23 @@
         </LinearLayout>
 
     </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/avstriktF"
+        android:layout_width="120dp"
+        android:layout_height="57dp"
+        android:layout_gravity="right"
+        android:background="@color/transparent_blue" >
+
+        <TextView
+            android:id="@+id/avstriktT"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="Dist: 122 Rikt: 234"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF" />
+
+    </FrameLayout>
     
 </FrameLayout>

@@ -4,8 +4,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.Log;
 import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
@@ -14,7 +14,6 @@ import com.teraim.vortex.dynamic.workflow_abstracts.Drawable;
 import com.teraim.vortex.dynamic.workflow_abstracts.Event;
 import com.teraim.vortex.dynamic.workflow_abstracts.EventListener;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
-import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnSave;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Widget;
 import com.teraim.vortex.gis.GisImageView;
 import com.teraim.vortex.non_generics.Constants;
@@ -37,9 +36,11 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener {
 	private GisImageView gisImageView;
 	private LinearLayout filtersC,layersC;
 	private final WF_Context myContext;
+	private View avstRiktF;
+	private TextView avstRiktT;
 	
 	public WF_Gis_Map(String id, View mapView, boolean isVisible, String picUrlorName,
-			WF_Context myContext, PhotoMeta photoMeta) {
+			WF_Context myContext, PhotoMeta photoMeta, View avstriktF) {
 		super(id, mapView, isVisible, myContext);
 		GlobalState gs = GlobalState.getInstance();
 		globalPh = gs.getGlobalPreferences();
@@ -52,16 +53,24 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener {
 		gisImageView.initialize(this,photoMeta);
 		myContext.addGis(id,this);
 		this.myContext=myContext;
-		
+		this.avstRiktF = avstriktF;
+		this.avstRiktT = (TextView)avstRiktF.findViewById(R.id.avstriktT);
 	}
 
 	public GisImageView getGis() {
 		return gisImageView;
 	}
 	
+	public TextView getAvstRiktView() {
+		return avstRiktT;
+	}
 	
-	
-	
+	public void setVisibleAvstRikt(boolean isVisible) {
+		if (isVisible)
+			avstRiktF.setVisibility(View.VISIBLE);
+		else
+			avstRiktF.setVisibility(View.INVISIBLE);
+	}
 
 
 	@Override

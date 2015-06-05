@@ -1,5 +1,7 @@
 package com.teraim.vortex.gis;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,6 +18,7 @@ import android.util.Log;
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.types.SweLocation;
 import com.teraim.vortex.dynamic.types.Variable;
+import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.non_generics.NamedVariables;
 import com.teraim.vortex.utils.Geomatte;
@@ -137,6 +140,7 @@ public class Tracker extends Service implements LocationListener {
 	}
 	@Override
 	public void onLocationChanged(Location location) {
+		try {
 		Log.d("vortex","got new coords: "+location.getLatitude()+","+location.getLongitude());
 		if (myX!=null) {
 			Log.d("vortex","setting sweref location");
@@ -158,6 +162,15 @@ public class Tracker extends Service implements LocationListener {
 				myY.setValue(myL.getY()+"");
 			}
 			
+		}
+		}catch(Exception e) {
+			LoggerI o = GlobalState.getInstance().getLogger();
+			o.addRow("");
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			e.printStackTrace(pw);		
+			o.addRedText(sw.toString());
+			e.printStackTrace();
 		}
 	}
 
