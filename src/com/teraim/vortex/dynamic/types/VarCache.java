@@ -75,7 +75,7 @@ public class VarCache {
 		if (row==null) {
 			Log.e("nils","Variable definition missing for "+varId);
 			o.addRow("");
-			o.addYellowText("Variabel definition missing for "+varId);
+			o.addYellowText("Variable definition missing for "+varId);
 			if (newA)
 				cache.remove(ret);
 			return null;

@@ -32,7 +32,7 @@ public class GisLayer {
 
 	public void addObjectBag(String key, Set<GisObject> myGisObjects, boolean dynamic) {
 		myObjects.put(key, myGisObjects);
-		Log.d("vortex","added "+myGisObjects.size()+" gisObjects to Layer: "+name+" of type "+key);
+		Log.d("vortex","added "+myGisObjects.size()+" : "+name+" of type "+key);
 		if (dynamic)
 			this.hasDynamic = true;
 		

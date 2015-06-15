@@ -30,5 +30,6 @@ public interface FullGisObjectConfiguration extends GisObjectBaseAttributes {
 	public String getClickFlow();
 	public CHash getObjectKeyHash();
 	public String getStatusVariable();
+	public boolean isUser();
 	
 }

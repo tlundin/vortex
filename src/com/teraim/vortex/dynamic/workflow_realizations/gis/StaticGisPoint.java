@@ -30,4 +30,18 @@ public class StaticGisPoint extends GisPointObject {
 		return res;
 	}
 
+
+
+	@Override
+	public boolean isDynamic() {
+		return false;
+	}
+
+
+
+	@Override
+	public boolean isUser() {
+		return false;
+	}
+
 }

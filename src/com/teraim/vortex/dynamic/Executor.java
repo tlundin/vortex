@@ -263,7 +263,8 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 						Tracker.ErrorCode code = gs.getTracker().startScan(gs.getContext());
 						o.addRow("GPS SCANNER RETURNS: "+code.name());
 						Log.d("vortex","got "+code.name());
-					}
+					} else
+						Log.e("vortex","This has no GPS");
 	
 				}
 

@@ -344,7 +344,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 		o.addRow("Parsing block: block_add_gis_point_objects...");
 		String id=null,nName=null,target=null,label=null,coordType = null, color=null,polyType=null,fillType=null,
 				location=null,objContext=null,imgSource=null,refreshRate=null,radius=null,onClick=null,statusVariable = null;
-		boolean isVisible=true;
+		boolean isVisible=true,isUser=true;
 
 		//parser.require(XmlPullParser.START_TAG, null,"block_add_gis_point_objects")
 		Log.d("vortex","In block_add_gis_point_objects!!");
@@ -367,6 +367,8 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				polyType = readText("poly_type",parser);
 			} else if (name.equals("is_visible")) {
 				isVisible = readText("is_visible",parser).equals("true");
+			} else if (name.equals("is_visible")) {
+				isUser = readText("is_user",parser).equals("true");
 			} else if (name.equalsIgnoreCase("name")) {
 				nName = readText("name",parser);
 			} else if (name.equalsIgnoreCase("coord_type")) {
@@ -396,7 +398,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 		checkForNull("block_ID",id,"target",target,"location",location);
 		if (imgSource!=null&&!imgSource.isEmpty())
 			Tools.cacheImage(imgSource,cacheFolder);
-		return new AddGisPointObjects(id,nName,label,target,objContext,coordType,location,imgSource,refreshRate,radius,isVisible,type,color,polyType,fillType,onClick,statusVariable);
+		return new AddGisPointObjects(id,nName,label,target,objContext,coordType,location,imgSource,refreshRate,radius,isVisible,type,color,polyType,fillType,onClick,statusVariable,isUser);
 
 	}
 

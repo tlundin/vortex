@@ -209,7 +209,10 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 			else
 				keyChain.put("uid",UUID.randomUUID().toString());
 			keyChain.put("år", VariableConfiguration.HISTORICAL_MARKER);
-			keyChain.put("ruta", rutaId);
+			
+			//Tarfala hack. TODO: Remove.
+			//keyChain.put("ruta", rutaId);
+			
 			keyChain.put(GisConstants.TYPE_COLUMN, myType);
 			
 			//Add geotype to attributes so that the correct object can be used at export.

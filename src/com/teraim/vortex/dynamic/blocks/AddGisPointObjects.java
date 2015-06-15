@@ -60,12 +60,13 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 	private String onClick;
 	private String statusVariable;
 	private CHash objKeyHash;
+	private boolean isUser;
 
 
 	public AddGisPointObjects(String id, String nName, String label,
 			String target, String objContext,String coordType, String locationVars, 
 			String imgSource, String refreshRate, String radius, boolean isVisible, 
-			GisObjectType type, String color, String polyType, String fillType, String onClick, String statusVariable) {
+			GisObjectType type, String color, String polyType, String fillType, String onClick, String statusVariable, boolean isUser) {
 		super();
 		this.blockId = id;
 		this.nName = nName;
@@ -80,6 +81,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 		this.onClick = onClick;
 		this.color=color;
 		this.statusVariable=statusVariable;
+		this.isUser=isUser;
 		myType = type;
 
 		if (coordType==null)
@@ -218,8 +220,10 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 			return;
 		}
 		DataType t1 = al.getnumType(row);
-		if (t1!=DataType.array)
-			pickerLocation1 = GlobalState.getInstance().getDb().getAllVariableInstances(coordVar1S);
+		if (t1==DataType.array) {
+			pickerLocation1 = GlobalState.getInstance().getDb().getLastVariableInstance(coordVar1S);
+			Log.e("vortex","called getLast.");
+		}
 		else
 			pickerLocation1 = GlobalState.getInstance().getDb().getAllVariableInstances(coordVar1S);
 
@@ -229,8 +233,8 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 			coordVar2S = GlobalState.getInstance().getDb().createSelection(objKeyHash.keyHash, locationVar2);
 			Log.d("vortex","selection: "+coordVar2S.selection);
 			Log.d("vortex","sel args: "+print(coordVar2S.selectionArgs));
-			if (t2!=DataType.array)
-				pickerLocation2 = GlobalState.getInstance().getDb().getAllVariableInstances(coordVar2S);
+			if (t2==DataType.array)
+				pickerLocation2 = GlobalState.getInstance().getDb().getLastVariableInstance(coordVar2S);
 			else
 				pickerLocation2 = GlobalState.getInstance().getDb().getAllVariableInstances(coordVar2S);
 		}
@@ -271,12 +275,16 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 					} else
 						myGisObjects.add(new DynamicGisPoint(this,objKeyHash.keyHash, v1,null));
 			} else {
-				if (!hasValues && !dynamic || hasValues&&twoVars&&pickerLocation2!=null&&!pickerLocation2.moveToFirst()) {
+				if (!hasValues && !dynamic) {
+					o.addRow("");
+					o.addRedText("No values in database for static GisPObject with name "+nName+" ...skipping");
+					return;
+				}
+				if (hasValues&&twoVars&&pickerLocation2!=null&&!pickerLocation2.moveToFirst()) {
 					Log.e("vortex","Missing values!!!");
 					o.addRow("");
 					o.addRedText("Cannot find any instances of secondary loc variable "+locationVar2);
 					return;
-					
 				}
 								
 				Map <String,Variable> statusVarM=null;
@@ -494,6 +502,10 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 
 	public String getStatusVariable() {
 		return statusVariable;
+	}
+	
+	public boolean isUser() {
+		return isUser;
 	}
 
 

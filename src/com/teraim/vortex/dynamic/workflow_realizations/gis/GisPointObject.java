@@ -27,6 +27,8 @@ public abstract class GisPointObject extends GisObject {
 		this.label = Tools.parseString(poc.getLabel(),keyChain);
 	}
 	public abstract Location getLocation();
+	public abstract boolean isDynamic();
+	public abstract boolean isUser();
 	public Bitmap getIcon() {
 		return poc.getIcon();
 	}

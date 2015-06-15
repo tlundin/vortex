@@ -85,6 +85,14 @@ public class DynamicGisPoint extends GisPointObject {
 				res+=myYVar.getValue();
 		return res;
 	}
+	@Override
+	public boolean isDynamic() {
+		return true;
+	}
+	
+	public boolean isUser() {
+		return poc.isUser();
+	}
 
 	
 }

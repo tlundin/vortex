@@ -145,6 +145,11 @@ public class Start extends MenuActivity {
 
 	//execute workflow.
 	public void changePage(Workflow wf, String statusVar) {
+		if (wf==null) {
+			debugLogger.addRow("Workflow not defined for button. Check your project XML");
+			Log.e("vortex","no wf in changepage");
+			return;
+		}
 		GlobalState gs = GlobalState.getInstance();
 		String label = wf.getLabel();
 		String template = wf.getTemplate();

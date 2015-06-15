@@ -21,7 +21,7 @@
         android:inputType="number" />
 
     <TextView
-        android:id="@+id/TextView01"
+        android:id="@+id/riktT"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignLeft="@+id/avgrStart"
@@ -33,8 +33,8 @@
         android:id="@+id/avgrSlut"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/TextView01"
-        android:layout_below="@+id/TextView01"
+        android:layout_alignLeft="@+id/riktT"
+        android:layout_below="@+id/riktT"
         android:ems="3"
         android:inputType="number" />
 
