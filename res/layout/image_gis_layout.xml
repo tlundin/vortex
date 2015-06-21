@@ -91,18 +91,21 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="right|center_vertical"
-        android:background="@color/transparent_blue" >
+        android:layout_margin="5dp"
+        android:background="@color/transparent_blue"
+        android:minWidth="100dp" >
 
         <LinearLayout
             android:id="@+id/avstRL"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:animateLayoutChanges="true"
-            android:orientation="vertical" >
+            android:orientation="vertical"
+            android:padding="5dp" >
 
             <Button
                 android:id="@+id/startB"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Start"
                 android:textColor="@color/white"
@@ -113,7 +116,7 @@
                 android:id="@+id/unlockB"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Stop"
+                android:text="Cancel"
                 android:textColor="@color/white"
                 android:textSize="30sp"
                 android:textStyle="bold" />

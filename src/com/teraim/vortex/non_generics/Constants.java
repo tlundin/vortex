@@ -38,7 +38,7 @@ import com.teraim.vortex.utils.PersistenceHelper;
 
 public class Constants {
 
-	public final static float VORTEX_VERSION = 1.16f;
+	public final static float VORTEX_VERSION = 1.22f;
 
 
 	//String constants
@@ -153,7 +153,7 @@ public class Constants {
 	}
 
 	public static String getMonth() {
-		return Integer.toString(Calendar.getInstance().get(Calendar.MONTH));
+		return Integer.toString(Calendar.getInstance().get(Calendar.MONTH)+1);
 	}
 
 	public static String getDayOfMonth() {

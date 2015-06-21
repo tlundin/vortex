@@ -19,6 +19,7 @@ public abstract class GisPointObject extends GisObject {
 	protected FullGisObjectConfiguration poc; 
 	private Variable statusVar=null;
 	private String label;
+	private int[] xy=null;
 	
 	public GisPointObject(FullGisObjectConfiguration poc,Map<String, String> keyChain,List<Location> myCoordinates, Variable statusVar) {
 		super(keyChain,myCoordinates);
@@ -116,7 +117,12 @@ public abstract class GisPointObject extends GisObject {
 	public double getY() {
 		return super.getCoordinates().get(0).getY();
 	}
-
+	public int[] getTranslatedLocation() {
+		return xy;
+	}
+	public void setTranslatedLocation(int[] xy) {
+		this.xy=xy;
+	}
 
 
 

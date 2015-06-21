@@ -60,9 +60,9 @@ public class RuleExecutor {
 		public String result;
 		private SubstiType myType;
 
-		public SubstiResult(String result, SubstiType iamAStringorBool) {
+		public SubstiResult(String result, SubstiType myType) {
 			this.result = result;
-			myType = iamAStringorBool;
+			this.myType = myType;
 		}
 
 		public boolean iAmAString() {

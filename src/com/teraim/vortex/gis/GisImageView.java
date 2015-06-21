@@ -81,6 +81,7 @@ public class GisImageView extends GestureImageView {
 	private Paint blCursorPaint;
 	private Paint btnTxt,vtnTxt;
 	private Paint grCursorPaint;
+	private Paint selectedPaint;
 
 	private Paint fgPaintSel;
 
@@ -92,6 +93,7 @@ public class GisImageView extends GestureImageView {
 
 
 	private final Map<String,String>YearKeyHash = new HashMap<String,String>();
+
 
 
 	public GisImageView(Context context) {
@@ -141,6 +143,11 @@ public class GisImageView extends GestureImageView {
 		txtPaint.setColor(Color.WHITE);
 		txtPaint.setStyle(Paint.Style.STROKE);
 		txtPaint.setTextAlign(Paint.Align.CENTER);
+		selectedPaint = new Paint();
+		selectedPaint.setTextSize(8);
+		selectedPaint.setColor(Color.BLACK);
+		selectedPaint.setStyle(Paint.Style.STROKE);
+		selectedPaint.setTextAlign(Paint.Align.CENTER);
 		btnTxt = new Paint();
 		btnTxt.setTextSize(8);
 		btnTxt.setColor(Color.WHITE);
@@ -559,52 +566,58 @@ public class GisImageView extends GestureImageView {
 								//Skip the the touched
 								if (touchedGop!=null&&gop.equals(touchedGop))
 									continue;
-								Location l = gop.getLocation();
-								if (l!=null) {
-									int[] xy = translateMapToRealCoordinates(adjustedScale,l);
-									if (xy==null) {
-										//If not on map, remove it.
-										if (!gop.isDynamic())
-											iterator.remove();
-										else {
+								int[] xy = null;
+								//Use buffered value if available.
+								xy = gop.getTranslatedLocation();
+								if (xy==null) { 
+									Location l = gop.getLocation();
+									if (l==null) {
+										Log.e("vortex","Gop is missing geo location!");
+										iterator.remove();
+										continue;
+									} 
+										xy = translateMapToRealCoordinates(adjustedScale,l);
+										if (xy==null) {
+											//If not on map, remove it.
+											if (!gop.isDynamic())
+												iterator.remove();
+											else {
 											//if user is outside map, remove usergop to prevent centering outside map image.
 											if (gop.equals(userGop))
 												userGop=null;
+											}
+										continue;
+										} else {
+											if (gop.isUser()) {
+												userGop = gop;
+											}
+											gop.setTranslatedLocation(xy);
+										}
+								}
+								//only allow clicks if something is not already touched.
+								pXR = this.getImageWidth()/photoMetaData.getWidth();
+								pYR = this.getImageHeight()/photoMetaData.getHeight();
+
+								if (touchedGop ==null && mapLocationForClick!=null && gop.isTouchedByClick(mapLocationForClick,pXR,pYR) && !gop.equals(userGop)) {
+									touchedGop = gop;
+									myMap.setVisibleAvstRikt(true);
+									//create a line between current location and gop.
+									if (myX!=null && myY!=null && myX.getValue()!=null && myY.getValue()!=null) {
+										Log.d("vortex","Creating riktlinje");
+										double mX = Double.parseDouble(myX.getValue());
+										double mY = Double.parseDouble(myY.getValue());
+										riktL  = translateMapToRealCoordinates(adjustedScale,new SweLocation(mX,mY));
 										}
 										continue;
-									} else {
-										if (gop.isUser()) {
-											userGop = gop;
-											
-										}
-									}
-									//only allow clicks if something is not already touched.
-									if (touchedGop ==null && mapLocationForClick!=null && gop.isTouchedByClick(mapLocationForClick,pXR,pYR) && !gop.equals(userGop)) {
-										touchedGop = gop;
-										
-										myMap.setVisibleAvstRikt(true);
-										//create a line between current location and gop.
-										if (myX!=null && myY!=null && myX.getValue()!=null && myY.getValue()!=null) {
-											Log.d("vortex","Creating riktlinje");
-											double mX = Double.parseDouble(myX.getValue());
-											double mY = Double.parseDouble(myY.getValue());
-											riktL  = translateMapToRealCoordinates(adjustedScale,new SweLocation(mX,mY));
-
-
-
-										}
-										continue;
-									} 
-
-									Bitmap bitmap = gop.getIcon();
-									float radius = gop.getRadius();
-									String color = gop.getColor();
-									Style style = gop.getStyle();
-									boolean isCircle = gop.isCircle();
-
-									Variable statusVar = gop.getStatusVariable();
-									if (statusVar!=null ) {
-										String value = statusVar.getValue();
+								} 
+								Bitmap bitmap = gop.getIcon();
+								float radius = gop.getRadius();
+								String color = gop.getColor();
+								Style style = gop.getStyle();
+								boolean isCircle = gop.isCircle();
+								Variable statusVar = gop.getStatusVariable();
+								if (statusVar!=null ) {
+									String value = statusVar.getValue();
 										if (value.equals("1")) {
 											color = "yellow";
 										}
@@ -614,73 +627,47 @@ public class GisImageView extends GestureImageView {
 										else if	(value.equals("3")) {
 											color = "green";
 										}
-									}
-
-									if (filters!=null&&!filters.isEmpty()) {
-										//Log.d("vortex","has filter!");
-										RuleExecutor ruleExecutor = GlobalState.getInstance().getRuleExecutor();
-										for (GisFilter filter:filters) {	
-											if (filter.isActive()) {
-												//Log.d("vortex","Filter active!");
-												if (!filter.hasCachedFilterResult()) 
-													filter.setTokens(ruleExecutor.findTokens(filter.getExpression(),null, gop.getKeyHash()));
-												Log.d("vortex","EXpr: "+filter.getExpression()+" tokens null? "+filter.getTokens());
-												if (!gop.hasCachedFilterResult(filter)) {
-													List<TokenizedItem> myTokens = filter.getTokens();
-													for (TokenizedItem t:myTokens) {
-														if (t.getType()==TokenType.variable)
-															t.setVariable(GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(gop.getKeyHash(), t.getVariable().getId()));
-
-													}
-													SubstiResult substR = ruleExecutor.substituteForValue(myTokens, filter.getExpression(),false);
-													String result = ruleExecutor.parseExpression(filter.getExpression(),substR.result);
-													if (result!=null&&!result.equals("0")) 
-														gop.setCachedFilterResult(filter,true);
-													else
-														gop.setCachedFilterResult(filter,false);
-												}
-
-												if ( gop.getCachedFilterResult(filter)) {
-													Log.d("vortex","FILTER MATCH FOR FILTER: "+filter.getLabel());
-													bitmap = filter.getBitmap();
-													radius = filter.getRadius();
-													color = filter.getColor();
-													style = filter.getStyle();
-													isCircle = filter.isCircle();
-												}
-											} else
-												Log.d("vortex","Filter turned off!");
-										}
-									} 
-									Rect r = new Rect();
-
-									if (bitmap!=null) {
-										//Log.d("vortex","bitmap! "+gop.getLabel());
-										r.set(xy[0]-32, xy[1]-32, xy[0], xy[1]);
-										canvas.drawBitmap(bitmap, null, r, null);
-									} //circular?
-									else if(isCircle) {
-										//Log.d("vortex","x,y,r"+xy[0]+","+xy[1]+","+radius);
-										canvas.drawCircle(xy[0], xy[1], radius, createPaint(color,style));
-									} //no...square.
-									else {
-										//Log.d("vortex","rect!");
-										int diam = (int)radius;
-										r.set(xy[0]-diam, xy[1]-diam, xy[0]+diam, xy[1]+diam);
-										canvas.drawRect(r, createPaint(color,style));
-									}
-									if (layerO.showLabels()) {
-										String mLabel = gop.getLabel();
-										Rect bounds = new Rect();
-										txtPaint.getTextBounds(mLabel, 0, mLabel.length(), bounds);
-										bounds.set(bounds.left-2,bounds.top-2,bounds.right+2,bounds.bottom+2);
-										bounds.offset((int)xy[0]-bounds.width()/2,(int)xy[1]-(bounds.height()/2+(int)radius));
-										canvas.drawRect(bounds, bCursorPaint);
-										canvas.drawText(mLabel, xy[0], (int)xy[1]-(bounds.height()/2+(int)radius),txtPaint);								
-									}
-
-
 								}
+								if (filters!=null&&!filters.isEmpty()) {
+									//Log.d("vortex","has filter!");
+									RuleExecutor ruleExecutor = GlobalState.getInstance().getRuleExecutor();
+									for (GisFilter filter:filters) {	
+										if (filter.isActive()) {
+											//Log.d("vortex","Filter active!");
+											if (!filter.hasCachedFilterResult()) 
+												filter.setTokens(ruleExecutor.findTokens(filter.getExpression(),null, gop.getKeyHash()));
+												Log.d("vortex","EXpr: "+filter.getExpression()+" tokens null? "+filter.getTokens());
+											if (!gop.hasCachedFilterResult(filter)) {
+												List<TokenizedItem> myTokens = filter.getTokens();
+												for (TokenizedItem t:myTokens) {
+													if (t.getType()==TokenType.variable)
+														t.setVariable(GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(gop.getKeyHash(), t.getVariable().getId()));
+												}
+												SubstiResult substR = ruleExecutor.substituteForValue(myTokens, filter.getExpression(),false);
+												String result = ruleExecutor.parseExpression(filter.getExpression(),substR.result);
+												if (result!=null&&!result.equals("0")) 
+													gop.setCachedFilterResult(filter,true);
+												else
+													gop.setCachedFilterResult(filter,false);
+											}
+											if ( gop.getCachedFilterResult(filter)) {
+												Log.d("vortex","FILTER MATCH FOR FILTER: "+filter.getLabel());
+												bitmap = filter.getBitmap();
+												radius = filter.getRadius();
+												color = filter.getColor();
+												style = filter.getStyle();
+												isCircle = filter.isCircle();
+											}
+										} else
+											Log.d("vortex","Filter turned off!");
+									}
+								} 
+								drawGop(canvas,bitmap,radius,color,style,isCircle,xy);
+								
+								if (layerO.showLabels()) {
+									drawGopLabel(canvas,xy,gop.getLabel(),gop.getRadius(),bCursorPaint,txtPaint);
+								}
+							
 							} else if (go instanceof GisMultiPointObject) {
 								//Log.d("vortex","Drawing multipoint!!");
 								GisMultiPointObject gop = (GisMultiPointObject)go;
@@ -753,14 +740,9 @@ public class GisImageView extends GestureImageView {
 						if (riktL!=null) {
 							canvas.drawLine(riktL[0], riktL[1], xy[0], xy[1],fgPaintSel);//fgPaintSel
 						}
-						canvas.drawCircle(xy[0], xy[1], touchedGop.getRadius(),rCursorPaint );
+						drawGop(canvas, null, touchedGop.getRadius(), "red", Style.FILL, false, xy);
 						displayDistanceAndDirection(touchedGop);
-						Rect boundsR = new Rect();
-						btnTxt.getTextBounds(mLabel, 0, mLabel.length(), boundsR);
-						boundsR.offset((int)xy[0]-boundsR.width()/2,(int)(xy[1]-touchedGop.getRadius()*2));
-						canvas.drawRect(boundsR, bCursorPaint);
-						canvas.drawText(mLabel, boundsR.centerX(), boundsR.bottom, txtPaint);
-						boundsR.set(boundsR.left-2,boundsR.top-2, boundsR.right+2,boundsR.bottom+2);
+						drawGopLabel(canvas,xy,touchedGop.getLabel(),touchedGop.getRadius(),wCursorPaint,selectedPaint);
 						//String btnT = "Kör flöde >>";
 						//,distR = null,riktR=null,bothR;
 						//btnTxt.getTextBounds(mLabel, 0, mLabel.length(), boundsR);
@@ -789,6 +771,36 @@ public class GisImageView extends GestureImageView {
 
 		canvas.restore();
 	}
+	private void drawGopLabel(Canvas canvas, int[] xy, String mLabel, float radius, Paint bgPaint, Paint txtPaint) {
+		Rect bounds = new Rect();
+		txtPaint.getTextBounds(mLabel, 0, mLabel.length(), bounds);
+		bounds.set(bounds.left-2,bounds.top-2,bounds.right+2,bounds.bottom+2);
+		bounds.offset((int)xy[0]-bounds.width()/2,(int)xy[1]-(bounds.height()/2+(int)radius));
+		canvas.drawRect(bounds, bgPaint);
+		canvas.drawText(mLabel, xy[0], (int)xy[1]-(bounds.height()/2+(int)radius),txtPaint);								
+
+	}
+
+	private void drawGop(Canvas canvas, Bitmap bitmap, float radius, String color, Style style, boolean isCircle, int[] xy) {
+		Rect r = new Rect();
+		if (bitmap!=null) {
+				//Log.d("vortex","bitmap! "+gop.getLabel());
+				r.set(xy[0]-32, xy[1]-32, xy[0], xy[1]);
+				canvas.drawBitmap(bitmap, null, r, null);
+		} //circular?
+		else if(isCircle) {
+				//Log.d("vortex","x,y,r"+xy[0]+","+xy[1]+","+radius);
+				canvas.drawCircle(xy[0], xy[1], radius, createPaint(color,style));
+		} 
+		//no...square.
+		else {
+				//Log.d("vortex","rect!");
+				int diam = (int)radius;
+				r.set(xy[0]-diam, xy[1]-diam, xy[0]+diam, xy[1]+diam);
+				canvas.drawRect(r, createPaint(color,style));
+		}
+	}
+
 	//0 = distance, 1=riktning.
 
 
@@ -843,11 +855,21 @@ public class GisImageView extends GestureImageView {
 		return p;
 	}
 
+	private Map<String,Paint> paintCache = new HashMap<String,Paint>();
+	
 	private Paint createPaint(String color, Paint.Style style) {
-
-		Paint p = new Paint();
+		String key = color+style.name();
+		Paint p = paintCache.get(key);
+		if (p!=null) {
+			Log.d("vortex","returns cached paint for "+key);
+			return p;
+		}
+		//If no cached object, create.
+		p = new Paint();
 		p.setColor(color!=null?Color.parseColor(color):Color.YELLOW);
 		p.setStyle(style!=null?style:Paint.Style.FILL);
+		p.setStrokeWidth(2);
+		paintCache.put(key, p);
 		return p;
 	}
 

@@ -647,10 +647,12 @@ public class Tools {
 			Log.e("vortex","PARSESTRING: "+varString.substring(hakeS, hakeE));
 			String interPS = interpret(varString.substring(hakeS, hakeE),keyHash);
 			String preS = varString.substring(cIndex, hakeS-1);
-			res = preS+interPS;
+			res = res+preS+interPS;
+			Log.d("vortex","Res is now "+res);
 			cIndex=hakeE+1;
 		} while(cIndex<varString.length());
 		String postS = varString.substring(cIndex,varString.length());
+		Log.d("vortex","returning "+res+postS);
 		return res+postS;
 	}
 	private static String interpret(String varString, Map<String,String> keyHash) {

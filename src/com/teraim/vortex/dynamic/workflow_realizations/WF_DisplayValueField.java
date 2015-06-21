@@ -68,7 +68,9 @@ public class WF_DisplayValueField extends WF_Widget implements EventListener {
 		SubstiResult sr;
 		Log.d("nils","Got event in WF_DisplayValueField");	
 		sr = ruleExecutor.substituteForValue(myTokens,formula,false);
-		if (!sr.iAmAString()) {
+		//Do not evaluate if the expression is evaluated to be a literal or defined as literal.
+		boolean isLiteral = (format!=null && format.equalsIgnoreCase("S"))||sr.iAmAString(); 
+		if (!isLiteral) {
 			subst = sr.result;
 			if (Tools.isNumeric(subst)) {
 				//check if all tokens are boolean.	
