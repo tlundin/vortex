@@ -4,6 +4,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 
 import com.teraim.vortex.FileLoadedCb;
@@ -91,15 +92,16 @@ public class CreateGisBlock extends Block {
 		Container myContainer = myContext.getContainer(containerId);
 		if (myContainer!=null && photoMetaData!=null) {
 		LayoutInflater li = LayoutInflater.from(myContext.getContext());
-		View mapView = li.inflate(R.layout.image_gis_layout, null);
-		final View avstriktF = mapView.findViewById(R.id.avstriktF);
-		WF_Gis_Map gis = new WF_Gis_Map(blockId, mapView, isVisible, picUrlorName,myContext,photoMetaData,avstriktF);
+		FrameLayout mapView = (FrameLayout)li.inflate(R.layout.image_gis_layout, null);
+		final View avstRL = mapView.findViewById(R.id.avstRL);
+		final View createMenuL = mapView.findViewById(R.id.createMenuL);
+		WF_Gis_Map gis = new WF_Gis_Map(blockId, mapView, isVisible, picUrlorName,myContext,photoMetaData,avstRL,createMenuL);
 		myContainer.add(gis);
 		myContext.addDrawable(name,gis);
 		final View menuL = mapView.findViewById(R.id.menuL);
 		
 		menuL.setVisibility(View.INVISIBLE);
-		avstriktF.setVisibility(View.INVISIBLE);
+		avstRL.setVisibility(View.INVISIBLE);
 		final ImageButton menuB = (ImageButton)mapView.findViewById(R.id.menuB);
 		
 		menuB.setOnClickListener(new OnClickListener() {

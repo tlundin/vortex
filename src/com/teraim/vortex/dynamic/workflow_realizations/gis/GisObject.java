@@ -10,14 +10,20 @@ import android.util.Log;
 import com.teraim.vortex.dynamic.types.LatLong;
 import com.teraim.vortex.dynamic.types.Location;
 import com.teraim.vortex.dynamic.types.SweLocation;
+import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.utils.Tools;
 
 public class GisObject {
 
+	
+	private Variable statusVar=null;
+	
 	public enum CoordinateType {
 		sweref,
 		latlong
 	}
+
+	private FullGisObjectConfiguration foc;
 	
 	public GisObject(Map<String, String> keyChain,List<Location> myCoordinates) {
 		this.keyChain=keyChain;this.myCoordinates=myCoordinates;
@@ -28,6 +34,16 @@ public class GisObject {
 			List<Location> myCoordinates, Map<String, String> attributes) {
 		this.keyChain=keyChain;this.myCoordinates=myCoordinates;this.attributes=attributes;
 	}
+
+	public GisObject(FullGisObjectConfiguration conf,
+			Map<String, String> keyChain,List<Location> myCoordinates,Variable statusVar) {
+		this.keyChain=keyChain;
+		this.foc = conf;
+		this.myCoordinates=myCoordinates;
+		this.statusVar=statusVar;
+	}
+	
+	
 
 	protected CoordinateType coordinateType = CoordinateType.sweref;
 	protected List<Location> myCoordinates = new ArrayList<Location>();
@@ -48,6 +64,18 @@ public class GisObject {
 		return attributes;
 	}
 	
+	public String getWorkflow() {
+		return foc.getClickFlow();
+	}
+	
+	public Variable getStatusVariable() {
+		return statusVar;
+	}
+	
+	public String getColor() {
+		return foc.getColor();
+	}
+
 
 	public static List<Location> createListOfLocations(String value, String coordType) {
 		if (value==null) {

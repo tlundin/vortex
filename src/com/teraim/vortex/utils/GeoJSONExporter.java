@@ -69,19 +69,7 @@ public class GeoJSONExporter extends Exporter {
 						}
 						//Hack for multiple SPY1 variables.
 						String name = cp.getVariable().name;
-						String spy = cp.getKeyColumnValues().get("spy");
-						if (spy!=null) {String hname = null;
-						if (name.endsWith(NamedVariables.FINNS_I_SPY+"1")) {
-							hname = NamedVariables.FINNS_I_SPY+spy;
-
-						} else if (name.endsWith(NamedVariables.number_of_selections+"1")) {
-							hname = NamedVariables.number_of_selections+spy;
-						}
-						if (hname!=null) { 
-							name = name.replace(NamedVariables.FINNS_I_SPY+"1", hname);
-							Log.d("vortex","new hacked name is: "+name);
-						}
-						} 
+						
 						gisObjM.put(name, cp.getVariable().value);
 
 						Log.d("vortex","Current keys: "+currentKeys.toString());

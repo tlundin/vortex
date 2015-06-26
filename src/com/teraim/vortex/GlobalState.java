@@ -243,6 +243,8 @@ public class GlobalState  {
 	 */
 
 	public Workflow getWorkflow(String id) {
+		if (id == null || id.isEmpty())
+			return null;
 		return myWfs.get(id);
 	}
 

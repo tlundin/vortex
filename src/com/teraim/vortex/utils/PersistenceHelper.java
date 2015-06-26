@@ -38,6 +38,7 @@ public class PersistenceHelper {
 	public static final String CURRENT_VERSION_OF_GIS_BLOCKS = "current_version_gis_blocks";
 	public static final String CURRENT_VERSION_OF_GIS_OBJECT_BLOCKS = "current_version_gis_object_blocks";
 	public static final String FIRST_TIME_KEY = "firzzt";
+	public static final String GIS_CREATE_FIRST_TIME_KEY = "fzzzt_gis";
 	public static final String DEVELOPER_SWITCH = "dev_switch";
 	public static final String VERSION_CONTROL_SWITCH_OFF = "no_version_control";
 	public static final String SYNC_FEATURE = "sync_feature";
@@ -50,6 +51,7 @@ public class PersistenceHelper {
 	public static final String CHANGE_BUNDLE = "change_bundle";
 	public static final String HIST_LOAD_COUNTER = "hist_counter";
 	public static final String AVSTAND_WARNING_SHOWN = "Avstand_warning_was_shown";
+
 	
 
 

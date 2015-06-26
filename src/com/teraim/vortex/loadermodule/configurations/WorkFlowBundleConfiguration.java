@@ -239,13 +239,13 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				else if (name.equals("block_add_gis_layer"))
 					blocks.add(readBlockAddGisLayer(parser));
 				else if (name.equals("block_add_gis_point_objects"))
-					blocks.add(readBlockAddGisPointObjects(parser,GisObjectType.point));
+					blocks.add(readBlockAddGisPointObjects(parser,GisObjectType.Point));
 				else if (name.equals("block_add_gis_multipoint_objects"))
-					blocks.add(readBlockAddGisPointObjects(parser,GisObjectType.multipoint));
+					blocks.add(readBlockAddGisPointObjects(parser,GisObjectType.Multipoint));
 				else if (name.equals("block_add_gis_polygons"))
-					blocks.add(readBlockAddGisPointObjects(parser,GisObjectType.polygon));
+					blocks.add(readBlockAddGisPointObjects(parser,GisObjectType.Polygon));
 				else if (name.equals("block_add_gis_linestring_objects"))
-					blocks.add(readBlockAddGisPointObjects(parser,GisObjectType.linestring));
+					blocks.add(readBlockAddGisPointObjects(parser,GisObjectType.Linestring));
 				else if (name.equals("block_add_gis_filter"))
 					blocks.add(readBlockAddGisFilter(parser));
 				else {			
@@ -344,7 +344,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 		o.addRow("Parsing block: block_add_gis_point_objects...");
 		String id=null,nName=null,target=null,label=null,coordType = null, color=null,polyType=null,fillType=null,
 				location=null,objContext=null,imgSource=null,refreshRate=null,radius=null,onClick=null,statusVariable = null;
-		boolean isVisible=true,isUser=true;
+		boolean isVisible=true,isUser=true,createAllowed=false;
 
 		//parser.require(XmlPullParser.START_TAG, null,"block_add_gis_point_objects")
 		Log.d("vortex","In block_add_gis_point_objects!!");
@@ -385,7 +385,9 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				refreshRate = readText("refresh_rate",parser);
 			} else if (name.equalsIgnoreCase("radius")) {
 				radius= readText("radius",parser);
-			} else if (name.equalsIgnoreCase("status_variable")) {
+			} else if (name.equalsIgnoreCase("create_allowed")) {
+				createAllowed= readText("create_allowed",parser).equals("true");
+			}else if (name.equalsIgnoreCase("status_variable")) {
 				statusVariable = readText("status_variable",parser);
 			}
 
@@ -398,7 +400,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 		checkForNull("block_ID",id,"target",target,"location",location);
 		if (imgSource!=null&&!imgSource.isEmpty())
 			Tools.cacheImage(imgSource,cacheFolder);
-		return new AddGisPointObjects(id,nName,label,target,objContext,coordType,location,imgSource,refreshRate,radius,isVisible,type,color,polyType,fillType,onClick,statusVariable,isUser);
+		return new AddGisPointObjects(id,nName,label,target,objContext,coordType,location,imgSource,refreshRate,radius,isVisible,type,color,polyType,fillType,onClick,statusVariable,isUser,createAllowed);
 
 	}
 

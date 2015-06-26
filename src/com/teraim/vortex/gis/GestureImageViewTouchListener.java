@@ -154,7 +154,8 @@ public class GestureImageViewTouchListener implements OnTouchListener {
 		tapDetector = new GestureDetector(image.getContext(), new SimpleOnGestureListener() {
 			@Override
 			public boolean onDoubleTap(MotionEvent e) {
-				startZoom(e);
+				if (currentScale!=8.0f)
+					startZoom(e);
 				return true;
 			}
 
@@ -280,12 +281,7 @@ public class GestureImageViewTouchListener implements OnTouchListener {
 		}
 		 */
 		if (zoomIn) {
-			zoomAnimation.reset();
-			zoomAnimation.setTouchX(e.getX());
-			zoomAnimation.setTouchY(e.getY());
-			zoomAnimation.setZoom(currentScale*8.0f);
-			image.animationStart(zoomAnimation);
-			zoomIn=false;
+			startZoom(e.getX(),e.getY(),8.0f-currentScale);
 		} else {
 
 			reset();
@@ -300,6 +296,15 @@ public class GestureImageViewTouchListener implements OnTouchListener {
 
 	}
 
+
+	public void startZoom(float x, float y, float zoomFactor) {
+		zoomAnimation.reset();
+		zoomAnimation.setTouchX(x);
+		zoomAnimation.setTouchY(y);
+		zoomAnimation.setZoom(zoomFactor);
+		image.animationStart(zoomAnimation);
+		zoomIn=false;
+	}
 
 	private void stopAnimations() {
 		image.animationStop();
@@ -323,12 +328,12 @@ public class GestureImageViewTouchListener implements OnTouchListener {
 
 					last.x = event.getX();
 					last.y = event.getY();
-
+					
 					if(imageListener != null) {
 						imageListener.onTouch(last.x, last.y);
 					}
 
-					touched = true;
+					//touched = true;
 				}
 				else if(event.getAction() == MotionEvent.ACTION_MOVE) {
 					if(event.getPointerCount() > 1) {
@@ -374,6 +379,7 @@ public class GestureImageViewTouchListener implements OnTouchListener {
 					}
 					else {
 						if(!touched) {
+							Log.d("vortex","getzzzz");
 							touched = true;
 							last.x = event.getX();
 							last.y = event.getY();
@@ -394,7 +400,8 @@ public class GestureImageViewTouchListener implements OnTouchListener {
 	}
 
 	protected void handleUp() {
-
+		Log.d("vortex","Touched is now false");
+		touched = false;
 		multiTouch = false;
 
 		initialDistance = 0;

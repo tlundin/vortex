@@ -11,9 +11,9 @@ import com.teraim.vortex.dynamic.types.CHash;
 public interface FullGisObjectConfiguration extends GisObjectBaseAttributes {
 
 	public enum GisObjectType {
-		point,
-		multipoint,
-		polygon, linestring
+		Point,
+		Multipoint,
+		Polygon, Linestring
 	}
 	
 	public enum PolyType {
@@ -25,11 +25,13 @@ public interface FullGisObjectConfiguration extends GisObjectBaseAttributes {
 	public String getColor();
 	public GisObjectType getGisPolyType();
 	public Bitmap getIcon();
-	public Paint.Style getFillType();
+	public Paint.Style getStyle();
 	public PolyType getShape();
 	public String getClickFlow();
 	public CHash getObjectKeyHash();
 	public String getStatusVariable();
 	public boolean isUser();
+	public String getName();
+	
 	
 }

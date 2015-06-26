@@ -14,20 +14,17 @@ public class GisPolygonObject extends GisObject {
 	Map<String, List<Location>> polygons;
 	private FullGisObjectConfiguration conf;
 	
-	public GisPolygonObject(Map<String, String> keyChain,
-			Map<String, List<Location>> polygons) {
-		super(keyChain,null);
-		this.polygons=polygons;
-	}
-	
+
+	//Called when XML has defined the object with a full configuration
 	public GisPolygonObject(FullGisObjectConfiguration conf, Map<String, String> keyChain,
 			String polygons,String coordType) {
-		super(keyChain,null);
+		//TODO: Add statusvariable
+		super(conf,keyChain,null,null);
 		this.polygons=buildMap(polygons,coordType);	
 		this.conf=conf;
 	}
 
-
+	//Called when the object is imported using only a partial configuration. 
 	public GisPolygonObject(Map<String, String> keyChain,
 			Map<String, List<Location>> polygons,
 			Map<String, String> attributes) {
@@ -77,7 +74,7 @@ public class GisPolygonObject extends GisObject {
 	}
 
 	public Style getStyle() {
-		return conf.getFillType();
+		return conf.getStyle();
 	}
 	
 	

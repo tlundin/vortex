@@ -31,8 +31,12 @@ public class GisLayer {
 	}
 
 	public void addObjectBag(String key, Set<GisObject> myGisObjects, boolean dynamic) {
+		if (myGisObjects==null) {
+			myGisObjects = new HashSet<GisObject>();
+			Log.d("vortex","Added empty set");
+		}
 		myObjects.put(key, myGisObjects);
-		Log.d("vortex","added "+myGisObjects.size()+" : "+name+" of type "+key);
+		Log.d("vortex","added "+myGisObjects.size()+" objects to layer: "+name+" of type "+key);
 		if (dynamic)
 			this.hasDynamic = true;
 		
@@ -52,7 +56,9 @@ public class GisLayer {
 	public Map<String,Set<GisObject>> getGisBags() {
 		return myObjects;
 	}
-	
+	public Set<GisObject> getBagOfType(String type) {
+		return myObjects.get(type);
+	}
 	public Map<String,Set<GisFilter>> getFilters() {
 		return myFilters;
 	}

@@ -198,11 +198,7 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 			reader.endObject();
 			String uuid = attributes.remove(GisConstants.GlobalID);
 			String rutaId = attributes.remove(GisConstants.RutaID);
-			if (rutaId==null) {
-				Log.e("vortex","ingen ruta ID!!!!");
-				rutaId = "666";
-			}
-			
+						
 				
 			if (uuid!=null)
 				keyChain.put("uid",uuid);
@@ -211,7 +207,10 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 			keyChain.put("år", VariableConfiguration.HISTORICAL_MARKER);
 			
 			//Tarfala hack. TODO: Remove.
-			//keyChain.put("ruta", rutaId);
+			if (rutaId==null)
+				Log.e("vortex","ingen ruta ID!!!!");
+			else
+				keyChain.put("ruta", rutaId);
 			
 			keyChain.put(GisConstants.TYPE_COLUMN, myType);
 			

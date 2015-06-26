@@ -61,12 +61,14 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 	private String statusVariable;
 	private CHash objKeyHash;
 	private boolean isUser;
+	private boolean createAllowed;
 
 
 	public AddGisPointObjects(String id, String nName, String label,
 			String target, String objContext,String coordType, String locationVars, 
 			String imgSource, String refreshRate, String radius, boolean isVisible, 
-			GisObjectType type, String color, String polyType, String fillType, String onClick, String statusVariable, boolean isUser) {
+			GisObjectType type, String color, String polyType, String fillType, 
+			String onClick, String statusVariable, boolean isUser, boolean createAllowed) {
 		super();
 		this.blockId = id;
 		this.nName = nName;
@@ -82,6 +84,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 		this.color=color;
 		this.statusVariable=statusVariable;
 		this.isUser=isUser;
+		this.createAllowed=createAllowed;
 		myType = type;
 
 		if (coordType==null)
@@ -126,13 +129,13 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 		if (imgSource!=null&&imgSource.length()>0 ) {
 			File cached = gs.getCachedFileFromUrl(imgSource);
 			if (cached==null) {
-			Log.d("vortex","no cached image...trying live.");
-			String protocol="http://";
-			if (!imgSource.toLowerCase().startsWith(protocol))
-				imgSource = protocol+imgSource;
-			Log.d("vortex","IMGURL: "+imgSource);
-			new DownloadImageTask(gisB)
-			.execute(imgSource);
+				Log.d("vortex","no cached image...trying live.");
+				String protocol="http://";
+				if (!imgSource.toLowerCase().startsWith(protocol))
+					imgSource = protocol+imgSource;
+				Log.d("vortex","IMGURL: "+imgSource);
+				new DownloadImageTask(gisB)
+				.execute(imgSource);
 			} else {
 				try {
 					icon = BitmapFactory.decodeStream(new FileInputStream(cached));
@@ -169,7 +172,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 		String kc="null";
 		if (objKeyHash.keyHash!= null)
 			kc = objKeyHash.keyHash.toString();
-		Log.d("vortex","In onCreate for AddGisP for type: "+myType+"with keychain: "+kc);
+		Log.d("vortex","In onCreate for AddGisP for ["+nName+"], Obj_type: "+myType+" with keychain: "+kc);
 		//Call to the database to get the objects.
 
 		//Either one or two location variables. 
@@ -186,12 +189,12 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 		}
 		String locationVar1=locationVarArray[0].trim();
 		String locationVar2=null;
-		
+
 		boolean twoVars = (locationVarArray.length==2);
 		if (twoVars)
 			locationVar2 = locationVarArray[1].trim();
 		Log.d("vortex","Twovars is "+twoVars+" gisvars are: "+(twoVars?" ["+locationVarArray[0]+","+locationVarArray[1]:locationVarArray[0])+"]");
-		if(twoVars && myType.equals(GisObjectType.multipoint)) {
+		if(twoVars && myType.equals(GisObjectType.Multipoint)) {
 			Log.e("vortex","Multivar on multipoint!");
 			o.addRow("");
 			o.addRedText("Multipoint can only have one Location variable with comma separated values, eg. GPSX_1,GPSY_1,...GPSX_n,GPSY_n");
@@ -228,7 +231,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 			pickerLocation1 = GlobalState.getInstance().getDb().getAllVariableInstances(coordVar1S);
 
 		if (twoVars) {
-			 
+
 			DataType t2 = al.getnumType(al.getCompleteVariableDefinition(locationVar2));
 			coordVar2S = GlobalState.getInstance().getDb().createSelection(objKeyHash.keyHash, locationVar2);
 			Log.d("vortex","selection: "+coordVar2S.selection);
@@ -251,137 +254,144 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 
 
 		if (pickerLocation1 !=null ) {
+			if (createAllowed) {
+				Log.d("vortex","Adding type to create menu for "+nName);
+				gisB.addGisObjectType(this);
+			}
 			myGisObjects = new HashSet<GisObject> ();
 			boolean hasValues = pickerLocation1.moveToFirst();
 			//No values! A dynamic variable can create new ones, so create object anyway.
 			if ((!hasValues&&dynamic) || (hasValues&&dynamic&&twoVars&&!pickerLocation2.moveToFirst())) {
-					Log.e("vortex","no X,Y instances found for keychain..creating empty");
-					Variable v1 = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(objKeyHash.keyHash, locationVar1);
-					if (v1==null){
-						Log.e("vortex", locationVar1+" does not exist. Check your configuration!");
-						o.addRow("");
-						o.addRedText("Cannot find variable "+locationVar1);
-						return;
-					}
-					if (twoVars) {
-						Variable v2 = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(objKeyHash.keyHash, locationVar2);
-						if (v2==null){
-							Log.e("vortex", locationVar2+" does not exist. Check your configuration!");
-							o.addRow("");
-							o.addRedText("Cannot find variable "+locationVar2);
-							return;
-						}
-						myGisObjects.add(new DynamicGisPoint(this,objKeyHash.keyHash, v1,v2,null));
-					} else
-						myGisObjects.add(new DynamicGisPoint(this,objKeyHash.keyHash, v1,null));
-			} else {
-				if (!hasValues && !dynamic) {
+				Log.e("vortex","no X,Y instances found for keychain..creating empty");
+				Variable v1 = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(objKeyHash.keyHash, locationVar1);
+				if (v1==null){
+					Log.e("vortex", locationVar1+" does not exist. Check your configuration!");
 					o.addRow("");
-					o.addRedText("No values in database for static GisPObject with name "+nName+" ...skipping");
+					o.addRedText("Cannot find variable "+locationVar1);
 					return;
 				}
+				if (twoVars) {
+					Variable v2 = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(objKeyHash.keyHash, locationVar2);
+					if (v2==null){
+						Log.e("vortex", locationVar2+" does not exist. Check your configuration!");
+						o.addRow("");
+						o.addRedText("Cannot find variable "+locationVar2);
+						return;
+					}
+					myGisObjects.add(new DynamicGisPoint(this,objKeyHash.keyHash, v1,v2,null));
+				} else
+					myGisObjects.add(new DynamicGisPoint(this,objKeyHash.keyHash, v1,null));
+			} else {
+
+
 				if (hasValues&&twoVars&&pickerLocation2!=null&&!pickerLocation2.moveToFirst()) {
 					Log.e("vortex","Missing values!!!");
 					o.addRow("");
 					o.addRedText("Cannot find any instances of secondary loc variable "+locationVar2);
 					return;
 				}
-								
-				Map <String,Variable> statusVarM=null;
-				boolean foundStatusVar = false;
-				if (pickerStatusVars!=null) 
-					foundStatusVar=pickerStatusVars.moveToFirst();
-					
-				 
-				while (foundStatusVar) {
-					String value  = pickerStatusVars.getVariable().value;
-					Variable statusVar = GlobalState.getInstance().getVariableConfiguration().getCheckedVariable(pickerStatusVars.getKeyColumnValues(),pickerStatusVars.getVariable().name,value,true);
-					if (statusVarM == null) 
-						statusVarM = new HashMap<String,Variable>();
-					statusVarM.put(statusVar.getKeyChain().get("uid"), statusVar);
-					Log.d("vortex","added statusvar");
-					foundStatusVar = pickerStatusVars.next();
-				} 
-				
+
+				if (!hasValues && !dynamic) {
+					Log.d("vortex","No values in database for static GisPObject with name "+nName);
+					o.addRow("No values in database for static GisPObject with name "+nName);
+				} else {
+					Map <String,Variable> statusVarM=null;
+					boolean foundStatusVar = false;
+					if (pickerStatusVars!=null) 
+						foundStatusVar=pickerStatusVars.moveToFirst();
 
 
-				do {
-					
-					storedVar1 = pickerLocation1.getVariable();
-					Log.d("vortex","Found "+storedVar1.value+" for "+storedVar1.name);
-					map1 = pickerLocation1.getKeyColumnValues();
-					Log.d("vortex","Found columns "+map1.toString()+" for "+storedVar1.name);
-					Log.d("vortex","bitmap null? "+(icon==null));
-					Variable v1=null,v2=null,statusVar=null;
-					//If status variable has a value in database, use it. 
-					if (statusVarM!=null) 
-						statusVar = statusVarM.get(pickerLocation1.getKeyColumnValues().get("uid"));
-					//if there is a statusvariable defined, but no value found, create a new empty variable.
-					if (statusVariable !=null && statusVar == null) {
-						currYearH.put("uid", pickerLocation1.getKeyColumnValues().get("uid"));
-						statusVar = GlobalState.getInstance().getVariableConfiguration().getCheckedVariable(currYearH,statusVariable,"0",true);
-					}
-					if (dynamic) {
-						String value = pickerLocation1.getVariable().value;
-						v1 = GlobalState.getInstance().getVariableConfiguration().getCheckedVariable(pickerLocation1.getKeyColumnValues(),storedVar1.name,value,true);
-					}
-					if (twoVars) {
-						storedVar2 = pickerLocation2.getVariable();
-						Log.d("vortex","Found "+storedVar2.value+" for "+storedVar2.name);
-						map2 = pickerLocation1.getKeyColumnValues();
-						Log.d("vortex","Found columns "+map2.toString()+" for "+storedVar2.name);
-						if (!Tools.sameKeys(map1, map2)) {
-							Log.e("vortex","key mismatch in db fetch: X key:"+map1.toString()+"\nY key: "+map2.toString());
-						} else {
-							if (!dynamic) {
-								myGisObjects.add(new StaticGisPoint(this,map1, new SweLocation(storedVar1.value,storedVar2.value),statusVar));
-							}
-							else {
-								String value = pickerLocation2.getVariable().value;
-								v2 = GlobalState.getInstance().getVariableConfiguration().getCheckedVariable(pickerLocation1.getKeyColumnValues(),storedVar2.name,value,true);
-								if (v1!=null && v2!=null) 
-									myGisObjects.add(new DynamicGisPoint(this,map1, v1,v2,statusVar));
+					while (foundStatusVar) {
+						String value  = pickerStatusVars.getVariable().value;
+						Variable statusVar = GlobalState.getInstance().getVariableConfiguration().getCheckedVariable(pickerStatusVars.getKeyColumnValues(),pickerStatusVars.getVariable().name,value,true);
+						if (statusVarM == null) 
+							statusVarM = new HashMap<String,Variable>();
+						statusVarM.put(statusVar.getKeyChain().get("uid"), statusVar);
+						Log.d("vortex","added statusvar");
+						foundStatusVar = pickerStatusVars.next();
+					} 
+
+
+
+					do {
+
+						storedVar1 = pickerLocation1.getVariable();
+						Log.d("vortex","Found "+storedVar1.value+" for "+storedVar1.name);
+						map1 = pickerLocation1.getKeyColumnValues();
+						Log.d("vortex","Found columns "+map1.toString()+" for "+storedVar1.name);
+						Log.d("vortex","bitmap null? "+(icon==null));
+						Variable v1=null,v2=null,statusVar=null;
+						//If status variable has a value in database, use it. 
+						if (statusVarM!=null) 
+							statusVar = statusVarM.get(map1.get("uid"));
+						//if there is a statusvariable defined, but no value found, create a new empty variable.
+						if (statusVariable !=null && statusVar == null) {
+							currYearH.put("uid",map1.get("uid"));
+							statusVar = GlobalState.getInstance().getVariableConfiguration().getCheckedVariable(currYearH,statusVariable,"0",true);
+						}
+						if (dynamic) {
+							String value = pickerLocation1.getVariable().value;
+							v1 = GlobalState.getInstance().getVariableConfiguration().getCheckedVariable(pickerLocation1.getKeyColumnValues(),storedVar1.name,value,true);
+						}
+						if (twoVars) {
+							storedVar2 = pickerLocation2.getVariable();
+							Log.d("vortex","Found "+storedVar2.value+" for "+storedVar2.name);
+							map2 = pickerLocation1.getKeyColumnValues();
+							Log.d("vortex","Found columns "+map2.toString()+" for "+storedVar2.name);
+							if (!Tools.sameKeys(map1, map2)) {
+								Log.e("vortex","key mismatch in db fetch: X key:"+map1.toString()+"\nY key: "+map2.toString());
+							} else {
+								if (!dynamic) {
+									myGisObjects.add(new StaticGisPoint(this,map1, new SweLocation(storedVar1.value,storedVar2.value),statusVar));
+								}
 								else {
-									Log.e("vortex","cannot create dyna 2 gis obj. One or both vars is null: "+v1+","+v2);
-									continue;
+									String value = pickerLocation2.getVariable().value;
+									v2 = GlobalState.getInstance().getVariableConfiguration().getCheckedVariable(pickerLocation1.getKeyColumnValues(),storedVar2.name,value,true);
+									if (v1!=null && v2!=null) 
+										myGisObjects.add(new DynamicGisPoint(this,map1, v1,v2,statusVar));
+									else {
+										Log.e("vortex","cannot create dyna 2 gis obj. One or both vars is null: "+v1+","+v2);
+										continue;
+									}
 								}
 							}
-						}
-						if (!pickerLocation2.next())
-							break;
-					} else {
-						if (myType.equals(GisObjectType.point)) {
-							if (!dynamic)
-								myGisObjects.add(new StaticGisPoint(this,map1, new SweLocation(storedVar1.value),statusVar));
-							else
-								myGisObjects.add(new DynamicGisPoint(this,map1,v1,statusVar));
-						}
-						else if (myType.equals(GisObjectType.multipoint)||myType.equals(GisObjectType.linestring))
-							myGisObjects.add(new GisMultiPointObject(this,map1,GisObject.createListOfLocations(storedVar1.value,coordType)));
+							if (!pickerLocation2.next())
+								break;
+						} else {
+							if (myType.equals(GisObjectType.Point)) {
+								if (!dynamic)
+									myGisObjects.add(new StaticGisPoint(this,map1, new SweLocation(storedVar1.value),statusVar));
+								else
+									myGisObjects.add(new DynamicGisPoint(this,map1,v1,statusVar));
+							}
+							else if (myType.equals(GisObjectType.Multipoint)||myType.equals(GisObjectType.Linestring))
+								myGisObjects.add(new GisMultiPointObject(this,map1,GisObject.createListOfLocations(storedVar1.value,coordType)));
 
-						else if (myType.equals(GisObjectType.polygon)) {
-							Log.d("vortex","Adding polygon");
-							myGisObjects.add(new GisPolygonObject(this,map1,storedVar1.value,coordType));
+							else if (myType.equals(GisObjectType.Polygon)) {
+								Log.d("vortex","Adding polygon");
+								myGisObjects.add(new GisPolygonObject(this,map1,storedVar1.value,coordType));
+							}
 						}
-					}
-					//Add these variables to bag 
+						//Add these variables to bag 
 
-				} while (pickerLocation1.next());
-				Log.d("vortex","Added "+myGisObjects.size()+" objects");
+					} while (pickerLocation1.next());
+					Log.d("vortex","Added "+myGisObjects.size()+" objects");
 
+				}
 			}
 		} else
 			Log.e("vortex","picker was null");
-		if (target!=null&&target.length()>0 && myGisObjects!=null && !myGisObjects.isEmpty()) {
+		//Add type to layer. Add even if empty.
+		if (target!=null) {//&&target.length()>0 && myGisObjects!=null && !myGisObjects.isEmpty()) {
 			//Add bag to layer.
 			GisLayer myLayer=myContext.getCurrentGis().getGis().getLayer(target);
-			//Apply radius to all point objects, if any.
 			if (myLayer!=null) {
 				myLayer.addObjectBag(nName,myGisObjects,dynamic);
 
 			} else {
-				Log.e("vortex","Layer was null! "+target);
-
+				Log.e("vortex","Could not find layer ["+target+"] for type "+nName);
+				o.addRow("");
+				o.addRedText("Could not find layer ["+target+"]. This means that type "+nName+" was not added");
 			}
 		}
 		loadDone=true;
@@ -391,6 +401,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 	private class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
 
 		WF_Gis_Map gisB;
+		int tries =10;
 		public DownloadImageTask(WF_Gis_Map gisB) {
 			this.gisB=gisB;
 		}
@@ -409,7 +420,11 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 		}
 
 		protected void onPostExecute(final Bitmap result) {
-			if(!loadDone) {
+			if(!loadDone)
+				Log.e("vortex","In load bitmap postexecute, but load failed or not done");
+			icon=result;
+			/*
+			if(!loadDone&&tries-->0) {
 				Log.e("vortex","not done loading objects!!");
 				final Handler handler = new Handler();
 				handler.postDelayed(new Runnable() {
@@ -420,11 +435,11 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 				}, 1000);
 			}
 			else {
-				Log.e("vortex","setting bitmaps!!");
+				Log.e("vortex","setting bitmaps or giving up");
 				icon=result;
 				if(gisB!=null)
 					gisB.getGis().invalidate();
-			}
+			}*/
 		}
 	}
 
@@ -481,7 +496,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 
 
 	@Override
-	public Style getFillType() {
+	public Style getStyle() {
 		return fillType;
 	}
 
@@ -503,9 +518,14 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 	public String getStatusVariable() {
 		return statusVariable;
 	}
-	
+
 	public boolean isUser() {
 		return isUser;
+	}
+
+	@Override
+	public String getName() {
+		return nName;
 	}
 
 

@@ -26,7 +26,7 @@
     </FrameLayout>
 
     <Button
-        android:id="@+id/backB"
+        android:id="@+id/createBackB"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="30sp"

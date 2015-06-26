@@ -208,8 +208,11 @@ public class Table implements Serializable {
 			if (row.size()>index)
 				result = row.get(index);
 			//Log.d("nils","found field "+columnName+": "+result+" in class Table");
-		} else
-			Log.e("nils","Did NOT find field "+columnName+" in class Table");
+		} else {
+			Log.e("nils","Did NOT find field ["+columnName+"] in class Table. Columns available:");
+			for (int i=0;i<myColumns.size();i++)
+				Log.e("vortex","["+myColumns.get(i)+"]");
+		}
 		return result;
 	}
 

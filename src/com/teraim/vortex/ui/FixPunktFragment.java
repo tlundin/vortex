@@ -61,7 +61,7 @@ public class FixPunktFragment extends Fragment implements OnGesturePerformedList
 	
 		final FrameLayout fl = (FrameLayout)v.findViewById(R.id.circle);
 		
-		final Button backB = (Button)v.findViewById(R.id.backB);
+		final Button backB = (Button)v.findViewById(R.id.createBackB);
 		backB.setOnClickListener(new OnClickListener() {			
 			@Override
 			public void onClick(View v) {

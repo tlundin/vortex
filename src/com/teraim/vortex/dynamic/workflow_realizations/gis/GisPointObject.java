@@ -17,43 +17,34 @@ import com.teraim.vortex.utils.Tools;
 public abstract class GisPointObject extends GisObject {
 
 	protected FullGisObjectConfiguration poc; 
-	private Variable statusVar=null;
+
 	private String label;
 	private int[] xy=null;
 	
 	public GisPointObject(FullGisObjectConfiguration poc,Map<String, String> keyChain,List<Location> myCoordinates, Variable statusVar) {
-		super(keyChain,myCoordinates);
+		super(poc,keyChain,myCoordinates,statusVar);
 		this.poc=poc;
-		this.statusVar=statusVar;
 		this.label = Tools.parseString(poc.getLabel(),keyChain);
 	}
 	public abstract Location getLocation();
 	public abstract boolean isDynamic();
 	public abstract boolean isUser();
+	
 	public Bitmap getIcon() {
 		return poc.getIcon();
 	}
 	public float getRadius() {
 		return poc.getRadius();
 	}
-	public String getColor() {
-		return poc.getColor();
-	}
+
 	public boolean isCircle() {
 		return poc.getShape()== PolyType.circle;
 	}
 	public boolean isRect() {
 		return poc.getShape()== PolyType.rect;
 	}
-	
-	public String getWorkflow() {
-		return poc.getClickFlow();
-	}
-	
-	public Variable getStatusVariable() {
-		return statusVar;
-	}
-	
+
+
 
 
 	@Override
@@ -82,7 +73,7 @@ public abstract class GisPointObject extends GisObject {
 		return false;
 	}
 	public Style getStyle() {
-		return poc.getFillType();
+		return poc.getStyle();
 	}
 	
 	public String getLabel() {

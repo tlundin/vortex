@@ -670,7 +670,7 @@ public class Tools {
 	}
 
 	public static void cacheImage(final String url, final String folder) {
-		
+		Log.d("vortex","In Cache image with url "+url+" and folder "+folder);
 		(new DownloadTask(new WebLoaderCb(){@Override
 		public void loaded(Boolean result) {
 			if (result)
@@ -699,8 +699,8 @@ public class Tools {
 				Log.e("vortex","filename or url name corrupt in downloadtask");
 				return false;
 			}
-			String fileName = fileNameAndUrl[0];
-			String url = fileNameAndUrl[1];
+			String fileName = fileNameAndUrl[0].trim();
+			String url = fileNameAndUrl[1].trim();
 			String folder = fileNameAndUrl[2];
 			if (!url.startsWith(protoH))
 				url=protoH+url;
@@ -749,6 +749,7 @@ public class Tools {
 	    BufferedInputStream in = null;
 	    FileOutputStream fout = null;
 	    try {
+	    	Log.d("vortex","urlString: "+urlString);
 	        in = new BufferedInputStream(new URL(urlString).openStream());
 	        fout = new FileOutputStream(filename);
 

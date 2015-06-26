@@ -11,12 +11,13 @@ public class GisMultiPointObject extends GisObject {
 	private FullGisObjectConfiguration poc;
 	
 	public GisMultiPointObject(FullGisObjectConfiguration conf,Map<String, String> keyChain,List<Location> myCoordinates) {
-		super(keyChain,myCoordinates);
+		//TODO: Add statusvariable.
+		super(conf,keyChain,myCoordinates,null);
 		poc = conf;
 	}
 	
 	public boolean isLineString() {
-		return poc.getGisPolyType()==GisObjectType.linestring;
+		return poc.getGisPolyType()==GisObjectType.Linestring;
 	}
 
 	

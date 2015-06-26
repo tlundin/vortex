@@ -742,4 +742,9 @@ public class GestureImageView extends ImageView  {
 	public int getDeviceOrientation() {
 		return deviceOrientation;
 	}
+	
+	//Change zoom.
+	public void startZoom(float x, float y, float zoomFactor) {
+		gestureImageViewTouchListener.startZoom(x, y, zoomFactor);
+	}
 }
