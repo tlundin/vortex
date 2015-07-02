@@ -1,27 +1,39 @@
 package com.teraim.vortex.dynamic.workflow_realizations.gis;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ActionBar.LayoutParams;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.net.Uri;
 import android.util.Log;
+import android.view.ActionMode;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.RadioGroup;
+import android.widget.Spinner;
 import android.widget.TextSwitcher;
 import android.widget.TextView;
 import android.widget.ViewSwitcher.ViewFactory;
@@ -29,6 +41,8 @@ import android.widget.ViewSwitcher.ViewFactory;
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
 import com.teraim.vortex.dynamic.types.PhotoMeta;
+import com.teraim.vortex.dynamic.types.Variable;
+import com.teraim.vortex.dynamic.types.Variable.DataType;
 import com.teraim.vortex.dynamic.workflow_abstracts.Drawable;
 import com.teraim.vortex.dynamic.workflow_abstracts.Event;
 import com.teraim.vortex.dynamic.workflow_abstracts.EventListener;
@@ -70,6 +84,59 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 	private List<FullGisObjectConfiguration> myGisObjectTypes;
 	private Button createBackB;
 	private Button createOkB;
+	
+	
+	private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
+
+		// Called when the action mode is created; startActionMode() was called
+		@Override
+		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+			// Inflate a menu resource providing context menu items
+			MenuInflater inflater = mode.getMenuInflater();
+			inflater.inflate(R.menu.gis_longpress_menu, menu);
+
+			return true;
+		}
+
+		// Called each time the action mode is shown. Always called after onCreateActionMode, but
+		// may be called multiple times if the mode is invalidated.
+		@Override
+		public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+			MenuItem x = menu.getItem(0);
+			MenuItem y = menu.getItem(1);
+
+
+			return false; // Return false if nothing is done
+		}
+
+		// Called when the user selects a contextual menu item
+		@Override
+		public boolean onActionItemClicked(final ActionMode mode, MenuItem item) {
+			switch (item.getItemId()) {
+			        
+			case R.id.menu_delete:
+				gisImageView.deleteSelectedGop();
+				mode.finish(); // Action picked, so close the CAB
+				return true;
+			case R.id.menu_info:
+				gisImageView.describeSelectedGop();
+				return false;
+			default:
+				return false;
+			}
+		}
+
+		// Called when the user exits the action mode
+		@Override
+		public void onDestroyActionMode(ActionMode mode) {
+			mActionMode = null;
+			gisImageView.unSelectGop();
+		}
+	};
+
+	ActionMode mActionMode;
+	
+		
 
 	public WF_Gis_Map(String id, final FrameLayout mapView, boolean isVisible, String picUrlorName,
 			final WF_Context myContext, PhotoMeta photoMeta, View avstRL, View createMenuL) {
@@ -121,7 +188,7 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 			public void onClick(View v) {
 				
 				if (!animationRunning) {
-					if (!gisObjMenuOpen) {
+					if (!gisObjMenuOpen && mActionMode==null) {
 						gisImageView.cancelGisObjectCreation();
 						gisObjectsPopUp.startAnimation(popupShow);
 						mapView.invalidate();
@@ -133,7 +200,7 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 			}
 		});
 		centerB = (Button)mapView.findViewById(R.id.centerUserB);
-
+		centerB.setVisibility(View.INVISIBLE);
 		centerB.setOnClickListener(new OnClickListener() {
 
 			@Override
@@ -229,7 +296,25 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 
 		myGisObjectTypes = new ArrayList<FullGisObjectConfiguration>();
 	}
+	
+	
+	public void startActionModeCb() {
+		if (!gisObjMenuOpen && mActionMode==null) {
+		// Start the CAB using the ActionMode.Callback defined above
+		mActionMode = ((Activity)myContext.getContext()).startActionMode(mActionModeCallback);
+		} else {
+			Log.d("vortex","Actionmode already running or gisObjMenu open...");
+		}
+	}
 
+	public void stopActionModeCb() {
+		if (mActionMode == null) {
+			Log.d("vortex","Actionmode not running");
+			return;
+		} else
+			mActionMode.finish();
+	}
+	
 	public GisImageView getGis() {
 		return gisImageView;
 	}
@@ -269,6 +354,12 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 			createMenuL.setVisibility(View.INVISIBLE);
 	}
 
+	public void showCenterButton(boolean isVisible) {
+		if (isVisible)
+			centerB.setVisibility(View.VISIBLE);
+		else
+			centerB.setVisibility(View.INVISIBLE);
+	}
 
 	@Override
 	public void onEvent(Event e) {
@@ -337,6 +428,9 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 		//swap in buttons for create mode. 
 		gisImageView.startGisObjectCreation(fop);
 	}
+
+
+	
 
 
 

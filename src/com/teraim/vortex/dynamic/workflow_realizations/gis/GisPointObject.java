@@ -102,12 +102,7 @@ public abstract class GisPointObject extends GisObject {
 	public boolean getCachedFilterResult(GisFilter filter) {
 		return filterCache.get(filter);
 	}
-	public double getX() {
-		return super.getCoordinates().get(0).getX();
-	}
-	public double getY() {
-		return super.getCoordinates().get(0).getY();
-	}
+
 	public int[] getTranslatedLocation() {
 		return xy;
 	}

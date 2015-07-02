@@ -134,13 +134,8 @@ public class VariableConfiguration implements Serializable {
 	public boolean isLocal(List<String> row) {
 		String s= row.get(fromNameToColumn.get(requiredColumns.get(SCOPE)));
 		//Log.d("nils","getvarislocal uses string "+s);
-		if (s==null||s.length()==0||s.equals(Scope.global_sync.name()))
-			return false;//Scope.global_sync;
-		else if (s.equals(Scope.local_nosync.name())) {
-			//return Scope.local_nosync;
-			return true;
-		} else 
-			return false;
+		return (s!=null && s.startsWith("local"));
+
 		/*
 		else if (s.equals(Scope.local_sync))
 			return Scope.local_sync;

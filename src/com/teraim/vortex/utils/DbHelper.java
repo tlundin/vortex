@@ -31,6 +31,8 @@ import com.teraim.vortex.dynamic.types.Table;
 import com.teraim.vortex.dynamic.types.VarCache;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.types.Variable.DataType;
+import com.teraim.vortex.dynamic.workflow_realizations.gis.GisConstants;
+import com.teraim.vortex.dynamic.workflow_realizations.gis.GisObject;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.non_generics.DelyteManager;
 import com.teraim.vortex.non_generics.NamedVariables;
@@ -1355,6 +1357,25 @@ public class DbHelper extends SQLiteOpenHelper {
 				yCol+"=? AND "+rCol+"=? AND "+pyCol+"=? AND var = 'Delyta'", new String[] {Constants.getYear(),currentRuta,currentProvyta});
 		Log.d("nils","Affected rows in eraseSmaProvyDelytaAssoc: "+affRows);
 	}
+	
+	public void deleteAllVariablesUsingKey(Map<String,String> keyHash) {
+		if (keyHash == null)
+			return;
+		String queryP="";
+		String[] valA = new String[keyHash.keySet().size()];
+		Iterator<String> it = keyHash.keySet().iterator();
+		String key; int i=0;
+		while (it.hasNext()) {
+			key = it.next();
+			queryP += getColumnName(key) + "= ?";
+			if (it.hasNext())
+				queryP += " AND ";
+			valA[i++]=keyHash.get(key);
+		}
+		int affRows = db.delete(DbHelper.TABLE_VARIABLES, 
+				queryP, valA);
+		Log.d("vortex","Deleted "+affRows+"entries in deleteAllVariablesUsingKey");
+	}
 
 
 	final ContentValues valuez = new ContentValues();
@@ -1441,6 +1462,21 @@ public class DbHelper extends SQLiteOpenHelper {
 		}
 		return true;
 	}
+	
+	
+	public void insertGisObject(GisObject go) {
+		boolean succ = true;
+		succ = fastHistoricalInsert(go.getKeyHash(),
+				GisConstants.Location,go.coordsToString());
+		succ = fastHistoricalInsert(go.getKeyHash(),
+				GisConstants.Geo_Type,go.getGisPolyType().name());
+		
+		if (!succ){
+			Log.e("vortex","Insert failed for "+GisConstants.Location+". Hash: "+go.getKeyHash().toString());
+		} else
+			Log.d("vortex","succesfully inserted new gisobject");
+	}
+	
 	/*	
 	public String getHistoricalValue(String varName,Map<String, String> keyChain) {
 		HashMap<String, String> histKeyChain = new HashMap<String,String>(keyChain);
@@ -1566,6 +1602,8 @@ public class DbHelper extends SQLiteOpenHelper {
 		db.setTransactionSuccessful();
 		db.endTransaction();
 	}
+
+
 
 	
 }

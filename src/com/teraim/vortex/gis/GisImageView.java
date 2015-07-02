@@ -30,6 +30,7 @@ import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
+import android.view.View.OnLongClickListener;
 import android.widget.TextSwitcher;
 import android.widget.TextView;
 
@@ -46,6 +47,7 @@ import com.teraim.vortex.dynamic.types.Workflow;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnSave;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.FullGisObjectConfiguration;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.FullGisObjectConfiguration.GisObjectType;
+import com.teraim.vortex.dynamic.workflow_realizations.gis.GisConstants;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisFilter;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisMultiPointObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisObject;
@@ -93,7 +95,7 @@ public class GisImageView extends GestureImageView {
 
 
 	Variable myX, myY;
-	GisPointObject touchedGop = null;
+	GisObject touchedGop = null;
 
 
 
@@ -104,6 +106,7 @@ public class GisImageView extends GestureImageView {
 
 	private Paint paintSimple;
 
+	private boolean clickWasShort=false;
 
 
 	public GisImageView(Context context) {
@@ -206,12 +209,71 @@ public class GisImageView extends GestureImageView {
 		Log.d("vortex","Fixscale is "+fixScale);
 
 		setOnClickListener(new OnClickListener() {
+
 			@Override
 			public void onClick(View v) {
-				checkForTargets(polyVertexX,polyVertexY);
+				if (clickXY!=null)
+					return;
+				
+				calculateMapLocationForClick(polyVertexX,polyVertexY);
+				
+				
+				if (gisTypeToCreate!=null) {
+					//GisObject newP = StaticGisPoint(gisTypeToCreate, Map<String, String> keyChain,Location myLocation, Variable statusVar)
+
+					List<Location> myDots;
+
+					if (newGisObj ==null) {
+
+						Set<GisObject> bag;
+						for (GisLayer l:myLayers.values()) { 
+
+							bag = l.getBagOfType(gisTypeToCreate.getName());
+							if (bag!= null) {
+								Log.d("vortex","found correct bag!");
+								newGisObj = createNewGisObject(gisTypeToCreate,bag);
+							}
+						}
+					}
+					if (newGisObj !=null) {
+					if (gisTypeToCreate.getGisPolyType()==GisObjectType.Linestring) {
+						myDots = newGisObj.getCoordinates();
+						myDots.add(mapLocationForClick);
+					} else if (gisTypeToCreate.getGisPolyType()==GisObjectType.Polygon) {
+						//Todo: Change this. currently assumed poly is under 1.
+						myDots = ((GisPolygonObject)newGisObj).getPolygons().get("Poly 1");
+						myDots.add(mapLocationForClick);
+					}
+
+
+					}
+				}
+				clickWasShort = true;
+				invalidate();
+	
+							
+				
+			
 			}
 		});
 
+		final int SearchRadiusInMeter = 50;
+		
+		setOnLongClickListener(new OnLongClickListener() {
+			
+			@Override
+			public boolean onLongClick(View v) {
+				if (clickXY!=null)
+					return false;
+				calculateMapLocationForClick(polyVertexX,polyVertexY);
+				clickWasShort = false;
+				invalidate();
+				return true;
+			}
+
+
+		});
+		
 
 
 		//make sure cursor blinks.
@@ -329,7 +391,7 @@ public class GisImageView extends GestureImageView {
 	}
 
 
-	private int[] translateMapToRealCoordinates(float scale, Location l) {
+	private int[] translateMapToRealCoordinates(Location l) {
 
 		double mapDistX = l.getX()-photoMetaData.W;
 		if (mapDistX <=imgWReal && mapDistX>=0)
@@ -448,40 +510,12 @@ public class GisImageView extends GestureImageView {
 	//Determine if something clicked. If so, open a something dialog.
 
 
-	public void checkForTargets(float x, float y) {
+	public void calculateMapLocationForClick(float x, float y) {
 		//Figure out geo coords from pic coords.
 		clickXY=translateToReal(x,y);
 		mapLocationForClick = translateRealCoordinatestoMap(clickXY);
 		Log.d("vortex","click at "+mapLocationForClick.getX()+","+mapLocationForClick.getY());
 		//Check if button is up & clicked.
-
-		if (gisTypeToCreate!=null) {
-			//GisObject newP = StaticGisPoint(gisTypeToCreate, Map<String, String> keyChain,Location myLocation, Variable statusVar)
-
-			List<Location> myDots;
-
-			if (newGisObj ==null) {
-
-				Set<GisObject> bag;
-				for (GisLayer l:myLayers.values()) { 
-
-					bag = l.getBagOfType(gisTypeToCreate.getName());
-					if (bag!= null) {
-						Log.d("vortex","found correct bag!");
-						newGisObj = createNewGisObject(gisTypeToCreate,bag);
-					}
-				}
-			}
-			if (newGisObj !=null) {
-			if (gisTypeToCreate.getGisPolyType()==GisObjectType.Linestring) {
-				myDots = newGisObj.getCoordinates();
-				myDots.add(mapLocationForClick);
-			}
-
-			}
-		}
-
-		this.invalidate();
 	}
 
 	//Temp method to create a new gis object based on keyhash + UID. 
@@ -514,6 +548,11 @@ public class GisImageView extends GestureImageView {
 				myDots = new ArrayList<Location>();
 				ret = new GisMultiPointObject(gisTypeToCreate, keyH.keyHash,myDots);	
 				break;
+			case Polygon:
+				ret = new GisPolygonObject(gisTypeToCreate, keyH.keyHash,
+						"",GisConstants.SWEREF);
+				break;
+				
 			}
 			bag.add(ret);	
 			myMap.setVisibleCreate(true);						
@@ -551,6 +590,7 @@ public class GisImageView extends GestureImageView {
 	}
 
 	public void createOk() {
+		GlobalState.getInstance().getDb().insertGisObject(newGisObj);
 		this.runSelectedWf(newGisObj);	
 		gisTypeToCreate=null;
 		newGisObj=null;
@@ -658,13 +698,14 @@ public class GisImageView extends GestureImageView {
 
 	//private Rect bRect = null;
 	//private GisPointObject clickedGisObject=null;
-	private int[] riktL = null;
 
 	private GisPointObject userGop;
 
+	private Set<GisObject> touchedBag;
 
 
-	private GisPointObject getClickedObject() {
+
+	private GisObject getClickedObject() {
 		return touchedGop;
 	}
 
@@ -697,9 +738,9 @@ public class GisImageView extends GestureImageView {
 				if (!bags.isEmpty()) {
 					for (String key:bags.keySet()) {
 						Set<GisFilter> filters = filterMap.get(key);
-						Set<GisObject> gisObjects = bags.get(key);
+						Set<GisObject> bagOfObjects = bags.get(key);
 						//Log.d("vortex","Found "+gisObjects.size()+" objects");
-						Iterator<GisObject> iterator = gisObjects.iterator();
+						Iterator<GisObject> iterator = bagOfObjects.iterator();
 						while (iterator.hasNext()) {
 							GisObject go = iterator.next();
 							if (go instanceof GisPointObject) {
@@ -717,20 +758,23 @@ public class GisImageView extends GestureImageView {
 										iterator.remove();
 										continue;
 									} 
-									xy = translateMapToRealCoordinates(adjustedScale,l);
+									xy = translateMapToRealCoordinates(l);
 									if (xy==null) {
 										//If not on map, remove it.
 										if (!gop.isDynamic())
 											iterator.remove();
 										else {
 											//if user is outside map, remove usergop to prevent centering outside map image.
-											if (gop.equals(userGop))
+											if (gop.equals(userGop)) {
+												myMap.showCenterButton(true);
 												userGop=null;
+											}
 										}
 										continue;
 									} else {
 										if (gop.isUser()) {
 											userGop = gop;
+											myMap.showCenterButton(true);
 										}
 										gop.setTranslatedLocation(xy);
 									}
@@ -739,18 +783,7 @@ public class GisImageView extends GestureImageView {
 								pXR = this.getImageWidth()/photoMetaData.getWidth();
 								pYR = this.getImageHeight()/photoMetaData.getHeight();
 
-								if (gisTypeToCreate == null && touchedGop ==null && mapLocationForClick!=null && gop.isTouchedByClick(mapLocationForClick,pXR,pYR) && !gop.equals(userGop)) {
-									touchedGop = gop;
-									myMap.setVisibleAvstRikt(true);
-									//create a line between current location and gop.
-									if (myX!=null && myY!=null && myX.getValue()!=null && myY.getValue()!=null) {
-										Log.d("vortex","Creating riktlinje");
-										double mX = Double.parseDouble(myX.getValue());
-										double mY = Double.parseDouble(myY.getValue());
-										riktL  = translateMapToRealCoordinates(adjustedScale,new SweLocation(mX,mY));
-									}
-									continue;
-								} 
+								
 								Bitmap bitmap = gop.getIcon();
 								float radius = gop.getRadius();
 								String color = gop.getColor();
@@ -815,41 +848,24 @@ public class GisImageView extends GestureImageView {
 								List<Location> ll = go.getCoordinates();
 								if (ll!=null) {
 									if (gop.isLineString()) {
-										Log.d("vortex","Drawing linestring!!");
+										//Log.d("vortex","Drawing linestring!!");
 										boolean first=true;
 										Path p = new Path();
+										
 										int[] xy = new int[2];
 										if (ll.size()==1) {
-											xy = translateMapToRealCoordinates(adjustedScale,ll.get(0));
+											xy = translateMapToRealCoordinates(ll.get(0));
 											if (xy==null)
 												continue;
 											else
 												canvas.drawCircle((float)xy[0],(float)xy[1],5,paintSimple);
 										} else {
-											for (Location l:ll) {
-												xy = translateMapToRealCoordinates(adjustedScale,l);
-												if (xy==null)
-													continue;
-												else
-													Log.d("vortex","not outside!!");
-												if (first) {
-													p.moveTo(xy[0],xy[1]);
-													first =false;
-												} else
-													p.lineTo(xy[0],xy[1]);
-											}
-
-											//Add glow effect if it is currently being drawn.
-											if (go.equals(newGisObj)) {
-												Log.d("vortex","GLOW!!");
-												canvas.drawPath(p, paintBlur);
-											}
-											canvas.drawPath(p, paintSimple);
+											drawGop(canvas,go,false);
 										}
 									} else {
-
+										//Multipoints are not selectable. Only draw the dots.
 										for (Location l:ll) {
-											int[] xy = translateMapToRealCoordinates(adjustedScale,l);
+											int[] xy = translateMapToRealCoordinates(l);
 											if (xy==null)
 												break;
 											Rect r = new Rect();
@@ -860,55 +876,57 @@ public class GisImageView extends GestureImageView {
 								}
 
 							} else if (go instanceof GisPolygonObject) {
-								Log.d("vortex","Drawing Polygons!!");
+								//Log.d("vortex","Drawing Polygons!!");
 								GisPolygonObject gop = (GisPolygonObject)go;
 								Map<String, List<Location>> polys = gop.getPolygons();
 
 								for (List<Location> poly:polys.values()) {
-									String path="";
-									Path p = new Path();
 									int[] xy;
-									boolean first=true;
-									for (Location l:poly) {
-										xy = translateMapToRealCoordinates(adjustedScale,l);
+									if (poly.size()==1) {
+										xy = translateMapToRealCoordinates(poly.get(0));
 										if (xy==null)
-											break;;
-											path+="{"+xy[0]+","+xy[1]+"}";
-											if (first) {
-												p.moveTo(xy[0],xy[1]);
-												first =false;
-											} else
-												p.lineTo(xy[0],xy[1]);	
+											continue;
+										else
+											canvas.drawCircle((float)xy[0],(float)xy[1],5,paintSimple);
+									} else {								
+									
+										drawGop(canvas,go,false);
+									
+									
 									}
-									//p.close();
-									Log.d("vortex","PATH: "+path);
-									canvas.drawPath(p, createPaint(gop.getColor(),gop.getStyle()));
+									//canvas.drawPath(p, createPaint(gop.getColor(),gop.getStyle()));
 								}
 							}
+							if (gisTypeToCreate == null && touchedGop ==null && mapLocationForClick!=null && go.isTouchedByClick(mapLocationForClick,pXR,pYR) && !go.equals(userGop)) {
+								touchedGop = go;
+								touchedBag = bagOfObjects;
+								continue;
+							} 
 						}
 					}
 					//Special rendering of touched gop.
 					if (touchedGop!=null) {
-						String mLabel = touchedGop.getLabel();
-						Location l = touchedGop.getLocation();
-						int[] xy = translateMapToRealCoordinates(adjustedScale,l);
-						if (riktL!=null) {
-							canvas.drawLine(riktL[0], riktL[1], xy[0], xy[1],fgPaintSel);//fgPaintSel
+								
+						drawGop(canvas,touchedGop,true);
+						//if longclick, open the actionbar menu.
+						if (!clickWasShort)
+							myMap.startActionModeCb();
+						else {
+							myMap.setVisibleAvstRikt(true);
+							displayDistanceAndDirection(touchedGop);
+							//create a line between current location and gop.
+							if (myX!=null && myY!=null && myX.getValue()!=null && myY.getValue()!=null) {
+								Log.d("vortex","Creating riktlinje");
+								double mX = Double.parseDouble(myX.getValue());
+								double mY = Double.parseDouble(myY.getValue());
+								int[] riktL  = translateMapToRealCoordinates(new SweLocation(mX,mY));
+								if (riktL!=null)
+									canvas.drawLine(riktL[0], riktL[1], (int)touchedGop.getLocation().getX(), (int)touchedGop.getLocation().getY(),fgPaintSel);//fgPaintSel
+
+							}
+
 						}
-						drawGop(canvas, null, touchedGop.getRadius(), "red", Style.FILL, touchedGop.isCircle(), xy);
-						displayDistanceAndDirection(touchedGop);
-						drawGopLabel(canvas,xy,touchedGop.getLabel(),touchedGop.getRadius(),wCursorPaint,selectedPaint);
-						//String btnT = "Kör flöde >>";
-						//,distR = null,riktR=null,bothR;
-						//btnTxt.getTextBounds(mLabel, 0, mLabel.length(), boundsR);
-						//Rect bbounds = new Rect();
-						//btnTxt.getTextBounds(btnT, 0, btnT.length(), bbounds);
-						//bbounds.offset((int)xy[0]-bbounds.width()/2,(int)(xy[1]+touchedGop.getRadius()*3));
-						//bbounds.set(bbounds.left-2,bbounds.top-2, bbounds.right+2,bbounds.bottom+2);
-
-						//canvas.drawRect(bbounds, blCursorPaint);
-						//canvas.drawText(btnT, xy[0], xy[1]+touchedGop.getRadius()*3, btnTxt);
-
+					
 					} else {
 						myMap.setVisibleAvstRikt(false);
 					}
@@ -925,7 +943,54 @@ public class GisImageView extends GestureImageView {
 		}
 
 		canvas.restore();
+		//Reset any click done. 
+		mapLocationForClick=null;
+		clickXY=null;
+
 	}
+	
+	private void drawGop(Canvas canvas, GisObject go, boolean selected) {
+		int[] xy;
+		//will only be called from here if selected.
+		if (go instanceof GisPointObject) {
+			GisPointObject gop = (GisPointObject)go;
+			xy = translateMapToRealCoordinates(go.getLocation());
+			drawGop(canvas, null,gop.getRadius(), "red", Style.FILL, gop.isCircle(), xy);
+			drawGopLabel(canvas,xy,gop.getLabel(),gop.getRadius(),wCursorPaint,selectedPaint);
+			
+		//Other objects might or might not be selected.
+		} else {
+			List<Location> ll = go.getCoordinates();
+			boolean first = true;
+			//String path="";
+			Path p = new Path();
+			for (Location l:ll) {
+				xy = translateMapToRealCoordinates(l);
+				if (xy==null)
+					continue;
+				if (first) {
+					p.moveTo(xy[0],xy[1]);
+					first =false;
+				} else
+					p.lineTo(xy[0],xy[1]);
+			}
+
+			//Add glow effect if it is currently being drawn.
+			if (go instanceof GisPolygonObject && !go.equals(newGisObj))
+				p.close();
+			if (go.equals(newGisObj)||selected)
+				newLineGlows(canvas,p);
+
+			//Log.d("vortex","PATH: "+path);
+			canvas.drawPath(p, paintSimple);
+		}
+			
+	}
+
+	private void newLineGlows(Canvas canvas, Path p) {
+		canvas.drawPath(p, paintBlur);
+	}
+
 	private void drawGopLabel(Canvas canvas, int[] xy, String mLabel, float radius, Paint bgPaint, Paint txtPaint) {
 		Rect bounds = new Rect();
 		txtPaint.getTextBounds(mLabel, 0, mLabel.length(), bounds);
@@ -961,12 +1026,10 @@ public class GisImageView extends GestureImageView {
 
 	public void unSelectGop() {
 		touchedGop=null;
-		mapLocationForClick=null;
-		riktL=null;
 		invalidate();
 	}
 
-	private void displayDistanceAndDirection(GisPointObject go) {
+	private void displayDistanceAndDirection(GisObject go) {
 		TextSwitcher textSwitcher = new TextSwitcher(this.getContext());
 
 		// specify the in/out animations you wish to use
@@ -991,8 +1054,8 @@ public class GisImageView extends GestureImageView {
 		} else {
 			double mX = Double.parseDouble(myX.getValue());
 			double mY = Double.parseDouble(myY.getValue());
-			double gX = go.getX();
-			double gY = go.getY();
+			double gX = go.getLocation().getX();
+			double gY = go.getLocation().getY();
 
 			int dist = (int)Geomatte.sweDist(mY,mX,gY,gX);
 			int rikt = (int)(Geomatte.getRikt2(mY, mX, gY, gX)*57.2957795);
@@ -1194,6 +1257,8 @@ public class GisImageView extends GestureImageView {
 	}
 
 	public void runSelectedWf() {
+		//update image to close polygon.
+		invalidate();
 		if (touchedGop!=null)
 			runSelectedWf(touchedGop);
 	}
@@ -1242,7 +1307,7 @@ public class GisImageView extends GestureImageView {
 	final static float ScaleTo = 4.0f;
 	public void centerOnUser() {
 		if (userGop!=null) {
-			int[] xy = translateMapToRealCoordinates(-1,userGop.getLocation());
+			int[] xy = translateMapToRealCoordinates(userGop.getLocation());
 			if (xy!=null) {
 				float[] rxy = translateToReal((float)xy[0],(float)xy[1]);
 				float scaleDiff = ScaleTo-scaleAdjust;
@@ -1256,7 +1321,7 @@ public class GisImageView extends GestureImageView {
 				//float newScale = 4.0f-scaleAdjust;
 				startZoom(x, y,scaleDiff);
 			}
-		} else {
+		}/* else {
 			new AlertDialog.Builder(ctx)
 			.setTitle("Context problem")
 			.setMessage("You are either outside map or have no valid GPS location.") 
@@ -1269,7 +1334,7 @@ public class GisImageView extends GestureImageView {
 				}
 			} )
 			.show();
-		}
+		}*/
 	}
 
 	enum CreateState {
@@ -1295,6 +1360,37 @@ public class GisImageView extends GestureImageView {
 		//unselect if selected
 		this.unSelectGop();
 		gisTypeToCreate=fop;
+	}
+
+	public void deleteSelectedGop() {
+		if (touchedGop!=null)
+		GlobalState.getInstance().getDb().deleteAllVariablesUsingKey(touchedGop.getKeyHash());
+		touchedBag.remove(touchedGop);
+		//Dont need to keep track of the bag anymore.
+		touchedBag=null;
+		invalidate();
+	}
+	
+	public void describeSelectedGop() {
+		String hash = "*null*";
+		if (touchedGop.getKeyHash()!=null)
+			hash = touchedGop.getKeyHash().toString();
+		new AlertDialog.Builder(ctx)
+		.setTitle("GIS OBJECT DESCRIPTION")
+		.setMessage("Type: "+touchedGop.getId()+"\nLabel: "+touchedGop.getLabel()+
+				"\nSweref: "+touchedGop.getLocation().getX()+","+touchedGop.getLocation().getY()+
+				"\nAttached workflow: "+touchedGop.getWorkflow()+
+				"\nKeyHash: "+hash+
+				"\nPolygon type: "+touchedGop.getGisPolyType().name())
+		.setIcon(android.R.drawable.ic_menu_info_details)
+		.setCancelable(true)
+		.setNeutralButton("Ok",new Dialog.OnClickListener() {				
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+
+			}
+		} )
+		.show();
 	}
 
 

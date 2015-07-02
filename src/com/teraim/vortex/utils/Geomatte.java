@@ -2,6 +2,8 @@ package com.teraim.vortex.utils;
 
 import android.util.Log;
 
+import com.teraim.vortex.dynamic.types.Location;
+import com.teraim.vortex.dynamic.types.Point;
 import com.teraim.vortex.dynamic.types.SweLocation;
 
 
@@ -23,9 +25,55 @@ public class Geomatte {
 	    return d;
 	}
 	
+	private static double sqr(double x) { return x * x; }
+	private static double dist2(Location v, Location w) { return sqr(v.getX() - w.getX()) + sqr(v.getY() - w.getY()); }
+	private static double distToSegmentSquared(Location p, Location v, Location w) {
+	  double l2 = dist2(v, w);
+	  if (l2 == 0) return dist2(p, v);
+	  double t = ((p.getX() - v.getX()) * (w.getX() - v.getX()) + (p.getY() - v.getY()) * (w.getY() - v.getY())) / l2;
+	  if (t < 0) return dist2(p, v);
+	  if (t > 1) return dist2(p, w);
+	  return dist2(p, new SweLocation(v.getX() + t * (w.getX() - v.getX()),
+	                    v.getY() + t * (w.getY() - v.getY())));
+	}
+	public static double pointToLineDistance3(Location A, Location B, Location P) { return Math.sqrt(distToSegmentSquared(P, A, B)); }
+	
+	
+	public static double pointToLineDistance(Location A, Location B, Location P) {
+		System.out.println("A (X,Y): "+A.getX()+","+A.getY()+" B (X,Y): "+B.getX()+","+B.getY()+" P (X,Y): "+P.getX()+","+P.getY());
+	    double normalLength = Math.sqrt((B.getX()-A.getX())*(B.getX()-A.getX())+(B.getY()-A.getY())*(B.getY()-A.getY()));
+	    System.out.println("normal length: "+normalLength);
+	    return Math.abs((P.getX()-A.getX())*(B.getY()-A.getY())-(P.getY()-A.getY())*(B.getX()-A.getX()))/normalLength;
+	  }
+
+	public static double pointToLineDistance2(Location A, Location B, Location P) {
+	
+
+		double x0 = P.getX();
+		double y0 = P.getY();
+
+		double x1 = A.getX();
+		double y1 = A.getY();
+
+		double x2 = B.getX();
+		double y2 = B.getY();
+
+		double Dx = (x2 - x1);
+		double Dy = (y2 - y1);
+
+		double numerator = Math.abs(Dy*x0 - Dx*y0 - x1*y2 + x2*y1);
+		double denominator = Math.sqrt(Dx*Dx + Dy*Dy);
+		
+		if (denominator == 0) 
+		   return sweDist(y0,x0, y1,x1);
+	    return numerator/denominator;
+
+		}
+	
+	
 	public static double sweDist(double myY,double myX,double destY, double destX) {	
-		Log.d("NILS","diffX: diffY: "+(myX-destX)+" "+(myY-destY));
-		Log.d("NILS","Values  x1 y1 x2 y2: "+myX+" "+myY+" "+destX+" "+destY);
+		//Log.d("NILS","diffX: diffY: "+(myX-destX)+" "+(myY-destY));
+		//Log.d("NILS","Values  x1 y1 x2 y2: "+myX+" "+myY+" "+destX+" "+destY);
 		return Math.sqrt(Math.pow((myX-destX),2)+Math.pow(myY-destY, 2));
 		
 	}
@@ -36,12 +84,12 @@ public class Geomatte {
 		double dy = destY-userY;
 		double dx = destX-userX;
 		double a2 = Math.atan2(dy,dx);
-		Log.d("NILS","ATAN2 (r) (g)"+a2+" "+57.2957795*a2);
+		//Log.d("NILS","ATAN2 (r) (g)"+a2+" "+57.2957795*a2);
 		if (a2>-PI&&a2<=PI/2)
 			alfa = (PI/2-a2);
 		else
 			alfa = (PI/2-a2)+2*PI;
-		Log.d("NILS","ALFA I RADIER: Grader: "+alfa+" "+ 57.2957795*alfa);
+		//Log.d("NILS","ALFA I RADIER: Grader: "+alfa+" "+ 57.2957795*alfa);
 		return alfa;
 		
 		
@@ -126,6 +174,11 @@ public class Geomatte {
 
 	Log.d("NILS"," lat long (x,y): "+x+" "+y);
 	return new SweLocation(x,y);
+	}
+
+	public static Location subtract(Location l1,
+			Location l2) {
+		return new SweLocation(l1.getX()-l2.getX(),l1.getY()-l2.getY());
 	}
 
 	

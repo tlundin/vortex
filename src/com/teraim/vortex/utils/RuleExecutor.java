@@ -878,8 +878,9 @@ public class RuleExecutor {
 					rows = al.getTable().getRowsContaining(VariableConfiguration.Col_Variable_Name, args[0]);
 				if (rows == null||rows.size()==0) {
 					Log.e("vortex","no variables found for filter "+args[0]);
-				}
-				Log.d("vortex","found "+(rows.size()-1)+" variables for "+args[0]);
+					return null;
+				} else
+					Log.d("vortex","found "+(rows.size()-1)+" variables for "+args[0]);
 				//Parse the expression. Find all references to Functional Group.
 				//Each argument need to either exist or not exist.
 				Map<String, String[]>values=new HashMap<String,String[]>();

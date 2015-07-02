@@ -180,7 +180,6 @@ public class GestureImageViewTouchListener implements OnTouchListener {
 					if(onLongClickListener != null) {
 						image.setPolyVertex(e.getX(),e.getY());
 						onLongClickListener.onLongClick(image);
-						Log.d("vortex","Longclick at "+e.getX()+" "+e.getY());
 
 					}
 				}

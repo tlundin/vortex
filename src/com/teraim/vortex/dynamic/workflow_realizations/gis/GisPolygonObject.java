@@ -5,9 +5,11 @@ import java.util.List;
 import java.util.Map;
 
 import android.graphics.Paint.Style;
+import android.util.Log;
 
-import com.teraim.vortex.dynamic.blocks.AddGisPointObjects;
 import com.teraim.vortex.dynamic.types.Location;
+import com.teraim.vortex.dynamic.types.SweLocation;
+import com.teraim.vortex.utils.Geomatte;
 
 public class GisPolygonObject extends GisObject {
 
@@ -39,15 +41,24 @@ public class GisPolygonObject extends GisObject {
 		String[] polys = polygons.split("\\|");
 		Map<String, List<Location>> ret = new HashMap<String, List<Location>>();
 		for (String poly:polys) {
+			Log.d("vortex","in poly with poly: ["+poly+"]");
 			ret.put("Poly "+i, GisObject.createListOfLocations(poly, coordType));
+			
 			i++;
 		}
+		
 		return ret;
 	}
 
+	//returns the first main polygon. The others are apparaently only holes.
 	@Override
 	public List<Location> getCoordinates() {
-		return null;
+		myCoordinates = polygons.get("Poly 1");
+		if (myCoordinates==null||myCoordinates.isEmpty()) {
+			Log.e("Vortex","No poly 1 found or poly contains no points!!");
+			return null;
+		} else
+			return myCoordinates;
 	}
 
 
@@ -65,6 +76,24 @@ public class GisPolygonObject extends GisObject {
 		return ret;
 	}
 
+	//return the geometrical centroid of the first polygon. 
+	@Override
+	public Location getLocation() {
+		if (polygons == null) return null;
+		List<Location> p1 = getCoordinates();
+		if (p1==null||p1.isEmpty()) {
+			return null;
+		}
+		double centroidX=0,centroidY=0;
+		for (Location l:p1) {
+			centroidX+=l.getX();
+			centroidY+=l.getY();
+			
+		}
+		//TODO: Add LATLONG!!
+		return new SweLocation(centroidX/p1.size(),centroidY/p1.size());
+	}
+
 	public Map<String, List<Location>> getPolygons() {
 		return polygons;
 	}
@@ -77,6 +106,28 @@ public class GisPolygonObject extends GisObject {
 		return conf.getStyle();
 	}
 	
+	@Override
+	public boolean isTouchedByClick(Location mapLocationForClick,double pxr,double pyr) {
+		//Only linestrings can be touched.
+		Log.d("vortex", "in istouch for poly");
+		myCoordinates =  getCoordinates() ;
+		if (myCoordinates == null||myCoordinates.isEmpty()) {
+			Log.d("vortex", "found no coordinates...exiting");
+			return false;
+		}
+		for (int i=0;i<myCoordinates.size();i++) {
+
+			Location A = myCoordinates.get(i);
+			Location B = myCoordinates.get((i+1)%myCoordinates.size());
+			double dist = Geomatte.pointToLineDistance3(A, B, mapLocationForClick);
+			Log.d("vortex","dist to "+this.getId()+" is "+dist+ "Thresh was Divided by pxr: "+ClickThresholdInMeters/pxr);
+			if (dist<(ClickThresholdInMeters)) {
+				Log.d("vortex","found!!!");
+				return true;
+			}
+		}
+		return false;
+	}
 	
 
 }

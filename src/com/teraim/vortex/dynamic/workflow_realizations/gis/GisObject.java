@@ -11,9 +11,13 @@ import com.teraim.vortex.dynamic.types.LatLong;
 import com.teraim.vortex.dynamic.types.Location;
 import com.teraim.vortex.dynamic.types.SweLocation;
 import com.teraim.vortex.dynamic.types.Variable;
+import com.teraim.vortex.dynamic.workflow_realizations.gis.FullGisObjectConfiguration.GisObjectType;
 import com.teraim.vortex.utils.Tools;
 
 public class GisObject {
+
+	
+	protected static final double ClickThresholdInMeters = 100;
 
 	
 	private Variable statusVar=null;
@@ -51,6 +55,13 @@ public class GisObject {
 	protected Map<String, String> attributes;
 	
 
+	//This default behavior is overridden for objects with more than one point or dynamic value. See subclasses for implementation.
+	public Location getLocation() {
+		if (myCoordinates==null || myCoordinates.isEmpty())
+			return null;
+		return myCoordinates.get(0);		
+	};
+
 
 	public List<Location> getCoordinates() {
 		return myCoordinates;
@@ -66,6 +77,18 @@ public class GisObject {
 	
 	public String getWorkflow() {
 		return foc.getClickFlow();
+	}
+	
+	public String getLabel() {
+		return foc.getLabel();
+	}
+	
+	public String getId() {
+		return foc.getName();
+	}
+	
+	public  GisObjectType getGisPolyType() {
+		return foc.getGisPolyType();
 	}
 	
 	public Variable getStatusVariable() {
@@ -97,10 +120,14 @@ public class GisObject {
 					ret.add(new LatLong(gX,coord));
 			}
 		}
+		Log.d("vortex","createlistlocations returning: "+ret.toString());
+
 		return ret;
 	}
 	
 	public String coordsToString() {
+		if (myCoordinates == null)
+			return null;
 		StringBuilder sb = new StringBuilder();
 		for (Location l:myCoordinates) {
 			
@@ -113,14 +140,15 @@ public class GisObject {
 			return null;
 	}
 
-	//Only implemented by Point object
+	//Should be overridden by subclasses.
 
 	public boolean isTouchedByClick(Location mapLocationForClick, double pxr,
 			double pyr) {
-		// TODO Auto-generated method stub
+		Log.e("vortex","Should never be here");
 		return false;
 	}
 
+	
 
 
 
