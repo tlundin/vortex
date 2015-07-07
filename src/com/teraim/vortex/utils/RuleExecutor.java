@@ -137,6 +137,7 @@ public class RuleExecutor {
 		getCurrentMinute(function,0),
 		getCurrentSecond(function,0),
 		getCurrentWeekNumber(function,0),
+		getSweDate(function,0),
 		sum(function,-1),
 		getDelytaArea(function,1),
 		ja(function,1),
@@ -749,6 +750,9 @@ public class RuleExecutor {
 		}
 		else if (item.getType()==TokenType.getCurrentWeekNumber) {
 			return Constants.getWeekNumber();
+		}
+		else if (item.getType()==TokenType.getSweDate) {
+			return Constants.getSweDate();
 		}
 		else if (item.getType()==TokenType.getColumnValue) {
 			if (args!=null && args.length!=0) {

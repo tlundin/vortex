@@ -365,10 +365,12 @@ public class Tools {
 			return false;
 		for (char c : str.toCharArray())
 		{
-			if (!Character.isDigit(c)) return false;
+			if (!Character.isDigit(c)&& c!='.') return false;
 		}
 		return true;
 	}
+	
+	
 
 	public static boolean isVersionNumber(String str)
 	{	

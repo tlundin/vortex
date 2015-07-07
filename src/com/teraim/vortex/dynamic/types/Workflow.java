@@ -18,6 +18,8 @@ public class Workflow implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = -8806673639097744371L;
+	//TODO: List of blocks needs to be a map.
+	
 	private List<Block> blocks;
 	private String name,label,applicationName,applicationVersion;
 
@@ -88,6 +90,13 @@ public class Workflow implements Serializable {
 		return Tools.parseString(label);
 	}
 
+	public boolean isBackAllowed() {
+		if (blocks!=null && blocks.size()>1 && blocks.get(1) instanceof PageDefineBlock)
+				return ((PageDefineBlock)blocks.get(1)).goBackAllowed();
+		
+		Log.e("vortex","failed to find pagedefineblock");
+		return true;
+	}
 	
 	public Fragment createFragment(String templateName) {
 		Fragment f = null;

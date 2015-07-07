@@ -219,6 +219,17 @@ public class Table implements Serializable {
 	public ArrayList<String> getKeyParts() {
 		return keyParts;
 	}
+
+
+	public void printTable() {
+		Map<Integer, List<String>> x = rowTable;
+		Log.d("vortex",myColumns.toString());
+		for (Integer key:rowTable.keySet()) {
+			List<String> l = rowTable.get(key);
+			Log.d("vortex","Row: "+key+":");
+			Log.d("vortex",l.toString());
+		}
+	}
 	
 	
 

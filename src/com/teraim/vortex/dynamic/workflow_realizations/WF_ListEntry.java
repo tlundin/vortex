@@ -53,10 +53,11 @@ public abstract class WF_ListEntry extends WF_Widget implements Listable,Compara
 
 	
 	@Override
-	public String getValue() {
+	public boolean hasValue() {
 		if (myVar == null)
-			return null;
-		return myVar.getValue();
+			return false;
+		else
+			return myVar.getValue()!=null;
 	}
 	
 	@Override

@@ -22,6 +22,7 @@ import com.teraim.vortex.dynamic.templates.LinjePortalTemplate;
 import com.teraim.vortex.dynamic.types.CHash;
 import com.teraim.vortex.dynamic.types.Workflow;
 import com.teraim.vortex.dynamic.workflow_abstracts.Event.EventType;
+import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnActivityResult;
 import com.teraim.vortex.loadermodule.LoadResult;
 import com.teraim.vortex.log.Logger;
@@ -254,7 +255,34 @@ public class Start extends MenuActivity {
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		if ((keyCode == KeyEvent.KEYCODE_BACK)) {
+			Log.d("vortex","gets here key back");
+			WF_Context wfCtx = null;
+			if (GlobalState.getInstance()!=null) {
+				wfCtx = GlobalState.getInstance().getCurrentContext();
+			}
+			Log.d("vortex","gets here wftctx is "+wfCtx);
+			if (wfCtx!=null) {
+				Workflow wf = wfCtx.getWorkflow();
+				Log.d("vortex","gets here wf is "+wf);
+				if (wf!=null) {
+					if (!wf.isBackAllowed()) {
+						new AlertDialog.Builder(this).setTitle("Warning!")
+						.setMessage("This will exit the page.")
+						.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int which) {
+								getFragmentManager().popBackStackImmediate();
+							}})
+							.setNegativeButton("Cancel",new DialogInterface.OnClickListener() {
+								public void onClick(DialogInterface dialog, int which) { 
 
+								}})
+								.setCancelable(false)
+								.setIcon(android.R.drawable.ic_dialog_alert)
+								.show();					
+					} else
+						Log.d("vortex","back was allowed");
+				}
+			}
 			if (getFragmentManager().findFragmentById(R.id.content_frame) instanceof LinjePortalTemplate) {
 				final LinjePortalTemplate lp = (LinjePortalTemplate)getFragmentManager().findFragmentById(R.id.content_frame);
 				if (lp.isRunning()) {

@@ -1555,8 +1555,39 @@ public class DbHelper extends SQLiteOpenHelper {
 
 	}
 
+	
+	
+	
 	//Fetch all instances of Variables matching namePrefix. Map varId to a Map of Variator, Value.
 	public Map<String, Map<String,String>> preFetchValues(Map<String,String> keyChain, String namePrefix, String variatorColumn) {		
+
+		Cursor c = getPrefetchCursor(keyChain,namePrefix,variatorColumn);		
+		Map<String, Map<String,String>> ret = new HashMap<String, Map<String,String>>();
+		if (c!=null && c.moveToFirst() ) {
+			Log.d("nils","In prefetchValues. Got "+c.getCount()+" results. PrefetchValues "+namePrefix+" with key "+keyChain.toString());
+			do {
+				String varId = c.getString(0);
+				if (varId!=null) {
+					Map<String,String> varMap = ret.get(varId);
+					if (varMap==null) {
+						varMap=new HashMap<String,String>();
+						ret.put(varId, varMap);
+					}
+					varMap.put(c.getString(1), c.getString(2));
+				}
+				Log.d("nils","varid: "+c.getString(0)+" variator: "+c.getString(1)+" value: "+c.getString(2));
+			} while (c.moveToNext());
+
+		}
+		if (c!=null)
+			c.close();
+		return ret;
+
+	}
+	
+	
+	//Fetch all instances of Variables matching namePrefix. Map varId to a Map of Variator, Value.
+	public Cursor getPrefetchCursor(Map<String,String> keyChain, String namePrefix, String variatorColumn) {		
 
 		String query = "SELECT "+VARID+","+getColumnName(variatorColumn)+",value FROM "+TABLE_VARIABLES+
 				" WHERE "+VARID+" LIKE '"+namePrefix+"%'";
@@ -1570,29 +1601,12 @@ public class DbHelper extends SQLiteOpenHelper {
 		}
 
 		Log.d("nils","Query: "+query);
-		Cursor c = db.rawQuery(query, selArgs);
-		Log.d("nils","In prefetchValues. Got "+c.getCount()+" results. PrefetchValues "+namePrefix+" with key "+keyChain.toString());
-		Map<String, Map<String,String>> ret = new HashMap<String, Map<String,String>>();
-		if (c!=null && c.moveToFirst() ) {
-			do {
-				String varId = c.getString(0);
-				if (varId!=null) {
-					Map<String,String> varMap = ret.get(varId);
-					if (varMap==null) {
-						varMap=new HashMap<String,String>();
-						ret.put(varId, varMap);
-					}
-					varMap.put(c.getString(1), c.getString(2));
-				}
-				//Log.d("nils","varid: "+c.getString(0)+" variator: "+c.getString(1)+" value: "+c.getString(2));
-			} while (c.moveToNext());
-
-		}
-		if (c!=null)
-			c.close();
-		return ret;
-
+		//Return cursor.
+		return db.rawQuery(query, selArgs);
+	
 	}
+	
+	
 
 	public void beginTransaction() {
 		db.beginTransaction();

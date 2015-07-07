@@ -22,14 +22,10 @@ public class WF_OnlyWithoutValue_Filter extends WF_Filter {
 		Iterator<? extends Listable> it = list.iterator();
 		while(it.hasNext()) {
 			Listable l = it.next();
-			String value = l.getValue();
-			//TODO use only NULL!!!
-			if (value == null||value.length()==0)
-				continue;
-			else {
-				it.remove();
+		if (l.hasValue())
+			it.remove();
 				//Log.d("nils","filter removes element "+l.getKey()+" because its value is null");
-			}
+			
 		}
 		return list;
 	}

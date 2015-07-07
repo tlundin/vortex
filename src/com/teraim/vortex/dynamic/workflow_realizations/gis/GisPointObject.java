@@ -80,13 +80,16 @@ public abstract class GisPointObject extends GisObject {
 		
 		if (label==null)
 			return "";
+		//@notation for id
 		if (label.startsWith("@")) {
 			String key = label.substring(1, label.length());
 			if (key.length()>0) {
-				return key+" "+keyChain.get(key);
+				String ret = keyChain.get(key);
+				if (ret!=null)
+					return ret;
 			}
 		}
-		return (label);
+		return Tools.parseString(label);
 		
 	}
 	

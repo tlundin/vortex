@@ -257,7 +257,7 @@ public class GisImageView extends GestureImageView {
 			}
 		});
 
-		final int SearchRadiusInMeter = 50;
+		
 		
 		setOnLongClickListener(new OnLongClickListener() {
 			
@@ -572,7 +572,8 @@ public class GisImageView extends GestureImageView {
 				newGisObj=null;
 				
 
-			} else if (newGisObj instanceof GisMultiPointObject) {
+			} else if (newGisObj instanceof GisMultiPointObject ||
+					newGisObj instanceof GisPolygonObject) {
 				List<Location> myDots = newGisObj.getCoordinates();
 				if (myDots.isEmpty()) {					
 					currentCreateBag.remove(newGisObj);
@@ -976,20 +977,23 @@ public class GisImageView extends GestureImageView {
 			}
 
 			//Add glow effect if it is currently being drawn.
-			if (go instanceof GisPolygonObject && !go.equals(newGisObj))
+			boolean beingDrawn = go.equals(newGisObj);
+			Paint paint = this.createPaint(go.getColor(), null);
+			if (go instanceof GisPolygonObject && !beingDrawn)
 				p.close();
-			if (go.equals(newGisObj)||selected)
-				newLineGlows(canvas,p);
-
-			//Log.d("vortex","PATH: "+path);
-			canvas.drawPath(p, paintSimple);
+			if (selected) {
+				canvas.drawPath(p, paintBlur);
+				canvas.drawPath(p, paintSimple);
+			}
+			else if (beingDrawn) {
+				canvas.drawPath(p, polyPaint);
+			} else
+				canvas.drawPath(p, createPaint(go.getColor(),Paint.Style.STROKE,1));
 		}
 			
 	}
 
-	private void newLineGlows(Canvas canvas, Path p) {
-		canvas.drawPath(p, paintBlur);
-	}
+
 
 	private void drawGopLabel(Canvas canvas, int[] xy, String mLabel, float radius, Paint bgPaint, Paint txtPaint) {
 		Rect bounds = new Rect();
@@ -1074,9 +1078,13 @@ public class GisImageView extends GestureImageView {
 	}
 
 	private Map<String,Paint> paintCache = new HashMap<String,Paint>();
-
+	
 	public Paint createPaint(String color, Paint.Style style) {
-		String key = color+style.name();
+		return createPaint(color,style,2);
+	}
+	
+	public Paint createPaint(String color, Paint.Style style, int strokeWidth) {
+		String key = style==null?color:color+style.name();
 		Paint p = paintCache.get(key);
 		if (p!=null) {
 			//Log.d("vortex","returns cached paint for "+key);
@@ -1086,7 +1094,7 @@ public class GisImageView extends GestureImageView {
 		p = new Paint();
 		p.setColor(color!=null?Color.parseColor(color):Color.YELLOW);
 		p.setStyle(style!=null?style:Paint.Style.FILL);
-		p.setStrokeWidth(2);
+		p.setStrokeWidth(strokeWidth);
 		paintCache.put(key, p);
 		return p;
 	}

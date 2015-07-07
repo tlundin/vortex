@@ -348,66 +348,8 @@ public class GlobalState  {
 		return new Aritmetic(name,label);
 	}
 
-	/*************************************
-	 * 
-	 * Variable Generators.
-	 * 
-	 */
-	/*
-	public synchronized Bool makeBoolean(String name, String label) {
-		Variable result = myVars.get(name);
-		if (result == null) {
-		    myVars.put(name, result = new Bool(name,label));
-		    return (Bool)result;
-		}
-		else {
-			return (Bool)result;
-		}
-	}
-
-	public synchronized Numeric makeNumeric(String name, String label) {
-		Variable result = myVars.get(name);
-		if (result == null) {
-		    myVars.put(name, result = new Numeric(name,label));
-		    return (Numeric)result;
-		}
-		else {
-			return (Numeric)result;
-		}
-	}
-
-	public synchronized Literal makeLiteral(String name, String label) {
-		Variable result = myVars.get(name);
-		if (result == null) {
-		    myVars.put(name, result = new Literal(name,label));
-		    return (Literal)result;
-		}
-		else {
-			return (Literal)result;
-		}
-	}	
-
-	public Variable getVariable(String name) {
-		return myVars.get(name);
-	}
-	 */
-
-
-
-
-	//IF new configuration files have been loaded, replace existing instances.
-	/*
-	public void refresh() {
-		artLista = new VariableConfiguration(this,myVarCache);	
-		myWfs = thawWorkflows();	
-		if (artLista.getTable()!=null) 
-			db.init(artLista.getTable().getKeyParts());			
-		else {
-			log.addRow("");
-			log.addRedText("Refresh failed - Table is missing. This is likely due to previous errors on startup");
-		}
-	}
-	 */
+	
+	
 
 	public VarCache getVariableCache() {
 		return myVarCache;

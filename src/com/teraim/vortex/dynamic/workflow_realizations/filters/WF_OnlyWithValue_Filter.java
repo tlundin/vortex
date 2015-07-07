@@ -21,11 +21,10 @@ public class WF_OnlyWithValue_Filter extends WF_Filter implements Filter {
 		Iterator<? extends Listable> it = list.iterator();
 		while(it.hasNext()) {
 			Listable l = it.next();
-			String value = l.getValue();
-			if (value == null||value.length()==0) {
+			if(!l.hasValue()) 
 				it.remove();
 				//Log.d("nils","filter removes element "+l.getKey()+" because its value is null");
-			}
+			
 		}
 		Log.d("nils","Exit only_with_value filter with "+list.size()+" elements");
 		return list;

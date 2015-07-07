@@ -11,7 +11,7 @@ public interface Listable {
 	public String getKey();
 	//TODO: Must separate into Comparable class or similar?
 	public long getTimeStamp();
-	public String getValue();
+	public boolean hasValue();
 	public String getLabel();
 	public void refresh();
 

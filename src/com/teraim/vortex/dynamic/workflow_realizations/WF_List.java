@@ -2,17 +2,18 @@ package com.teraim.vortex.dynamic.workflow_realizations;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import android.os.Handler;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.TableLayout;
 import android.widget.TableLayout.LayoutParams;
 
 import com.teraim.vortex.GlobalState;
-import com.teraim.vortex.dynamic.Executor;
+import com.teraim.vortex.R;
 import com.teraim.vortex.dynamic.VariableConfiguration;
-import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.workflow_abstracts.Filter;
 import com.teraim.vortex.dynamic.workflow_abstracts.Filterable;
 import com.teraim.vortex.dynamic.workflow_abstracts.Listable;
@@ -29,13 +30,27 @@ public abstract class WF_List extends WF_Widget implements Sortable,Filterable {
 	protected WF_Context myContext;
 	protected GlobalState gs;
 	protected VariableConfiguration al;
+	
+	private ViewGroup myW = null; 
+	
+	//Table needs to send only part of its layout to list
+	public WF_List(String id,boolean isVisible,WF_Context ctx, View v) {
+		super(id,v,isVisible,ctx);	
+		myContext = ctx;
+		gs = GlobalState.getInstance();
+		
+		myW = (TableLayout)v.findViewById(R.id.table);
+		
 
+	}
+	//TODO: MERGE THESE
 	//How about using the Container's panel?? TODO
 	public WF_List(String id,boolean isVisible,WF_Context ctx) {
 		super(id,new LinearLayout(ctx.getContext()),isVisible,ctx);	
-		myWidget = (LinearLayout)getWidget();
-		myWidget.setOrientation(LinearLayout.VERTICAL);
-		myWidget.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+		myW = (LinearLayout)this.getWidget();
+		LinearLayout ll = (LinearLayout)myW;
+		ll.setOrientation(LinearLayout.VERTICAL);
+		ll.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 		myContext = ctx;
 		gs = GlobalState.getInstance();
 		al = gs.getVariableConfiguration();
@@ -91,12 +106,13 @@ public abstract class WF_List extends WF_Widget implements Sortable,Filterable {
 					//Log.d("nils","After sorter: "+System.currentTimeMillis());
 
 					//Log.d("nils","in redraw...");
-					myWidget.removeAllViews();
+					prepareDraw();
+					
 					for (Listable l:filteredList) {
 						//l.refreshInputFields();
 						l.refresh();						
 						//Everything is WF_Widgets, so this is safe!					
-						myWidget.addView(((WF_Widget)l).getWidget());
+						myW.addView(((WF_Widget)l).getWidget());
 					} 
 					//Log.d("nils","Settingdrawactive to false");
 					drawActive = false;
@@ -106,8 +122,11 @@ public abstract class WF_List extends WF_Widget implements Sortable,Filterable {
 			Log.d("nils","DISCARDED DRAW CALL");
 
 
+		
 	}
 	
-
+	protected void prepareDraw() {
+		myW.removeAllViews();
+	}
 
 }

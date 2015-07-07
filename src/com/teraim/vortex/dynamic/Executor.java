@@ -36,7 +36,9 @@ import com.teraim.vortex.dynamic.blocks.AddVariableToEntryFieldBlock;
 import com.teraim.vortex.dynamic.blocks.AddVariableToEveryListEntryBlock;
 import com.teraim.vortex.dynamic.blocks.AddVariableToListEntry;
 import com.teraim.vortex.dynamic.blocks.Block;
+import com.teraim.vortex.dynamic.blocks.BlockAddColumnsToTable;
 import com.teraim.vortex.dynamic.blocks.BlockCreateListEntriesFromFieldList;
+import com.teraim.vortex.dynamic.blocks.BlockCreateTableEntriesFromFieldList;
 import com.teraim.vortex.dynamic.blocks.ButtonBlock;
 import com.teraim.vortex.dynamic.blocks.ConditionalContinuationBlock;
 import com.teraim.vortex.dynamic.blocks.ContainerDefineBlock;
@@ -54,7 +56,6 @@ import com.teraim.vortex.dynamic.blocks.SetValueBlock;
 import com.teraim.vortex.dynamic.blocks.SetValueBlock.ExecutionBehavior;
 import com.teraim.vortex.dynamic.blocks.TextFieldBlock;
 import com.teraim.vortex.dynamic.blocks.VarValueSourceBlock;
-import com.teraim.vortex.dynamic.types.CHash;
 import com.teraim.vortex.dynamic.types.Rule;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.types.Variable.DataType;
@@ -69,11 +70,11 @@ import com.teraim.vortex.dynamic.workflow_realizations.WF_Event;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnBluetoothMessageReceived;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnSave;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Static_List;
+import com.teraim.vortex.dynamic.workflow_realizations.WF_Table;
 import com.teraim.vortex.gis.Tracker;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.ui.MenuActivity;
-import com.teraim.vortex.utils.RuleExecutor;
 import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 
 /**
@@ -135,6 +136,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 		myContext = new WF_Context((Context)activity,this,R.id.content_frame);
 		o = gs.getLogger();
 		wf = getFlow();
+		myContext.setWorkflow(wf);
 		al = gs.getVariableConfiguration();
 
 		ifi = new IntentFilter();
@@ -344,6 +346,19 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 					BlockCreateListEntriesFromFieldList bl = (BlockCreateListEntriesFromFieldList)b;
 					bl.create(myContext);
 				}
+				else if (b instanceof BlockCreateTableEntriesFromFieldList) {
+					o.addRow("");
+					o.addYellowText("BlockCreateTableEntriesFromFieldList found "+b.getBlockId());
+					BlockCreateTableEntriesFromFieldList bl = (BlockCreateTableEntriesFromFieldList)b;
+					bl.create(myContext);
+				}
+				else if (b instanceof BlockAddColumnsToTable) {
+					o.addRow("");
+					o.addYellowText("BlockAddColumn(s)ToTable found "+b.getBlockId());
+					BlockAddColumnsToTable bl = (BlockAddColumnsToTable)b;
+					bl.create(myContext);
+				}
+				
 				else if (b instanceof AddVariableToEntryFieldBlock) {
 					o.addRow("");
 					o.addYellowText("AddVariableToEntryFieldBlock found "+b.getBlockId());
@@ -606,6 +621,8 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 				//Draw all lists first.
 				for (WF_Static_List l:myContext.getLists()) 			
 					l.draw();
+				for (WF_Table t:myContext.getTables())
+					t.draw();
 				//Trgger redraw event on lists.
 				//myContext.registerEvent(new WF_Event_OnSave("fackabuudle"));
 				if (root!=null) 

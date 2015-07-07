@@ -19,7 +19,6 @@ import com.teraim.vortex.utils.CombinedRangeAndListFilter;
 
 public abstract class WF_Not_ClickableField extends WF_ListEntry {
 	protected WF_Context myContext;
-	protected TextView myHeader;
 	protected String myDescription;
 	final LinearLayout outputContainer;
 	protected Map<Variable,OutC> myOutputFields = new HashMap<Variable,OutC>();
@@ -27,7 +26,8 @@ public abstract class WF_Not_ClickableField extends WF_ListEntry {
 	//Hack! Used to determine what is the master key for this type of element.
 	//If DisplayOut & Virgin --> This is master key.
 	boolean virgin=true;
-	protected Variable myVar;
+	//Removed myVar 2.07.15
+	//protected Variable myVar;
 	public abstract LinearLayout getFieldLayout();
 
 
@@ -67,12 +67,14 @@ public abstract class WF_Not_ClickableField extends WF_ListEntry {
 	public WF_Not_ClickableField(final String label,final String descriptionT, WF_Context myContext, 
 			View view,boolean isVisible) {
 		super(label,view,myContext,isVisible);
+		TextView myHeader;
 
 		this.myContext = myContext;
 		myHeader = (TextView)getWidget().findViewById(R.id.editfieldtext);
 		outputContainer = (LinearLayout)getWidget().findViewById(R.id.outputContainer);
 		//outputContainer.setLayoutParams(params);
-		myHeader.setText(label);
+		if (myHeader!=null)
+			myHeader.setText(label);
 		this.label = label;
 		myDescription = descriptionT;
 

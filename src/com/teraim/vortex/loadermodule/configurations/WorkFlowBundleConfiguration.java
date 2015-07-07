@@ -21,7 +21,9 @@ import com.teraim.vortex.dynamic.blocks.AddVariableToEntryFieldBlock;
 import com.teraim.vortex.dynamic.blocks.AddVariableToEveryListEntryBlock;
 import com.teraim.vortex.dynamic.blocks.AddVariableToListEntry;
 import com.teraim.vortex.dynamic.blocks.Block;
+import com.teraim.vortex.dynamic.blocks.BlockAddColumnsToTable;
 import com.teraim.vortex.dynamic.blocks.BlockCreateListEntriesFromFieldList;
+import com.teraim.vortex.dynamic.blocks.BlockCreateTableEntriesFromFieldList;
 import com.teraim.vortex.dynamic.blocks.ButtonBlock;
 import com.teraim.vortex.dynamic.blocks.ConditionalContinuationBlock;
 import com.teraim.vortex.dynamic.blocks.ContainerDefineBlock;
@@ -206,10 +208,15 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 					blocks.add(readBlockCreateDisplayField(parser));
 				else if (name.equals("block_create_list_entries_from_field_list"))
 					blocks.add(readBlockCreateListEntriesFromFieldList(parser));
+				else if (name.equals("block_create_table_entries_from_field_list"))
+					blocks.add(readBlockCreateTableEntriesFromFieldList(parser));
 				else if (name.equals("block_add_variable_to_every_list_entry"))
 					blocks.add(readBlockAddVariableToEveryListEntry(parser));
 				else if (name.equals("block_add_variable_to_entry_field"))
-					blocks.add(readBlockAddVariableToEntryField(parser));	
+					blocks.add(readBlockAddVariableToEntryField(parser));
+				else if (name.equals("block_add_column_to_table")||
+						name.equals("block_add_columns_to_table"))
+					blocks.add(readBlockAddColumnsToTable(parser));				
 				else if (name.equals("block_add_entry_to_field_list")) 
 					blocks.add(readBlockAddEntryToFieldList(parser));
 				else if (name.equals("block_add_variable_to_list_entry")) 
@@ -919,6 +926,42 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 		checkForNull("block_ID",id,"name",namn,"target",target,"format",format);
 		return new AddVariableToEntryFieldBlock(id,target,namn,isDisplayed,format,isVisible,showHistorical,initialValue);
 	}
+	
+	private Block readBlockAddColumnsToTable(XmlPullParser parser) throws IOException, XmlPullParserException {
+		o.addRow("Parsing block: block_add_column_to_table...");
+		String id=null,target=null,label=null,type=null,colKey=null,width=null;
+
+		while (parser.next() != XmlPullParser.END_TAG) {
+			if (parser.getEventType() != XmlPullParser.START_TAG) {
+				continue;
+			}
+			String name= parser.getName();
+			if (name.equals("block_ID")) {
+				id = readText("block_ID",parser);
+			} else if (name.equals("target")) {
+				target = readText("target",parser);
+			} else if (name.equals("label")) {
+				label = readText("label",parser);
+			
+			}else if (name.equalsIgnoreCase("column_key")) {
+				colKey = readText("column_key",parser);
+			}else if (name.equalsIgnoreCase("type")) {
+				type = readText("type",parser);
+			}else if (name.equalsIgnoreCase("width")) {
+				width = readText("width",parser);
+			} 
+			else {
+				Log.e("vortex","Skipped "+name);
+				skip(name,parser);
+			}
+		}
+
+		checkForNull("block_ID",id,"target",target);
+		return new BlockAddColumnsToTable(id,target,label,colKey,type,width);
+
+	}
+	
+	
 	private Block readBlockCreateListEntriesFromFieldList(XmlPullParser parser) throws IOException, XmlPullParserException {
 		//o.addRow("Parsing block: block_create_list_entries_from_field_list...");
 		String namn=null, type=null,containerId=null,selectionField=null,selectionPattern=null,id=null;
@@ -961,6 +1004,50 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				"uri_field",uriField);
 		return new BlockCreateListEntriesFromFieldList(id,namn, type,
 				containerId,selectionPattern,selectionField,variatorColumn);
+	}
+	
+	private Block readBlockCreateTableEntriesFromFieldList(XmlPullParser parser) throws IOException, XmlPullParserException {
+		//o.addRow("Parsing block: block_create_list_entries_from_field_list...");
+		String namn=null, type=null,containerId=null,selectionField=null,selectionPattern=null,id=null;
+		String labelField=null,descriptionField=null,typeField=null,uriField=null,variatorColumn=null;
+		parser.require(XmlPullParser.START_TAG, null,"block_create_table_entries_from_field_list");
+		while (parser.next() != XmlPullParser.END_TAG) {
+			if (parser.getEventType() != XmlPullParser.START_TAG) {
+				continue;
+			}
+			String name= parser.getName();
+			if (name.equals("block_ID")) {
+				id = readText("block_ID",parser);
+			}
+			else if (name.equals("type")) {
+				type = readText("type",parser);
+			} else if (name.equals("selection_field")) {
+				selectionField = readText("selection_field",parser);
+			} else if (name.equals("selection_pattern")) {
+				selectionPattern = readText("selection_pattern",parser);
+			}  else if (name.equals("name")) {
+				namn = readText("name",parser);
+			} else if (name.equals("container_name")) {
+				containerId = readText("container_name",parser);
+			}  else if (name.equals("label_field")) {
+				labelField = readText("label_field",parser);
+			} else if (name.equals("description_field")) {
+				descriptionField = readText("description_field",parser);
+			} else if (name.equals("type_field")) {
+				typeField = readText("type_field",parser);
+			} else if (name.equals("column_key_name")) {
+				variatorColumn = readText("column_key_name",parser);
+			} else if (name.equals("uri_field")) {
+				uriField = readText("uri_field",parser);
+			} else
+				skip(name,parser,o);
+
+		}
+		checkForNull("block_ID",id,"selection_field",selectionField,"name",namn,"container_name",
+				containerId,"label_field",labelField,"description_field",descriptionField,"type_field",typeField,
+				"uri_field",uriField);
+		return new BlockCreateTableEntriesFromFieldList(id,namn, type,
+				containerId,selectionPattern,selectionField,variatorColumn,descriptionField,uriField,labelField);
 	}
 
 
@@ -1461,7 +1548,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 	private PageDefineBlock readPageDefineBlock(XmlPullParser parser) throws IOException, XmlPullParserException {
 		//o.addRow("Parsing block: block_define_page...");
 		String pageType=null,label="",id=null;
-		boolean hasGPS=false;
+		boolean hasGPS=false,goBackAllowed=true;
 		parser.require(XmlPullParser.START_TAG, null,"block_define_page");
 		while (parser.next() != XmlPullParser.END_TAG) {
 			if (parser.getEventType() != XmlPullParser.START_TAG) {
@@ -1473,7 +1560,9 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			} else if (name.equals("type")) {
 				pageType = readText("type",parser);				
 			} else if (name.equals("gps_on")) {
-				hasGPS = readText("gps_on",parser).equals("true");				
+				hasGPS = readText("gps_on",parser).equals("true");	
+			} else if (name.equals("allow_OS_page_back")) {
+				goBackAllowed = readText("allow_OS_page_back",parser).equals("true");
 			} else if (name.equals("label")) {
 				label = readText("label",parser);
 				o.addRow("Parsing workflow "+label);
@@ -1481,7 +1570,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				skip(name,parser,o);
 		}
 		checkForNull("block_ID",id,"type",pageType,"label",label);
-		return new PageDefineBlock(id,"root", pageType,label,hasGPS);
+		return new PageDefineBlock(id,"root", pageType,label,hasGPS,goBackAllowed);
 	}
 
 

@@ -25,20 +25,20 @@ import com.teraim.vortex.dynamic.Executor;
 import com.teraim.vortex.dynamic.types.CHash;
 import com.teraim.vortex.dynamic.types.Rule;
 import com.teraim.vortex.dynamic.types.Variable;
+import com.teraim.vortex.dynamic.types.Workflow;
 import com.teraim.vortex.dynamic.workflow_abstracts.Container;
 import com.teraim.vortex.dynamic.workflow_abstracts.Drawable;
 import com.teraim.vortex.dynamic.workflow_abstracts.Event;
 import com.teraim.vortex.dynamic.workflow_abstracts.Event.EventType;
 import com.teraim.vortex.dynamic.workflow_abstracts.EventListener;
 import com.teraim.vortex.dynamic.workflow_abstracts.Filterable;
-import com.teraim.vortex.dynamic.workflow_abstracts.Listable;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.WF_Gis_Map;
-import com.teraim.vortex.gis.Tracker;
 
 public class WF_Context {
 
 	private Context ctx;
 	private final List<WF_Static_List> lists=new ArrayList<WF_Static_List>();
+	private final List<WF_Table> tables=new ArrayList<WF_Table>();
 	private Map<String,Drawable> drawables;
 	private List<WF_Container> containers;
 	private final Executor myTemplate;
@@ -51,6 +51,7 @@ public class WF_Context {
 	private List<WF_Gis_Map> gisses;
 	private boolean hasGPSTracker = false;
 	private CHash myHash;
+	private Workflow myWorkflow;
 
 
 
@@ -66,7 +67,16 @@ public class WF_Context {
 	public Context getContext() {
 		return ctx;
 	}
+	
+	public Workflow getWorkflow() {
+		return myWorkflow;
+	}
+	
+	public void setWorkflow(Workflow flow) {
+		myWorkflow = flow;
+	}
 
+	
 	public Activity getActivity() {
 		return (Activity)ctx;
 	}
@@ -74,10 +84,23 @@ public class WF_Context {
 	public List<WF_Static_List> getLists() {
 		return lists;
 	}
+	
+	public List<WF_Table> getTables() {
+		return tables;
+	}
 
 	public  WF_Static_List getList(String id) {
 		for (WF_Static_List wfl:lists) {
-			Log.d("nils","filterable list: "+wfl.getId());
+			String myId = wfl.getId();				
+			if(myId!=null && myId.equalsIgnoreCase(id))
+				return wfl;
+		}
+		return null;
+	}	
+	
+	public  WF_Table getTable(String id) {
+		for (WF_Table wfl:tables) {
+			Log.d("nils","In gettable: "+wfl.getId());
 			String myId = wfl.getId();				
 			if(myId!=null && myId.equalsIgnoreCase(id))
 				return wfl;
@@ -85,7 +108,7 @@ public class WF_Context {
 		return null;
 	}	
 
-
+/*
 	public List<Listable> getListable(String id) {
 		for (WF_Static_List wfl:lists) {
 			Log.d("nils","filterable list: "+wfl.getId());
@@ -95,7 +118,7 @@ public class WF_Context {
 		}
 		return null;
 	}	
-
+*/
 	
 	public Filterable getFilterable(String id) {
 		Log.d("nils","Getfilterable called with id "+id);
@@ -113,15 +136,21 @@ public class WF_Context {
 	public void addContainers(List<WF_Container> containers) {
 		this.containers = containers; 
 	}
-	//TODO: If required introduce nonfilterable lists. For now it is assumed that all lists implements filterable. 
+	//TODO: If required introduce nonfilterable lists and tables. For now it is assumed that all implements filterable. 
 	public void addList(WF_Static_List l) {
 		lists.add(l);
 		filterables.add(l);
 	}
+	
+	public void addTable(WF_Table t) {
+		tables.add(t);
+		filterables.add(t);
+	}
+	/*
 	public void addFilterable(Filterable f) {
 		filterables.add(f);
 	}
-
+	 */
 	public void addDrawable(String key,Drawable d) {	
 		drawables.put(key,d);
 	}
@@ -154,6 +183,7 @@ public class WF_Context {
 
 	public void resetState() {
 		emptyContainers();
+		tables.clear();
 		lists.clear();
 		filterables.clear();
 		drawables.clear();

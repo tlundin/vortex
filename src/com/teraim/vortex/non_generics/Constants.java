@@ -13,11 +13,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import android.annotation.SuppressLint;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
@@ -38,7 +41,7 @@ import com.teraim.vortex.utils.PersistenceHelper;
 
 public class Constants {
 
-	public final static float VORTEX_VERSION = 1.29f;
+	public final static float VORTEX_VERSION = 1.31f;
 
 
 	//String constants
@@ -169,6 +172,12 @@ public class Constants {
 	}
 	public static String getSecond() {
 		return Integer.toString(Calendar.getInstance().get(Calendar.SECOND));
+	}
+	
+	@SuppressLint("SimpleDateFormat") 
+	public static String getSweDate() {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		return sdf.format(new Date()); 
 	}
 
 	public static final String GroupFileName = "Groups.csv";

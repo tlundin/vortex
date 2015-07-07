@@ -56,6 +56,7 @@ public class BlockCreateListEntriesFromFieldList extends Block {
 				Log.e("vortex","Selectionfield: "+selectionField+" selectionPattern: "+selectionPattern+" returns zero rows! List cannot be created");
 				o.addRow("");
 				o.addRedText("Selectionfield: "+selectionField+" selectionPattern: "+selectionPattern+" returns zero rows! List cannot be created");
+				al.getTable().printTable();
 			} else {		
 				cacheMap.put(selectionField+selectionPattern, rows);
 				Log.d("nils","Number of rows in CreateEntrieFromList "+rows.size());
