@@ -3,6 +3,7 @@ package com.teraim.vortex.dynamic.workflow_realizations;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.app.ProgressDialog;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
@@ -87,8 +88,11 @@ public abstract class WF_List extends WF_Widget implements Sortable,Filterable {
 		if (!drawActive) {
 			//Log.d("nils","Settingdrawactive to true from list"+this.getId());
 			drawActive = true;
+			final ProgressDialog progress = new ProgressDialog(myContext.getContext());
+
 			new Handler().postDelayed(new Runnable() {
 				public void run() {
+					
 					filteredList = list;
 					if (myFilters != null) {			
 						List<Listable> listx = new ArrayList<Listable>(list);
@@ -116,8 +120,12 @@ public abstract class WF_List extends WF_Widget implements Sortable,Filterable {
 					} 
 					//Log.d("nils","Settingdrawactive to false");
 					drawActive = false;
+
 				}
 			}, 0);
+			
+			
+		     
 		} else
 			Log.d("nils","DISCARDED DRAW CALL");
 

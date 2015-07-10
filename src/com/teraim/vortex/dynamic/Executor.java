@@ -37,6 +37,7 @@ import com.teraim.vortex.dynamic.blocks.AddVariableToEveryListEntryBlock;
 import com.teraim.vortex.dynamic.blocks.AddVariableToListEntry;
 import com.teraim.vortex.dynamic.blocks.Block;
 import com.teraim.vortex.dynamic.blocks.BlockAddColumnsToTable;
+import com.teraim.vortex.dynamic.blocks.BlockAddVariableToTable;
 import com.teraim.vortex.dynamic.blocks.BlockCreateListEntriesFromFieldList;
 import com.teraim.vortex.dynamic.blocks.BlockCreateTableEntriesFromFieldList;
 import com.teraim.vortex.dynamic.blocks.ButtonBlock;
@@ -352,10 +353,18 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 					BlockCreateTableEntriesFromFieldList bl = (BlockCreateTableEntriesFromFieldList)b;
 					bl.create(myContext);
 				}
+				
 				else if (b instanceof BlockAddColumnsToTable) {
 					o.addRow("");
 					o.addYellowText("BlockAddColumn(s)ToTable found "+b.getBlockId());
 					BlockAddColumnsToTable bl = (BlockAddColumnsToTable)b;
+					bl.create(myContext);
+				}
+				
+				else if (b instanceof BlockAddVariableToTable) {
+					o.addRow("");
+					o.addYellowText("BlockAddVariableToTable(s)ToTable found "+b.getBlockId());
+					BlockAddVariableToTable bl = (BlockAddVariableToTable)b;
 					bl.create(myContext);
 				}
 				

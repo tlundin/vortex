@@ -1,20 +1,26 @@
 package com.teraim.vortex.dynamic.workflow_realizations;
 
+import java.util.Map;
+
 import android.view.LayoutInflater;
 import android.widget.LinearLayout;
 
+import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
+import com.teraim.vortex.dynamic.types.Variable;
 
-public class WF_Cell_Widget extends WF_ClickableField {
+public class WF_Cell_Widget extends WF_ClickableField implements WF_Cell {
 
 
-	public WF_Cell_Widget(String headerT, String descriptionT,
+	private Map<String, String> myHash;
+
+	public WF_Cell_Widget(Map<String, String> columnKeyHash, String headerT, String descriptionT,
 			WF_Context context, String id,boolean isVisible) {
 		super(headerT,descriptionT, context, id,
 				LayoutInflater.from(context.getContext()).inflate(R.layout.cell_field_normal,null),
 				isVisible);
 
-
+		myHash = columnKeyHash;
 	}
 
 	@Override
@@ -24,7 +30,13 @@ public class WF_Cell_Widget extends WF_ClickableField {
 		//o.setText(varId.getLabel()+": "+value);	
 		//u.setText(" ("+varId.getPrintedUnit()+")");
 
-		return (LinearLayout)LayoutInflater.from(myContext.getContext()).inflate(R.layout.output_field_selection_element,null);
+		return (LinearLayout)LayoutInflater.from(myContext.getContext()).inflate(R.layout.cell_output_field_selection_element,null);
+	}
+	int i=0;
+	public void addVariable(final String varId, boolean displayOut,String format,boolean isVisible,boolean showHistorical, String prefetchValue) {	
+		Variable var = GlobalState.getInstance().getVariableConfiguration().getCheckedVariable(myHash, varId, prefetchValue, prefetchValue!=null);
+		super.addVariable(var, displayOut, format, isVisible,showHistorical);
 	}
 	
+
 }

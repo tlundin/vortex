@@ -20,6 +20,7 @@ import com.teraim.vortex.dynamic.blocks.AddSumOrCountBlock;
 import com.teraim.vortex.dynamic.blocks.AddVariableToEntryFieldBlock;
 import com.teraim.vortex.dynamic.blocks.AddVariableToEveryListEntryBlock;
 import com.teraim.vortex.dynamic.blocks.AddVariableToListEntry;
+import com.teraim.vortex.dynamic.blocks.BlockAddVariableToTable;
 import com.teraim.vortex.dynamic.blocks.Block;
 import com.teraim.vortex.dynamic.blocks.BlockAddColumnsToTable;
 import com.teraim.vortex.dynamic.blocks.BlockCreateListEntriesFromFieldList;
@@ -216,7 +217,9 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 					blocks.add(readBlockAddVariableToEntryField(parser));
 				else if (name.equals("block_add_column_to_table")||
 						name.equals("block_add_columns_to_table"))
-					blocks.add(readBlockAddColumnsToTable(parser));				
+					blocks.add(readBlockAddColumnsToTable(parser));	
+				else if (name.equals("block_add_variable_to_table"))
+					blocks.add(readBlockAddVariableToTable(parser));
 				else if (name.equals("block_add_entry_to_field_list")) 
 					blocks.add(readBlockAddEntryToFieldList(parser));
 				else if (name.equals("block_add_variable_to_list_entry")) 
@@ -1089,6 +1092,46 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 		return new 	AddVariableToEveryListEntryBlock(id,target,
 				variableSuffix, displayOut,format,isVisible,showHistorical,initialValue);
 	}
+	
+	private Block readBlockAddVariableToTable(XmlPullParser parser) throws IOException, XmlPullParserException {
+		//o.addRow("Parsing block: block_add_variable_to_every_list_entry...");
+		String target=null,variableSuffix=null,format=null,id=null,initialValue=null;
+		boolean displayOut=false,isVisible=true,showHistorical=false;
+
+		parser.require(XmlPullParser.START_TAG, null,"block_add_variable_to_table");
+		while (parser.next() != XmlPullParser.END_TAG) {
+			if (parser.getEventType() != XmlPullParser.START_TAG) {
+				continue;
+			}
+			String name= parser.getName();
+
+			if (name.equals("block_ID")) {
+				id = readText("block_ID",parser);
+			} else if (name.equals("target")) {
+				target = readText("target",parser);
+			} else if (name.equals("format")) {
+				format = readText("format",parser);
+			}else if (name.equals("name")) {
+				variableSuffix = readText("name",parser);
+			} else if (name.equals("is_displayed")) {
+				displayOut = readText("is_displayed",parser).trim().equals("true");
+			} else if (name.equals("is_visible")) {
+				isVisible = readText("is_visible",parser).trim().equals("true");
+			} else if (name.equals("show_historical")) {
+				showHistorical = readText("show_historical",parser).equals("true");
+			}  else if (name.equals("initial_value")) {
+				initialValue = readText("initial_value",parser);
+			}
+			else
+				skip(name,parser,o);
+
+		}
+		checkForNull("block_ID",id,"target",target,"format",format,"name",variableSuffix);
+		return new 	BlockAddVariableToTable(id,target,
+				variableSuffix, displayOut,format,isVisible,showHistorical,initialValue);
+	}
+	
+	
 
 	private DisplayValueBlock readBlockCreateDisplayField(XmlPullParser parser)throws IOException, XmlPullParserException {
 		//o.addRow("Parsing block: block_create_display_field...");

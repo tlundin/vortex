@@ -265,7 +265,7 @@ public class Variable implements Serializable {
 			unknown = false;
 			myValue = myDefaultValue;
 			if (!valueIsPersisted) {
-				Log.d("nils","Creating variable "+this.getId()+". Variable is not persisted: "+myValue);
+				//Log.d("nils","Creating variable "+this.getId()+". Variable is not persisted: "+myValue);
 				usingDefault = true;
 			}
 		} 

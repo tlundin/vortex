@@ -403,11 +403,13 @@ public  class ButtonBlock extends Block {
 								//Context ok?
 								String msg, btnText;
 								if (r.err==null) {
+									/*
 									exportFileName = gs.getGlobalPreferences().get(PersistenceHelper.BUNDLE_NAME)+"_";
 									if (target!=null)
 										exportFileName += getTarget()+"_";
 									exportFileName+=Constants.getTimeStamp();
-
+									*/
+									exportFileName = Tools.parseString(getTarget());
 									if (exportFormat  == null) 
 										exportFormat = "csv";
 									exportFormat = exportFormat.toLowerCase();
@@ -415,7 +417,7 @@ public  class ButtonBlock extends Block {
 									if (jRep.er == ExportReport.OK) {
 										msg = jRep.noOfVars+" variables exported to file: "+exportFileName+"."+exportFormat+"\n";
 										msg+= "You can find this file under "+Constants.EXPORT_FILES_DIR+" on your device";
-										btnText = "Ok, thanks";
+										btnText = "Ok";
 									} else {
 										if (jRep.er==ExportReport.NO_DATA)
 											msg = "Nothing to export! Have you entered any values? Have you marked your export variables as 'global'? (Local variables are not exported)";

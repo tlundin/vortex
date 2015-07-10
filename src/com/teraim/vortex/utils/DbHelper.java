@@ -1558,7 +1558,7 @@ public class DbHelper extends SQLiteOpenHelper {
 	
 	
 	
-	//Fetch all instances of Variables matching namePrefix. Map varId to a Map of Variator, Value.
+	//Fetch all instances of Variables matching namePrefix (group id). Map varId to a Map of Variator, Value.
 	public Map<String, Map<String,String>> preFetchValues(Map<String,String> keyChain, String namePrefix, String variatorColumn) {		
 
 		Cursor c = getPrefetchCursor(keyChain,namePrefix,variatorColumn);		

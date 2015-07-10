@@ -55,6 +55,7 @@ public class WF_Container extends WF_Thing implements Container {
 		View v;
 
 		for(WF_Widget d:myItems) {
+			Log.d("vortex","Drawing "+d.getId());
 			v = d.getWidget();
 			if (v.getParent()!=null && v.getParent().equals(me)) {
 				Log.d("nils","Parent of this object is me. Skip draw!!!");

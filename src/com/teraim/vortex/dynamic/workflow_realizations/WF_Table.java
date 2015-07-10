@@ -1,8 +1,11 @@
 package com.teraim.vortex.dynamic.workflow_realizations;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import android.content.Context;
 import android.util.Log;
@@ -17,6 +20,7 @@ import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.workflow_abstracts.Filter;
 import com.teraim.vortex.dynamic.workflow_abstracts.Listable;
 import com.teraim.vortex.dynamic.workflow_abstracts.Sorter;
+import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.Tools;
 
 public class WF_Table extends WF_List {
@@ -37,6 +41,9 @@ public class WF_Table extends WF_List {
 	private 		int rowNumber=0;
 	private final String ColHeadId = "TableHeader";
 	private WF_Table_Row headerRow;
+	private Map<String, Map<String, String>> allInstances;
+	
+	private String varNamePrefix;
 	
 	//How about using the Container's panel?? TODO
 	public WF_Table(String id,boolean isVisible,WF_Context ctx,String namePrefix,String variatorColumn, View tableV) {
@@ -49,29 +56,53 @@ public class WF_Table extends WF_List {
 		myVariator = variatorColumn;
 		//myTable = new GridView(ctx.getContext());
 		
-		Map<String, Map<String, String>> allInstances = gs.getDb().preFetchValues(ctx.getKeyHash(), namePrefix, variatorColumn);		
-		Log.d("nils","in update entry fields. AllInstances contain "+allInstances.size());
 		//Create rows.
 		inflater = (LayoutInflater)ctx.getContext().getSystemService
 				(Context.LAYOUT_INFLATER_SERVICE); 
 		
 		//Add the header.
-		headerRow = new WF_Table_Row(ColHeadId,inflater.inflate(R.layout.header_table_row, null),myContext,true);
+		headerRow = new WF_Table_Row(tableView,ColHeadId,inflater.inflate(R.layout.header_table_row, null),myContext,true);
 		//Add a first empty cell 
-		headerRow.addEmptyCell();
+		headerRow.addEmptyCell(id);
 		tableView.addView(headerRow.getWidget());
+		
+		varNamePrefix = namePrefix;
+		
+		allInstances = gs.getDb().preFetchValues(myContext.getKeyHash(), namePrefix, myVariator);		
+		Log.d("nils","in update entry fields. AllInstances contain "+allInstances.size()+ ": "+allInstances.toString());
+		tableView.setStretchAllColumns (true);
+
 	}
 	
+	Map<String,Set<String>>varIdMap=new HashMap<String,Set<String>>();
 	//Creates new rows and adds dataset to each.
 	public void addRows(List<List<String>> rows) {
+		//Rows are not containing unique entries. only need one of each.
+		Map<String,List<String>>uRows = new HashMap<String,List<String>>();
 		for (List<String> row:rows) {
-			addRow(row);
-		}		
+			
+			String key = al.getEntryLabel(row);
+			if (uRows.get(key)==null)
+				uRows.put(key,row);							//Smprov:bjork:selectedSpy1
+															//smaprov:ek:selectedSpy1
+															//smaprov:bjork:selectedSpy2
+			//collect all variables existing under one label. GrName_VarGrId_VarId
+			Set<String> s = varIdMap.get(key);
+			if (s==null){
+				s=new HashSet<String>();
+				varIdMap.put(key, s);
+			}
+			s.add(al.getVarName(row));
+		}	
+		//Now add only the unique entrylabel ones
+		for (String rowKey:uRows.keySet()) {
+			addRow(uRows.get(rowKey));
+		}
 	}
 	//Create a new row + dataset.
 	public void addRow(List<String> row) {		
-		WF_Table_Row rowWidget = new WF_Table_Row((rowNumber++)+"",inflater.inflate(R.layout.table_row, null),myContext,true);
-		rowWidget.addRow(row);
+		WF_Table_Row rowWidget = new WF_Table_Row(tableView,(rowNumber++)+"",inflater.inflate(R.layout.table_row, null),myContext,true);
+		rowWidget.addEntryField(row);
 		list.add(rowWidget);
 	}
 	
@@ -102,11 +133,14 @@ public class WF_Table extends WF_List {
 			addColumn(l,k,type,width);
 			
 		}
-		
+		for (String s:columnKeys)
+			Log.d("vortex","my columns: "+s);
 		
 	}
 	
 	
+	//Keep column keys in memory.
+	private List<String> columnKeys = new ArrayList<String>();
 	
 	public void addColumn(String header, String colKey, String type, String width) {
 		//Copy the key and add the variator.
@@ -122,15 +156,13 @@ public class WF_Table extends WF_List {
 			WF_Table_Row wft = (WF_Table_Row)l;
 			wft.addCell(header, colKey, colHash, type, width);
 		}
+		columnKeys.add(colKey);
 	}
 	
 
 
 
-	@Override
-	public TableLayout getWidget() {
-		return tableView;
-	}
+
 
 	@Override
 	protected void prepareDraw() {
@@ -139,6 +171,61 @@ public class WF_Table extends WF_List {
 		
 	}
 
+	public void addVariableToEveryCell(String variableSuffix,
+			boolean displayOut, String format, boolean isVisible,
+			boolean showHistorical, String initialValue) {
+		
+
+		//Map<String, String> colHash = Tools.copyKeyHash(myContext.getKeyHash());
+		
+		
+		
+		
+		//get rows.
+		for (Listable l:list) {
+			WF_Table_Row wft = (WF_Table_Row)l;
+			Set<String> varIds = varIdMap.get(wft.getLabel());
+			String varGrId=null;
+			if (varIds==null) {
+				Log.e("vortex","No variableIds found for "+wft.getLabel());
+				return;
+			} else {
+				for (String varGr:varIds) {
+					if (varGr.endsWith(variableSuffix)) {
+						varGrId = varGr;
+						break;
+					}
+				}
+			}
+			//Construct variablename. 
+			//String varId = varNamePrefix+Constants.VariableSeparator+varGrId+Constants.VariableSeparator+variableSuffix;
+			Log.d("vortex","Adding variable "+varGrId);
+			//Get prefetchvalue per variator value. 
+			Map<String, String> valueMap = allInstances.get(varGrId);
+			
+				
+			//add to each cell
+			
+			int columnIndex=0;
+			for (WF_Cell cell:wft.getCells()) {
+				//Get columnKey
+				String colKey = columnKeys.get(columnIndex);
+
+				//Get value for this column
+				String prefetchValue = null;
+				if (valueMap!=null) {
+					prefetchValue = valueMap.get(colKey);
+				}
+				if (prefetchValue!=null) {
+					Log.d("vortex","valueMap: "+valueMap.toString()+" colKey: "+colKey);
+					Log.d("vortex","found prefetch value "+prefetchValue);
+				}
+				cell.addVariable(varGrId, displayOut, format, isVisible, showHistorical,prefetchValue);
+				columnIndex++;
+			}
+		
+		}
+	}
 	
 
 	
