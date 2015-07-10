@@ -122,9 +122,9 @@ public class WF_Context {
 	
 	public Filterable getFilterable(String id) {
 		Log.d("nils","Getfilterable called with id "+id);
-		if (id==null||lists==null)
+		if (id==null)
 			return null;
-		for (Filterable wfl:lists) {
+		for (Filterable wfl:filterables) {
 			Log.d("nils","filterable: "+wfl.getId());
 			String myId = wfl.getId();				
 			if(myId!=null && myId.equalsIgnoreCase(id))

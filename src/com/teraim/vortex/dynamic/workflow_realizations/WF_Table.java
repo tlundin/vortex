@@ -71,6 +71,7 @@ public class WF_Table extends WF_List {
 		allInstances = gs.getDb().preFetchValues(myContext.getKeyHash(), namePrefix, myVariator);		
 		Log.d("nils","in update entry fields. AllInstances contain "+allInstances.size()+ ": "+allInstances.toString());
 		tableView.setStretchAllColumns (true);
+		addSorter(new WF_Alphanumeric_Sorter());
 
 	}
 	

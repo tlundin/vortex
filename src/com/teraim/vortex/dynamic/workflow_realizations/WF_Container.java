@@ -57,7 +57,8 @@ public class WF_Container extends WF_Thing implements Container {
 		for(WF_Widget d:myItems) {
 			Log.d("vortex","Drawing "+d.getId());
 			v = d.getWidget();
-			if (v.getParent()!=null && v.getParent().equals(me)) {
+			//If the widget is the container, don't draw. The same if the comp is already attached.
+			if (v.equals(me)||(v.getParent()!=null && v.getParent().equals(me))) {
 				Log.d("nils","Parent of this object is me. Skip draw!!!");
 				continue;
 			}

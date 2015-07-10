@@ -1,28 +1,15 @@
 package com.teraim.vortex.dynamic.blocks;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import android.content.Context;
-import android.util.Log;
-import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.TableLayout.LayoutParams;
 
 import com.teraim.vortex.GlobalState;
-import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.workflow_abstracts.Container;
 import com.teraim.vortex.dynamic.workflow_abstracts.Filterable;
+import com.teraim.vortex.dynamic.workflow_realizations.WF_Container;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
+import com.teraim.vortex.dynamic.workflow_realizations.WF_List;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_SorterWidget;
-import com.teraim.vortex.dynamic.workflow_realizations.WF_Static_List;
-import com.teraim.vortex.dynamic.workflow_realizations.WF_Widget;
-import com.teraim.vortex.dynamic.workflow_realizations.filters.WF_Column_Name_Filter;
-import com.teraim.vortex.dynamic.workflow_realizations.filters.WF_Filter;
 
 public class CreateSortWidgetBlock extends Block {
 
@@ -65,7 +52,7 @@ public class CreateSortWidgetBlock extends Block {
 		}
 		else {
 			o.addRow("Adding new SorterWidget of type "+type);
-			myContainer.add(new WF_SorterWidget(name,ctx,type,((WF_Static_List)targetList),selF,dispF,selP,isVisible));
+			myContainer.add(new WF_SorterWidget(name,ctx,type,((WF_List)targetList),((WF_Container)myContainer).getViewGroup(), selF,dispF,selP,isVisible));
 			//myContainer.add(new WF_Widget(buttonPanel));
 		}
 		

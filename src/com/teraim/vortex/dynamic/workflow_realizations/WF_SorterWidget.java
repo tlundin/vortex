@@ -7,6 +7,7 @@ import java.util.Set;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TableLayout.LayoutParams;
@@ -22,23 +23,28 @@ import com.teraim.vortex.dynamic.workflow_realizations.filters.WF_Filter;
 public class WF_SorterWidget extends WF_Widget {
 
 	private final String[] alfabet = {
-			"*","ABC","DEF","GHI","JKL",
-			"MN","OPQ","RS","T","UV",
-			"WXYZ","Å","Ä","Ö"};
+			"*","ABCD","EFGH","IJKL","MNOP","QRST","UVXY","ZÅÄÖ"};
 
 
 
 	WF_Filter existing;
-	WF_Static_List targetList;
+	WF_List targetList;
 
-	public WF_SorterWidget(String name,WF_Context ctx, String type, final WF_Static_List targetList,final String selectionField, final String displayField,String selectionPattern,boolean isVisible) {
-		super(name,new LinearLayout(ctx.getContext()),isVisible,ctx);
-		LinearLayout buttonPanel;
+	public WF_SorterWidget(String name,WF_Context ctx, String type, final WF_List targetList,final ViewGroup buttonPanel,final String selectionField, final String displayField,String selectionPattern,boolean isVisible) {
+		super(name,buttonPanel,isVisible,ctx);
+		//LinearLayout buttonPanel;
 		o = GlobalState.getInstance().getLogger();
-		LayoutParams lp = new LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.WRAP_CONTENT);
-		buttonPanel = (LinearLayout) getWidget();
-		buttonPanel.setOrientation(LinearLayout.VERTICAL);
-		buttonPanel.setLayoutParams(lp);
+		LayoutParams lp;
+		//buttonPanel = (LinearLayout) getWidget();
+		//buttonPanel.setOrientation(LinearLayout.VERTICAL);
+		//buttonPanel.setLayoutParams(lp);
+		int orientation =  ((LinearLayout)buttonPanel).getOrientation();
+		if (orientation==LinearLayout.HORIZONTAL)
+
+			lp = new LayoutParams(LayoutParams.WRAP_CONTENT,LayoutParams.MATCH_PARENT);
+		else 
+			lp = new LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.WRAP_CONTENT);
+
 
 
 		this.targetList=targetList;
@@ -66,10 +72,11 @@ public class WF_SorterWidget extends WF_Widget {
 			Button b;
 			for (String c:alfabet) {
 				b = new Button(ctx.getContext());
-				b.setLayoutParams(lp);
+				//b.setLayoutParams(lp);
 				b.setText(c);
 				b.setOnClickListener(cl);
 				buttonPanel.addView(b);
+				Log.d("nils","Added button "+c);
 			}
 
 		} else if (type.equals("column")) {
@@ -117,7 +124,7 @@ public class WF_SorterWidget extends WF_Widget {
 				} else{
 					o.addRow("");
 					o.addRedText("Could not find column <display_field>: "+displayField+" in WF_SorterWidget. Check your xml for block_create_sort_widget");
-					
+
 				}
 			} else {
 				o.addRow("");
@@ -129,6 +136,8 @@ public class WF_SorterWidget extends WF_Widget {
 
 
 	}
+
+
 
 	private void removeExistingFilter() {
 		if (existing!=null) {
