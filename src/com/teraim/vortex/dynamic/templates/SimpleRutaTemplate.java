@@ -294,7 +294,7 @@ public class SimpleRutaTemplate extends Executor implements OnGesturePerformedLi
 	private void createInvTypSelection() {
 		if (al.createRutaKeyMap()!=null) {
 		gs.setKeyHash(al.createRutaKeyMap());
-		CreateEntryFieldBlock x = new CreateEntryFieldBlock("typSpinner","RutaSorteringsTyp", "Aggregation_panel_3",true,"DDD",false,Constants.NO_DEFAULT_VALUE,null);
+		CreateEntryFieldBlock x = new CreateEntryFieldBlock("typSpinner","RutaSorteringsTyp", "Aggregation_panel_3",true,"DDD",false,Constants.NO_DEFAULT_VALUE,null,true);
 		x.create(myContext);
 		}
 	}

@@ -66,7 +66,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 	final LinearLayout inputContainer;
 
 	protected Map<Variable,View> myVars = new HashMap<Variable,View>();
-
+	private boolean autoOpenSpinner = true;
 	private GlobalState gs;
 	private VariableConfiguration al;
 	private static boolean HIDE=false,SHOW=true;
@@ -340,7 +340,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 		// Set an EditText view to get user input 
 		if (displayOut && virgin) {
 			virgin = false;
-			Log.d("nils","Setting key variable to "+varId);
+			//Log.d("nils","Setting key variable to "+varId);
 			super.setKeyRow(var);
 			if (var.getType()!=null && var.getType().equals(DataType.bool)) 
 				singleBoolean=true;
@@ -387,7 +387,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 			spinner.setAdapter(adapter);
 			inputContainer.addView(sl);			
 			Log.d("nils","Adding spinner for label "+label);
-			if (firstSpinner == null && myVars.isEmpty())
+			if (firstSpinner == null && myVars.isEmpty() && autoOpenSpinner)
 				firstSpinner=spinner;
 
 			myVars.put(var,sl);
@@ -903,6 +903,10 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 		return tmp.length==0?null:(CombinedRangeAndListFilter)tmp[0];						
 	}
 	 */
+	
+	protected void setAutoOpenSpinner(boolean open) {
+		autoOpenSpinner = open;
+	}
 
 }
 

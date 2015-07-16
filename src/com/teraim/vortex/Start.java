@@ -271,6 +271,7 @@ public class Start extends MenuActivity {
 						.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
 							public void onClick(DialogInterface dialog, int which) {
 								getFragmentManager().popBackStackImmediate();
+								GlobalState.getInstance().setCurrentContext(null);
 							}})
 							.setNegativeButton("Cancel",new DialogInterface.OnClickListener() {
 								public void onClick(DialogInterface dialog, int which) { 

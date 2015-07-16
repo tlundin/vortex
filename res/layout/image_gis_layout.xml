@@ -46,27 +46,28 @@
        android:scaleType="fitCenter"
        android:src="@drawable/gis_object_menu_button" />
    
+
     <LinearLayout
         android:id="@+id/menuL"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
-        android:background="@color/white"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"    
+     	android:layout_gravity="center"
+        android:background="@drawable/transparent_object_menu_pop_bg"
         android:minHeight="300dp"
+        android:minWidth="500dp"
         android:orientation="horizontal" >
-
+		
         <LinearLayout
             android:id="@+id/LayersL"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginLeft="10dp"
-            android:layout_weight=".5"
+            android:layout_weight="0.6"
             android:orientation="vertical" >
-
+			
             <TextView
                 android:id="@+id/filterName"
+                android:textColor="@color/white"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Layers"
@@ -78,13 +79,14 @@
 
         <LinearLayout
              android:id="@+id/FiltersL"
+            android:layout_weight="0.5" 
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginLeft="10dp"
-            android:layout_weight=".5"
             android:orientation="vertical" >
 
             <TextView
+                android:textColor="@color/white"
                 android:id="@+id/textView2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -96,7 +98,7 @@
         </LinearLayout>
 
     </LinearLayout>
-
+	
     <FrameLayout
         android:id="@+id/avstriktF"
         android:layout_width="wrap_content"
@@ -111,7 +113,7 @@
             android:layout_height="wrap_content"
             android:animateLayoutChanges="true"
             android:orientation="vertical"
-        	android:background="@color/transparent_blue"
+        	android:background="@drawable/object_menu_pop_bg"
             android:padding="5dp" >
 
             <Button
@@ -136,20 +138,22 @@
                 android:id="@+id/avstTS"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
                 android:inAnimation="@anim/push_up_in"
-        		android:outAnimation="@anim/push_up_out"
+                android:outAnimation="@anim/push_up_out"
                 android:textColor="#FFFFFF"
-                android:textSize="35sp"
+                android:textSize="30sp"
                 android:textStyle="bold" />
 
             <TextSwitcher
                 android:id="@+id/riktTS"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
                 android:inAnimation="@anim/push_up_in"
-        		android:outAnimation="@anim/push_up_out"
+                android:outAnimation="@anim/push_up_out"
                 android:textColor="#FFFFFF"
-                android:textSize="35sp"
+                android:textSize="30sp"
                 android:textStyle="bold" />
 
         </LinearLayout>
@@ -161,7 +165,7 @@
             android:animateLayoutChanges="true"
             android:orientation="vertical"
             android:padding="5dp"
-            android:background="@color/transparent_blue"
+            android:background="@drawable/object_menu_pop_bg"
             android:visibility="gone" >
 
             <Button

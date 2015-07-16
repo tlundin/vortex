@@ -93,7 +93,10 @@ public class WF_DisplayValueField extends WF_Widget implements EventListener {
 					strRes = GlobalState.getInstance().getContext().getString(R.string.yes);
 			else if (strRes.equals("0"))
 				strRes = GlobalState.getInstance().getContext().getString(R.string.no);
-		}
+		} else 
+			strRes = WF_Not_ClickableField.getFormattedText(strRes,format);
+
+		
 			
 		o.addRow("");
 		o.addText("Text in DisplayField "+label+" is [");o.addGreenText(strRes); o.addText("]");

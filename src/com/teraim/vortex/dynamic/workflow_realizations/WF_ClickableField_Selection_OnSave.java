@@ -15,10 +15,10 @@ public class WF_ClickableField_Selection_OnSave extends WF_ClickableField_Select
 	
 	
 	public WF_ClickableField_Selection_OnSave(String headerT, String descriptionT,
-			WF_Context context, String id,boolean isVisible) {
+			WF_Context context, String id,boolean isVisible, boolean autoOpenSpinner) {
 		super(headerT,descriptionT, context, id,isVisible);
 		context.addEventListener(this, EventType.onSave);
-		
+		setAutoOpenSpinner(autoOpenSpinner);
 	}
 
 	@Override

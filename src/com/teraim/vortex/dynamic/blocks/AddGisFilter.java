@@ -104,6 +104,7 @@ public class AddGisFilter extends Block implements GisFilter {
 				gisLayer.addObjectFilter(targetObjectType, this);
 
 				layersL.addView(filtersRow);
+				layersL.setVisibility(View.VISIBLE);
 			}
 			} else {
 				o.addRow("");

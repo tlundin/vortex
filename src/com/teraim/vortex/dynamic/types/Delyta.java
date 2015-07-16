@@ -28,7 +28,7 @@ public class Delyta {
 	private static final Coord West = new Coord(100,90);
 	private static final float NO_VALUE = -9999999;
 	private static final int[] DelytaColor = {Color.BLACK,
-		Color.parseColor("#4d90fe"),Color.parseColor("#EE7600"),Color.parseColor("#8A9A5B"),Color.DKGRAY};
+		Color.parseColor("#4d90fe"),Color.parseColor("#EE7600"),Color.parseColor("#8A9A5B"),Color.DKGRAY,Color.MAGENTA,Color.YELLOW};
 
 	private float myNumX=NO_VALUE,myNumY=NO_VALUE;
 	private DelyteManager dym;
@@ -70,7 +70,7 @@ public class Delyta {
 			end = raw.get(i+1);	
 			isArc = (start.avst==Rad && end.avst==Rad && !previousWasArc);
 			previousWasArc = isArc;					
-			if(rDist(start.rikt,end.rikt)>1||Math.abs(start.avst-end.avst)>0)
+			if(rDist(start.rikt,end.rikt)>1||Math.abs(start.avst-end.avst)>0||(rDist(start.rikt,end.rikt)>0&&isArc))
 				tag.add(new Segment(start,end,isArc));
 			else
 				Log.d("nils","Dist and avst same. Did not add tåg");
@@ -208,11 +208,44 @@ public class Delyta {
 	//If segment is not an arc, the southermost point is on the line from south pole perpendicular to the segment
 	//If segment is an arc, the arc is either covering the soutpole or not. If cover, done. If not, caluclate the line 
 	//between the southmost coordinate and south pole. This is the distance.
-	private float distance(Coord Pole) {
-		float Dx,Dy,x1y2,x2y1;
-		float ret=-1,max=10000;
+	private float distance(Coord pole) {
+		double r2,v2,d,d1,d2;
+		final double DR = Math.PI/180;
+		double min = 100000;
+		double r1 = pole.avst;
+		double v1 = pole.rikt*DR;
 
 		for (Segment s:tag) {
+			if (s.isArc) {
+				int endToPoleDist = pDist(s.end.rikt,pole.rikt);
+				int endToStartDist = pDist(s.end.rikt,s.start.rikt);
+				if (endToPoleDist < endToStartDist) {				
+					Log.d("nils","This arc goes through pole");
+					min=0;
+					break;
+				}
+			}
+			v2 = s.start.rikt*DR;
+			r2 = s.start.avst;
+			d = calcDistance(r1,v1,r2,v2);
+			if (d<min)
+				min = d;
+			Log.d("nils","DISTANCE TO "+(pole.equals(West)?"WEST":"SOUTH")+" for ("+s.start.avst+","+s.start.rikt+") to ("+pole.avst+","+pole.rikt+"): "+d);
+		}
+		return (float)min;
+	}
+	
+	private double calcDistance(double r1, double v1, double r2, double v2) {
+		return Math.sqrt( r1*r1 + r2*r2 - 2*r1*r2*Math.cos(v1 - v2) );
+	}
+	
+	private float oldDistance(Coord Pole) {
+		
+		float Dx,Dy,x1y2,x2y1;
+		float ret=-1,max=10000;
+		Log.d("vortex","In distance calc..");
+		for (Segment s:tag) {
+			Log.d("vortex","Segment: "+DelyteManager.printSegment(s));
 			if (s.isArc) {
 				int endToPoleDist = pDist(s.end.rikt,Pole.rikt);
 				int endToStartDist = pDist(s.end.rikt,s.start.rikt);
@@ -232,12 +265,15 @@ public class Delyta {
 					Coord shortest = dStart<=dEnd?s.start:s.end;
 					Dx = shortest.x-Pole.x;
 					Dy = shortest.y-Pole.y;
+					//Log.d("vortex","dStart dEnd, shortest dx dy"+dStart+","+dEnd+","+shortest.rikt+","+Dx+","+Dy);
 					ret = (float)Math.sqrt(Dx*Dx+Dy*Dy);
-					Log.d("nils","DISTANCE TO "+(Pole.equals(West)?"WEST":"SOUTH")+" POLAR: "+ret);
+					
+					Log.d("nils","DISTANCE TO "+(Pole.equals(West)?"WEST":"SOUTH")+" For ARC: "+ret);
 
 				}
 
 			} else {
+				/*
 				Dx = s.start.x-s.end.x;
 				Dy = s.start.y-s.end.y;
 				x1y2 = s.start.x*s.end.y;
@@ -245,8 +281,11 @@ public class Delyta {
 				float hyp = (float)Math.sqrt(Dx*Dx+Dy*Dy);
 				float d = Math.abs(Dy*Pole.x-Dx*Pole.y + x1y2 - x2y1);
 				ret = d/hyp;
-				Log.d("nils","DISTANCE TO "+(Pole.equals(West)?"WEST":"SOUTH")+ret);
 				float slope = Dy/Dx;
+				*/
+				
+				Log.d("nils","DISTANCE TO "+(Pole.equals(West)?"WEST":"SOUTH")+" for SIDE: "+ret);
+				
 
 			}
 			if (ret<max)

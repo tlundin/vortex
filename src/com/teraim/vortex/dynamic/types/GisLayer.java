@@ -86,5 +86,9 @@ public class GisLayer {
 	public String getLabel() {
 		return label;
 	}
+	
+	public String getId() {
+		return name;
+	}
 
 }

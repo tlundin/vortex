@@ -1,5 +1,6 @@
 package com.teraim.vortex.dynamic.workflow_realizations;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import android.graphics.Color;
@@ -22,6 +23,7 @@ WF_Not_ClickableField implements EventListener {
 	private WF_Static_List targetList;
 	private WF_Context myContext;
 	String myPattern;
+	private Set<Variable> allMatchingVariables;
 	//Detta är en id för widgeten - inte variabeln!!
 	//private static final String MY_WIDGET_ID = "Antal Arter";
 	
@@ -39,7 +41,7 @@ WF_Not_ClickableField implements EventListener {
 		targetList = myContext.getList(myTarget);
 		myType = sumOrCount;
 		myPattern = pattern;
-
+		allMatchingVariables=new HashSet<Variable>();
 		TextView text = (TextView)getWidget().findViewById(R.id.editfieldtext);
 		LinearLayout bg = (LinearLayout)getWidget().findViewById(R.id.background);
 		if (bgColor!=null)
@@ -52,9 +54,19 @@ WF_Not_ClickableField implements EventListener {
 			o.addRedText("Couldn't create "+header+" since target list: "+myTarget+" does not exist");
 			Log.e("parser","couldn't create SumAndCountOfVariables - could not find target list "+myTarget);
 		} else {
-
+			
+			for (Listable l:targetList.getList()) {
+				Set<Variable> vars = l.getAssociatedVariables();
+				for (Variable v:vars) {
+					if (v.getId().matches(myPattern))
+						allMatchingVariables.add(v);
+				}
+			}
+			
 		myContext.addEventListener(this,EventType.onRedraw);
 		}
+		
+		
 	}
 
 	@Override
@@ -81,12 +93,34 @@ WF_Not_ClickableField implements EventListener {
 		Long sum=Long.valueOf(0);
 		if (targetList==null) 
 			return;
+		
+		for (Variable v:allMatchingVariables) {
+			String val=v.getValue();
+			if (val!=null&&!val.isEmpty()) {
+				//Log.d("nils","VALUE: "+v.getValue());
+				if (myType == Type.count) {
+					sum++;
+				}
+					
+				else {
+					try {
+					sum+=Long.parseLong(val);
+					} catch (NumberFormatException e) {
+						Log.e("vortex","Numberformatexception for "+val);
+					}
+				}
+				
+			} else
+				variablesWithNoValue += v.getId()+",";
+		}
+		/*
 		for (Listable l:targetList.getList()) {
-			Set<Variable> vars = l.getAssociatedVariables();
-			//Log.d("nils","now in matchandrecalculate with list "+vars.size());
+			Set<Variable> vars = l.getAssociatedVariables();		
+			//Log.d("nils","now in matchandrecalculate with list size "+vars.size()+" my label: "+this.getLabel());
 			if (vars!=null && !vars.isEmpty()) {
 				for (Variable v:vars) {
 					if (v.getId().matches(myPattern)) {
+						Log.d("nils","Match for "+v.getId());
 						if (v.getValue()!=null) {
 							//Log.d("nils","VALUE: "+v.getValue());
 							if (myType == Type.count) {
@@ -114,11 +148,11 @@ WF_Not_ClickableField implements EventListener {
 			} else {
 				Log.d("nils ","Vars for "+l.getLabel()+" empty");
 			}
-		}
+		}*/
 		if (sum==0) {
 			variablesWithNoValue+="]";
 			o.addRow("");
-			o.addYellowText("Sum zero in Count/Add Block. No value found for:");
+			o.addYellowText("Sum zero in Count/Add Block. with pattern ["+myPattern+"] No value found for:");
 			o.addRow(variablesWithNoValue);
 		} else {
 			o.addRow("");

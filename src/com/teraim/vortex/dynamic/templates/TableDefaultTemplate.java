@@ -28,7 +28,7 @@ public class TableDefaultTemplate extends Executor {
 
 
 	View view; 
-	private LinearLayout my_root,sortPanel,tablePanel;
+	private LinearLayout my_root,sortPanel,tablePanel,filterPanel;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -58,6 +58,7 @@ public class TableDefaultTemplate extends Executor {
 		my_root = (LinearLayout)v.findViewById(R.id.myRoot);
 		sortPanel = (LinearLayout)v.findViewById(R.id.sortPanel);
 		tablePanel = (LinearLayout)v.findViewById(R.id.myTable);
+		filterPanel = (LinearLayout)v.findViewById(R.id.filterPanel);
 		myContext.addContainers(getContainers());
 
 		if (wf!=null) {
@@ -76,6 +77,7 @@ public class TableDefaultTemplate extends Executor {
 		WF_Container root = new WF_Container("root",my_root, null);
 		ret.add(root);
 		ret.add(new WF_Container("sort_panel",sortPanel,root));
+		ret.add(new WF_Container("filter_panel",filterPanel,root));
 		ret.add(new WF_Container("table_panel",tablePanel,root));
 		return ret;
 	}

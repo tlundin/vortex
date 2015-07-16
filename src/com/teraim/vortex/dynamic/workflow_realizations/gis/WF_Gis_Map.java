@@ -164,7 +164,8 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 		gisObjectMenu = (GisObjectsMenu)gisObjectsPopUp.findViewById(R.id.gisObjectsMenu);
 		gisObjectsPopUp.setVisibility(View.GONE);
 		mapView.addView(gisObjectsPopUp);
-
+		LinearLayout filtersL = (LinearLayout)mapView.findViewById(R.id.FiltersL);
+		filtersL.setVisibility(View.GONE);
 		FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(LayoutParams.WRAP_CONTENT,LayoutParams.WRAP_CONTENT);
 
 		params.gravity=Gravity.RIGHT;

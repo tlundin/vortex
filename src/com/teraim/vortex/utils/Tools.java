@@ -517,13 +517,13 @@ public class Tools {
 		if (m1.size() != m2.size())
 			return false;
 		for (String key: m1.keySet()) {
-			Log.d("nils","Key:"+key+" m1: "+(m1==null?"null":m1.toString())+" m2: "+(m2==null?"null":m2.toString()));
+			//Log.d("nils","Key:"+key+" m1: "+(m1==null?"null":m1.toString())+" m2: "+(m2==null?"null":m2.toString()));
 			if (m1.get(key)==null&&m2.get(key)==null)
 				continue;
 			if ((m1.get(key)==null || m2.get(key)==null)||!m1.get(key).equals(m2.get(key)))
 				return false;
 		}
-		Log.d("nils","keys equal..no header");
+		//Log.d("nils","keys equal..no header");
 		return true;
 	}
 
@@ -580,17 +580,38 @@ public class Tools {
 		context.finish();		
 	}
 
-	public static Map<String,String> findKeyDifferences(Map<String, String> longer,
-			Map<String, String> shorter) {
+	public static Map<String,String> findKeyDifferences(Map<String, String> k1,
+			Map<String, String> k2) {
 		Map<String,String> res = new HashMap<String,String>();
+		Map<String, String> longer,shorter;
 		//if (shorter!=null && longer!=null){
 		//	Log.d("vortex","Longer: "+longer.toString());
 		//	Log.d("vortex","shorter: "+shorter.toString());
 		//}
-		if (longer == null) 
-			return null;
-		if (shorter == null && !longer.isEmpty())
-			return copyKeyHash(longer);
+		
+		if (k1!=null &&!k1.isEmpty()) {
+			//If k2 is null, the diff is everything.
+			if (k2==null||k2.isEmpty())
+				return copyKeyHash(k1);
+			if (k1.size()>k2.size()) {
+				longer = k1;
+				shorter = k2;
+			}
+			if (k1.size()<k2.size()) {
+				longer = k2;
+				shorter = k1;
+			} 
+			//same.
+			else 
+				return null;
+		} else {
+			//both are null
+			if (k2==null||k2.isEmpty())
+				return null;
+			//else k2 is the difference.
+			else 
+				return copyKeyHash(k2);			
+		}
 		Set<String> sK = shorter.keySet();
 		for (String key:longer.keySet()) {
 			if (!sK.contains(key)) {

@@ -264,50 +264,59 @@ public class ProvytaView extends View {
 
 
 	private void drawDelytor(Canvas c, float cx, float cy, float oScaleF) {
-		float startX,startY,endX,endY;
+
 		for (Delyta d:delytor) {
-			for (Segment s:d.getSegments()) {	
-				if (s.isArc) {
-//					if (!d.isSelected())
-//						continue;	
-//					else {
-						RectF oval = new RectF(-r+cx, -r+cy, r+cx, r+cy);	
-						Log.d("nils","start - end"+s.start.rikt+"-"+s.end.rikt);
-						float start = s.start.rikt;
-						float end = Delyta.rDist((int)start,s.end.rikt);
-						Log.d("nils","Drawing arc from "+start+" with sweep "+end);
-						start = start-90;
-						if (start<0)
-							start +=360;
-						
-						p.setColor(d.isSelected()?Color.RED:isSelected?Color.LTGRAY:d.getColor());
-						c.drawArc(oval, start, end, false, p);
-//						c.drawArc(oval, start, end, false, pySelected);
-
-//					}
-				} else {
-					//float mirror = margY+r*2;							
-					startX = cx+(s.start.x*oScaleF);
-					startY = cy+(s.start.y*oScaleF);
-					endX = cx+(s.end.x*oScaleF);
-					endY = cy+(s.end.y*oScaleF);				
-					Log.d("nils","Drawing Start: "+startX+","+startY+" End: "+endX+","+endY);
-					p.setColor(d.isSelected()?Color.RED:isSelected?Color.LTGRAY:d.getColor());
-//					c.drawLine(startX,startY,endX,endY, d.isSelected()?pySelected:p);	
-					c.drawLine(startX,startY,endX,endY, p);
-				}
-
-			}
-			Point numPos = d.getNumberPos();
-			if (numPos!=null) {
-				float nx = cx+(numPos.x*oScaleF);
-				float ny = cy+(numPos.y*oScaleF);
-				Log.d("nils","Drawing number at: "+nx+","+ny);
-				px.setColor(d.isSelected()?Color.RED:isSelected?Color.LTGRAY:d.getColor());
-				c.drawText(d.getId()+"["+Math.round(d.getArea()/100)+"]", nx, ny, px);
-			}
+			if (!d.isSelected())
+				drawDelyta(d,c,cx,cy,oScaleF);
+		}
+		for (Delyta d:delytor) {
+			if (d.isSelected())
+				drawDelyta(d,c,cx,cy,oScaleF);
 		}
 	}
+
+	private void drawDelyta(Delyta d,Canvas c, float cx, float cy, float oScaleF) {
+		float startX,startY,endX,endY;
+		for (Segment s:d.getSegments()) {	
+			if (s.isArc) {
+//				if (!d.isSelected())
+//					continue;	
+//				else {
+					RectF oval = new RectF(-r+cx, -r+cy, r+cx, r+cy);	
+					Log.d("nils","start - end"+s.start.rikt+"-"+s.end.rikt);
+					float start = s.start.rikt;
+					float end = Delyta.rDist((int)start,s.end.rikt);
+					Log.d("nils","Drawing arc from "+start+" with sweep "+end);
+					start = start-90;
+					if (start<0)
+						start +=360;
+					
+					p.setColor(d.isSelected()?Color.RED:isSelected?Color.LTGRAY:d.getColor());
+					c.drawArc(oval, start, end, false, p);
+//					c.drawArc(oval, start, end, false, pySelected);
+
+//				}
+			} else {
+				//float mirror = margY+r*2;							
+				startX = cx+(s.start.x*oScaleF);
+				startY = cy+(s.start.y*oScaleF);
+				endX = cx+(s.end.x*oScaleF);
+				endY = cy+(s.end.y*oScaleF);				
+				Log.d("nils","Drawing Start: "+startX+","+startY+" End: "+endX+","+endY);
+				p.setColor(d.isSelected()?Color.RED:isSelected?Color.LTGRAY:d.getColor());
+//				c.drawLine(startX,startY,endX,endY, d.isSelected()?pySelected:p);	
+				c.drawLine(startX,startY,endX,endY, p);
+			}
+
+		}
+		Point numPos = d.getNumberPos();
+		if (numPos!=null) {
+			float nx = cx+(numPos.x*oScaleF);
+			float ny = cy+(numPos.y*oScaleF);
+			Log.d("nils","Drawing number at: "+nx+","+ny);
+			px.setColor(d.isSelected()?Color.RED:isSelected?Color.LTGRAY:d.getColor());
+			c.drawText(d.getId()+"["+Math.round(d.getArea()/100)+"]", nx, ny, px);
+		}	}
 
 	public void showDelytor(List<Delyta> delytor, boolean isSelected) {
 		

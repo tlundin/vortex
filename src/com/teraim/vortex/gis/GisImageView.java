@@ -3,7 +3,6 @@ package com.teraim.vortex.gis;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -11,6 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.UUID;
 
 import android.R;
@@ -30,7 +30,6 @@ import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
-import android.view.View.OnLongClickListener;
 import android.widget.TextSwitcher;
 import android.widget.TextView;
 
@@ -226,7 +225,7 @@ public class GisImageView extends GestureImageView {
 					if (newGisObj ==null) {
 
 						Set<GisObject> bag;
-						for (GisLayer l:myLayers.values()) { 
+						for (GisLayer l:myLayers) { 
 
 							bag = l.getBagOfType(gisTypeToCreate.getName());
 							if (bag!= null) {
@@ -550,7 +549,7 @@ public class GisImageView extends GestureImageView {
 				break;
 			case Polygon:
 				ret = new GisPolygonObject(gisTypeToCreate, keyH.keyHash,
-						"",GisConstants.SWEREF);
+						"",GisConstants.SWEREF,null);
 				break;
 				
 			}
@@ -721,12 +720,12 @@ public class GisImageView extends GestureImageView {
 			if(adjustedScale != 1.0f) {
 				canvas.scale(adjustedScale, adjustedScale);
 			}
-			for (String layer:myLayers.keySet()) {
-				//Log.d("vortex","drawing layer "+layer);
+			for (GisLayer layerO:myLayers) {
+				String layerId = layerO.getId();
+				Log.d("vortex","drawing layer "+layerId);
 				//get all objects that should be drawn on this layer.
-				GisLayer layerO = myLayers.get(layer);
 				if (!layerO.isVisible()) {
-					Log.d("vortex","layer not visible...skipping "+layer);
+					Log.d("vortex","layer not visible...skipping "+layerId);
 					continue;
 				}
 				if (layerO.hasDynamic()) {
@@ -790,19 +789,9 @@ public class GisImageView extends GestureImageView {
 								String color = gop.getColor();
 								Style style = gop.getStyle();
 								boolean isCircle = gop.isCircle();
-								Variable statusVar = gop.getStatusVariable();
-								if (statusVar!=null ) {
-									String value = statusVar.getValue();
-									if (value.equals("1")) {
-										color = "yellow";
-									}
-									else if (value.equals("2")) {
-										color = "red";
-									}
-									else if	(value.equals("3")) {
-										color = "green";
-									}
-								}
+								String statusColor = colorShiftOnStatus(gop.getStatusVariable());
+								if (statusColor!=null)
+									color = statusColor;
 								if (filters!=null&&!filters.isEmpty()) {
 									//Log.d("vortex","has filter!");
 									RuleExecutor ruleExecutor = GlobalState.getInstance().getRuleExecutor();
@@ -950,6 +939,23 @@ public class GisImageView extends GestureImageView {
 
 	}
 	
+	private String colorShiftOnStatus(Variable statusVar) {
+		String color=null;
+		if (statusVar!=null ) {
+			String value = statusVar.getValue();
+			if (value.equals("1")) {
+				color = "yellow";
+			}
+			else if (value.equals("2")) {
+				color = "red";
+			}
+			else if	(value.equals("3")) {
+				color = "green";
+			}
+		} 
+		return color;
+	}
+
 	private void drawGop(Canvas canvas, GisObject go, boolean selected) {
 		int[] xy;
 		//will only be called from here if selected.
@@ -978,7 +984,7 @@ public class GisImageView extends GestureImageView {
 
 			//Add glow effect if it is currently being drawn.
 			boolean beingDrawn = go.equals(newGisObj);
-			Paint paint = this.createPaint(go.getColor(), null);
+			
 			if (go instanceof GisPolygonObject && !beingDrawn)
 				p.close();
 			if (selected) {
@@ -987,9 +993,18 @@ public class GisImageView extends GestureImageView {
 			}
 			else if (beingDrawn) {
 				canvas.drawPath(p, polyPaint);
-			} else
-				canvas.drawPath(p, createPaint(go.getColor(),Paint.Style.STROKE,1));
+			} else {
+				String statusColor = colorShiftOnStatus(go.getStatusVariable());
+				String color = null;
+				if (statusColor!=null) {
+					color = statusColor;
+				}
+				else
+					color = go.getColor();
+				canvas.drawPath(p, createPaint(color,Paint.Style.STROKE,0));
+			}
 		}
+		
 			
 	}
 
@@ -1228,18 +1243,24 @@ public class GisImageView extends GestureImageView {
 		}
 	}
 	 */
-	Map<String,GisLayer> myLayers=new HashMap<String,GisLayer>();
+	List<GisLayer> myLayers=new ArrayList<GisLayer>();
 
-	public void addLayer(GisLayer layer,String identifier) {
+	public void addLayer(GisLayer layer) {
 		if(layer!=null) {
 			Log.d("vortex","Succesfully added layer");
-			myLayers.put(identifier,layer);
+			myLayers.add(layer);
 		}
 
 	}
 
 	public GisLayer getLayer(String identifier) {
-		return myLayers.get(identifier);
+		if (myLayers==null||myLayers.isEmpty()||identifier==null)
+			return null;
+		for (GisLayer gl:myLayers) {
+			if (gl.getId().equals(identifier))
+				return gl;
+		}
+		return null;
 	}
 
 	private boolean isStarted=false;
@@ -1305,8 +1326,7 @@ public class GisImageView extends GestureImageView {
 					Log.d("vortex","NOT Setting status variable to 1...current val: "+statusVariable.getValue());
 				myMap.registerEvent(new WF_Event_OnSave("Gis"));
 
-			} else
-				Log.e("vortex","statusvariable missing!!");
+			} 
 
 			Start.singleton.changePage(wf,statusVarS);
 

@@ -1,8 +1,8 @@
 package com.teraim.vortex.dynamic.workflow_realizations;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import android.util.Log;
 import android.view.View;
@@ -30,20 +30,20 @@ public class WF_SorterWidget extends WF_Widget {
 	WF_Filter existing;
 	WF_List targetList;
 
-	public WF_SorterWidget(String name,WF_Context ctx, String type, final WF_List targetList,final ViewGroup buttonPanel,final String selectionField, final String displayField,String selectionPattern,boolean isVisible) {
-		super(name,buttonPanel,isVisible,ctx);
-		//LinearLayout buttonPanel;
+	public WF_SorterWidget(String name,WF_Context ctx, String type, final WF_List targetList,final ViewGroup container,final String selectionField, final String displayField,String selectionPattern,boolean isVisible) {
+		super(name,new LinearLayout(ctx.getContext()),isVisible,ctx);
+		LinearLayout buttonPanel;
 		o = GlobalState.getInstance().getLogger();
 		LayoutParams lp;
-		//buttonPanel = (LinearLayout) getWidget();
-		//buttonPanel.setOrientation(LinearLayout.VERTICAL);
-		//buttonPanel.setLayoutParams(lp);
-		int orientation =  ((LinearLayout)buttonPanel).getOrientation();
+		int orientation =  ((LinearLayout)container).getOrientation();
 		if (orientation==LinearLayout.HORIZONTAL)
-
 			lp = new LayoutParams(LayoutParams.WRAP_CONTENT,LayoutParams.MATCH_PARENT);
 		else 
 			lp = new LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.WRAP_CONTENT);
+
+		buttonPanel = (LinearLayout) getWidget();
+		buttonPanel.setOrientation(orientation);
+		buttonPanel.setLayoutParams(lp);
 
 
 
@@ -106,7 +106,7 @@ public class WF_SorterWidget extends WF_Widget {
 
 				int cIndex = t.getColumnIndex(displayField);
 				if (cIndex != -1) {
-					Set<String> txts = new HashSet<String>();
+					Set<String> txts = new TreeSet<String>();
 					Button b;
 					for(List<String>row:rows)
 						txts.add(row.get(cIndex));

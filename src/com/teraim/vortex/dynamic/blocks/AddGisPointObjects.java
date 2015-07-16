@@ -369,7 +369,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 
 							else if (myType.equals(GisObjectType.Polygon)) {
 								Log.d("vortex","Adding polygon");
-								myGisObjects.add(new GisPolygonObject(this,map1,storedVar1.value,coordType));
+								myGisObjects.add(new GisPolygonObject(this,map1,storedVar1.value,coordType,statusVar));
 							}
 						}
 						//Add these variables to bag 

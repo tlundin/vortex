@@ -1,6 +1,7 @@
 package com.teraim.vortex.non_generics;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -34,8 +35,10 @@ public class DelyteManager {
 	VariableConfiguration al;
 	private List<Delyta> myDelytor = new ArrayList<Delyta>();
 	private int myPyID;
+	private List<Segment> answer;
+	private final static float r = 100;
 
-	public static final int MAX_DELYTEID = 5;
+	public static final int MAX_DELYTEID = 7;
 
 
 
@@ -67,14 +70,14 @@ public class DelyteManager {
 				rikt +=360;
 			//Log.d("vortex","Avstånd: "+avst+" Rikt: "+rikt+" from X "+this.x+"Y "+this.y);
 		}
-		
+
 		public int getAvst() {
 			return Math.round(avst);
 		}
 		public int getRikt() {
 			return Math.round(rikt);
 		}
-		
+
 
 	}
 
@@ -154,14 +157,14 @@ public class DelyteManager {
 						if (tmp!=null)
 							tmp.setValue(d.getId()+"");
 					}
-						
+
 
 				}
 		}
 
-		
+
 		return true;
-		
+
 
 	}
 
@@ -180,8 +183,8 @@ public class DelyteManager {
 					arcs.add(s);
 			}
 			if (!arcs.isEmpty()) {
-			Iterator<Segment> it = arcs.iterator();
-			//if (arcs.size()==1) {				
+				Iterator<Segment> it = arcs.iterator();
+				//if (arcs.size()==1) {				
 				//Put in middle of pyramid.
 				Segment arc=it.next();
 				int dist;
@@ -333,14 +336,212 @@ public class DelyteManager {
 			 */
 
 			//A free arc is an arc that spans a gap between two existing arcs
-			
+
 			Segment x = sortedArcs.last();
-	
+
 			Log.d("nils","number of arcs: "+sortedArcs.size());
 			for (Segment s:sortedArcs) {
 				Log.d("nils","checking arc: "+x.end.rikt+","+s.start.rikt);
 				if (Delyta.rDist(x.end.rikt, s.start.rikt)<1) {
 					Log.d("nils","skipping "+x.end.rikt+","+s.start.rikt);
+
+				} else {
+					Segment potential = new Segment(x.end,s.start,true);
+					//check that this arc is not already covered.
+					if (!hasSegment(sortedArcs,potential)) {
+						freeArcs.add(new Segment(x.end,s.start,true));
+						Log.d("nils","Adding free arc piece. S:"+x.end.rikt+" E:"+s.start.rikt);
+					}
+				}
+				x=s;
+			}
+		}
+
+		//Extract all segments that are not arcs.
+		for(Delyta d:myDelytor) {
+			for (Segment s:d.tag) {
+				if (s.isArc)
+					continue;
+				else {//Add reverse of all sides.
+					freeArcs.add(new Segment(s.end,s.start,false));
+					Log.d("vortex","added side piece S:"+s.end.rikt+" E:"+s.start.rikt);
+				}
+			}
+		}
+
+		Log.d("vortex","Frearcs has "+freeArcs.size()+" elements");
+
+		Set<List<Segment>> bgPollies= new HashSet<List<Segment>>();
+
+		//Find all connected loops.
+		//loop needs at least 3 pieces & one arc.
+
+		while (findPoly(new ArrayList<Segment>(),freeArcs)) {
+			Log.d("Vortex","background poly:");
+			for(Segment s:answer) {
+				printSegment(s);
+				if (!freeArcs.remove(s))
+					Log.e("vortex","remove failed!");
+			}
+			bgPollies.add(answer);
+		}
+		//Should look for more. 
+
+
+		for (List<Segment> bgp:bgPollies) {
+			if (bgp.size()>0) {
+				Delyta d = new Delyta(this);
+				d.createFromSegments(bgp);
+				myDelytor.add(d);
+			}
+		}
+
+		Log.d("nils","myDelytor now contains "+myDelytor.size()+" delytor.");
+		printDelytor();
+
+
+	}
+
+	//Finds a closed polygon built from the segments in freeArcs. If not, returns false
+	private boolean findPoly(List<Segment> bgPoly, List<Segment> freeArcs) {
+
+		Log.d("vortex","freearcsize: "+freeArcs.size());
+		Log.d("vortex","bgpoly size: "+bgPoly.size());
+
+		int polySize = bgPoly.size();
+		if (polySize == 0) {
+			if (freeArcs.isEmpty()) {
+				Log.d("vortex","freearcs empty and polysize 0, fail!");
+				return false;
+			}
+			bgPoly.add(freeArcs.remove(0));
+			return findPoly(bgPoly,freeArcs);
+
+		}
+
+		//If first and last touches, and there is more than one segment, this is a poly!
+		if (polySize>1&&isConnected(bgPoly.get(0),bgPoly.get(polySize-1))) {
+			if (bgPoly.get(0).isArc || bgPoly.get(polySize-1).isArc) {
+				Log.d("vortex","found touch between "+printSegment(bgPoly.get(polySize-1))+" and "+ printSegment(bgPoly.get(0)));
+				answer = new ArrayList<Segment>();
+				answer.addAll(bgPoly);
+				Log.d("vortex","ansewr has "+answer.size()+" elements!");
+				return true;
+			} else {
+				Log.e("vortex","a loop between two sides...not allowed");
+				return false;
+			}
+		}
+
+		Iterator<Segment> it = freeArcs.iterator();
+		Segment lastP = bgPoly.get(bgPoly.size()-1);
+		while (it.hasNext()) {
+			Segment currentP = it.next();
+			if (isTouching(lastP,currentP)) {
+				Log.d("vortex","YES!");
+				List<Segment>altPoly = new ArrayList<Segment>();
+				altPoly.addAll(bgPoly);
+				altPoly.add(currentP);
+				List<Segment>altFreeArcs = new ArrayList<Segment>();
+				altFreeArcs.addAll(freeArcs);
+				altFreeArcs.remove(currentP);
+				//bgPoly.add(currentP);
+				//freeArcs.remove(currentP);
+				if (findPoly(altPoly,altFreeArcs))
+					return true;
+				else {
+					Log.d("vortex","fail..."+printSegment(currentP)+" trying next..");
+				}
+			}
+		}
+		Log.d("vortex","no touch found...removing segment "+printSegment(lastP));
+		bgPoly.remove(lastP);
+		return findPoly(bgPoly,freeArcs);
+
+
+	}
+
+	public float getArea(int delyteId) {
+		float area=0;
+		for(Delyta d:myDelytor) {
+			if (d.getId()==delyteId)
+				area += d.getArea();
+		}
+		return area;
+	}
+	
+	public static String printSegment(Segment c) {
+		return "[ s:("+c.start.avst+","+c.start.rikt+"),e:("+c.end.avst+","+c.end.rikt+") ]";
+	}
+
+	private boolean hasArc(List<Segment> segments) {
+		for (Segment s:segments)
+			if (s.isArc)
+				return true;
+		return false;
+	}
+
+	private boolean startsOnEdge(Segment s) {
+		return s.start.avst==r;
+	}
+
+	private boolean isTouching(Segment a, Segment b) {
+		Log.d("vortex","isTouching "+printSegment(a)+" and "+printSegment(b)+" ?");
+		if (a.isArc&&b.isArc) {
+			Log.e("vortex","Touch between arcs, not allowed");
+			return false;
+		}
+		return a.end.rikt == b.start.rikt && a.end.avst==b.start.avst;
+	}
+	private boolean isConnected(Segment a, Segment b) {
+		return a.start.rikt == b.end.rikt && a.start.avst==b.end.avst;
+
+	}
+
+
+	public void calcRemainingYtaOld() {
+		List<Segment> freeArcs = new ArrayList<Segment>();
+		List<Segment> bgPoly;
+
+		SortedSet<Segment> sortedArcs = new TreeSet<Segment>(new Comparator<Segment>(){
+			@Override
+			public int compare(Segment lhs, Segment rhs) {
+				return (int)(lhs.start.rikt-rhs.start.rikt);
+			}});
+		//Sort arcs. Save in set.
+		for(Delyta d:myDelytor)
+			for (Segment s:d.tag) {
+				if (!s.isArc)
+					continue;
+				else {
+					Log.d("nils","Adding existing arc piece. S:"+s.start.rikt+" E:"+s.end.rikt+" Delyta "+d.getId());
+					sortedArcs.add(s);
+				}
+			}
+		if (sortedArcs.isEmpty()) {
+			Log.d("nils","NO FREE ARC!");
+		} else {
+			/*			//A free arc is an arc that stretches between the end of an existing arc, and the beginning of the next.
+			Segment x = sortedArcs.last();
+			Log.d("nils","number of arcs: "+sortedArcs.size());
+			for (Segment s:sortedArcs) {
+				freeArcs.add(new Segment(x.end,s.start,true));
+				Log.d("nils","Adding free arc piece. S:"+x.end.rikt+" E:"+s.start.rikt);
+				x=s;
+			}
+		}
+			 */
+
+			//A free arc is an arc that spans a gap between two existing arcs
+
+			Segment x = sortedArcs.last();
+
+			Log.d("nils","number of arcs: "+sortedArcs.size());
+			for (Segment s:sortedArcs) {
+				Log.d("nils","checking arc: "+x.end.rikt+","+s.start.rikt);
+				if (Delyta.rDist(x.end.rikt, s.start.rikt)<1) {
+					Log.d("nils","skipping "+x.end.rikt+","+s.start.rikt);
+					x=s;
 					continue;
 				}
 				Segment potential = new Segment(x.end,s.start,true);
@@ -363,13 +564,14 @@ public class DelyteManager {
 					freeArcs.add(new Segment(s.end,s.start,false));
 			}
 		}
+		Log.d("vortex","Freacrs has "+freeArcs.size()+" elements");
 		//starting piece should not be an arc. Use first other. If no other, there are no free pieces.
 		Set<List<Segment>> bgPollies= new HashSet<List<Segment>>();
 		int previousSize=0;
-				
+
 		while(freeArcs.size()>startP && freeArcs.size()!=previousSize) {
 			previousSize = freeArcs.size();
-		//if (freeArcs.size()>startP) {
+			//if (freeArcs.size()>startP) {
 			bgPoly = new ArrayList<Segment>();
 			Segment c = freeArcs.get(startP);
 			bgPoly.add(c);
@@ -386,16 +588,16 @@ public class DelyteManager {
 						found = true;
 						break;						
 					} 
-									
+
 				}
-				
+
 			}
 			Log.d("nils","bgpoly found of size "+bgPoly.size());
 			for(Segment s:bgPoly) 
 				Log.d("nils","start: "+s.start.rikt+"end: "+s.end.rikt+" isarc: "+s.isArc);
 			bgPollies.add(bgPoly);
 		}
-			/*
+		/*
 		for(Delyta d:myDelytor) {
 			for (Segment s:d.tag) {
 				if (s.isArc)
@@ -471,16 +673,16 @@ public class DelyteManager {
 			myDelytor.add(d);
 		}
 
-			 * 
-			 */
+		 * 
+		 */
 		for (List<Segment> bgp:bgPollies) {
 			if (bgp.size()>0) {
-			Delyta d = new Delyta(this);
-			d.createFromSegments(bgp);
-			myDelytor.add(d);
+				Delyta d = new Delyta(this);
+				d.createFromSegments(bgp);
+				myDelytor.add(d);
 			}
 		}
-		
+
 		Log.d("nils","myDelytor now contains "+myDelytor.size()+" delytor.");
 		printDelytor();
 
@@ -495,7 +697,7 @@ public class DelyteManager {
 
 	private boolean hasSegment(SortedSet<Segment> sortedArcs, Segment p) {
 		for (Segment s:sortedArcs) {
-			if (p.start.rikt==s.start.rikt && p.end.rikt == s.end.rikt)
+			if (p.start.rikt==s.start.rikt) // && p.end.rikt == s.end.rikt)
 				return true;
 		}
 		return false;
@@ -674,7 +876,7 @@ public class DelyteManager {
 				}
 			}
 		}	
-			
+
 		hasUnsaved = false;
 		return true;
 	}
@@ -699,9 +901,9 @@ public class DelyteManager {
 		return myPyID;
 	}
 
-	public void setSelected(Delyta dy) {
+	public void setSelected(int i) {
 		for(Delyta d:myDelytor) {
-			if (dy!=null && d.equals(dy))
+			if (i == d.getId())
 				d.setSelected(true);
 			else
 				d.setSelected(false);

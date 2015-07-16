@@ -96,7 +96,7 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 		final String currRuta = al.getCurrentRuta();
 		dym = DelyteManager.getInstance();
 		
-		dym.setSelected(null);
+		dym.setSelected(-1);
 		statusHandler = gs.getStatusHandler();
 
 		isAbo = Constants.isAbo(dym.getPyID());
@@ -182,7 +182,7 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 				public void onClick() {
 					al.getVariableInstance(NamedVariables.CURRENT_DELYTA).setValue(I+"");
 					Delyta dy = dym.getDelyta(I);
-					dym.setSelected(dy);
+					dym.setSelected(I);
 					Log.d("nils","Selected delyta set to "+dy.getId()+"");						
 					gs.sendEvent(MenuActivity.REDRAW);
 				} },buttonContext,-1);

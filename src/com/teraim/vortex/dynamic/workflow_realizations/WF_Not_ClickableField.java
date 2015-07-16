@@ -145,7 +145,7 @@ public abstract class WF_Not_ClickableField extends WF_ListEntry {
 								break;
 							}
 				} else
-					outS = getFormattedText(variable,value,outC.format);
+					outS = getFormattedText(value,outC.format);
 			} 
 			//boolean..use yes or no.
 			else {
@@ -179,12 +179,11 @@ public abstract class WF_Not_ClickableField extends WF_ListEntry {
 
 
 
-	public String getFormattedText(Variable varId, String value, String format) {
+	public static String getFormattedText(String value, String format) {
 		int lf=0,rf=0;
 		boolean hasFormat = false, hasDot = false;
-		if (value!=null||value.length()>0) {
+		if (value!=null&&value.length()>0) {
 			if (format!=null) {
-				hasFormat = true;
 				if (format.contains(".")) {
 					hasDot = true;
 					String[] p = format.split("\\.");
@@ -194,10 +193,12 @@ public abstract class WF_Not_ClickableField extends WF_ListEntry {
 					} 
 				} else
 					lf = format.length();
+				//hasformat true if lf or rf is not 0 length.
+				hasFormat = (lf!=0||rf!=0);
 			}
 
 			if (hasFormat) {
-				int l = value.length();
+				
 				if (hasDot) {
 					if (!value.contains(".")) {
 						value += ".0";
@@ -231,12 +232,12 @@ public abstract class WF_Not_ClickableField extends WF_ListEntry {
 		return value;
 	}
 
-	private String addZeros(String s,int i) {
+	private static String addZeros(String s,int i) {
 		while (i-->0)
 			s="0"+s;
 		return s;
 	}
-	private String addSpaces(String s,int i) {
+	private static String addSpaces(String s,int i) {
 		while (i-->0)
 			s=" "+s;
 		return s;

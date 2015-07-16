@@ -824,7 +824,7 @@ public class RuleExecutor {
 				return null;
 			}
 			if (args==null||args.length!=1) {
-				Log.e("vortex","no or too few arguments in hasSame");
+				Log.e("vortex","no or too few arguments in getDelytaArea");
 				gs.getLogger().addRow("");
 				gs.getLogger().addRedText("No or too few arguments in getDelytaArea");
 				return null;
@@ -834,7 +834,7 @@ public class RuleExecutor {
 			if (arg !=null && arg.length()>0) {
 
 			} else {
-				Log.e("vortex","no first argument in hasSame");
+				Log.e("vortex","no first argument in getDelytaArea");
 				gs.getLogger().addRow("");
 				gs.getLogger().addRedText("Argument missing in getDelytaArea");
 				return null;
@@ -856,14 +856,14 @@ public class RuleExecutor {
 			} else
 				value = arg;
 
-			Delyta dy = dym.getDelyta(Integer.parseInt(value));
-			if (dy==null) {
-				Log.e("vortex","delyta null in getdelytaarea");
-				gs.getLogger().addRow("");
-				gs.getLogger().addRedText("Delyta "+args[0]+" does not exist (in function getDelytaArea)");
+			float area = dym.getArea(Integer.parseInt(value));
+			if (area == 0) {
+				Log.e("vortex","area 0 in getdelytaarea");
+				gs.getLogger().addRow("Area 0");
+				gs.getLogger().addRedText("Either Delyta "+args[0]+" does not exist or area is 0 (in function getDelytaArea)");
 				return null;
 			}
-			return Float.toString(dy.getArea()/100);
+			return Float.toString(area/100);
 		}
 
 		else if (item.getType()==TokenType.hasSame||item.getType()==TokenType.hasValue||item.getType()==TokenType.allHaveValue) {

@@ -1177,7 +1177,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 
 	private CreateEntryFieldBlock readBlockCreateEntryField(XmlPullParser parser)throws IOException, XmlPullParserException {
 		//o.addRow("Parsing block: block_create_entry_field...");
-		boolean isVisible = true,showHistorical = false;
+		boolean isVisible = true,showHistorical = false,autoOpenSpinner=true;
 		String namn=null,containerId=null,postLabel="",format=null,id=null,initialValue=null,label=null;
 		Unit unit = Unit.nd;		
 		parser.require(XmlPullParser.START_TAG, null,"block_create_entry_field");
@@ -1206,12 +1206,14 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				showHistorical = readText("show_historical",parser).equals("true");
 			}  else if (name.equals("initial_value")) {
 				initialValue = readText("initial_value",parser);
+			} else if (name.equals("auto_open_spinner")) {
+				autoOpenSpinner = readText("auto_open_spinner",parser).equals("true");;
 			}
 			else
 				skip(name,parser,o);
 		}
 		checkForNull("block_ID",id,"name",namn,"container_name",containerId,"format",format);
-		return new CreateEntryFieldBlock(id,namn, containerId,isVisible,format,showHistorical,initialValue,label);
+		return new CreateEntryFieldBlock(id,namn, containerId,isVisible,format,showHistorical,initialValue,label,autoOpenSpinner);
 	}
 
 	/**

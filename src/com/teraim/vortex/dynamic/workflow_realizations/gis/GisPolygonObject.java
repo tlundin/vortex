@@ -9,6 +9,7 @@ import android.util.Log;
 
 import com.teraim.vortex.dynamic.types.Location;
 import com.teraim.vortex.dynamic.types.SweLocation;
+import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.utils.Geomatte;
 
 public class GisPolygonObject extends GisObject {
@@ -19,9 +20,9 @@ public class GisPolygonObject extends GisObject {
 
 	//Called when XML has defined the object with a full configuration
 	public GisPolygonObject(FullGisObjectConfiguration conf, Map<String, String> keyChain,
-			String polygons,String coordType) {
+			String polygons,String coordType,Variable statusVar) {
 		//TODO: Add statusvariable
-		super(conf,keyChain,null,null);
+		super(conf,keyChain,null,statusVar);
 		this.polygons=buildMap(polygons,coordType);	
 		this.conf=conf;
 	}

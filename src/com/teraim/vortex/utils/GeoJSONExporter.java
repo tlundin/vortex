@@ -49,16 +49,25 @@ public class GeoJSONExporter extends Exporter {
 				writer.endObject();
 				writer.name("features");
 				writer.beginArray();
-				Map<String,String> currentKeys;
+				Map<String,String> currentHash=null,previousHash=null;
 
 				Map<String,Map<String,String>> gisObjects=new HashMap<String,Map<String,String>>();
 				String uid;
 				Map<String, String> gisObjM;
 				do {
-					//Count number of geoobj exported
-					varC++;
-					currentKeys = cp.getKeyColumnValues();
-					uid = currentKeys.get("uid");
+					currentHash = cp.getKeyColumnValues();
+					uid = currentHash.get("uid");
+					if (varC>0) {
+						if (!Tools.sameKeys(previousHash,currentHash)) {
+							Log.e("vortex","Diff!!!");
+						Map<String, String> diff = Tools.findKeyDifferences(currentHash, previousHash);
+						if (diff!=null) {
+						//Find difference.
+							Log.d("vortex","UID: "+uid+" DIFF: "+diff.toString());
+						}
+						}
+					}
+					
 					if (uid==null)
 						Log.e("vortex","missing uid!!!");
 					else {
@@ -72,7 +81,12 @@ public class GeoJSONExporter extends Exporter {
 						
 						gisObjM.put(name, cp.getVariable().value);
 
-						Log.d("vortex","Current keys: "+currentKeys.toString());
+						Log.d("vortex","Current hash: "+currentHash.toString());
+						//current becomes previous
+						previousHash = currentHash;
+						//Count number of geoobj exported
+						varC++;
+						
 					}
 				} while (cp.next());
 				Log.d("vortex","now inserting into json.");
@@ -108,7 +122,7 @@ public class GeoJSONExporter extends Exporter {
 					else {
 						p=true;
 						Log.d("vortex","POLYGON!!!");
-						polygons = coordinates.split("|");
+						polygons = coordinates.split("\\|");
 						writer.beginArray();
 					}
 					for (String polygon:polygons) {
@@ -116,8 +130,11 @@ public class GeoJSONExporter extends Exporter {
 							writer.beginArray();
 						String[] coords = polygon.split(",");
 						writer.beginArray();
-						for (int i =0;i<coords.length;i++)
+						for (int i =0;i<coords.length;i++) {
+							Log.d("vortex","cord length: "+coords.length);
+							Log.d("vortex","coord ["+i+"] :"+coords[i]);
 							writer.value(Float.parseFloat(coords[i]));
+						}
 						writer.endArray();
 						if (p)
 							writer.endArray();
@@ -131,8 +148,6 @@ public class GeoJSONExporter extends Exporter {
 					//Add the UUID
 					write("GlobalID",uid);
 					for (String mKey:gisObjM.keySet()) {
-
-
 						write(mKey,gisObjM.get(mKey));
 						Log.d("vortex","var, value: "+mKey+","+gisObjM.get(mKey));
 					}
