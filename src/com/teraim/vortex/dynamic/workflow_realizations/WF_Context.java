@@ -52,6 +52,7 @@ public class WF_Context {
 	private boolean hasGPSTracker = false;
 	private CHash myHash;
 	private Workflow myWorkflow;
+	private boolean hasSatNav;
 
 
 
@@ -296,10 +297,6 @@ public class WF_Context {
 		return currentGis;
 	}
 	
-	public void startTracker() {
-		hasGPSTracker=true;
-	}
-	
 	
 	public boolean hasGPSTracker() {
 		return hasGPSTracker;
@@ -328,6 +325,12 @@ public class WF_Context {
 			Log.e("vortex", "myhash was null i getRawHash, context!!");
 			return null;
 		}
+	}
+	public boolean hasSatNav() {
+		return hasSatNav;
+	}
+	public void enableSatNav() {
+		hasSatNav=true;
 	}
 
 

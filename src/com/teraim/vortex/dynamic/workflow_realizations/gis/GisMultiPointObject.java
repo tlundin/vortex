@@ -60,9 +60,9 @@ public class GisMultiPointObject extends GisObject {
 
 			Location A = Geomatte.subtract(myCoordinates.get(i),mapLocationForClick);
 			Location B = Geomatte.subtract(myCoordinates.get(i+1),mapLocationForClick);
-			double dist = Geomatte.pointToLineDistance(A, B, origo);
+			//double dist = Geomatte.pointToLineDistance(A, B, origo);
 			double dist2 = Geomatte.pointToLineDistance3(A, B, origo);
-			Log.d("vortex","Distance O: "+dist+" Distance N: "+dist2);
+			Log.d("vortex"," Distance N: "+dist2);
 			if (dist2<(ClickThresholdInMeters)) {
 				Log.d("vortex","found!!!");
 				return true;

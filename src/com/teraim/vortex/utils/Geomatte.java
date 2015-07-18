@@ -2,8 +2,8 @@ package com.teraim.vortex.utils;
 
 import android.util.Log;
 
+import com.teraim.vortex.dynamic.types.LatLong;
 import com.teraim.vortex.dynamic.types.Location;
-import com.teraim.vortex.dynamic.types.Point;
 import com.teraim.vortex.dynamic.types.SweLocation;
 
 
@@ -12,72 +12,41 @@ public class Geomatte {
 	final static double d2r = (Math.PI / 180.0);
 	//calculate haversine distance for linear distance
 
-	
+
 	public static double dist(double lat1, double long1, double lat2, double long2)
 	{
-	    double dlong = (long2 - long1) * d2r;
-	    double dlat = (lat2 - lat1) * d2r;
-	    double a = Math.pow(Math.sin(dlat/2.0), 2) + Math.cos(lat1*d2r) * 
-	    		Math.cos(lat2*d2r) * Math.pow(Math.sin(dlong/2.0), 2);
-	    double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-	    double d = 6367 * c;
+		double dlong = (long2 - long1) * d2r;
+		double dlat = (lat2 - lat1) * d2r;
+		double a = Math.pow(Math.sin(dlat/2.0), 2) + Math.cos(lat1*d2r) * 
+				Math.cos(lat2*d2r) * Math.pow(Math.sin(dlong/2.0), 2);
+		double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+		double d = 6367 * c;
 
-	    return d;
+		return d;
 	}
-	
+
 	private static double sqr(double x) { return x * x; }
 	private static double dist2(Location v, Location w) { return sqr(v.getX() - w.getX()) + sqr(v.getY() - w.getY()); }
 	private static double distToSegmentSquared(Location p, Location v, Location w) {
-	  double l2 = dist2(v, w);
-	  if (l2 == 0) return dist2(p, v);
-	  double t = ((p.getX() - v.getX()) * (w.getX() - v.getX()) + (p.getY() - v.getY()) * (w.getY() - v.getY())) / l2;
-	  if (t < 0) return dist2(p, v);
-	  if (t > 1) return dist2(p, w);
-	  return dist2(p, new SweLocation(v.getX() + t * (w.getX() - v.getX()),
-	                    v.getY() + t * (w.getY() - v.getY())));
+		double l2 = dist2(v, w);
+		if (l2 == 0) return dist2(p, v);
+		double t = ((p.getX() - v.getX()) * (w.getX() - v.getX()) + (p.getY() - v.getY()) * (w.getY() - v.getY())) / l2;
+		if (t < 0) return dist2(p, v);
+		if (t > 1) return dist2(p, w);
+		return dist2(p, new SweLocation(v.getX() + t * (w.getX() - v.getX()),
+				v.getY() + t * (w.getY() - v.getY())));
 	}
 	public static double pointToLineDistance3(Location A, Location B, Location P) { return Math.sqrt(distToSegmentSquared(P, A, B)); }
-	
-	
-	public static double pointToLineDistance(Location A, Location B, Location P) {
-		System.out.println("A (X,Y): "+A.getX()+","+A.getY()+" B (X,Y): "+B.getX()+","+B.getY()+" P (X,Y): "+P.getX()+","+P.getY());
-	    double normalLength = Math.sqrt((B.getX()-A.getX())*(B.getX()-A.getX())+(B.getY()-A.getY())*(B.getY()-A.getY()));
-	    System.out.println("normal length: "+normalLength);
-	    return Math.abs((P.getX()-A.getX())*(B.getY()-A.getY())-(P.getY()-A.getY())*(B.getX()-A.getX()))/normalLength;
-	  }
 
-	public static double pointToLineDistance2(Location A, Location B, Location P) {
-	
 
-		double x0 = P.getX();
-		double y0 = P.getY();
 
-		double x1 = A.getX();
-		double y1 = A.getY();
-
-		double x2 = B.getX();
-		double y2 = B.getY();
-
-		double Dx = (x2 - x1);
-		double Dy = (y2 - y1);
-
-		double numerator = Math.abs(Dy*x0 - Dx*y0 - x1*y2 + x2*y1);
-		double denominator = Math.sqrt(Dx*Dx + Dy*Dy);
-		
-		if (denominator == 0) 
-		   return sweDist(y0,x0, y1,x1);
-	    return numerator/denominator;
-
-		}
-	
-	
 	public static double sweDist(double myY,double myX,double destY, double destX) {	
 		//Log.d("NILS","diffX: diffY: "+(myX-destX)+" "+(myY-destY));
 		//Log.d("NILS","Values  x1 y1 x2 y2: "+myX+" "+myY+" "+destX+" "+destY);
 		return Math.sqrt(Math.pow((myX-destX),2)+Math.pow(myY-destY, 2));
-		
+
 	}
-	
+
 	public static double getRikt2(double userY, double userX, double destY, double destX) {
 		double alfa=-100;
 		double PI = Math.PI;
@@ -91,18 +60,18 @@ public class Geomatte {
 			alfa = (PI/2-a2)+2*PI;
 		//Log.d("NILS","ALFA I RADIER: Grader: "+alfa+" "+ 57.2957795*alfa);
 		return alfa;
-		
-		
+
+
 	}
-		
-	
+
+
 	static double getRikt(double dest, double centerY, double centerX, double destY, double destX) {
 		//dest is Opposite side length.
 		//We still 
 		double b = destX-centerX;
 		//double a = Math.abs(destY-centerY); **not needed.
 		double c = dest;
-		
+
 		double  beta = Math.acos(b/c);
 		Log.d("NILS","b,c,beta: "+b+" "+c+" "+beta);
 		//Gamma is the top angle in a 90 deg. triangle.
@@ -110,70 +79,137 @@ public class Geomatte {
 		//alfa is PI+gamma if destx - x is negative.
 		double alfa =  Math.PI+gamma;
 		Log.d("NILS","gamma: "+gamma);
-		
+
 		//Alfa should also be equal to Atan2(y,x).
 		double alfa2 = Math.atan2(destY, destX);
 		Log.d("NILS","ALFA: "+alfa+" ALFA (tan2): "+alfa2);
 		return alfa;
-		
+
+
+	}
+
+
+
+
+
+
+	public static LatLong convertToLatLong(double y, double x) {
+
+
+		double axis; // Semi-major axis of the ellipsoid.
+		double flattening; // Flattening of the ellipsoid.
+		double central_meridian; // Central meridian for the projection.
+		double scale; // Scale on central meridian.
+		double false_northing; // Offset for origo.
+		double false_easting; // Offset for origo.
+
+		//Sweref 99_tm.
+		axis = 6378137.0; // GRS 80.
+		flattening = 1.0 / 298.257222101; // GRS 80.
+		central_meridian = Double.MIN_VALUE;
+		scale = 1.0;
+		false_northing = 0.0;
+		false_easting = 150000.0;
+		central_meridian = 15.00;
+		scale = 0.9996;
+		false_northing = 0.0;
+		false_easting = 500000.0;
+
+
+
+
+
+		double[] lat_lon = new double[2];
+
+		// Prepare ellipsoid-based stuff.
+		double e2 = flattening * (2.0 - flattening);
+		double n = flattening / (2.0 - flattening);
+		double a_roof = axis / (1.0 + n) * (1.0 + n * n / 4.0 + n * n * n * n / 64.0);
+		double delta1 = n / 2.0 - 2.0 * n * n / 3.0 + 37.0 * n * n * n / 96.0 - n * n * n * n / 360.0;
+		double delta2 = n * n / 48.0 + n * n * n / 15.0 - 437.0 * n * n * n * n / 1440.0;
+		double delta3 = 17.0 * n * n * n / 480.0 - 37 * n * n * n * n / 840.0;
+		double delta4 = 4397.0 * n * n * n * n / 161280.0;
+
+		double Astar = e2 + e2 * e2 + e2 * e2 * e2 + e2 * e2 * e2 * e2;
+		double Bstar = -(7.0 * e2 * e2 + 17.0 * e2 * e2 * e2 + 30.0 * e2 * e2 * e2 * e2) / 6.0;
+		double Cstar = (224.0 * e2 * e2 * e2 + 889.0 * e2 * e2 * e2 * e2) / 120.0;
+		double Dstar = -(4279.0 * e2 * e2 * e2 * e2) / 1260.0;
+
+		// Convert.
+		double deg_to_rad = Math.PI / 180;
+		double lambda_zero = central_meridian * deg_to_rad;
+		double xi = (x - false_northing) / (scale * a_roof);
+		double eta = (y - false_easting) / (scale * a_roof);
+		double xi_prim = xi -
+				delta1 * Math.sin(2.0 * xi) * math_cosh(2.0 * eta) -
+				delta2 * Math.sin(4.0 * xi) * math_cosh(4.0 * eta) -
+				delta3 * Math.sin(6.0 * xi) * math_cosh(6.0 * eta) -
+				delta4 * Math.sin(8.0 * xi) * math_cosh(8.0 * eta);
+		double eta_prim = eta -
+				delta1 * Math.cos(2.0 * xi) * math_sinh(2.0 * eta) -
+				delta2 * Math.cos(4.0 * xi) * math_sinh(4.0 * eta) -
+				delta3 * Math.cos(6.0 * xi) * math_sinh(6.0 * eta) -
+				delta4 * Math.cos(8.0 * xi) * math_sinh(8.0 * eta);
+		double phi_star = Math.asin(Math.sin(xi_prim) / math_cosh(eta_prim));
+		double delta_lambda = Math.atan(math_sinh(eta_prim) / Math.cos(xi_prim));
+		double lon_radian = lambda_zero + delta_lambda;
+		double lat_radian = phi_star + Math.sin(phi_star) * Math.cos(phi_star) *
+				(Astar +
+						Bstar * Math.pow(Math.sin(phi_star), 2) +
+						Cstar * Math.pow(Math.sin(phi_star), 4) +
+						Dstar * Math.pow(Math.sin(phi_star), 6));
+		lat_lon[0] = lat_radian * 180.0 / Math.PI;
+		lat_lon[1] = lon_radian * 180.0 / Math.PI;
+		return new LatLong(lat_lon[0],lat_lon[1]);
 		
 	}
-	
-	
-	private static double math_atanh(double value) {
-		return 0.5 * Math.log((1.0 + value) / (1.0 - value));
-	}
-	
-	
-	
-	
-	
+
 	public static SweLocation convertToSweRef(double lat, double lon) {
-	
-	double a = 6378137.0000;
-	double f = 1.0/298.257222101;
-	double e2 = f*(2.0-f);
-	double cent_m = 15.0;
-	double k0 = 0.9996;
-	double FN = 0;
-	double FE = 500000;
-	double n = f/(2.0-f);
-	double ap = a/(1.0+n)*(1.0+(Math.pow(n,2)/4.0)+(Math.pow(n,4)/64.0));
 
-	double latr = lat*Math.PI/180.0;
-	double lambda = lon*Math.PI/180.0;
-	double lambda0 = cent_m*Math.PI/180.0;
-	double deltalambda = lambda-lambda0;
-	double A = e2;
-	double B = (1.0/6.0)*(5.0*Math.pow(e2, 2)-Math.pow(e2, 3));	
-	double C = (1.0/120.0)*(104.0*Math.pow(e2, 3)-45.0*Math.pow(e2, 4));
-	double D = (1.0/1260.0)*(1237.0*Math.pow(e2, 4));
-	double latStar = latr-Math.sin(latr)*Math.cos(latr)*(A+B*Math.pow(Math.sin(latr),2)+
-			C*Math.pow(Math.sin(latr), 4)+D*Math.pow(Math.sin(latr),6));
-	double oui = Math.atan(Math.tan(latStar)/Math.cos(deltalambda));
-	double nui = math_atanh(Math.cos(latStar)*Math.sin(deltalambda));
-	
-	double b1 = n/2.0-(2.0*n*n)/3.0+(5.0/16.0)*Math.pow(n,3)+(41.0/180.0)*Math.pow(n, 4);
-	double b2 = (13.0/48.0)*n*n-(3.0/5.0)*Math.pow(n,3)+(557.0/1440.0)*Math.pow(n, 4);
-	double b3 = (61.0/240.0)*Math.pow(n, 3)-(103.0/140.0)*Math.pow(n, 4);
-	double b4 = (49561.0/161280.0)*Math.pow(n, 4);
+		double a = 6378137.0000;
+		double f = 1.0/298.257222101;
+		double e2 = f*(2.0-f);
+		double cent_m = 15.0;
+		double k0 = 0.9996;
+		double FN = 0;
+		double FE = 500000;
+		double n = f/(2.0-f);
+		double ap = a/(1.0+n)*(1.0+(Math.pow(n,2)/4.0)+(Math.pow(n,4)/64.0));
 
-			
-	double y = k0*ap*(oui+
-			b1*Math.sin(2.0*oui)*Math.cosh(2.0*nui)+
-			b2*Math.sin(4.0*oui)*Math.cosh(4.0*nui)+
-			b3*Math.sin(6.0*oui)*Math.cosh(6.0*nui)+
-			b4*Math.sin(8.0*oui)*Math.cosh(8.0*nui))+FN;
-	double x = k0*ap*(nui+
-			b1*Math.cos(2.0*oui)*Math.sinh(2.0*nui)+
-			b2*Math.cos(4.0*oui)*Math.sinh(4.0*nui)+
-			b3*Math.cos(6.0*oui)*Math.sinh(6.0*nui)+
-			b4*Math.cos(8.0*oui)*Math.sinh(8.0*nui))+FE;
-	y = Math.round(y * 1000.0) / 1000.0;
-	x = Math.round(x * 1000.0) / 1000.0;
+		double latr = lat*Math.PI/180.0;
+		double lambda = lon*Math.PI/180.0;
+		double lambda0 = cent_m*Math.PI/180.0;
+		double deltalambda = lambda-lambda0;
+		double A = e2;
+		double B = (1.0/6.0)*(5.0*Math.pow(e2, 2)-Math.pow(e2, 3));	
+		double C = (1.0/120.0)*(104.0*Math.pow(e2, 3)-45.0*Math.pow(e2, 4));
+		double D = (1.0/1260.0)*(1237.0*Math.pow(e2, 4));
+		double latStar = latr-Math.sin(latr)*Math.cos(latr)*(A+B*Math.pow(Math.sin(latr),2)+
+				C*Math.pow(Math.sin(latr), 4)+D*Math.pow(Math.sin(latr),6));
+		double oui = Math.atan(Math.tan(latStar)/Math.cos(deltalambda));
+		double nui = math_atanh(Math.cos(latStar)*Math.sin(deltalambda));
 
-	Log.d("NILS"," lat long (x,y): "+x+" "+y);
-	return new SweLocation(x,y);
+		double b1 = n/2.0-(2.0*n*n)/3.0+(5.0/16.0)*Math.pow(n,3)+(41.0/180.0)*Math.pow(n, 4);
+		double b2 = (13.0/48.0)*n*n-(3.0/5.0)*Math.pow(n,3)+(557.0/1440.0)*Math.pow(n, 4);
+		double b3 = (61.0/240.0)*Math.pow(n, 3)-(103.0/140.0)*Math.pow(n, 4);
+		double b4 = (49561.0/161280.0)*Math.pow(n, 4);
+
+
+		double y = k0*ap*(oui+
+				b1*Math.sin(2.0*oui)*Math.cosh(2.0*nui)+
+				b2*Math.sin(4.0*oui)*Math.cosh(4.0*nui)+
+				b3*Math.sin(6.0*oui)*Math.cosh(6.0*nui)+
+				b4*Math.sin(8.0*oui)*Math.cosh(8.0*nui))+FN;
+		double x = k0*ap*(nui+
+				b1*Math.cos(2.0*oui)*Math.sinh(2.0*nui)+
+				b2*Math.cos(4.0*oui)*Math.sinh(4.0*nui)+
+				b3*Math.cos(6.0*oui)*Math.sinh(6.0*nui)+
+				b4*Math.cos(8.0*oui)*Math.sinh(8.0*nui))+FE;
+		y = Math.round(y * 1000.0) / 1000.0;
+		x = Math.round(x * 1000.0) / 1000.0;
+
+		Log.d("NILS"," lat long (x,y): "+x+" "+y);
+		return new SweLocation(x,y);
 	}
 
 	public static Location subtract(Location l1,
@@ -181,5 +217,17 @@ public class Geomatte {
 		return new SweLocation(l1.getX()-l2.getX(),l1.getY()-l2.getY());
 	}
 
-	
+	private static double math_sinh(double value) {
+		return 0.5 * (Math.exp(value) - Math.exp(-value));
+	}
+
+	private static double math_cosh(double value) {
+		return 0.5 * (Math.exp(value) + Math.exp(-value));
+	}
+
+	private static double math_atanh(double value) {
+		return 0.5 * Math.log((1.0 + value) / (1.0 - value));
+	}
+
+
 }

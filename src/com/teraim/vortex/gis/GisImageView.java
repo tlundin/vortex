@@ -99,7 +99,7 @@ public class GisImageView extends GestureImageView {
 
 
 
-	private final Map<String,String>YearKeyHash = new HashMap<String,String>();
+	private static final Map<String,String>YearKeyHash = new HashMap<String,String>();
 
 	private Paint paintBlur;
 
@@ -1397,6 +1397,10 @@ public class GisImageView extends GestureImageView {
 		//Dont need to keep track of the bag anymore.
 		touchedBag=null;
 		invalidate();
+	}
+	
+	public GisObject getSelectedGop() {
+		return touchedGop;
 	}
 	
 	public void describeSelectedGop() {

@@ -1,14 +1,13 @@
 package com.teraim.vortex.dynamic.workflow_realizations.gis;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import android.app.ActionBar.LayoutParams;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.ActionBar.LayoutParams;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -28,21 +27,19 @@ import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.RadioGroup;
-import android.widget.Spinner;
 import android.widget.TextSwitcher;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ViewSwitcher.ViewFactory;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
+import com.teraim.vortex.dynamic.templates.ProvytaTemplate;
+import com.teraim.vortex.dynamic.types.Location;
 import com.teraim.vortex.dynamic.types.PhotoMeta;
-import com.teraim.vortex.dynamic.types.Variable;
-import com.teraim.vortex.dynamic.types.Variable.DataType;
 import com.teraim.vortex.dynamic.workflow_abstracts.Drawable;
 import com.teraim.vortex.dynamic.workflow_abstracts.Event;
 import com.teraim.vortex.dynamic.workflow_abstracts.EventListener;
@@ -50,6 +47,7 @@ import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Widget;
 import com.teraim.vortex.gis.GisImageView;
 import com.teraim.vortex.non_generics.Constants;
+import com.teraim.vortex.utils.Geomatte;
 import com.teraim.vortex.utils.PersistenceHelper;
 import com.teraim.vortex.utils.Tools;
 
@@ -74,7 +72,7 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 	private TextSwitcher avstTS;
 	private TextSwitcher riktTS;
 	private Button unlockB,startB,centerB;
-	private ImageButton objectMenuB;
+	private ImageButton objectMenuB,carNavB;
 	private Animation popupShow;
 	private Animation popupHide;
 	private GisObjectsMenu gisObjectMenu;
@@ -84,8 +82,9 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 	private List<FullGisObjectConfiguration> myGisObjectTypes;
 	private Button createBackB;
 	private Button createOkB;
-	
-	
+
+
+
 	private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
 
 		// Called when the action mode is created; startActionMode() was called
@@ -113,7 +112,7 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 		@Override
 		public boolean onActionItemClicked(final ActionMode mode, MenuItem item) {
 			switch (item.getItemId()) {
-			        
+
 			case R.id.menu_delete:
 				gisImageView.deleteSelectedGop();
 				mode.finish(); // Action picked, so close the CAB
@@ -135,8 +134,8 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 	};
 
 	ActionMode mActionMode;
-	
-		
+
+
 
 	public WF_Gis_Map(String id, final FrameLayout mapView, boolean isVisible, String picUrlorName,
 			final WF_Context myContext, PhotoMeta photoMeta, View avstRL, View createMenuL) {
@@ -153,7 +152,7 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 		myContext.addGis(id,this);
 		this.myContext=myContext;
 		this.avstRiktF = avstRL;
-		
+
 		this.createMenuL=createMenuL;
 
 		avstTS = (TextSwitcher)avstRiktF.findViewById(R.id.avstTS);
@@ -173,30 +172,30 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 
 		gisObjectsPopUp.setLayoutParams(params);
 		Button cancelB = (Button)gisObjectsPopUp.findViewById(R.id.cancelB);
-		
+
 		cancelB.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				gisObjectsPopUp.startAnimation(popupHide);
 			}
 		});
-		
+
 		objectMenuB = (ImageButton)mapView.findViewById(R.id.objectMenuB);
 		objectMenuB.setVisibility(View.GONE);
 		objectMenuB.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
-				
+
 				if (!animationRunning) {
 					if (!gisObjMenuOpen && mActionMode==null) {
 						gisImageView.cancelGisObjectCreation();
 						gisObjectsPopUp.startAnimation(popupShow);
 						mapView.invalidate();
-						
+
 						gisImageView.centerOnUser();
 					}
-					
+
 				}
 			}
 		});
@@ -211,7 +210,34 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 			}
 		});
 
+		carNavB = (ImageButton)mapView.findViewById(R.id.carNavB);
 
+		if (!myContext.hasSatNav()) 
+			carNavB.setVisibility(View.GONE);
+		else {
+
+			carNavB.setOnClickListener(new OnClickListener() {
+
+				@Override
+				public void onClick(View v) {
+					//Get Lat Long.
+					GisObject gop = gisImageView.getSelectedGop();
+					//sweref
+					Location sweref = gop.getLocation();
+					if (sweref!=null) {
+					Location latlong = Geomatte.convertToLatLong(sweref.getX(),sweref.getY());
+					if (latlong!=null) {
+						Log.d("vortex","Nav to: "+sweref.getX()+","+sweref.getY()+" LAT: "+latlong.getX()+" LONG: "+latlong.getY());
+							Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("google.navigation:q="+latlong.getX()+","+latlong.getY()));
+							intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+							ctx.startActivity(intent);
+						} else {
+							Toast.makeText(ctx, "Saknar koordinater", Toast.LENGTH_SHORT).show();;
+						}
+					}
+				}
+			});
+		}
 		unlockB = (Button)avstRiktF.findViewById(R.id.unlockB);
 
 		unlockB.setOnClickListener(new OnClickListener() {
@@ -276,8 +302,8 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 					setVisibleCreate(false);
 			}
 		});
-		
-		
+
+
 		createOkB = (Button)mapView.findViewById(R.id.createOkB);
 
 		createOkB.setOnClickListener(new OnClickListener() {
@@ -288,8 +314,8 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 				setVisibleCreate(false);
 			}
 		});
-		
-		
+
+
 		popupShow = AnimationUtils.loadAnimation(ctx, R.anim.popup_show);
 		popupShow.setAnimationListener(this);
 		popupHide = AnimationUtils.loadAnimation(ctx, R.anim.popup_hide);
@@ -297,12 +323,12 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 
 		myGisObjectTypes = new ArrayList<FullGisObjectConfiguration>();
 	}
-	
-	
+
+
 	public void startActionModeCb() {
 		if (!gisObjMenuOpen && mActionMode==null) {
-		// Start the CAB using the ActionMode.Callback defined above
-		mActionMode = ((Activity)myContext.getContext()).startActionMode(mActionModeCallback);
+			// Start the CAB using the ActionMode.Callback defined above
+			mActionMode = ((Activity)myContext.getContext()).startActionMode(mActionModeCallback);
 		} else {
 			Log.d("vortex","Actionmode already running or gisObjMenu open...");
 		}
@@ -315,7 +341,7 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 		} else
 			mActionMode.finish();
 	}
-	
+
 	public GisImageView getGis() {
 		return gisImageView;
 	}
@@ -346,9 +372,9 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 		else
 			avstRiktF.setVisibility(View.INVISIBLE);
 	}
-	
+
 	public void setVisibleCreate(boolean isVisible) {
-		
+
 		if (isVisible)
 			createMenuL.setVisibility(View.VISIBLE);
 		else
@@ -419,19 +445,19 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 			.setNeutralButton("Ok!",new Dialog.OnClickListener() {				
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
-				
+
 				}
 			} )
 			.show();
 		}
 		//Put Map and GisViewer into create mode.
-		
+
 		//swap in buttons for create mode. 
 		gisImageView.startGisObjectCreation(fop);
 	}
 
 
-	
+
 
 
 

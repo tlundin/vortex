@@ -268,6 +268,10 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 						Log.d("vortex","got "+code.name());
 					} else
 						Log.e("vortex","This has no GPS");
+					if (bl.hasSatNav())
+						myContext.enableSatNav();
+					else
+						Log.e("vortex","This has no SATNAV");
 	
 				}
 

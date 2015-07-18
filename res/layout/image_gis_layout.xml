@@ -116,6 +116,19 @@
         	android:background="@drawable/object_menu_pop_bg"
             android:padding="5dp" >
 
+            <ImageButton
+                android:id="@+id/carNavB"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingLeft="20dp"
+                android:paddingRight="20dp"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter"
+                android:src="@drawable/car"
+                android:textColor="@color/white"
+                android:textSize="30sp"
+                android:textStyle="bold" />
+            
             <Button
                 android:id="@+id/startB"
                 android:layout_width="match_parent"
