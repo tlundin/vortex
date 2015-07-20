@@ -2,7 +2,9 @@ package com.teraim.vortex.gis;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import android.app.Service;
@@ -18,16 +20,16 @@ import android.util.Log;
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.types.SweLocation;
 import com.teraim.vortex.dynamic.types.Variable;
+import com.teraim.vortex.gis.TrackerListener.GPS_State;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.non_generics.NamedVariables;
 import com.teraim.vortex.utils.Geomatte;
-import com.teraim.vortex.utils.Tools;
 
 
 public class Tracker extends Service implements LocationListener {
 
-	
+	List<TrackerListener> mListeners = null; 
 
 	// flag for GPS status
 	boolean isGPSEnabled = false;
@@ -61,6 +63,8 @@ public class Tracker extends Service implements LocationListener {
 		myY = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(YearKeyHash, NamedVariables.MY_GPS_LONG);
 
 	}
+	
+	
 
 	public enum ErrorCode {
 		GPS_VARS_MISSING,
@@ -145,7 +149,7 @@ public class Tracker extends Service implements LocationListener {
 		if (myX!=null) {
 			Log.d("vortex","setting sweref location");
 			SweLocation myL = Geomatte.convertToSweRef(location.getLatitude(),location.getLongitude());
-			
+			/*
 			String oldX = myX.getValue();
 			String oldY = myY.getValue();
 			if (oldX!=null&&oldY!=null) {
@@ -161,6 +165,10 @@ public class Tracker extends Service implements LocationListener {
 				myX.setValue(myL.getX()+"");
 				myY.setValue(myL.getY()+"");
 			}
+			*/
+			myX.setValue(myL.getX()+"");
+			myY.setValue(myL.getY()+"");
+			sendMessage(GPS_State.newValueReceived);
 			
 		}
 		}catch(Exception e) {
@@ -176,6 +184,13 @@ public class Tracker extends Service implements LocationListener {
 
 
 
+	private void sendMessage(GPS_State newState) {
+		if (mListeners!=null) {
+			for (TrackerListener gl:mListeners) 
+				gl.gpsStateChanged(newState);
+		}
+	}
+	
 	@Override
 	public IBinder onBind(Intent arg0) {
 		return null;
@@ -189,17 +204,24 @@ public class Tracker extends Service implements LocationListener {
 	@Override
 	public void onProviderEnabled(String provider) {
 		Log.d("vortex","Provider enabled in gps listener");
+		sendMessage(GPS_State.enabled);
 	}
 
 	@Override
 	public void onProviderDisabled(String provider) {
 		Log.d("vortex","Provider disabled in gps listener");
-
+		sendMessage(GPS_State.disabled);
 	}
 	public void stopUsingGPS(){
 		if(locationManager != null){
 			locationManager.removeUpdates(Tracker.this);
 		}       
+	}
+	
+	public void registerListener(TrackerListener tl) {
+		if (mListeners==null)
+			mListeners = new ArrayList<TrackerListener>();
+		mListeners.add(tl);
 	}
 
 }

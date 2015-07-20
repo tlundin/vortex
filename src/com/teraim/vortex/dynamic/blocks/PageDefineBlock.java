@@ -14,7 +14,7 @@ public  class PageDefineBlock extends Block {
 	private String pageName="",pageType=null,pageLabel="";
 	private boolean hasGPS;
 	private boolean goBackAllowed=true;
-	private boolean hasSatNav=true;
+
 
 	public String getPageName() {
 		return pageName;
@@ -29,18 +29,15 @@ public  class PageDefineBlock extends Block {
 		return hasGPS;
 	}
 	
-	public boolean hasSatNav() {
-		return hasSatNav;
-	}
 	
-	public PageDefineBlock(String id,String pageName,String pageType,String pageLabel,boolean hasGPS, boolean hasSatNav, boolean goBackAllowed) {
+	public PageDefineBlock(String id,String pageName,String pageType,String pageLabel,boolean hasGPS, boolean goBackAllowed) {
 		this.pageName =pageName;
 		this.pageType = pageType;
 		this.pageLabel=pageLabel;
 		this.blockId=id;
 		this.hasGPS=hasGPS;
 		this.goBackAllowed = goBackAllowed;
-		this.hasSatNav = hasSatNav;
+
 	}
 	public boolean goBackAllowed() {
 		return goBackAllowed;

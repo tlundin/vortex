@@ -1,8 +1,11 @@
 package com.teraim.vortex.dynamic.workflow_realizations.gis;
 
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import android.app.ActionBar.LayoutParams;
 import android.app.Activity;
@@ -12,7 +15,9 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapRegionDecoder;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.util.Log;
 import android.view.ActionMode;
@@ -37,7 +42,6 @@ import android.widget.ViewSwitcher.ViewFactory;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
-import com.teraim.vortex.dynamic.templates.ProvytaTemplate;
 import com.teraim.vortex.dynamic.types.Location;
 import com.teraim.vortex.dynamic.types.PhotoMeta;
 import com.teraim.vortex.dynamic.workflow_abstracts.Drawable;
@@ -71,8 +75,8 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 	private TextView avstT,riktT;
 	private TextSwitcher avstTS;
 	private TextSwitcher riktTS;
-	private Button unlockB,startB,centerB;
-	private ImageButton objectMenuB,carNavB;
+	private Button unlockB,startB;
+	private ImageButton objectMenuB,carNavB,zoomB,centerB;
 	private Animation popupShow;
 	private Animation popupHide;
 	private GisObjectsMenu gisObjectMenu;
@@ -142,7 +146,7 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 		super(id, mapView, isVisible, myContext);
 		GlobalState gs = GlobalState.getInstance();
 		globalPh = gs.getGlobalPreferences();
-		String fullPicFileName = Constants.VORTEX_ROOT_DIR+globalPh.get(PersistenceHelper.BUNDLE_NAME)+picUrlorName;
+		final String fullPicFileName = Constants.VORTEX_ROOT_DIR+globalPh.get(PersistenceHelper.BUNDLE_NAME)+picUrlorName;
 		final Context ctx = myContext.getContext();	
 		ph = gs.getPreferences();
 		Bitmap bmp = Tools.getScaledImage(ctx,fullPicFileName);
@@ -199,8 +203,8 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 				}
 			}
 		});
-		centerB = (Button)mapView.findViewById(R.id.centerUserB);
-		centerB.setVisibility(View.INVISIBLE);
+		centerB = (ImageButton)mapView.findViewById(R.id.centerUserB);
+		centerB.setVisibility(View.GONE);
 		centerB.setOnClickListener(new OnClickListener() {
 
 			@Override
@@ -225,9 +229,9 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 					//sweref
 					Location sweref = gop.getLocation();
 					if (sweref!=null) {
-					Location latlong = Geomatte.convertToLatLong(sweref.getX(),sweref.getY());
-					if (latlong!=null) {
-						Log.d("vortex","Nav to: "+sweref.getX()+","+sweref.getY()+" LAT: "+latlong.getX()+" LONG: "+latlong.getY());
+						Location latlong = Geomatte.convertToLatLong(sweref.getX(),sweref.getY());
+						if (latlong!=null) {
+							Log.d("vortex","Nav to: "+sweref.getX()+","+sweref.getY()+" LAT: "+latlong.getX()+" LONG: "+latlong.getY());
 							Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("google.navigation:q="+latlong.getX()+","+latlong.getY()));
 							intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 							ctx.startActivity(intent);
@@ -259,6 +263,59 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 
 			}
 		});
+
+		zoomB = (ImageButton)mapView.findViewById(R.id.zoomB);
+		zoomB.setVisibility(View.GONE);
+		//zoomB.setVisibility(View.INVISIBLE);
+		zoomB.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				Toast.makeText(ctx, "ujuj",Toast.LENGTH_SHORT).show();
+				BitmapRegionDecoder decoder = null; 
+
+				InputStream is =null;
+				try { 
+					is = new BufferedInputStream(new FileInputStream(fullPicFileName));
+					decoder = BitmapRegionDecoder.newInstance(is, false); 
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}  finally {
+					if (is != null) {
+						try{is.close();}catch(IOException ex){};
+					} 
+				}
+					Log.d("vortex","w h "+decoder.getWidth()+","+decoder.getHeight());
+					Log.d("vortex","x y centerX centerY "+gisImageView.getImageX()+","+gisImageView.getImageY()+","+gisImageView.getCenterX()+","+gisImageView.getCenterY());
+					Log.d("vortex","w h scalew scaleh"+gisImageView.getImageWidth()+","+gisImageView.getImageHeight()+","+gisImageView.getScaledWidth()+","+gisImageView.getScaledHeight());
+					Log.d("vortex","scale scaleX scaleY"+gisImageView.getScale()+gisImageView.getScaleX()+","+gisImageView.getScaleY());
+					float left = gisImageView.getScaledWidth()/2 -gisImageView.getImageX();
+					float top = gisImageView.getScaledHeight()/2 -gisImageView.getImageY();
+					float right = left + gisImageView.getImageWidth();
+					float bottom = top + gisImageView.getImageHeight();
+					//Translate image slice into raw size.
+					float rawImageW = decoder.getWidth();
+					float rawImageH = decoder.getHeight();
+					
+					float sW = rawImageW/gisImageView.getImageWidth();
+					float sH = rawImageH/gisImageView.getImageHeight();
+					
+					float rLeft = left*sW;
+					float rRight = right*sW;
+					float rTop = top*sH;
+					float rBottom = bottom*sH;
+					Log.d("vortex","l r t b"+rLeft+","+rRight+","+rTop+","+rBottom);
+					Rect r= new Rect((int)rLeft,(int)rTop,(int)rRight,(int)rBottom);
+					
+					decoder.decodeRegion(r,null);
+				}
+			});
+
+
+
+
+
+
 
 		avstTS.setFactory(new ViewFactory() {
 
@@ -322,143 +379,143 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 		popupHide.setAnimationListener(this);
 
 		myGisObjectTypes = new ArrayList<FullGisObjectConfiguration>();
-	}
-
-
-	public void startActionModeCb() {
-		if (!gisObjMenuOpen && mActionMode==null) {
-			// Start the CAB using the ActionMode.Callback defined above
-			mActionMode = ((Activity)myContext.getContext()).startActionMode(mActionModeCallback);
-		} else {
-			Log.d("vortex","Actionmode already running or gisObjMenu open...");
 		}
-	}
 
-	public void stopActionModeCb() {
-		if (mActionMode == null) {
-			Log.d("vortex","Actionmode not running");
-			return;
-		} else
-			mActionMode.finish();
-	}
 
-	public GisImageView getGis() {
-		return gisImageView;
-	}
-
-	int noA=5,noR=5;
-
-	public void setAvstTxt(String text) {
-		String ct = ((TextView)avstTS.getCurrentView()).getText().toString();
-		if (ct.equals(text)&&noA-->0)
-			return;
-		else {
-			noA=5;
-			avstTS.setText(text);
+		public void startActionModeCb() {
+			if (!gisObjMenuOpen && mActionMode==null) {
+				// Start the CAB using the ActionMode.Callback defined above
+				mActionMode = ((Activity)myContext.getContext()).startActionMode(mActionModeCallback);
+			} else {
+				Log.d("vortex","Actionmode already running or gisObjMenu open...");
+			}
 		}
-	}
-	public void setRiktTxt(String text) {
-		String ct = ((TextView)riktTS.getCurrentView()).getText().toString();
-		if (ct.equals(text)&&noR-->0)
-			return;
-		else {
-			noR=5;
-			riktTS.setText(text);
+
+		public void stopActionModeCb() {
+			if (mActionMode == null) {
+				Log.d("vortex","Actionmode not running");
+				return;
+			} else
+				mActionMode.finish();
 		}
-	}
-	public void setVisibleAvstRikt(boolean isVisible) {
-		if (isVisible)
-			avstRiktF.setVisibility(View.VISIBLE);
-		else
-			avstRiktF.setVisibility(View.INVISIBLE);
-	}
 
-	public void setVisibleCreate(boolean isVisible) {
-
-		if (isVisible)
-			createMenuL.setVisibility(View.VISIBLE);
-		else
-			createMenuL.setVisibility(View.INVISIBLE);
-	}
-
-	public void showCenterButton(boolean isVisible) {
-		if (isVisible)
-			centerB.setVisibility(View.VISIBLE);
-		else
-			centerB.setVisibility(View.INVISIBLE);
-	}
-
-	@Override
-	public void onEvent(Event e) {
-
-		Log.d("vortex","In GIS_Map Event Handler");
-	}
-
-	//Relay event to myContext without exposing context to caller.
-	public void registerEvent(Event event) {
-		myContext.registerEvent(event);
-	}
-
-	@Override
-	public void onAnimationStart(Animation animation) {
-		if (animation.equals(popupShow)) {
-			Log.d("vortex","gets here!");
-			gisObjectsPopUp.setVisibility(View.VISIBLE);
-			gisObjectMenu.setMenuItems(myGisObjectTypes,gisImageView,this);
+		public GisImageView getGis() {
+			return gisImageView;
 		}
-		animationRunning = true;
-	}
 
-	@Override
-	public void onAnimationEnd(Animation animation) {
-		animationRunning = false;
-		if (animation.equals(popupShow))
-			gisObjMenuOpen = true;
-		else {
-			gisObjectsPopUp.setVisibility(View.GONE);
-			gisObjMenuOpen = false;
+		int noA=10,noR=10;
+
+		public void setAvstTxt(String text) {
+			String ct = ((TextView)avstTS.getCurrentView()).getText().toString();
+			if (noA-->0)
+				return;
+			else {
+				noA=10;
+				avstTS.setText(text);
+			}
 		}
-	}
-
-	@Override
-	public void onAnimationRepeat(Animation animation) {
-		// TODO Auto-generated method stub
-
-	}
-
-	//Add a gisobject to the createMenu.
-	public void addGisObjectType(FullGisObjectConfiguration gop) {
-		myGisObjectTypes.add(gop);
-		objectMenuB.setVisibility(View.VISIBLE);
-	}
-
-	public void startGisObjectCreation(FullGisObjectConfiguration fop) {
-		gisObjectsPopUp.startAnimation(popupHide);
-		boolean firstTime = (globalPh.get(PersistenceHelper.GIS_CREATE_FIRST_TIME_KEY).equals(PersistenceHelper.UNDEFINED));
-		if (firstTime) {
-			globalPh.put(PersistenceHelper.GIS_CREATE_FIRST_TIME_KEY, "notfirstanymore!");
-			new AlertDialog.Builder(myContext.getContext())
-			.setTitle("Creating GIS objects")
-			.setMessage("You are creating your first GIS object!\nClick on the location where you want to place the object, or the objects first point. You will then get options how to proceed in the righthand side menu.")
-			.setIcon(android.R.drawable.ic_dialog_info)
-			.setCancelable(false)
-			.setNeutralButton("Ok!",new Dialog.OnClickListener() {				
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-
-				}
-			} )
-			.show();
+		public void setRiktTxt(String text) {
+			String ct = ((TextView)riktTS.getCurrentView()).getText().toString();
+			if (ct.equals(text)&&noR-->0)
+				return;
+			else {
+				noR=10;
+				riktTS.setText(text);
+			}
 		}
-		//Put Map and GisViewer into create mode.
+		public void setVisibleAvstRikt(boolean isVisible) {
+			if (isVisible)
+				avstRiktF.setVisibility(View.VISIBLE);
+			else
+				avstRiktF.setVisibility(View.INVISIBLE);
+		}
 
-		//swap in buttons for create mode. 
-		gisImageView.startGisObjectCreation(fop);
+		public void setVisibleCreate(boolean isVisible) {
+
+			if (isVisible)
+				createMenuL.setVisibility(View.VISIBLE);
+			else
+				createMenuL.setVisibility(View.INVISIBLE);
+		}
+
+		public void showCenterButton(boolean isVisible) {
+			if (isVisible)
+				centerB.setVisibility(View.VISIBLE);
+			else
+				centerB.setVisibility(View.GONE);
+		}
+
+		@Override
+		public void onEvent(Event e) {
+
+			Log.d("vortex","In GIS_Map Event Handler");
+		}
+
+		//Relay event to myContext without exposing context to caller.
+		public void registerEvent(Event event) {
+			myContext.registerEvent(event);
+		}
+
+		@Override
+		public void onAnimationStart(Animation animation) {
+			if (animation.equals(popupShow)) {
+				Log.d("vortex","gets here!");
+				gisObjectsPopUp.setVisibility(View.VISIBLE);
+				gisObjectMenu.setMenuItems(myGisObjectTypes,gisImageView,this);
+			}
+			animationRunning = true;
+		}
+
+		@Override
+		public void onAnimationEnd(Animation animation) {
+			animationRunning = false;
+			if (animation.equals(popupShow))
+				gisObjMenuOpen = true;
+			else {
+				gisObjectsPopUp.setVisibility(View.GONE);
+				gisObjMenuOpen = false;
+			}
+		}
+
+		@Override
+		public void onAnimationRepeat(Animation animation) {
+			// TODO Auto-generated method stub
+
+		}
+
+		//Add a gisobject to the createMenu.
+		public void addGisObjectType(FullGisObjectConfiguration gop) {
+			myGisObjectTypes.add(gop);
+			objectMenuB.setVisibility(View.VISIBLE);
+		}
+
+		public void startGisObjectCreation(FullGisObjectConfiguration fop) {
+			gisObjectsPopUp.startAnimation(popupHide);
+			boolean firstTime = (globalPh.get(PersistenceHelper.GIS_CREATE_FIRST_TIME_KEY).equals(PersistenceHelper.UNDEFINED));
+			if (firstTime) {
+				globalPh.put(PersistenceHelper.GIS_CREATE_FIRST_TIME_KEY, "notfirstanymore!");
+				new AlertDialog.Builder(myContext.getContext())
+				.setTitle("Creating GIS objects")
+				.setMessage("You are creating your first GIS object!\nClick on the location where you want to place the object, or the objects first point. You will then get options how to proceed in the righthand side menu.")
+				.setIcon(android.R.drawable.ic_dialog_info)
+				.setCancelable(false)
+				.setNeutralButton("Ok!",new Dialog.OnClickListener() {				
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+
+					}
+				} )
+				.show();
+			}
+			//Put Map and GisViewer into create mode.
+
+			//swap in buttons for create mode. 
+			gisImageView.startGisObjectCreation(fop);
+		}
+
+
+
+
+
+
 	}
-
-
-
-
-
-
-}

@@ -268,10 +268,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 						Log.d("vortex","got "+code.name());
 					} else
 						Log.e("vortex","This has no GPS");
-					if (bl.hasSatNav())
-						myContext.enableSatNav();
-					else
-						Log.e("vortex","This has no SATNAV");
+					
 	
 				}
 
@@ -593,8 +590,12 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 				else if (b instanceof CreateGisBlock) {
 					savedBlockPointer = blockP+1;
 					//Will callback to this object after image is loaded.
-					((CreateGisBlock) b).create(myContext,this);
-					//exit for now.
+					CreateGisBlock bl = ((CreateGisBlock) b);
+					if (bl.hasCarNavigation())
+						myContext.enableSatNav();
+					else
+						Log.e("vortex","This has no SATNAV");
+					bl.create(myContext,this);
 					return;
 				}
 				

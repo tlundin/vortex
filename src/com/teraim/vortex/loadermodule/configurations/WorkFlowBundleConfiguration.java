@@ -463,7 +463,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 		o.addRow("Parsing block: block_add_gis_image_view...");
 		String id=null,nName=null,container=null,source=null;
 		String N=null,E=null,S=null,W=null;
-		boolean isVisible=true;
+		boolean isVisible=true,hasSatNav=false;
 
 		parser.require(XmlPullParser.START_TAG, null,"block_add_gis_image_view");
 		Log.d("vortex","In block block_add_gis_view!!");
@@ -492,6 +492,8 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				E = readText("BottomE",parser);
 			}else if (name.equalsIgnoreCase("BottomN")) {
 				S = readText("BottomN",parser);
+			}else if (name.equals("car_navigation_on")) {			
+				hasSatNav = readText("car_navigation_on",parser).equals("true");
 			} 
 			else {
 				Log.e("vortex","Skipped "+name);
@@ -501,7 +503,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 
 
 		checkForNull("block_ID",id,"name",nName,"container_name",container,"source",source);
-		return new CreateGisBlock(id,nName,container,isVisible,source,N,E,S,W);
+		return new CreateGisBlock(id,nName,container,isVisible,source,N,E,S,W,hasSatNav);
 
 	}
 
@@ -1608,18 +1610,14 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				hasGPS = readText("gps_on",parser).equals("true");	
 			} else if (name.equals("allow_OS_page_back")) {
 				goBackAllowed = readText("allow_OS_page_back",parser).equals("true");
-			} else if (name.equals("car_navigation_on")) {			
-				hasSatNav = readText("car_navigation_on",parser).equals("true");
-				if (hasSatNav)
-					hasGPS = true;
-			} else if (name.equals("label")) {
+			}  else if (name.equals("label")) {
 				label = readText("label",parser);
 				o.addRow("Parsing workflow "+label);
 			} else
 				skip(name,parser,o);
 		}
 		checkForNull("block_ID",id,"type",pageType,"label",label);
-		return new PageDefineBlock(id,"root", pageType,label,hasGPS,hasSatNav,goBackAllowed);
+		return new PageDefineBlock(id,"root", pageType,label,hasGPS,goBackAllowed);
 	}
 
 

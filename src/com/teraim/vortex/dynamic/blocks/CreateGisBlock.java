@@ -32,22 +32,26 @@ public class CreateGisBlock extends Block {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 2013870148670474248L;
+	private static final long serialVersionUID = 2013870148670474249L;
 	private final String name,containerId,source,N,E,S,W;
 	Unit unit;
 	GlobalState gs;
 	boolean isVisible = false,showHistorical;
 	String format;
-
+	
 	
 	
 	private boolean menuUp = false;
 	private WF_Context myContext;
 	private LoggerI o;
+	private boolean hasSatNav;
 
+	public boolean hasCarNavigation() {
+		return hasSatNav;
+	}
 	
 	public CreateGisBlock(String id,String name, 
-			String containerId,boolean isVisible,String source,String N,String E, String S,String W) {
+			String containerId,boolean isVisible,String source,String N,String E, String S,String W, boolean hasSatNav) {
 		super();
 		
 		this.name = name;
@@ -59,6 +63,7 @@ public class CreateGisBlock extends Block {
 		this.E=E;
 		this.S=S;
 		this.W=W;
+		this.hasSatNav=hasSatNav;
 	}
 
 	
