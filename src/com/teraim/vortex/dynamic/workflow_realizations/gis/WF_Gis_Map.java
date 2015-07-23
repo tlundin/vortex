@@ -15,10 +15,14 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.BitmapRegionDecoder;
 import android.graphics.Color;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
+import android.os.Handler;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.ActionMode;
 import android.view.Gravity;
@@ -26,8 +30,10 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnTouchListener;
 import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
 import android.view.animation.AnimationUtils;
@@ -42,6 +48,8 @@ import android.widget.ViewSwitcher.ViewFactory;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
+import com.teraim.vortex.Start;
+import com.teraim.vortex.dynamic.blocks.CreateGisBlock;
 import com.teraim.vortex.dynamic.types.Location;
 import com.teraim.vortex.dynamic.types.PhotoMeta;
 import com.teraim.vortex.dynamic.workflow_abstracts.Drawable;
@@ -76,7 +84,7 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 	private TextSwitcher avstTS;
 	private TextSwitcher riktTS;
 	private Button unlockB,startB;
-	private ImageButton objectMenuB,carNavB,zoomB,centerB;
+	private ImageButton objectMenuB,carNavB,zoomB,centerB,plusB,minusB;
 	private Animation popupShow;
 	private Animation popupHide;
 	private GisObjectsMenu gisObjectMenu;
@@ -139,22 +147,37 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 
 	ActionMode mActionMode;
 
+	Bitmap bmp;
+	//final PhotoMeta photoMeta;
+	final Context ctx;
+	final String fullPicFileName;
+	final CreateGisBlock myDaddy;
+	
 
-
-	public WF_Gis_Map(String id, final FrameLayout mapView, boolean isVisible, String picUrlorName,
-			final WF_Context myContext, PhotoMeta photoMeta, View avstRL, View createMenuL) {
+	
+	public WF_Gis_Map(CreateGisBlock createGisBlock,Rect rect, String id, final FrameLayout mapView, boolean isVisible, String picUrlorName,
+			final WF_Context myContext, final PhotoMeta photoMeta, View avstRL, View createMenuL, boolean zoom) {
 		super(id, mapView, isVisible, myContext);
 		GlobalState gs = GlobalState.getInstance();
+		//this.photoMeta=photoMeta;
+		this.myContext=myContext;
+		this.myDaddy=createGisBlock;
 		globalPh = gs.getGlobalPreferences();
-		final String fullPicFileName = Constants.VORTEX_ROOT_DIR+globalPh.get(PersistenceHelper.BUNDLE_NAME)+picUrlorName;
-		final Context ctx = myContext.getContext();	
+		fullPicFileName = Constants.VORTEX_ROOT_DIR+globalPh.get(PersistenceHelper.BUNDLE_NAME)+picUrlorName;
+		ctx = myContext.getContext();	
 		ph = gs.getPreferences();
-		Bitmap bmp = Tools.getScaledImage(ctx,fullPicFileName);
+		//Bitmap bmp = Tools.getScaledImage(ctx,fullPicFileName);
+	
+		bmp = Tools.getScaledImageRegion(ctx,fullPicFileName,rect);
+
 		gisImageView = (GisImageView)mapView.findViewById(R.id.GisV);		
 		gisImageView.setImageBitmap(bmp);
-		gisImageView.initialize(this,photoMeta);
+		gisImageView.initialize(this,photoMeta,zoom);
+
+
+		
 		myContext.addGis(id,this);
-		this.myContext=myContext;
+
 		this.avstRiktF = avstRL;
 
 		this.createMenuL=createMenuL;
@@ -265,56 +288,134 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 		});
 
 		zoomB = (ImageButton)mapView.findViewById(R.id.zoomB);
-		zoomB.setVisibility(View.GONE);
+		setZoomButtonVisible(false);
 		//zoomB.setVisibility(View.INVISIBLE);
 		zoomB.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
-				Toast.makeText(ctx, "ujuj",Toast.LENGTH_SHORT).show();
-				BitmapRegionDecoder decoder = null; 
+				
+				final BitmapFactory.Options options = new BitmapFactory.Options();
+				options.inJustDecodeBounds=true;
+				Bitmap piece;
+				BitmapFactory.decodeFile(fullPicFileName,options);
+				int realW = options.outWidth;
+				int realH = options.outHeight;
+				
+				//get cutout
+				Rect r = gisImageView.getCurrentViewSize(realW,realH);
+				//get geocordinates
+				List<Location> geoR = gisImageView.getRectGeoCoordinates(r);
 
-				InputStream is =null;
-				try { 
-					is = new BufferedInputStream(new FileInputStream(fullPicFileName));
-					decoder = BitmapRegionDecoder.newInstance(is, false); 
-				} catch (IOException ex) {
-					ex.printStackTrace();
-				}  finally {
-					if (is != null) {
-						try{is.close();}catch(IOException ex){};
-					} 
-				}
-					Log.d("vortex","w h "+decoder.getWidth()+","+decoder.getHeight());
-					Log.d("vortex","x y centerX centerY "+gisImageView.getImageX()+","+gisImageView.getImageY()+","+gisImageView.getCenterX()+","+gisImageView.getCenterY());
-					Log.d("vortex","w h scalew scaleh"+gisImageView.getImageWidth()+","+gisImageView.getImageHeight()+","+gisImageView.getScaledWidth()+","+gisImageView.getScaledHeight());
-					Log.d("vortex","scale scaleX scaleY"+gisImageView.getScale()+gisImageView.getScaleX()+","+gisImageView.getScaleY());
-					float left = gisImageView.getScaledWidth()/2 -gisImageView.getImageX();
-					float top = gisImageView.getScaledHeight()/2 -gisImageView.getImageY();
-					float right = left + gisImageView.getImageWidth();
-					float bottom = top + gisImageView.getImageHeight();
-					//Translate image slice into raw size.
-					float rawImageW = decoder.getWidth();
-					float rawImageH = decoder.getHeight();
-					
-					float sW = rawImageW/gisImageView.getImageWidth();
-					float sH = rawImageH/gisImageView.getImageHeight();
-					
-					float rLeft = left*sW;
-					float rRight = right*sW;
-					float rTop = top*sH;
-					float rBottom = bottom*sH;
-					Log.d("vortex","l r t b"+rLeft+","+rRight+","+rTop+","+rBottom);
-					Rect r= new Rect((int)rLeft,(int)rTop,(int)rRight,(int)rBottom);
-					
-					decoder.decodeRegion(r,null);
-				}
+				//Trigger reexecution of flow.
+				myDaddy.setCutOut(r,geoR);
+				//myContext.getTemplate().restart();
+				Start.singleton.changePage(myContext.getWorkflow(), null);
+				
+				
+			}
+			
 			});
 
 
+		plusB = (ImageButton)mapView.findViewById(R.id.plusB);
+		
+		plusB.setOnTouchListener(new OnTouchListener() {
+			final float Initial = 2f;
+			float scaleIncrement = Initial;
+			long interval=100;
+			Handler handler;
+			Runnable runnable;
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				
+		    switch(event.getAction()) {
+			case MotionEvent.ACTION_DOWN:
+				//startScrollIn();
+				gisImageView.handleScale(Initial);
+		    	break;
+		    case MotionEvent.ACTION_UP:
+		    	//stopScrollIn();
+		    	break;
+			}
+		    
+		    return v.performClick();
+			}
+			private void startScrollIn() {
+				if (handler==null) {
+					
+					handler = new Handler();
+					runnable = new Runnable(){
+						public void run() {
+							//gisImageView.changeScale(scaleIncrement);
+							scaleIncrement+=0.05;
+							gisImageView.invalidate();
+							if (handler!=null)
+								handler.postDelayed(this, interval);
+						}
+					};
+					
+					handler.postDelayed(runnable, interval);
+					
+				}
+				
 
+			}
+			private void stopScrollIn() {
+				handler.removeCallbacks(runnable);
+				handler = null;
+				scaleIncrement=Initial;
+			}});
 
+		minusB = (ImageButton)mapView.findViewById(R.id.minusB);
+		
+		minusB.setOnTouchListener(new OnTouchListener() {
+			final float Initial = .5f;
+			float scaleIncrement = Initial;
+			long interval=100;
+			Handler handler;
+			Runnable runnable;
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				
+		    switch(event.getAction()) {
+			case MotionEvent.ACTION_DOWN:
+				gisImageView.handleScale(Initial);
+				//startScrollOut();
+		    	break;
+		    case MotionEvent.ACTION_UP:
+		    	//stopScrollOut();
+		    	break;
+			}
+		    
+		    return v.performClick();
+			}
+			private void startScrollOut() {
+				if (handler==null) {
+					
+					handler = new Handler();
+					runnable = new Runnable(){
+						public void run() {
+							//gisImageView.changeScale(-scaleIncrement);
+							scaleIncrement+=0.05;
+							gisImageView.invalidate();
+							if (handler!=null)
+								handler.postDelayed(this, interval);
+						}
+					};
+					
+					handler.postDelayed(runnable, interval);
+					
+				}
+				
 
+			}
+			private void stopScrollOut() {
+				handler.removeCallbacks(runnable);
+				handler = null;
+				scaleIncrement=Initial;
+			}});
+		
 
 
 		avstTS.setFactory(new ViewFactory() {
@@ -379,6 +480,17 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 		popupHide.setAnimationListener(this);
 
 		myGisObjectTypes = new ArrayList<FullGisObjectConfiguration>();
+		}
+
+
+
+
+
+		public void setZoomButtonVisible(boolean visible) {
+			if (!visible)
+				zoomB.setVisibility(View.GONE);
+			else
+				zoomB.setVisibility(View.VISIBLE);
 		}
 
 
@@ -512,6 +624,9 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 			//swap in buttons for create mode. 
 			gisImageView.startGisObjectCreation(fop);
 		}
+
+
+
 
 
 

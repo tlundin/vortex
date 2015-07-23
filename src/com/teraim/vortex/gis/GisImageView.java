@@ -29,6 +29,7 @@ import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.Start;
@@ -294,7 +295,18 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 	}
 	double pXR,pYR;
 	private WF_Gis_Map myMap;
-	public void initialize(WF_Gis_Map wf_Gis_Map, PhotoMeta pm) {
+
+	private float screenX;
+	private float screenY;
+
+	private boolean allowZoom;
+	/**
+	 *  
+	 * @param wf_Gis_Map 	The map object
+	 * @param pm			The geo coordinates for the image corners
+	 * @param zoom			If extreme zoom is enabled
+	 */
+	public void initialize(WF_Gis_Map wf_Gis_Map, PhotoMeta pm, boolean zoom) {
 		mapLocationForClick=null;
 		fixScale = scale * scaleAdjust;
 		this.photoMetaData=pm;
@@ -306,7 +318,9 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 		myX = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(YearKeyHash, NamedVariables.MY_GPS_LAT);
 		myY = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(YearKeyHash, NamedVariables.MY_GPS_LONG);
 
-
+		screenX = this.getImageWidth()*fixScale;
+		screenY = this.getImageHeight()*fixScale;
+		this.allowZoom = zoom;
 	}
 	/*
 	private Paint createNewPaint() {
@@ -366,7 +380,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 	private float[] translateToReal(float mx,float my) {
 		float fixScale = scale * scaleAdjust;
 		//Log.d("vortex","MX, MY "+mx+","+my);
-		Log.d("vortex","W, H "+this.getImageWidth()+","+this.getImageHeight());
+		
 		Log.d("vortex","fixscale: "+fixScale);
 		mx = (mx-x)/fixScale;//+(this.getImageWidth()/2)/fixScale;
 		my = (my-y)/fixScale;//+(this.getImageHeight()/2)/fixScale;
@@ -399,11 +413,11 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 			;//Log.d("vortex","Distance X in meter: "+mapDistX+" [inside]");
 		else {
 
-			Log.e("vortex","Distance X in meter: "+mapDistX+" [outside!]");
-			Log.d("vortex","w h of gis image. w h of image ("+photoMetaData.getWidth()+","+photoMetaData.getHeight()+") ("+this.getScaledWidth()+","+this.getScaledHeight()+")");
-			Log.d("vortex","photo (X) "+photoMetaData.W+"-"+photoMetaData.E);
-			Log.d("vortex","photo (Y) "+photoMetaData.S+"-"+photoMetaData.N);
-			Log.d("vortex","object X,Y: "+l.getX()+","+l.getY());
+			//Log.e("vortex","Distance X in meter: "+mapDistX+" [outside!]");
+			//Log.d("vortex","w h of gis image. w h of image ("+photoMetaData.getWidth()+","+photoMetaData.getHeight()+") ("+this.getScaledWidth()+","+this.getScaledHeight()+")");
+			//Log.d("vortex","photo (X) "+photoMetaData.W+"-"+photoMetaData.E);
+			//Log.d("vortex","photo (Y) "+photoMetaData.S+"-"+photoMetaData.N);
+			//Log.d("vortex","object X,Y: "+l.getX()+","+l.getY());
 
 			return null;
 		}
@@ -411,11 +425,11 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 		if (mapDistY <=imgHReal && mapDistY>=0)
 			;//Log.d("vortex","Distance Y in meter: "+mapDistY+" [inside]");
 		else {
-			Log.e("vortex","Distance Y in meter: "+mapDistY+" [outside!]");
-			Log.d("vortex","w h of gis image. w h of image ("+photoMetaData.getWidth()+","+photoMetaData.getHeight()+") ("+this.getScaledWidth()+","+this.getScaledHeight()+")");
-			Log.d("vortex","photo (X) "+photoMetaData.W+"-"+photoMetaData.E);
-			Log.d("vortex","photo (Y) "+photoMetaData.S+"-"+photoMetaData.N);
-			Log.d("vortex","object X,Y: "+l.getX()+","+l.getY());
+			//Log.e("vortex","Distance Y in meter: "+mapDistY+" [outside!]");
+			//Log.d("vortex","w h of gis image. w h of image ("+photoMetaData.getWidth()+","+photoMetaData.getHeight()+") ("+this.getScaledWidth()+","+this.getScaledHeight()+")");
+			//Log.d("vortex","photo (X) "+photoMetaData.W+"-"+photoMetaData.E);
+			//Log.d("vortex","photo (Y) "+photoMetaData.S+"-"+photoMetaData.N);
+			//Log.d("vortex","object X,Y: "+l.getX()+","+l.getY());
 			return null;
 		}
 		pXR = this.getImageWidth()/photoMetaData.getWidth();
@@ -511,12 +525,14 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 	//Determine if something clicked. If so, open a something dialog.
 
 
-	public void calculateMapLocationForClick(float x, float y) {
+	public Location calculateMapLocationForClick(float x, float y) {
 		//Figure out geo coords from pic coords.
 		clickXY=translateToReal(x,y);
 		mapLocationForClick = translateRealCoordinatestoMap(clickXY);
+		Log.d("vortex","click at "+x+","+y);
 		Log.d("vortex","click at "+mapLocationForClick.getX()+","+mapLocationForClick.getY());
 		//Check if button is up & clicked.
+		return mapLocationForClick;
 	}
 
 	//Temp method to create a new gis object based on keyhash + UID. 
@@ -705,26 +721,30 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 
 	private Set<GisObject> touchedBag;
 
+	private boolean showLabelForAWhile=true;
 
 
-	private GisObject getClickedObject() {
-		return touchedGop;
-	}
 
 	@Override
 	protected void dispatchDraw(Canvas canvas) {
 		super.dispatchDraw(canvas);
+		
+		
 		canvas.save();
 		//scale and adjust.
 		try {
 			float adjustedScale = scale * scaleAdjust;
+			if (allowZoom && adjustedScale>2.0f)
+				myMap.setZoomButtonVisible(true);
+			else
+				myMap.setZoomButtonVisible(false);
 			canvas.translate(x, y);
 			if(adjustedScale != 1.0f) {
 				canvas.scale(adjustedScale, adjustedScale);
 			}
 			for (GisLayer layerO:myLayers) {
 				String layerId = layerO.getId();
-				Log.d("vortex","drawing layer "+layerId);
+				//Log.d("vortex","drawing layer "+layerId);
 				//get all objects that should be drawn on this layer.
 				if (!layerO.isVisible()) {
 					Log.d("vortex","layer not visible...skipping "+layerId);
@@ -828,7 +848,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 											Log.d("vortex","Filter turned off!");
 									}
 								} 
-								drawGop(canvas,bitmap,radius,color,style,isCircle,xy);
+								drawGop(canvas,bitmap,radius,color,style,isCircle,xy,adjustedScale);
 
 								if (layerO.showLabels()) {
 									drawGopLabel(canvas,xy,gop.getLabel(),gop.getRadius(),bCursorPaint,txtPaint);
@@ -852,7 +872,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 											else
 												canvas.drawCircle((float)xy[0],(float)xy[1],5,paintSimple);
 										} else {
-											drawGop(canvas,go,false);
+											drawGop(canvas,layerO,go,false);
 										}
 									} else {
 										//Multipoints are not selectable. Only draw the dots.
@@ -882,7 +902,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 											canvas.drawCircle((float)xy[0],(float)xy[1],5,paintSimple);
 									} else {								
 
-										drawGop(canvas,go,false);
+										drawGop(canvas,layerO,go,false);
 
 
 									}
@@ -891,6 +911,8 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 							}
 							if (gisTypeToCreate == null && touchedGop ==null && mapLocationForClick!=null && go.isTouchedByClick(mapLocationForClick,pXR,pYR) && !go.equals(userGop)) {
 								touchedGop = go;
+								showLabelForAWhile=true;
+								startShowLabelTimer();
 								touchedBag = bagOfObjects;
 								continue;
 							} 
@@ -899,7 +921,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 					//Special rendering of touched gop.
 					if (touchedGop!=null) {
 
-						drawGop(canvas,touchedGop,true);
+						drawGop(canvas,layerO,touchedGop,true);
 						//if longclick, open the actionbar menu.
 						if (!clickWasShort)
 							myMap.startActionModeCb();
@@ -908,8 +930,6 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 							displayDistanceAndDirection();
 							if (riktLinjeStart!=null)
 								canvas.drawLine(riktLinjeStart[0], riktLinjeStart[1], riktLinjeEnd[0],riktLinjeEnd[1],fgPaintSel);//fgPaintSel
-							else
-								Log.d("vortex","NOT DRAWING RIKTLINJE");
 						}
 
 					} else {
@@ -934,6 +954,19 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 
 	}
 
+	private void startShowLabelTimer() {
+		final int interval = 1000; // 1 Second
+		Handler handler = new Handler();
+		Runnable runnable = new Runnable(){
+		    public void run() {
+		    	showLabelForAWhile=false;
+		    	postInvalidate();
+		    }
+		};
+		
+		handler.postDelayed(runnable, interval);
+	}
+
 	private String colorShiftOnStatus(Variable statusVar) {
 		String color=null;
 		if (statusVar!=null ) {
@@ -951,14 +984,15 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 		return color;
 	}
 
-	private void drawGop(Canvas canvas, GisObject go, boolean selected) {
+	private void drawGop(Canvas canvas, GisLayer layerO, GisObject go, boolean selected) {
 		int[] xy;
 		//will only be called from here if selected.
 		if (go instanceof GisPointObject) {
 			GisPointObject gop = (GisPointObject)go;
 			xy = translateMapToRealCoordinates(go.getLocation());
-			drawGop(canvas, null,gop.getRadius(), "red", Style.FILL, gop.isCircle(), xy);
-			drawGopLabel(canvas,xy,gop.getLabel(),gop.getRadius(),wCursorPaint,selectedPaint);
+			drawGop(canvas, null,gop.getRadius(), "red", Style.FILL, gop.isCircle(), xy,1);
+			if (layerO.showLabels()||showLabelForAWhile)
+				drawGopLabel(canvas,xy,gop.getLabel(),gop.getRadius(),wCursorPaint,selectedPaint);
 
 			//Other objects might or might not be selected.
 		} else {
@@ -1015,21 +1049,26 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 
 	}
 
-	private void drawGop(Canvas canvas, Bitmap bitmap, float radius, String color, Style style, boolean isCircle, int[] xy) {
+	private void drawGop(Canvas canvas, Bitmap bitmap, float radius, String color, Style style, boolean isCircle, int[] xy, float adjustedScale) {
 		Rect r = new Rect();
+		//pXR = this.getImageWidth()/photoMetaData.getWidth();		
+		//radius = Math.max(5, (int)(radius*pXR));
+		//Log.d("vortex","PXR: Radius:"+pXR+","+radius);
 		if (bitmap!=null) {
 			//Log.d("vortex","bitmap! "+gop.getLabel());
 			r.set(xy[0]-32, xy[1]-32, xy[0], xy[1]);
 			canvas.drawBitmap(bitmap, null, r, null);
 		} //circular?
+		
 		else if(isCircle) {
+			
 			//Log.d("vortex","x,y,r"+xy[0]+","+xy[1]+","+radius);
-			canvas.drawCircle(xy[0], xy[1], radius, createPaint(color,style));
+			canvas.drawCircle(xy[0], xy[1],radius, createPaint(color,style));
 		} 
 		//no...square.
 		else {
 			//Log.d("vortex","rect!");
-			int diam = (int)radius;
+			int diam = (int)(radius/2);
 			r.set(xy[0]-diam, xy[1]-diam, xy[0]+diam, xy[1]+diam);
 			canvas.drawRect(r, createPaint(color,style));
 		}
@@ -1040,12 +1079,13 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 
 	public void unSelectGop() {
 		touchedGop=null;
+		showLabelForAWhile=true;
 		invalidate();
 	}
 
 	boolean drawLine=true;
-	
-	
+
+
 	//save the position where the user pressed start. 
 	int[] riktLinjeStart,riktLinjeEnd;
 	final static int TimeOut = 30;
@@ -1063,18 +1103,18 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 						handler.postDelayed(this, interval);
 				}
 			};
-			
+
 			handler.postDelayed(runnable, interval);
-			
+
 		}
-		
+
 	}
-	
+
 	private void displayDistanceAndDirectionL() {
 
 
 		//Check preconditions for GPS to work
-		
+
 		if (myX==null||myY==null||GlobalState.getInstance()==null) {
 			myMap.setAvstTxt("C_Error");
 			handler=null;
@@ -1085,7 +1125,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 			handler=null;
 			return;
 		}
-		
+
 		if (!GlobalState.getInstance().getTracker().isGPSEnabled) {
 			myMap.setAvstTxt("GPS OFF");
 			//myMap.setRiktTxt(spinAnim());
@@ -1093,7 +1133,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 		//Start a redrawtimer if not already started that redraws this window independent of the redraw cycle of the gops.
 
 		//Check  timediff. Returns null in case no value exists.
-		
+
 		long timeDiff;
 		long ct;
 		if (mostRecentGPSValueTimeStamp!=-1) {
@@ -1104,167 +1144,172 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 			//myMap.setRiktTxt(spinAnim());
 			return;
 		}
-			boolean old = TimeUnit.MILLISECONDS.toSeconds(timeDiff)>TimeOut; 
-			if (old) {
-				Log.d("vortex","Time of insert: "+mostRecentGPSValueTimeStamp);
-				Log.d("vortex","Current time: "+ct);
-				Log.d("vortex","TimeDiff: "+timeDiff);
+		boolean old = TimeUnit.MILLISECONDS.toSeconds(timeDiff)>TimeOut; 
+		if (old) {
+			Log.d("vortex","Time of insert: "+mostRecentGPSValueTimeStamp);
+			Log.d("vortex","Current time: "+ct);
+			Log.d("vortex","TimeDiff: "+timeDiff);
+		}
+		double mX = Double.parseDouble(myX.getValue());
+		double mY = Double.parseDouble(myY.getValue());
+		double gX = touchedGop.getLocation().getX();
+		double gY = touchedGop.getLocation().getY();
+		int dist = (int)Geomatte.sweDist(mY,mX,gY,gX);
+		int rikt = (int)(Geomatte.getRikt2(mY, mX, gY, gX)*57.2957795);
+		myMap.setAvstTxt((old?TimeUnit.MILLISECONDS.toSeconds(timeDiff)+"s:":"")+(dist>9999?(dist/1000+"km"):(dist+"m")));
+		myMap.setRiktTxt(rikt+Deg);
+		if (drawLine) {
+			riktLinjeStart  = translateMapToRealCoordinates(new SweLocation(mX,mY));
+			riktLinjeEnd  = translateMapToRealCoordinates(touchedGop.getLocation());
+			if (riktLinjeStart!=null) {
+				drawLine=false;
+				invalidate();
 			}
-			double mX = Double.parseDouble(myX.getValue());
-			double mY = Double.parseDouble(myY.getValue());
-			double gX = touchedGop.getLocation().getX();
-			double gY = touchedGop.getLocation().getY();
-			int dist = (int)Geomatte.sweDist(mY,mX,gY,gX);
-			int rikt = (int)(Geomatte.getRikt2(mY, mX, gY, gX)*57.2957795);
-			myMap.setAvstTxt((old?TimeUnit.MILLISECONDS.toSeconds(timeDiff)+"s:":"")+(dist>9999?(dist/1000+"km"):(dist+"m")));
-			myMap.setRiktTxt(rikt+Deg);
-			if (drawLine) {
-				riktLinjeStart  = translateMapToRealCoordinates(new SweLocation(mX,mY));
-				riktLinjeEnd  = translateMapToRealCoordinates(touchedGop.getLocation());
-				if (riktLinjeStart!=null) {
-					drawLine=false;
-					invalidate();
-				}
-			}
-			
-				
-			
+		}
+
+
+
 	}
 
-private int spinState=0;
-private String spinAnim() {
-	final String[] spinSymbols = new String[] {"|","/","-","\\"};
-	String r = spinSymbols[spinState];
-	spinState++;
-	if (spinState == spinSymbols.length)
-		spinState=0;
-	return r;
-}
+	private int spinState=0;
+	private String spinAnim() {
+		final String[] spinSymbols = new String[] {"|","/","-","\\"};
+		String r = spinSymbols[spinState];
+		spinState++;
+		if (spinState == spinSymbols.length)
+			spinState=0;
+		return r;
+	}
 
-private Paint newTextPaint(int height) {
-	Paint p = new Paint();
-	p.setColor(Color.WHITE);
-	p.setStyle(Style.STROKE);
-	p.setTextSize(height);
-	return p;
-}
-
-private Map<String,Paint> paintCache = new HashMap<String,Paint>();
-
-public Paint createPaint(String color, Paint.Style style) {
-	return createPaint(color,style,2);
-}
-
-public Paint createPaint(String color, Paint.Style style, int strokeWidth) {
-	String key = style==null?color:color+style.name();
-	Paint p = paintCache.get(key);
-	if (p!=null) {
-		//Log.d("vortex","returns cached paint for "+key);
+	private Paint newTextPaint(int height) {
+		Paint p = new Paint();
+		p.setColor(Color.WHITE);
+		p.setStyle(Style.STROKE);
+		p.setTextSize(height);
 		return p;
 	}
-	//If no cached object, create.
-	p = new Paint();
-	p.setColor(color!=null?Color.parseColor(color):Color.YELLOW);
-	p.setStyle(style!=null?style:Paint.Style.FILL);
-	p.setStrokeWidth(strokeWidth);
-	paintCache.put(key, p);
-	return p;
-}
 
+	private Map<String,Paint> paintCache = new HashMap<String,Paint>();
 
-List<GisLayer> myLayers=new ArrayList<GisLayer>();
-
-public void addLayer(GisLayer layer) {
-	if(layer!=null) {
-		Log.d("vortex","Succesfully added layer");
-		myLayers.add(layer);
+	public Paint createPaint(String color, Paint.Style style) {
+		return createPaint(color,style,2);
 	}
 
-}
-
-public GisLayer getLayer(String identifier) {
-	if (myLayers==null||myLayers.isEmpty()||identifier==null)
-		return null;
-	for (GisLayer gl:myLayers) {
-		if (gl.getId().equals(identifier))
-			return gl;
-	}
-	return null;
-}
-
-private boolean isStarted=false;
-
-
-private FullGisObjectConfiguration gisTypeToCreate;
-
-
-
-public void runSelectedWf() {
-	//update image to close polygon.
-	invalidate();
-	if (touchedGop!=null)
-		runSelectedWf(touchedGop);
-	unSelectGop();
-}
-public void runSelectedWf(GisObject gop) {
-	GlobalState.getInstance().setKeyHash(gop.getKeyHash());
-
-	Log.d("vortex","Setting current keyhash to "+gop.getKeyHash());
-	String target = gop.getWorkflow();
-	Workflow wf = GlobalState.getInstance().getWorkflow(target);
-	if (wf ==null) {
-		Log.e("vortex","missing click target workflow");
-		new AlertDialog.Builder(ctx)
-		.setTitle("Missing workflow")
-		.setMessage("No workflow associated with the GIS object or workflow not found: ["+target+"]. Check your XML.") 
-		.setIcon(android.R.drawable.ic_dialog_alert)
-		.setCancelable(false)
-		.setNeutralButton("Ok",new Dialog.OnClickListener() {				
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				// TODO Auto-generated method stub
-
-			}
-		} )
-		.show();
-	} else {
-
-		Variable statusVariable = gop.getStatusVariable();
-		String statusVarS=null;
-		if (statusVariable!=null) {
-			statusVarS = statusVariable.getId();
-			String valS = statusVariable.getValue();
-			if (valS==null || valS.equals("0")) {
-				Log.d("vortex","Setting status variable to 1");
-				statusVariable.setValue("1");
-			} else
-				Log.d("vortex","NOT Setting status variable to 1...current val: "+statusVariable.getValue());
-			myMap.registerEvent(new WF_Event_OnSave("Gis"));
-
-		} 
-
-		Start.singleton.changePage(wf,statusVarS);
-
-	}
-}
-final static float ScaleTo = 4.0f;
-public void centerOnUser() {
-	if (userGop!=null) {
-		int[] xy = translateMapToRealCoordinates(userGop.getLocation());
-		if (xy!=null) {
-			//float[] rxy = translateToReal((float)xy[0],(float)xy[1]);
-			float scaleDiff = ScaleTo-scaleAdjust;
-			//moveBy(rxy[0],rxy[1]);
-			setPosition(fixedX-xy[0]*ScaleTo,fixedY-xy[1]*ScaleTo); //300 450
-			redraw();
-			Log.d("vortex","X Y USER "+xy[0]+","+xy[1]);
-			//Log.d("vortex","RX RY USER "+rxy[0]+","+rxy[1]);
-			Log.d("vortex","X Y SCALE: SCALEADJ:"+x+","+y+","+scale+","+scaleAdjust);
-			//this.invalidate();
-			//float newScale = 4.0f-scaleAdjust;
-			startZoom(x, y,scaleDiff);
+	public Paint createPaint(String color, Paint.Style style, int strokeWidth) {
+		String key = style==null?color:color+style.name();
+		Paint p = paintCache.get(key);
+		if (p!=null) {
+			//Log.d("vortex","returns cached paint for "+key);
+			return p;
 		}
-	}/* else {
+		//If no cached object, create.
+		p = new Paint();
+		p.setColor(color!=null?Color.parseColor(color):Color.YELLOW);
+		p.setStyle(style!=null?style:Paint.Style.FILL);
+		p.setStrokeWidth(strokeWidth);
+		paintCache.put(key, p);
+		return p;
+	}
+
+
+	List<GisLayer> myLayers=new ArrayList<GisLayer>();
+
+	public void addLayer(GisLayer layer) {
+		if(layer!=null) {
+			Log.d("vortex","Succesfully added layer");
+			myLayers.add(layer);
+		}
+
+	}
+
+	public GisLayer getLayer(String identifier) {
+		if (myLayers==null||myLayers.isEmpty()||identifier==null)
+			return null;
+		for (GisLayer gl:myLayers) {
+			if (gl.getId().equals(identifier))
+				return gl;
+		}
+		return null;
+	}
+
+	private boolean isStarted=false;
+
+
+	private FullGisObjectConfiguration gisTypeToCreate;
+
+
+
+	public void runSelectedWf() {
+		//update image to close polygon.
+		invalidate();
+		if (touchedGop!=null)
+			runSelectedWf(touchedGop);
+		unSelectGop();
+	}
+	public void runSelectedWf(GisObject gop) {
+		GlobalState.getInstance().setKeyHash(gop.getKeyHash());
+
+		Log.d("vortex","Setting current keyhash to "+gop.getKeyHash());
+		String target = gop.getWorkflow();
+		Workflow wf = GlobalState.getInstance().getWorkflow(target);
+		if (wf ==null) {
+			Log.e("vortex","missing click target workflow");
+			new AlertDialog.Builder(ctx)
+			.setTitle("Missing workflow")
+			.setMessage("No workflow associated with the GIS object or workflow not found: ["+target+"]. Check your XML.") 
+			.setIcon(android.R.drawable.ic_dialog_alert)
+			.setCancelable(false)
+			.setNeutralButton("Ok",new Dialog.OnClickListener() {				
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					// TODO Auto-generated method stub
+
+				}
+			} )
+			.show();
+		} else {
+
+			Variable statusVariable = gop.getStatusVariable();
+			String statusVarS=null;
+			if (statusVariable!=null) {
+				statusVarS = statusVariable.getId();
+				String valS = statusVariable.getValue();
+				if (valS==null || valS.equals("0")) {
+					Log.d("vortex","Setting status variable to 1");
+					statusVariable.setValue("1");
+				} else
+					Log.d("vortex","NOT Setting status variable to 1...current val: "+statusVariable.getValue());
+				myMap.registerEvent(new WF_Event_OnSave("Gis"));
+
+			} 
+
+			Start.singleton.changePage(wf,statusVarS);
+
+		}
+	}
+
+
+
+
+
+	final static float ScaleTo = 4.0f;
+	public void centerOnUser() {
+		if (userGop!=null) {
+			int[] xy = translateMapToRealCoordinates(userGop.getLocation());
+			if (xy!=null) {
+				//float[] rxy = translateToReal((float)xy[0],(float)xy[1]);
+				float scaleDiff = ScaleTo-scaleAdjust;
+				//moveBy(rxy[0],rxy[1]);
+				setPosition(fixedX-xy[0]*ScaleTo,fixedY-xy[1]*ScaleTo); //300 450
+				redraw();
+				Log.d("vortex","X Y USER "+xy[0]+","+xy[1]);
+				//Log.d("vortex","RX RY USER "+rxy[0]+","+rxy[1]);
+				Log.d("vortex","X Y SCALE: SCALEADJ:"+x+","+y+","+scale+","+scaleAdjust);
+				//this.invalidate();
+				//float newScale = 4.0f-scaleAdjust;
+				startZoom(x, y,scaleDiff);
+			}
+		}/* else {
 			new AlertDialog.Builder(ctx)
 			.setTitle("Context problem")
 			.setMessage("You are either outside map or have no valid GPS location.") 
@@ -1278,96 +1323,215 @@ public void centerOnUser() {
 			} )
 			.show();
 		}*/
-}
+	}
 
-enum CreateState {
-	initial,
-	inBetween,
-	readyToGo
-}
+	enum CreateState {
+		initial,
+		inBetween,
+		readyToGo
+	}
 
-public void cancelGisObjectCreation() {
-	if (gisTypeToCreate!=null) {
-		gisTypeToCreate=null;
-		if (newGisObj!=null) {
-			currentCreateBag.remove(newGisObj);
-			currentCreateBag =null;	
-			newGisObj=null;		
+	public void cancelGisObjectCreation() {
+		if (gisTypeToCreate!=null) {
+			gisTypeToCreate=null;
+			if (newGisObj!=null) {
+				currentCreateBag.remove(newGisObj);
+				currentCreateBag =null;	
+				newGisObj=null;		
+			}
+		}
+		invalidate();
+	}
+
+
+	public void startGisObjectCreation(FullGisObjectConfiguration fop) {
+		//unselect if selected
+		this.unSelectGop();
+		gisTypeToCreate=fop;
+	}
+
+	public void deleteSelectedGop() {
+		if (touchedGop!=null)
+			GlobalState.getInstance().getDb().deleteAllVariablesUsingKey(touchedGop.getKeyHash());
+		touchedBag.remove(touchedGop);
+		//Dont need to keep track of the bag anymore.
+		touchedBag=null;
+		invalidate();
+	}
+
+	public GisObject getSelectedGop() {
+		return touchedGop;
+	}
+
+	public void describeSelectedGop() {
+		String hash = "*null*";
+		if (touchedGop.getKeyHash()!=null)
+			hash = touchedGop.getKeyHash().toString();
+		new AlertDialog.Builder(ctx)
+		.setTitle("GIS OBJECT DESCRIPTION")
+		.setMessage("Type: "+touchedGop.getId()+"\nLabel: "+touchedGop.getLabel()+
+				"\nSweref: "+touchedGop.getLocation().getX()+","+touchedGop.getLocation().getY()+
+				"\nAttached workflow: "+touchedGop.getWorkflow()+
+				"\nKeyHash: "+hash+
+				"\nPolygon type: "+touchedGop.getGisPolyType().name())
+				.setIcon(android.R.drawable.ic_menu_info_details)
+				.setCancelable(true)
+				.setNeutralButton("Ok",new Dialog.OnClickListener() {				
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+
+					}
+				} )
+				.show();
+	}
+
+	long mostRecentGPSValueTimeStamp=-1;
+	@Override
+	public void gpsStateChanged(GPS_State newState) {
+		Log.d("vortex","Got GPS STATECHANGE");
+		if (newState==GPS_State.newValueReceived)
+			mostRecentGPSValueTimeStamp = System.currentTimeMillis();
+
+		this.postInvalidate();
+
+
+	}
+
+	//Starts a redraw every 3rd second if at least one object is dynamic.
+	private void startDynamicRedraw() {
+		if (!isStarted) {
+			final int interval = 1000; // 1 Second
+			handler = new Handler();
+			Runnable runnable = new Runnable(){
+				public void run() {
+					gpsStateChanged(GPS_State.ping);
+					handler.postDelayed(this, interval);
+				}
+			};
+
+			handler.postDelayed(runnable, interval);
+			isStarted=true;
 		}
 	}
-	invalidate();
-}
-
-
-public void startGisObjectCreation(FullGisObjectConfiguration fop) {
-	//unselect if selected
-	this.unSelectGop();
-	gisTypeToCreate=fop;
-}
-
-public void deleteSelectedGop() {
-	if (touchedGop!=null)
-		GlobalState.getInstance().getDb().deleteAllVariablesUsingKey(touchedGop.getKeyHash());
-	touchedBag.remove(touchedGop);
-	//Dont need to keep track of the bag anymore.
-	touchedBag=null;
-	invalidate();
-}
-
-public GisObject getSelectedGop() {
-	return touchedGop;
-}
-
-public void describeSelectedGop() {
-	String hash = "*null*";
-	if (touchedGop.getKeyHash()!=null)
-		hash = touchedGop.getKeyHash().toString();
-	new AlertDialog.Builder(ctx)
-	.setTitle("GIS OBJECT DESCRIPTION")
-	.setMessage("Type: "+touchedGop.getId()+"\nLabel: "+touchedGop.getLabel()+
-			"\nSweref: "+touchedGop.getLocation().getX()+","+touchedGop.getLocation().getY()+
-			"\nAttached workflow: "+touchedGop.getWorkflow()+
-			"\nKeyHash: "+hash+
-			"\nPolygon type: "+touchedGop.getGisPolyType().name())
-			.setIcon(android.R.drawable.ic_menu_info_details)
-			.setCancelable(true)
-			.setNeutralButton("Ok",new Dialog.OnClickListener() {				
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-
-				}
-			} )
-			.show();
-}
-
-long mostRecentGPSValueTimeStamp=-1;
-@Override
-public void gpsStateChanged(GPS_State newState) {
-	Log.d("vortex","Got GPS STATECHANGE");
-	if (newState==GPS_State.newValueReceived)
-		mostRecentGPSValueTimeStamp = System.currentTimeMillis();
-
-	this.postInvalidate();
-
-
-}
-
-//Starts a redraw every 3rd second if at least one object is dynamic.
-private void startDynamicRedraw() {
-	if (!isStarted) {
-		final int interval = 1000; // 1 Second
-		handler = new Handler();
-		Runnable runnable = new Runnable(){
-			public void run() {
-				gpsStateChanged(GPS_State.ping);
-				handler.postDelayed(this, interval);
-			}
-		};
-
-		handler.postDelayed(runnable, interval);
-		isStarted=true;
+	
+	public List<Location> getRectGeoCoordinates(Rect r) {
+		
+		//Left top right bottom!
+		List<Location> ret = new ArrayList<Location> ();
+		
+		Location topCorner = calculateMapLocationForClick(0,0);
+		Location bottomCorner = calculateMapLocationForClick(this.displayWidth,this.displayHeight);
+		
+		ret.add(topCorner);
+		ret.add(bottomCorner);
+		
+		return ret;
+		
 	}
-}
+	
+	public Rect getCurrentViewSize(float fileImageWidth,float fileImageHeight) {
+		float Scales = scale * scaleAdjust;
+	
+
+		//int top = (int)(rX-this.getImageWidth()/2);
+
+		final float Xs = (this.getScaledWidth()/2)-x;
+		final float Ys = (this.getScaledHeight()/2)-y;
+		final float Xe = Xs+this.displayWidth;
+		final float Ye = Ys+this.displayHeight;
+	
+		
+		final float scaleFx = fileImageWidth/this.getScaledWidth();
+		final float scaleFy = fileImageHeight/this.getScaledHeight();
+		
+		
+		final int left  = (int)(Xs * scaleFx);
+		final int top  = (int)(Ys * scaleFy);
+		
+		final int right = (int)(Xe * scaleFx);
+		final int bottom =(int)(Ye * scaleFy);
+		
+		Rect r = new Rect(left,top,right,bottom);
+		
+		Log.d("vortex","top bottom left right "+top+","+bottom+","+left+","+right);
+		return r;
+	}
+	public Rect getCurrentViewSizeP(float wf,float hf) {
+		final float w = 600;
+		final float h = 920;
+		
+		float ws = this.getScaledWidth();
+		float hs = this.getScaledHeight();
+		
+		float sx  = ws/wf;
+		float sy  = hs/hf;
+		
+		float xf = x/sx;
+		float yf = y/sy;
+		
+		//float w = this.getImageWidth();
+		//float h = this.getImageHeight();
+		
+		float adjustedScale = scale * scaleAdjust;
+		Log.d("vortex","scale: "+scaleAdjust);
+		
+		Log.d("vortex","wf hf ws hs "+wf+","+hf+","+ws+","+hs);
+		Log.d("vortex","x y fixedX*scale fixedY*scale"+x+","+y+","+fixedX*adjustedScale+","+fixedY*adjustedScale);
+		//float x0 = x-fixedX*scale;
+		//float y0 = y-fixedY*scale;
+		Log.d("vortex","sx sy xf yf w h "+sx+","+sy+","+xf+","+yf+","+w+","+h);
+		
+		int top    = (int)Math.max( 0, hf / 2 - (h / 2 / sy) + yf );
+		int bottom = (int)Math.min( hf,hf / 2 + (h / 2 / sy) + yf );
+		int left   = (int)Math.max( 0, wf / 2 - (w / 2 / sx) - xf );
+		int right  = (int)Math.min( wf,wf / 2 + (w / 2 / sx) - xf );
+		
+		Log.d("vortex","top bottom left right "+top+","+bottom+","+left+","+right);
+		
+		Rect r = new Rect(left,top,right,bottom);
+		
+		return r;
+	}
+
+	public Rect getCurrentViewSizeOld(float fullW,float fullH) {
+		Rect r = new Rect();
+		Log.d("vortex","scalew scaleh imgw imgh"+ this.getScaledWidth()+","+this.getScaledHeight()+","+this.getImageWidth()+","+this.getImageHeight());
+		float[] topCorner = translateToReal(0, 0);
+		float[] bottomCorner = translateToReal(this.getImageWidth(), this.getImageHeight());
+		Log.d("vortex","TopX "+ topCorner[0]+", TopY "+topCorner[1]);//+","+this.getImageWidth()+","+this.getImageHeight());
+
+		topCorner[0] = this.getImageWidth()/2+((float)topCorner[0]);
+		topCorner[1] = this.getImageHeight()/2+((float)topCorner[1]);
+		bottomCorner[0] = this.getImageWidth()/2+((float)bottomCorner[0]);
+		bottomCorner[1] = this.getImageHeight()/2+((float)bottomCorner[1]);
+
+		float left,right,top,bottom;
+		
+		left = topCorner[0];
+		right = bottomCorner[0];
+		top = topCorner[1];
+		bottom = bottomCorner[1];
+		double N,E,S,W;
+		Location topCornerL = this.translateRealCoordinatestoMap(topCorner);
+		Location bottomCornerL = this.translateRealCoordinatestoMap(bottomCorner);
+		N = topCornerL.getY();
+		W = topCornerL.getX();
+		E = bottomCornerL.getX();
+		S = bottomCornerL.getY();
+		Log.d("vortex","Real coordinates for this slice (NESW) : "+N+","+E+","+S+","+W);
+		PhotoMeta pm = new PhotoMeta(N,E,S,W);
+		//Translate to coordinates in large image. 
+		float Px = fullW/this.getScaledWidth();
+		float Py = fullH/this.getScaledHeight();
+		r.left=(int)(left*Px);
+		r.right= (int)(right*Px);
+		r.top=(int)(top*Py);
+		r.bottom=(int)(bottom*Py);
+		Log.d("vortex","fullw fullh rl rr rt rb px py"+fullW+","+fullH+","+r.left+","+r.right+","+r.top+","+r.bottom+","+Px+","+Py);
+		
+
+		return r;
+	}
 
 
 

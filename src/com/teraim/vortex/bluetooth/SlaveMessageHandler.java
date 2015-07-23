@@ -90,10 +90,11 @@ public class SlaveMessageHandler extends MessageHandler {
 				SyncEntry[] ses = (SyncEntry[])message;
 				o.addRow("[BT MESSAGE -->Recieved "+ses.length+" rows of data]");				
 				Log.d("nils","[BT MESSAGE -->Recieved "+ses.length+" rows of data]");	
-				if (ses!=null && ses.length>1)
+				if (ses!=null && ses.length>1) {
 					gs.synchronise(ses,false); 
 				//Send back the timestamp identifying this sync.
 				gs.sendMessage(new SyncSuccesful(((SyncEntryHeader)ses[0]).timeStampOfLastEntry));
+				}
 				o.addRow("Trying to send sync succesful message to Master");
 				gs.sendEvent(BluetoothConnectionService.SYNK_DATA_RECEIVED);
 				o.addRow("Trying to send my data to Master.");

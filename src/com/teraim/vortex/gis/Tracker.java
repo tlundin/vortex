@@ -10,12 +10,14 @@ import java.util.Map;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.location.GpsStatus;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.types.SweLocation;
@@ -198,7 +200,37 @@ public class Tracker extends Service implements LocationListener {
 
 	@Override
 	public void onStatusChanged(String provider, int status, Bundle extras) {
-		
+		switch(status) 
+        {
+            case GpsStatus.GPS_EVENT_STARTED:
+                System.out.println("TAG - GPS searching: ");                        
+                break;
+            case GpsStatus.GPS_EVENT_STOPPED:    
+                System.out.println("TAG - GPS Stopped");
+                break;
+            case GpsStatus.GPS_EVENT_FIRST_FIX:
+            	 System.out.println("FIX!");
+                /*
+                 * GPS_EVENT_FIRST_FIX Event is called when GPS is locked            
+                 */
+                    Location gpslocation = locationManager
+                            .getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
+                    if(gpslocation != null)
+                    {       
+                    System.out.println("GPS Info:"+gpslocation.getLatitude()+":"+gpslocation.getLongitude());
+
+                    /*
+                     * Removing the GPS status listener once GPS is locked  
+                     */
+                        //locationManager.removeGpsStatusListener(mGPSStatusListener);                
+                    }               
+
+                break;
+            case GpsStatus.GPS_EVENT_SATELLITE_STATUS:
+ //                 System.out.println("TAG - GPS_EVENT_SATELLITE_STATUS");
+                break;                  
+       }
 	}
 
 	@Override

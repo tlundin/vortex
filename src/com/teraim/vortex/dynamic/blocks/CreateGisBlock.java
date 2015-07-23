@@ -1,5 +1,11 @@
 package com.teraim.vortex.dynamic.blocks;
 
+import java.io.Serializable;
+import java.util.List;
+import java.util.Stack;
+
+import android.graphics.BitmapFactory;
+import android.graphics.Rect;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,6 +17,7 @@ import com.teraim.vortex.FileLoadedCb;
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
 import com.teraim.vortex.dynamic.AsyncResumeExecutorI;
+import com.teraim.vortex.dynamic.types.Location;
 import com.teraim.vortex.dynamic.types.PhotoMeta;
 import com.teraim.vortex.dynamic.types.Workflow.Unit;
 import com.teraim.vortex.dynamic.workflow_abstracts.Container;
@@ -32,15 +39,14 @@ public class CreateGisBlock extends Block {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 2013870148670474249L;
+	private static final long serialVersionUID = 2013870148670474252L;
 	private final String name,containerId,source,N,E,S,W;
 	Unit unit;
 	GlobalState gs;
 	boolean isVisible = false,showHistorical;
 	String format;
 	
-	
-	
+	private Cutout cutOut=null;
 	private boolean menuUp = false;
 	private WF_Context myContext;
 	private LoggerI o;
@@ -98,9 +104,32 @@ public class CreateGisBlock extends Block {
 		if (myContainer!=null && photoMetaData!=null) {
 		LayoutInflater li = LayoutInflater.from(myContext.getContext());
 		FrameLayout mapView = (FrameLayout)li.inflate(R.layout.image_gis_layout, null);
-		final View avstRL = mapView.findViewById(R.id.avstRL);
+		final View avstRL = mapView.findViewById(R.id.avstriktF);
 		final View createMenuL = mapView.findViewById(R.id.createMenuL);
-		WF_Gis_Map gis = new WF_Gis_Map(blockId, mapView, isVisible, picUrlorName,myContext,photoMetaData,avstRL,createMenuL);
+		WF_Gis_Map gis;
+		Rect r;
+		boolean zoom;
+		if (cutOut==null) {
+			BitmapFactory.Options options = new BitmapFactory.Options();
+			options.inJustDecodeBounds = true;
+			String fullPicFileName = Constants.VORTEX_ROOT_DIR+GlobalState.getInstance().getGlobalPreferences().get(PersistenceHelper.BUNDLE_NAME)+picUrlorName;
+			BitmapFactory.decodeFile(fullPicFileName, options);
+			int imageHeight = options.outHeight;
+			int imageWidth = options.outWidth;
+			Log.d("vortex","image rect h w is "+imageHeight+","+imageWidth);
+			r = new Rect(0,0,imageWidth,imageHeight);
+			zoom = true;
+		} else {
+			//This is a cutout. pop the correct slice specification from the stack. 
+			zoom=false;
+			r = cutOut.r;
+			Location topC = cutOut.geoR.get(0);
+			Location botC = cutOut.geoR.get(1);
+			photoMetaData = new PhotoMeta(topC.getY(),botC.getX(),botC.getY(),topC.getX());
+			cutOut=null;
+		}
+		gis = new WF_Gis_Map(this,r,blockId, mapView, isVisible, picUrlorName,myContext,photoMetaData,avstRL,createMenuL,zoom);	
+				
 		myContainer.add(gis);
 		myContext.addDrawable(name,gis);
 		final View menuL = mapView.findViewById(R.id.menuL);
@@ -133,6 +162,7 @@ public class CreateGisBlock extends Block {
 		cb.continueExecution();
 	}
 
+	
 	private void loadImageMetaData(PersistenceHelper ph, PersistenceHelper globalPh, String picUrlorName) {		
 		//Did we get image meta data in xml tags?
 		//If not, try to load it from file.
@@ -184,9 +214,20 @@ public class CreateGisBlock extends Block {
 		}
 		}
 	}
+	
+	private class Cutout {
+		Rect r;
+		List<Location> geoR;
+	}
 
+	
 
-
+	public void setCutOut(Rect r, List<Location> geoR) {
+		cutOut = new Cutout();
+		cutOut.r = r;
+		cutOut.geoR = geoR;
+		
+	}
 
 
 }

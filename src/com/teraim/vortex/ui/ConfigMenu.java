@@ -1,6 +1,7 @@
 package com.teraim.vortex.ui;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
@@ -13,6 +14,7 @@ import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
+import com.teraim.vortex.bluetooth.BluetoothConnectionService;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.PersistenceHelper;
 import com.teraim.vortex.utils.Tools;
@@ -108,11 +110,12 @@ public class ConfigMenu extends PreferenceActivity {
 		public void onSharedPreferenceChanged(
 				SharedPreferences sharedPreferences, String key) {
 			Preference pref = findPreference(key);
+			GlobalState gs = GlobalState.getInstance();
+			
 			if (pref instanceof EditTextPreference) {
 				EditTextPreference etp = (EditTextPreference) pref;
 				pref.setSummary(etp.getText());
 				if (key.equals(PersistenceHelper.BUNDLE_NAME)) {
-					GlobalState gs = GlobalState.getInstance();
 					if (gs != null) 
 						//if a state exists, restart the app.
 						Tools.restart(this.getActivity());
@@ -138,6 +141,12 @@ public class ConfigMenu extends PreferenceActivity {
 						this.getActivity().getSharedPreferences(Constants.GLOBAL_PREFS,Context.MODE_PRIVATE).edit().putBoolean(PersistenceHelper.SYNC_FEATURE,false).apply();
 						Log.d("nils","Changed to SOLO");
 					}
+					if (gs!=null) {
+						if (gs.getSyncStatus()!=BluetoothConnectionService.SYNK_STOPPED) {
+							getActivity().stopService(new Intent(this.getActivity(),BluetoothConnectionService.class));
+							Log.d("vortex","stopping bluetooth");
+						}
+					}
 					Tools.restart(this.getActivity());
 					
 				}
@@ -145,7 +154,7 @@ public class ConfigMenu extends PreferenceActivity {
 			}
 			
 			//force redraw of menuactivity.
-			GlobalState gs = GlobalState.getInstance();
+			
 			if (gs!=null) {
 				gs.sendEvent(MenuActivity.REDRAW);
 			}

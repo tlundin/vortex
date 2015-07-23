@@ -307,6 +307,7 @@ public class GestureImageView extends ImageView  {
 		if(recycle && drawable != null && drawable instanceof BitmapDrawable) {
 			Bitmap bitmap = ((BitmapDrawable)drawable).getBitmap();
 			if(bitmap != null) {
+				Log.d("vortex","recycling!");
 				bitmap.recycle();
 			}
 		}
@@ -331,14 +332,15 @@ public class GestureImageView extends ImageView  {
 				}
 
 				drawable.draw(canvas);
-
 				canvas.restore();
-			}
+			} else
+				Log.d("vortex", "nodraw......................");
 
 			if(drawLock.availablePermits() <= 0) {
 				drawLock.release();
 			}
-		}
+		} else
+			Log.e("vortex","no layout no draw!");
 	}
 
 	/**
@@ -393,16 +395,25 @@ public class GestureImageView extends ImageView  {
 			if(colorFilter != null) {
 				this.drawable.setColorFilter(colorFilter);
 			}
-		}
+		} else
+			Log.e("vortex","drawable was null in initImage!!");
 		
 		if(!layout) {
+			Log.e("vortex","layout!!!");
 			requestLayout();
 			redraw();
 		}
 	}
 
+
 	public void setImageBitmap(Bitmap image) {
-		this.drawable = new BitmapDrawable(getResources(), image);
+		if (image==null)
+			Log.d("vortex","Image null!");
+		if(this.drawable != null) {
+			this.recycle();
+			Log.d("vortex","REcycle!");
+		}
+		this.drawable = new BitmapDrawable(getResources(), image);		
 		initImage();
 	}
 
@@ -473,9 +484,23 @@ public class GestureImageView extends ImageView  {
 	}
 
 	public void setScale(float scale) {
-		scaleAdjust = scale;
+		
+			scaleAdjust = scale;
+		
 	}
 
+	public void handleScale(float scaleDiff) {
+		
+		//float newScale = scaleAdjust+scaleDiff;
+		//Log.d("vortex","new scale: "+newScale);
+		
+		gestureImageViewTouchListener.startZoom(centerX, centerY, scaleDiff);
+		//oldScale = scaleAdjust; 
+		//float newX = (ratio * xDiff) + startX;
+		//float newY = (ratio * yDiff) + startY;
+		//gestureImageViewTouchListener.handleScale(newScale,newX, newY);
+	}
+	
 	public float getScale() {
 		return scaleAdjust;
 	}

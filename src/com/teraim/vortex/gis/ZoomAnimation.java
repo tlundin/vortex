@@ -16,6 +16,7 @@
 package com.teraim.vortex.gis;
 
 import android.graphics.PointF;
+import android.util.Log;
 
 
 /**
@@ -130,6 +131,7 @@ public class ZoomAnimation implements Animation {
 	}
 	
 	public void setZoom(float zoom) {
+		Log.d("vortex","zoom: "+zoom);
 		this.zoom = zoom;
 	}
 	

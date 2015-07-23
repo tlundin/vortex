@@ -357,7 +357,7 @@ public class GestureImageViewTouchListener implements OnTouchListener {
 
 									float newX = scaleVector.end.x;
 									float newY = scaleVector.end.y;
-
+									Log.d("vortex","newscale, centerX,centerY,newX, newY "+newScale+","+centerX+","+centerY+","+newX+","+newY);
 									handleScale(newScale, newX, newY);
 								}
 							}
@@ -378,12 +378,13 @@ public class GestureImageViewTouchListener implements OnTouchListener {
 					}
 					else {
 						if(!touched) {
-							Log.d("vortex","getzzzz");
 							touched = true;
 							last.x = event.getX();
 							last.y = event.getY();
 							next.x = image.getImageX();
 							next.y = image.getImageY();
+							
+
 						}
 						else if(!multiTouch) {
 							if(handleDrag(event.getX(), event.getY())) {
@@ -485,6 +486,7 @@ public class GestureImageViewTouchListener implements OnTouchListener {
 			last.y = current.y;
 
 			if(canDragX || canDragY) {
+				Log.d("vortex","XY "+next.x+","+next.y);
 				image.setPosition(next.x, next.y);
 
 				if(imageListener != null) {
@@ -584,6 +586,10 @@ public class GestureImageViewTouchListener implements OnTouchListener {
 			boundaryTop = centerY - diff;
 			boundaryBottom = centerY + diff;
 		}
+	}
+	
+	public void setScale(float scale) {
+		currentScale = scale;
 	}
 
 }

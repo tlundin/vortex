@@ -8,6 +8,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
@@ -32,7 +33,9 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
+import android.graphics.BitmapRegionDecoder;
 import android.graphics.Canvas;
+import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
@@ -204,10 +207,42 @@ public class Tools {
 		}
 	}
 
-	//Scales an image to a size that can be displayed.
+	//Scales an image region to a size that can be displayed.
+	public static Bitmap getScaledImageRegion(Context ctx,String fileName, Rect r) {
+		BitmapRegionDecoder decoder = null; 
 
+
+		try { 
+			
+			decoder = BitmapRegionDecoder.newInstance(fileName, true); 
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}  
+			Log.d("vortex","w h "+decoder.getWidth()+","+decoder.getHeight());
+			final BitmapFactory.Options options = new BitmapFactory.Options();
+			options.inJustDecodeBounds=true;
+			Bitmap piece;
+			decoder.decodeRegion(r,options);
+			int realW = options.outWidth;
+			int realH = options.outHeight;
+			Log.d("vortex","Wp Wh: "+realW+","+realH);
+			DisplayMetrics metrics = ctx.getResources().getDisplayMetrics();
+			int sWidth = metrics.widthPixels;
+			double tWidth = sWidth;
+			//height is then the ratio times this..
+			int tHeight = (int) (tWidth*.66f);
+			//use target values to calculate the correct inSampleSize
+			options.inSampleSize = Tools.calculateInSampleSize(options, (int)tWidth, tHeight);
+			Log.d("nils"," Calculated insamplesize "+options.inSampleSize);
+			//now create real bitmap using insampleSize
+			options.inJustDecodeBounds = false;
+			Log.d("vortex","stime: "+System.currentTimeMillis()/1000);
+			piece = decoder.decodeRegion(r,options);			
+			Log.d("vortex","ptime: "+System.currentTimeMillis()/1000);
+			Log.d("vortex","piece w: b: "+piece.getWidth()+","+piece.getRowBytes());
+			return piece;
+	}
 	public static Bitmap getScaledImage(Context ctx,String fileName) {
-
 		//Try to load pic from disk, if any.
 		//To avoid memory issues, we need to figure out how big bitmap to allocate, approximately
 		//Picture is in landscape & should be approx half the screen width, and 1/5th of the height.
@@ -259,6 +294,7 @@ public class Tools {
 			return null;
 		}
 	}
+	
 	public static Bitmap decodeSampledBitmapFromResource(Resources res, int resId,
 			int reqWidth, int reqHeight) {
 

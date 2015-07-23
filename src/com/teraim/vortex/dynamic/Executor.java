@@ -725,4 +725,14 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 		} )
 		.show();
 	}
+	
+	public void restart() {
+		new Handler().postDelayed(new Runnable() {
+			public void run() {
+				myContext.resetState();
+				Executor.this.run();
+				Log.d("vortex","workflow restarted");
+			}
+		}, 0);
+	}
 }
