@@ -26,17 +26,22 @@ public class Geomatte {
 	}
 
 	private static double sqr(double x) { return x * x; }
-	private static double dist2(Location v, Location w) { return sqr(v.getX() - w.getX()) + sqr(v.getY() - w.getY()); }
-	private static double distToSegmentSquared(Location p, Location v, Location w) {
-		double l2 = dist2(v, w);
-		if (l2 == 0) return dist2(p, v);
-		double t = ((p.getX() - v.getX()) * (w.getX() - v.getX()) + (p.getY() - v.getY()) * (w.getY() - v.getY())) / l2;
-		if (t < 0) return dist2(p, v);
-		if (t > 1) return dist2(p, w);
-		return dist2(p, new SweLocation(v.getX() + t * (w.getX() - v.getX()),
-				v.getY() + t * (w.getY() - v.getY())));
+	private static double dist2(Location v, Location w,double pxr,double pyr) { 
+		
+		
+		return sqr((v.getX() - w.getX())*pxr) + sqr((v.getY() - w.getY())*pyr); 
+		
 	}
-	public static double pointToLineDistance3(Location A, Location B, Location P) { return Math.sqrt(distToSegmentSquared(P, A, B)); }
+	private static double distToSegmentSquared(Location p, Location v, Location w,double pxr,double pyr) {
+		double l2 = dist2(v, w,pxr,pyr);
+		if (l2 == 0) return dist2(p, v,pxr,pyr);
+		double t = ((p.getX() - v.getX()) * (w.getX() - v.getX()) + (p.getY() - v.getY()) * (w.getY() - v.getY())) / l2;
+		if (t < 0) return dist2(p, v,pxr,pyr);
+		if (t > 1) return dist2(p, w,pxr,pyr);
+		return dist2(p, new SweLocation(v.getX() + t * (w.getX() - v.getX()),
+				v.getY() + t * (w.getY() - v.getY())),pxr,pyr);
+	}
+	public static double pointToLineDistance3(Location A, Location B, Location P,double pxr,double pyr) { return Math.sqrt(distToSegmentSquared(P, A, B,pxr,pyr)); }
 
 
 

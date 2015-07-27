@@ -57,6 +57,7 @@ public class GeoJSONExporter extends Exporter {
 				do {
 					currentHash = cp.getKeyColumnValues();
 					uid = currentHash.get("uid");
+					/*
 					if (varC>0) {
 						if (!Tools.sameKeys(previousHash,currentHash)) {
 							Log.e("vortex","Diff!!!");
@@ -67,23 +68,27 @@ public class GeoJSONExporter extends Exporter {
 						}
 						}
 					}
-					
-					if (uid==null)
-						Log.e("vortex","missing uid!!!");
+					*/
+					if (uid==null) {
+						
+						//Log.e("vortex","missing uid!!!");
+						//Log.e("vortex","keyhash: "+currentHash.toString());
+					}
 					else {
 						gisObjM = gisObjects.get(uid);
 						if (gisObjM==null) { 
 							gisObjM = new HashMap<String,String>();
 							gisObjects.put(uid, gisObjM);
+							Log.d("vortex","keyhash: "+currentHash.toString());
 						}
 						//Hack for multiple SPY1 variables.
 						String name = cp.getVariable().name;
 						
 						gisObjM.put(name, cp.getVariable().value);
 
-						Log.d("vortex","Current hash: "+currentHash.toString());
+						
 						//current becomes previous
-						previousHash = currentHash;
+						//previousHash = currentHash;
 						//Count number of geoobj exported
 						varC++;
 						
@@ -146,7 +151,7 @@ public class GeoJSONExporter extends Exporter {
 					writer.name("properties");
 					writer.beginObject();	
 					//Add the UUID
-					write("GlobalID",uid);
+					write("GlobalID",key);
 					for (String mKey:gisObjM.keySet()) {
 						write(mKey,gisObjM.get(mKey));
 						Log.d("vortex","var, value: "+mKey+","+gisObjM.get(mKey));

@@ -46,6 +46,9 @@ public class GisMultiPointObject extends GisObject {
 	
 	@Override
 	public boolean isTouchedByClick(Location mapLocationForClick,double pxr,double pyr) {
+		//Check if this object has something! A workflow. Otherwise no touch.
+		if (this.getWorkflow()==null)
+			return false;
 		//Only linestrings can be touched.
 		Log.d("vortex", "in istouch for linestr");
 		if (!isLineString()) {
@@ -56,18 +59,22 @@ public class GisMultiPointObject extends GisObject {
 			Log.d("vortex", "found no coordinates...exiting");
 			return false;
 		}
+		double distanceToClick = ClickThresholdInMeters;
 		for (int i=0;i<myCoordinates.size()-1;i++) {
 
 			Location A = Geomatte.subtract(myCoordinates.get(i),mapLocationForClick);
 			Location B = Geomatte.subtract(myCoordinates.get(i+1),mapLocationForClick);
 			//double dist = Geomatte.pointToLineDistance(A, B, origo);
-			double dist2 = Geomatte.pointToLineDistance3(A, B, origo);
+			double dist2 = Geomatte.pointToLineDistance3(A, B, origo,pxr,pyr);
 			Log.d("vortex"," Distance N: "+dist2);
-			if (dist2<(ClickThresholdInMeters)) {
-				Log.d("vortex","found!!!");
-				return true;
-			}
+			if (dist2<distanceToClick) 
+				distanceToClick=dist2;
+			
 		}
+		if (distanceToClick<ClickThresholdInMeters) 
+			return true;
+		
+			
 		return false;
 	}
 	

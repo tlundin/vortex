@@ -14,5 +14,6 @@ public class GisConstants {
 	public static final String LATLONG= "latlong";
 	public static final String RutaID = "ruta";
 	public static final String GPS_Coord_Var_Name = "gpscoord";
+	public static final Object MULTI_POLYGON = "Multipolygon";
 	
 }

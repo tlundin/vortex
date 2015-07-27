@@ -92,7 +92,7 @@ public class Variable implements Serializable {
 	private boolean usingDefault = false;
 
 	public enum DataType {
-		numeric,bool,list,text,existence,auto_increment, array
+		numeric,bool,list,text,existence,auto_increment, array, decimal
 	}
 
 	public String getValue() {
@@ -165,7 +165,10 @@ public class Variable implements Serializable {
 			
 		Log.e("nils","Var: "+this.getId()+" old Val: "+myValue+" new Val: "+value+" this var hash#"+this.hashCode());	
 		value = Tools.removeStartingZeroes(value);
-		myValue = value;		
+		myValue = value;
+		//Remove any .xx if numeric.
+		if (this.getType()==DataType.numeric) 
+			value = Integer.parseInt(value)+"";			
 		//will change keyset as side effect if valueKey variable.
 		//reason for changing indirect is that old variable need to be erased. 
 		insertVariable(value,isSynchronized);

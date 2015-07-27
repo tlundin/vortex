@@ -648,7 +648,11 @@ public class GlobalState  {
 									if (val.equals(VariableConfiguration.HISTORICAL_MARKER)) {
 										Log.d("vortex","Historical!");
 										keyHash.put(arg,val);
-									} else {
+									} else if (val.equals("*")) {
+										Log.d("vortex","WILDCARD!!");
+										keyHash.put(arg,val);
+									}
+									else {
 										//Variable or function. need to evaluate first..
 										Variable v=null;// = getVariableConfiguration().getVariableInstance(val);
 										String varVal=null;

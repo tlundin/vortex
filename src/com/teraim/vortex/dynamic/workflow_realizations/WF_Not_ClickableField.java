@@ -234,7 +234,7 @@ public abstract class WF_Not_ClickableField extends WF_ListEntry {
 
 	private static String addZeros(String s,int i) {
 		while (i-->0)
-			s="0"+s;
+			s=s+"0";
 		return s;
 	}
 	private static String addSpaces(String s,int i) {

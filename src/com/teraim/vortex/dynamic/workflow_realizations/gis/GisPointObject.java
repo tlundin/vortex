@@ -54,19 +54,25 @@ public abstract class GisPointObject extends GisObject {
 			Log.d("vortex","No location found for object "+this.getLabel());
 			return false;
 		}
-		double xD = Math.abs(mapLocationForClick.getX()-myLocation.getX());
-		double yD = Math.abs(mapLocationForClick.getY()-myLocation.getY());
+		if (this.getWorkflow()==null)
+			return false;
+		Log.d("vortex","pxr pyr"+pxr+","+pyr);
+		double xD = (mapLocationForClick.getX()-myLocation.getX())*pxr;
+		double yD = (mapLocationForClick.getY()-myLocation.getY())*pyr;
 
-		double touchThresh;
+		//double touchThresh = ClickThresholdInMeters;
 		
+		distanceToClick = Math.sqrt(xD*xD+yD*yD);
+		/*
 		if (isCircle())
 			touchThresh = this.getRadius()/pxr;
 		else {
 			touchThresh = this.getRadius()/pyr;
 		}
-
-		if (xD<touchThresh&&yD<touchThresh) {
-			Log.d("vortex","found friend!");
+		 */
+		//Log.d("vortex","I: D: "+this.getLabel()+","+distanceToClick);
+		if (distanceToClick<ClickThresholdInMeters) {
+			Log.d("vortex","found friend!");			
 			return true;
 		}
 		//Log.d("vortex", "Dist x  y  tresh: "+xD+","+yD+","+touchThresh);

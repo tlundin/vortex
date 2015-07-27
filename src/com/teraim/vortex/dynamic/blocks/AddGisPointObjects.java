@@ -43,7 +43,7 @@ import com.teraim.vortex.utils.Tools;
 public class AddGisPointObjects extends Block implements FullGisObjectConfiguration {
 
 
-	private static final long serialVersionUID = 7979886099817953004L;
+	private static final long serialVersionUID = 7979886099817953005L;
 	private String nName, label,
 	target, coordType,  locationVariables,
 	objContext,  imgSource,

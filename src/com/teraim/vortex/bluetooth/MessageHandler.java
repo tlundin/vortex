@@ -1,13 +1,9 @@
 package com.teraim.vortex.bluetooth;
 
-import android.content.Intent;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.teraim.vortex.GlobalState;
-import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnSave;
 import com.teraim.vortex.log.LoggerI;
-import com.teraim.vortex.utils.PersistenceHelper;
 
 public abstract class MessageHandler {
 

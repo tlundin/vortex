@@ -504,6 +504,7 @@ public class RuleExecutor {
 			return new SubstiResult(formula,stringT?SubstiType.String:null);
 		String subst = formula.toLowerCase();
 		subst = substFormulas(subst, myTokens);
+		
 		return substVariables(formula,subst,myTokens,stringT);
 
 
@@ -805,7 +806,7 @@ public class RuleExecutor {
 				gs.getLogger().addRow("Sum evaluates to "+sum);
 				Log.d("vortex","Sum evaluates to "+sum);
 				//TODO: Remove Round when going to float from integer.
-				return Float.toString(Math.round(sum));
+				return Float.toString(sum);
 			} else {
 				Log.e("vortex","sum function without arguments");
 				gs.getLogger().addRow("");
@@ -1109,6 +1110,7 @@ public class RuleExecutor {
 			o.addText("Parsing Expr "+formula+" evaluates to null");	
 			return null;
 		} else {
+			Log.d("vortex","FFF "+exp.value());
 			return exp.value()==null?null:(exp.value().intValue()+"");
 		}
 	}

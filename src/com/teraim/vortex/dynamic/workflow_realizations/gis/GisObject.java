@@ -18,7 +18,7 @@ public class GisObject {
 
 	
 	protected static final double ClickThresholdInMeters = 100;
-
+	protected double distanceToClick=-1;
 	
 	private Variable statusVar=null;
 	
@@ -97,6 +97,10 @@ public class GisObject {
 	
 	public String getColor() {
 		return foc.getColor();
+	}
+	
+	public double getDistanceToClick() {
+		return distanceToClick;
 	}
 
 

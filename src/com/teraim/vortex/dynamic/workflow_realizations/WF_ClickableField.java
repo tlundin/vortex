@@ -156,7 +156,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 					Log.d("vortex","deleting variable "+variable.getId()+" with value "+variable.getValue());
 					DataType type = variable.getType();
 					View view = pairs.getValue();
-					if (type == DataType.numeric||
+					if (type == DataType.numeric|| type == DataType.decimal ||
 							type == DataType.text){
 						EditText etview = (EditText)view.findViewById(R.id.edit);
 						etview.setText("");
@@ -563,8 +563,12 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 			myVars.put(var,l);			
 			break;
 		case numeric:
+		case decimal:
 			//o.addRow("Adding edit field for dy-variable with label "+label+", name "+varId+", type "+numType.name()+" and unit "+unit.name());
-			l = LayoutInflater.from(myContext.getContext()).inflate(R.layout.edit_field_numeric,null);
+			if (var.getType()==DataType.numeric)
+				l = LayoutInflater.from(myContext.getContext()).inflate(R.layout.edit_field_numeric,null);
+			else
+				l = LayoutInflater.from(myContext.getContext()).inflate(R.layout.edit_field_float,null);
 			header = (TextView)l.findViewById(R.id.header);
 			String headerTxt = varLabel+((unit!=null&&unit.length()>0)?" ("+unit+")":"");
 			if (hist!=null && showHistorical) {
@@ -597,6 +601,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 			myVars.put(var, l);
 			break;
 		}
+
 
 		OutC w=null;
 		if (displayOut) {
@@ -672,7 +677,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 					newValue = null;
 			} else 
 				if (type == DataType.numeric||
-				type == DataType.text){
+				type == DataType.text || type == DataType.decimal){
 					EditText etview = (EditText)view.findViewById(R.id.edit);
 					String txt = etview.getText().toString();
 					if (txt.trim().length()>0)
@@ -785,8 +790,8 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 						nej.setChecked(true);				
 				}
 			} else
-				if (numType == Variable.DataType.numeric||
-				numType ==DataType.text) {
+				if (numType == DataType.numeric||
+				numType ==DataType.text ) {
 
 					//Log.d("nils","refreshing edittext with varid "+variable.getId());
 					EditText et = (EditText)v.findViewById(R.id.edit);

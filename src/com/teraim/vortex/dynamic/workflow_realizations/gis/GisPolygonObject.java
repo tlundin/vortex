@@ -109,24 +109,26 @@ public class GisPolygonObject extends GisObject {
 	
 	@Override
 	public boolean isTouchedByClick(Location mapLocationForClick,double pxr,double pyr) {
-		//Only linestrings can be touched.
-		Log.d("vortex", "in istouch for poly");
+		
+		if (this.getWorkflow()==null)
+			return false;
 		myCoordinates =  getCoordinates() ;
 		if (myCoordinates == null||myCoordinates.isEmpty()) {
 			Log.d("vortex", "found no coordinates...exiting");
 			return false;
 		}
-		for (int i=0;i<myCoordinates.size();i++) {
+		distanceToClick=ClickThresholdInMeters;
+		for (int i=0;i<myCoordinates.size()-1;i++) {
 
 			Location A = myCoordinates.get(i);
-			Location B = myCoordinates.get((i+1)%myCoordinates.size());
-			double dist = Geomatte.pointToLineDistance3(A, B, mapLocationForClick);
-			Log.d("vortex","dist to "+this.getId()+" is "+dist+ "Thresh was Divided by pxr: "+ClickThresholdInMeters/pxr);
-			if (dist<(ClickThresholdInMeters)) {
-				Log.d("vortex","found!!!");
-				return true;
-			}
+			Location B = myCoordinates.get(i+1);
+			double dist = Geomatte.pointToLineDistance3(A, B, mapLocationForClick,pxr,pyr);
+			//Log.d("vortex","dist to "+this.getId()+" is "+dist+ "Thresh was Divided by pxr: "+ClickThresholdInMeters/pxr);
+			if (dist<distanceToClick) 
+				distanceToClick=dist;
 		}
+		if (distanceToClick<ClickThresholdInMeters)
+			return true;
 		return false;
 	}
 	

@@ -11,13 +11,14 @@ import com.teraim.vortex.dynamic.types.Variable.DataType;
 import com.teraim.vortex.utils.RuleExecutor;
 import com.teraim.vortex.utils.RuleExecutor.SubstiResult;
 import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
+import com.teraim.vortex.utils.Tools;
 
 public class SetValueBlock extends Block {
 
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -9113802658084282749L;
+	private static final long serialVersionUID = -9113802658084282750L;
 
 	public enum ExecutionBehavior {
 		constant,dynamic,update_flow
@@ -61,8 +62,11 @@ public class SetValueBlock extends Block {
 		//substitute any variables or functions.
 		SubstiResult sr = re.substituteForValue(tokens,formula,stringT);
 		String subst = sr.result;
+		if (subst!=null && Tools.isNumeric(subst))
+			return subst;
 		if (subst!=null && !sr.iAmAString()) { 
 			subst = re.parseExpression(formula,subst);
+			Log.d("vortex","YYY Evaluate "+subst);
 			return subst;
 		}
 		if (sr.iAmAString() && subst  == null) {

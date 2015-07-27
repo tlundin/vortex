@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.json.JSONException;
@@ -20,7 +22,6 @@ import com.teraim.vortex.dynamic.types.SweLocation;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisConstants;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisPolygonObject;
-import com.teraim.vortex.loadermodule.ConfigurationModule;
 import com.teraim.vortex.loadermodule.JSONConfigurationModule;
 import com.teraim.vortex.loadermodule.LoadResult;
 import com.teraim.vortex.loadermodule.LoadResult.ErrorCode;
@@ -43,6 +44,11 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 		this.hasSimpleVersion=true;
 		this.isDatabaseModule=true;
 		this.myType = fileName;
+		if (myType!=null&&myType.length()>0) {
+			myType = myType.toLowerCase();
+			myType =( myType.substring(0,1).toUpperCase() + myType.substring(1));
+			Log.e("vortex","MYTYPE: "+myType);
+		}
 	}
 
 	private static String fixedLength(String fileName) {
@@ -150,10 +156,10 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 				}
 				myGisObjects.add(new GisObject(keyChain,myCoordinates,attributes));
 			}  else if (mType.equals(GisConstants.POLYGON)){
-				Map<String,List<Location>> polygons = null;
+				Map<String,List<Location>> holedPolygons = null;
 				List<Location> myCoordinates=null; 
 				int proxyId = 0;
-				polygons = new HashMap<String,List<Location>>();
+				holedPolygons = new HashMap<String,List<Location>>();
 				while (!reader.peek().equals(JsonToken.END_ARRAY)) {	
 					reader.beginArray();
 					myCoordinates = new ArrayList<Location>();
@@ -166,14 +172,43 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 						myCoordinates.add(new SweLocation(x, y));
 						reader.endArray();
 					}					
-					polygons.put((proxyId)+"" , myCoordinates);
+					holedPolygons.put((proxyId)+"" , myCoordinates);
 					proxyId++;
 					reader.endArray();
 				}
 
-				if (polygons!=null&&!polygons.isEmpty())
-					myGisObjects.add(new GisPolygonObject(keyChain,polygons,attributes));
+				if (holedPolygons!=null&&!holedPolygons.isEmpty())
+					myGisObjects.add(new GisPolygonObject(keyChain,holedPolygons,attributes));
 
+			} else if (mType.equals(GisConstants.MULTI_POLYGON)){
+				Log.d("vortex","MULTIPOLYGON!!");
+				Set<GisPolygonObject> multiPoly 			= new HashSet<GisPolygonObject>();
+				Map<String,List<Location>> 	 holedPolygons 	= new HashMap<String,List<Location>>();
+				List<Location> myCoordinates=null; 
+				int proxyId = 0;
+				while (!reader.peek().equals(JsonToken.END_ARRAY)) {
+					while (!reader.peek().equals(JsonToken.END_ARRAY)) {	
+						reader.beginArray();
+						myCoordinates = new ArrayList<Location>();
+						while (!reader.peek().equals(JsonToken.END_ARRAY)) {
+							reader.beginArray();
+							x = reader.nextDouble();
+							y = reader.nextDouble();
+							if (!reader.peek().equals(JsonToken.END_ARRAY)) 
+								z = reader.nextDouble();
+							myCoordinates.add(new SweLocation(x, y));
+							reader.endArray();
+						}					
+						holedPolygons.put((proxyId)+"" , myCoordinates);
+						proxyId++;
+						reader.endArray();
+					} 
+					if (holedPolygons!=null&&!holedPolygons.isEmpty())
+						multiPoly.add(new GisPolygonObject(keyChain,holedPolygons,attributes));
+
+				}
+				if (holedPolygons!=null&&!holedPolygons.isEmpty())
+					myGisObjects.add(new GisPolygonObject(keyChain,holedPolygons,attributes));
 			} else {
 				o.addRow("");
 				o.addRedText("Unsupported Geo Type in parser: "+type);
@@ -198,22 +233,22 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 			reader.endObject();
 			String uuid = attributes.remove(GisConstants.GlobalID);
 			String rutaId = attributes.remove(GisConstants.RutaID);
-						
-				
+
+
 			if (uuid!=null)
 				keyChain.put("uid",uuid);
 			else
 				keyChain.put("uid",UUID.randomUUID().toString());
 			keyChain.put("år", VariableConfiguration.HISTORICAL_MARKER);
-			
+
 			//Tarfala hack. TODO: Remove.
 			if (rutaId==null)
 				Log.e("vortex","ingen ruta ID!!!!");
 			else
 				keyChain.put("ruta", rutaId);
-			
+
 			keyChain.put(GisConstants.TYPE_COLUMN, myType);
-			
+
 			//Add geotype to attributes so that the correct object can be used at export.
 			attributes.put(GisConstants.Geo_Type, mType);
 
@@ -247,7 +282,7 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 			firstCall = false;
 			Log.d("vortex","keyhash for first: "+myGisObjects.get(0).getKeyHash().toString());
 		}
-	
+
 		//Insert GIS variables into database
 		GisObject go = myGisObjects.get(counter);
 		if (!myDb.fastHistoricalInsert(go.getKeyHash(),
@@ -264,12 +299,12 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 				o.addRedText("Row: "+counter+". Insert failed for "+key+". Hash: "+go.getKeyHash().toString());;
 			}
 		}
-		
+
 		if (this.freezeSteps==(counter+1)) {
 			Log.d("vortex","Transaction ends");
 			myDb.endTransaction();
 		}
-		
+
 		return true;
 
 	}

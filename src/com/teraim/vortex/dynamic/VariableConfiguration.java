@@ -193,6 +193,8 @@ public class VariableConfiguration implements Serializable {
 				return Variable.DataType.auto_increment;
 			else if (type.equals("array")) 
 				return Variable.DataType.array;
+			else if (type.equals("decimal")||type.equals("float"))
+				return Variable.DataType.decimal;
 			else
 				Log.e("nils","TYPE NOT KNOWN: ["+type+"]");
 		}

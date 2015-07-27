@@ -183,8 +183,7 @@ public class Tools {
 	}
 
 	public static Unit convertToUnit(String unit) {
-		Log.d("unit","unit is "+unit+" with length "+unit.length());
-		if (unit == null ||unit.length()==0) {
+		if (unit == null) {
 			Log.d("unit","translates to undefined");
 			return Unit.nd;
 		}
@@ -399,9 +398,14 @@ public class Tools {
 	{	
 		if (str==null||str.length()==0)
 			return false;
+		int i=0;
 		for (char c : str.toCharArray())
 		{
-			if (!Character.isDigit(c)&& c!='.') return false;
+			if (!Character.isDigit(c)&& c!='.') {
+				if (i>0 || c!='-')
+					return false;
+			}
+			i++;
 		}
 		return true;
 	}

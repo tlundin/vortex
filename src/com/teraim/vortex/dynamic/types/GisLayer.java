@@ -9,6 +9,14 @@ import android.util.Log;
 
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisFilter;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisObject;
+/**
+ * 
+ * A Layer holds the GIS Objects drawn in GisImageView, created by block_add_gis_layer.
+ * Each GIS Layer may hold reference to any GIS Object type. 
+ * Each GIS Layer may be visible or hidden, controlled by user.
+ * A GIS Layer may or may not have a Widget, controlled by XML Tag. 
+ * Please see the XML Block definition for block_add_gis_layer
+ */
 
 public class GisLayer {
 
@@ -65,6 +73,21 @@ public class GisLayer {
 
 	public void setVisible(boolean isVisible) {
 		this.isVisible=isVisible;
+	}
+	
+	/** Search for GisObject in all bags. 
+	 * @param go   -- the object to look for.
+	 * @return -- the first instance of the object if found. 
+	 * */
+	public Set<GisObject> getBagContainingGo(GisObject go) {
+		for (String k:myObjects.keySet()) {
+			Set<GisObject> gos = myObjects.get(k);
+			for (GisObject g:gos) 
+				if (go.equals(g))
+					return gos;
+			
+		}
+		return null;
 	}
 	
 	public void setShowLabels(boolean show) {

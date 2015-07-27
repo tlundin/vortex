@@ -291,28 +291,40 @@ public class DbHelper extends SQLiteOpenHelper {
 		Log.d("vortex","context: "+context.toString());
 		Log.d("vortex","filename: "+exportFileName);
 		String selection = null;
-		String[] selArgs = null;
+		List<String> selArgs = null;
 		if (context!=null) {
-			selArgs = new String[context.size()];
 			selection = "";
 			int i=0;
 			String col = null;
 			//Build query
-			for (String key:context.keySet()) {
+			Iterator <String>it = context.keySet().iterator();
+			while (it.hasNext()) {
+				String key = it.next();
 				col = this.getColumnName(key);
 				if (col==null) {
 					Log.e("nils","Could not find column mapping to columnHeader "+key);
 					return new Report(ExportReport.COLUMN_DOES_NOT_EXIST);
 				}
-				selection += col+(i<(selArgs.length-1)?"=? AND ":"=?");			
-				selArgs[i++]=context.get(key);
+				if (context.get(key).equals("*")) {
+					selection += col + " LIKE '%'";
+					if (it.hasNext())
+							selection += " AND ";
+				} else {
+				selection += col+(it.hasNext()?"=? AND ":"=?");			
+				if (selArgs==null) 
+					selArgs = new ArrayList<String>();
+				selArgs.add(context.get(key));
+				}
 			}
 		}
 		//Select.
 		Log.d("vortex","selection is "+selection);
 		Log.d("vortex","Args is "+selArgs);
+		String[] selArgsA = null;
+		if (selArgs !=null)
+			selArgsA = selArgs.toArray(new String[selArgs.size()]);
 		Cursor c = db.query(TABLE_VARIABLES,null,selection,
-				selArgs,null,null,null,null);	
+				selArgsA,null,null,null,null);	
 		if (c!=null) {
 			Log.d("nils","Variables found in db for context "+context);
 			//Wrap the cursor in an object that understand how to pick it!
@@ -1418,7 +1430,7 @@ public class DbHelper extends SQLiteOpenHelper {
 	public boolean deleteHistoryEntries(String typeColumn, String typeValue) {
 		try {
 			Log.d("nils","deleting historical values of type "+typeValue);
-			int rows = db.delete(TABLE_VARIABLES, getColumnName("år")+"= ? AND "+getColumnName(typeColumn)+"= ?", new String[]{VariableConfiguration.HISTORICAL_MARKER,typeValue});
+			int rows = db.delete(TABLE_VARIABLES, getColumnName("år")+"= ? AND "+getColumnName(typeColumn)+"= ? COLLATE NOCASE", new String[]{VariableConfiguration.HISTORICAL_MARKER,typeValue});
 			Log.d("nils","Deleted "+rows+" rows of history");
 		} catch (SQLiteException e) {
 			Log.d("nils","not a nils db");

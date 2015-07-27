@@ -50,7 +50,10 @@ public abstract class XMLConfigurationModule extends ConfigurationModule {
 		parser.require(XmlPullParser.START_TAG, null,tag);
 		String text = readText(parser);
 		parser.require(XmlPullParser.END_TAG, null,tag);
-		return text;
+		if (text==null || text.isEmpty())
+			return null;
+		else
+			return text;
 	}
 
 	protected static String[] readArray(String tag,XmlPullParser parser) throws IOException, XmlPullParserException {
