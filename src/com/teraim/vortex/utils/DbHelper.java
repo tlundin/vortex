@@ -1305,7 +1305,6 @@ public class DbHelper extends SQLiteOpenHelper {
 		if (c!=null)
 			c.close();
 		return ret;
-
 	}
 
 

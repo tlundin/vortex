@@ -54,8 +54,8 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 	public final static String SYNK_SERVICE_STARTED = "com.teraim.vortex.synkstarted";
 	public final static String SYNK_SERVICE_MESSAGE_RECEIVED = "com.teraim.vortex.message";
 	public final static String SYNK_SERVICE_CONNECTED = "com.teraim.vortex.synk_connected";
-	public final static String SYNK_SERVICE_CLIENT_CONNECT_FAIL = "com.teraim.vortex.synk_no_connect";
-	public final static String SYNK_SERVICE_SERVER_CONNECT_FAIL = "com.teraim.vortex.synk_lost_connect";
+	public final static String SYNC_SERVICE_CONNECTION_ATTEMPT_FAILED = "com.teraim.vortex.synk_no_connect";
+	public final static String SYNC_SERVICE_CONNECTION_BROKEN = "com.teraim.vortex.synk_attempt_fail";
 //	public final static String SYNK_PING_MESSAGE_RECEIVED = "com.teraim.vortex.ping";
 	public final static String SYNK_NO_BONDED_DEVICE = "com.teraim.vortex.binderror";
 	public static final String SYNK_INITIATE = "com.teraim.vortex.synkinitiate";
@@ -133,7 +133,7 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 			public void onReceive(Context ctx, Intent intent) {
 				final String action = intent.getAction();
 				//If message fails, try to ping until sister replies.
-				if (action.equals(BluetoothConnectionService.SYNK_SERVICE_SERVER_CONNECT_FAIL)) {
+				if (action.equals(BluetoothConnectionService.SYNC_SERVICE_CONNECTION_BROKEN)) {
 					Toast.makeText(me, "Avbröt kontakten med andra dosan", Toast.LENGTH_LONG).show();
 					stop();
 				}
@@ -141,7 +141,7 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 					pingC=0;
 					stop();
 				}
-				else if (action.equals(BluetoothConnectionService.SYNK_SERVICE_CLIENT_CONNECT_FAIL)) {
+				else if (action.equals(BluetoothConnectionService.SYNC_SERVICE_CONNECTION_ATTEMPT_FAILED)) {
 					//Try to ping again in a while if still running.
 					new Handler().postDelayed(new Runnable() {
 						public void run() {
@@ -188,8 +188,8 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 			//When bluetooth runs, call start server. Then try to ping the server.
 			IntentFilter ifi = new IntentFilter();
 			ifi.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
-			ifi.addAction(BluetoothConnectionService.SYNK_SERVICE_CLIENT_CONNECT_FAIL);
-			ifi.addAction(BluetoothConnectionService.SYNK_SERVICE_SERVER_CONNECT_FAIL);
+			ifi.addAction(BluetoothConnectionService.SYNC_SERVICE_CONNECTION_ATTEMPT_FAILED);
+			ifi.addAction(BluetoothConnectionService.SYNC_SERVICE_CONNECTION_BROKEN);
 			ifi.addAction(BluetoothConnectionService.SYNK_SERVICE_STOPPED);
 			ifi.addAction(BluetoothConnectionService.SAME_SAME_SYNDROME);
 			this.registerReceiver(brr, ifi);
@@ -540,7 +540,7 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 				connectException.printStackTrace();
 				//Tell the world.
 				Intent intent = new Intent();
-				intent.setAction(SYNK_SERVICE_CLIENT_CONNECT_FAIL);
+				intent.setAction(SYNC_SERVICE_CONNECTION_ATTEMPT_FAILED);
 				mContext.sendBroadcast(intent);
 				try {
 					mmSocket.close();
@@ -619,7 +619,7 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 					} catch (Exception e) {
 						Log.e("NILS","got strange exception in Inputstream");
 						Intent intent = new Intent();
-						intent.setAction(SYNK_SERVICE_SERVER_CONNECT_FAIL);
+						intent.setAction(SYNC_SERVICE_CONNECTION_BROKEN);
 						gs.getContext().sendBroadcast(intent);
 						break;
 					}
@@ -715,6 +715,10 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 
 	}
 
+	
+	
+	
+	
 	@Override
 	public void getParameter(String key) {
 

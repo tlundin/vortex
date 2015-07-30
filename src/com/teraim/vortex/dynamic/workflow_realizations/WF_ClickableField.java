@@ -703,13 +703,15 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 						}
 					} else
 						if (type == DataType.auto_increment) {
-							EditText etview = (EditText)view.findViewById(R.id.edit);
+							/*EditText etview = (EditText)view.findViewById(R.id.edit);
 							String s = etview.getText().toString();
 							if (s!=null && s.length()>0) {
 								int val = Integer.parseInt(etview.getText().toString());
 								val++;
 								newValue = val+"";
 							}
+							*/
+							newValue = existingValue;
 						}
 			if (newValue == null || !newValue.equals(existingValue)||variable.isUsingDefault()) {
 				Log.d("nils","New value: "+newValue);

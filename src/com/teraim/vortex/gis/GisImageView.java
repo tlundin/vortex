@@ -210,9 +210,11 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 
 			@Override
 			public void onClick(View v) {
+				Log.d("vortex","Gets short!");
 				if (clickXY!=null)
 					return;
-
+				//if (doubleTap())
+				//	return;
 				calculateMapLocationForClick(polyVertexX,polyVertexY);
 
 
@@ -221,8 +223,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 
 					List<Location> myDots;
 
-					if (newGisObj ==null) {
-
+					if (newGisObj ==null) {						
 						Set<GisObject> bag;
 						for (GisLayer l:myLayers) { 
 
@@ -230,7 +231,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 							if (bag!= null) {
 								Log.d("vortex","found correct bag!");
 								newGisObj = createNewGisObject(gisTypeToCreate,bag);
-							}
+							} 
 						}
 					}
 					if (newGisObj !=null) {
@@ -244,8 +245,10 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 						}
 
 
-					}
-				}
+					} else 
+						Log.e("vortex","New GisObj is null!");
+				} else
+					Log.e("vortex","gistype null!");
 				clickWasShort = true;
 				invalidate();
 
@@ -261,6 +264,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 
 			@Override
 			public boolean onLongClick(View v) {
+				Log.d("vortex","Gets long!");
 				if (clickXY!=null)
 					return false;
 				calculateMapLocationForClick(polyVertexX,polyVertexY);
@@ -593,7 +597,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 			} else if (newGisObj instanceof GisMultiPointObject ||
 					newGisObj instanceof GisPolygonObject) {
 				List<Location> myDots = newGisObj.getCoordinates();
-				if (myDots.isEmpty()) {					
+				if (myDots==null) {					
 					currentCreateBag.remove(newGisObj);
 					newGisObj=null;
 				}
@@ -927,41 +931,41 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 				}
 			}
 
-					//Special rendering of touched gop.
-					if (!candidates.isEmpty()) {
-						//Candidates are sorted in a set. Return first. 
-						String candidatesS="";
-						for (GisObject go:candidates) {
-							candidatesS+=go.getLabel()+" Distance: "+go.getDistanceToClick()+"\n";
-						}
-						Log.d("vortex","DEBUG: Members of candidateS: \n"+candidatesS);
-						touchedGop = candidates.iterator().next();
-						showLabelForAWhile=true;
-						startShowLabelTimer();
-						
-						//Find the layer and bag touched. 
-						for (GisLayer layer:myLayers) {
-							touchedBag = layer.getBagContainingGo(touchedGop);
-							if (touchedBag!=null) 
-								touchedLayer = layer;
-						}
-						//if longclick, open the actionbar menu.
-						if (!clickWasShort)
-							myMap.startActionModeCb();
-						else {
-							myMap.setVisibleAvstRikt(true);
-							displayDistanceAndDirection();
-							if (riktLinjeStart!=null)
-								canvas.drawLine(riktLinjeStart[0], riktLinjeStart[1], riktLinjeEnd[0],riktLinjeEnd[1],fgPaintSel);//fgPaintSel
-						}
-						candidates.clear();
+			//Special rendering of touched gop.
+			if (!candidates.isEmpty()) {
+				//Candidates are sorted in a set. Return first. 
+				String candidatesS="";
+				for (GisObject go:candidates) {
+					candidatesS+=go.getLabel()+" Distance: "+go.getDistanceToClick()+"\n";
+				}
+				Log.d("vortex","DEBUG: Members of candidateS: \n"+candidatesS);
+				touchedGop = candidates.iterator().next();
+				showLabelForAWhile=true;
+				startShowLabelTimer();
 
-					} 
+				//Find the layer and bag touched. 
+				for (GisLayer layer:myLayers) {
+					touchedBag = layer.getBagContainingGo(touchedGop);
+					if (touchedBag!=null) 
+						touchedLayer = layer;
+				}
+				//if longclick, open the actionbar menu.
+				if (!clickWasShort)
+					myMap.startActionModeCb();
+				else {
+					myMap.setVisibleAvstRikt(true);
+					displayDistanceAndDirection();
+					if (riktLinjeStart!=null)
+						canvas.drawLine(riktLinjeStart[0], riktLinjeStart[1], riktLinjeEnd[0],riktLinjeEnd[1],fgPaintSel);//fgPaintSel
+				}
+				candidates.clear();
 
-					if (touchedGop!=null) {
-						drawGop(canvas,touchedLayer,touchedGop,true);
+			} 
 
-					} 
+			if (touchedGop!=null) {
+				drawGop(canvas,touchedLayer,touchedGop,true);
+
+			} 
 		} catch(Exception e) {
 			LoggerI o = GlobalState.getInstance().getLogger();
 			o.addRow("");
@@ -1026,15 +1030,17 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 			boolean first = true;
 			//String path="";
 			Path p = new Path();
-			for (Location l:ll) {
-				xy = translateMapToRealCoordinates(l);
-				if (xy==null)
-					continue;
-				if (first) {
-					p.moveTo(xy[0],xy[1]);
-					first =false;
-				} else
-					p.lineTo(xy[0],xy[1]);
+			if (ll!=null) {
+				for (Location l:ll) {
+					xy = translateMapToRealCoordinates(l);
+					if (xy==null)
+						continue;
+					if (first) {
+						p.moveTo(xy[0],xy[1]);
+						first =false;
+					} else
+						p.lineTo(xy[0],xy[1]);
+				}
 			}
 
 			//Add glow effect if it is currently being drawn.
@@ -1177,7 +1183,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 			Log.d("vortex","Current time: "+ct);
 			Log.d("vortex","TimeDiff: "+timeDiff);
 		}
-		*/
+		 */
 		double mX = Double.parseDouble(myX.getValue());
 		double mY = Double.parseDouble(myY.getValue());
 		double gX = touchedGop.getLocation().getX();

@@ -104,7 +104,7 @@ public class CreateGisBlock extends Block {
 		if (myContainer!=null && photoMetaData!=null) {
 		LayoutInflater li = LayoutInflater.from(myContext.getContext());
 		FrameLayout mapView = (FrameLayout)li.inflate(R.layout.image_gis_layout, null);
-		final View avstRL = mapView.findViewById(R.id.avstriktF);
+		final View avstRL = mapView.findViewById(R.id.avstRL);
 		final View createMenuL = mapView.findViewById(R.id.createMenuL);
 		WF_Gis_Map gis;
 		Rect r;

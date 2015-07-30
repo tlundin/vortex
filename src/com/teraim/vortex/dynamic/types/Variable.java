@@ -18,6 +18,7 @@ import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.CombinedRangeAndListFilter;
 import com.teraim.vortex.utils.DbHelper;
 import com.teraim.vortex.utils.FilterFactory;
+import com.teraim.vortex.utils.PersistenceHelper;
 import com.teraim.vortex.utils.RuleExecutor;
 import com.teraim.vortex.utils.Tools;
 import com.teraim.vortex.utils.DbHelper.Selection;
@@ -101,7 +102,15 @@ public class Variable implements Serializable {
 			Log.d("nils","fetching: "+System.currentTimeMillis()+" var: "+this.getId());
 			myValue = myDb.getValue(name,mySelection,myValueColumn);	
 			//Variable doesnt exist in database
-			if (myValue==null && myDefaultValue !=null) {
+			if (myValue==null && myType == DataType.auto_increment) {
+				//find value for global auto_inc counter in persistent memory.
+				//increment global counter.
+				int globalAC = gs.getPreferences().getI(PersistenceHelper.GLOBAL_AUTO_INC_COUNTER);
+				gs.getPreferences().put(PersistenceHelper.GLOBAL_AUTO_INC_COUNTER, globalAC+1);
+				//set the Value 				
+				setValue(globalAC+1+"");
+			}
+			else if (myValue==null && myDefaultValue !=null) {
 				Log.d("nils","Value null! Using default: "+myDefaultValue);
 				//use default value.
 				myValue = myDefaultValue;
@@ -168,7 +177,7 @@ public class Variable implements Serializable {
 		myValue = value;
 		//Remove any .xx if numeric.
 		if (this.getType()==DataType.numeric) 
-			value = Integer.parseInt(value)+"";			
+			value = (int)(Float.parseFloat(value))+"";			
 		//will change keyset as side effect if valueKey variable.
 		//reason for changing indirect is that old variable need to be erased. 
 		insertVariable(value,isSynchronized);

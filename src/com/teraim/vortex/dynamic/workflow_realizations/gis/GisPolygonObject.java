@@ -56,7 +56,10 @@ public class GisPolygonObject extends GisObject {
 	public List<Location> getCoordinates() {
 		myCoordinates = polygons.get("Poly 1");
 		if (myCoordinates==null||myCoordinates.isEmpty()) {
-			Log.e("Vortex","No poly 1 found or poly contains no points!!");
+			if (myCoordinates==null)
+				Log.e("Vortex","No poly 1 found");
+			else
+				Log.e("Vortex","poly 1 contains no points!!");
 			return null;
 		} else
 			return myCoordinates;

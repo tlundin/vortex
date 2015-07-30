@@ -152,10 +152,14 @@ public class GestureImageViewTouchListener implements OnTouchListener {
 		});
 
 		tapDetector = new GestureDetector(image.getContext(), new SimpleOnGestureListener() {
+			
+			boolean doubleTapped=false;
 			@Override
 			public boolean onDoubleTap(MotionEvent e) {
+				Log.d("vortex","double tap!");
 				if (currentScale!=8.0f)
 					startZoom(e);
+				doubleTapped=true;
 				return true;
 			}
 
@@ -163,20 +167,22 @@ public class GestureImageViewTouchListener implements OnTouchListener {
 
 			@Override
 			public boolean onSingleTapConfirmed(MotionEvent e) {
-				if(!inZoom) {
+				
+				if(!inZoom&&!doubleTapped) {
 					if(onClickListener != null) {
 						image.setPolyVertex(e.getX(),e.getY());
+						Log.e("vortex","single tap!!");
 						onClickListener.onClick(image);
 						return true;
 					}
 				}
-
-				return false;
+				doubleTapped=false;
+				return super.onSingleTapConfirmed(e);
 			}
 
 			@Override
 			public void onLongPress(MotionEvent e) {
-				if(!inZoom) {
+				if(!inZoom &&!doubleTapped) {
 					if(onLongClickListener != null) {
 						image.setPolyVertex(e.getX(),e.getY());
 						onLongClickListener.onLongClick(image);
@@ -184,6 +190,7 @@ public class GestureImageViewTouchListener implements OnTouchListener {
 					}
 				}
 				super.onLongPress(e);
+				doubleTapped=false;
 			}
 		});
 

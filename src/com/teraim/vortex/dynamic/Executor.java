@@ -172,11 +172,13 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 	@Override
 	public void onResume() {
 		Log.d("vortex","in Executor onResume");
-		activity.registerReceiver(brr, ifi);
+		
 		gs = GlobalState.getInstance();
 		if (gs!=null) {
+			activity.registerReceiver(brr, ifi);
 			if(myContext!=null&&myContext.hasGPSTracker())
 				gs.getTracker().startScan(gs.getContext());
+			
 		}
 		super.onResume();
 	}

@@ -19,6 +19,7 @@ import android.os.Handler;
 import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
+import com.teraim.vortex.R;
 import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.types.CHash;
 import com.teraim.vortex.dynamic.types.GisLayer;
@@ -111,11 +112,13 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 
 		}
 
+		//Set default icons for different kind of objects.
 	}
 
 	//Assumed that all blocks will deal with "current gis".
 
 	public void create(WF_Context myContext) {
+		setDefaultBitmaps(myContext);
 		o = GlobalState.getInstance().getLogger();
 		GlobalState gs = GlobalState.getInstance();
 		WF_Gis_Map gisB = myContext.getCurrentGis();
@@ -396,6 +399,19 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 		}
 		loadDone=true;
 
+	}
+
+	private void setDefaultBitmaps(WF_Context myContext) {
+		if (icon==null) {
+			
+			if (myType == GisObjectType.Polygon) {
+				
+				icon = BitmapFactory.decodeResource(myContext.getContext().getResources(), R.drawable.poly);
+				
+				
+			}
+
+		}
 	}
 
 	private class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {

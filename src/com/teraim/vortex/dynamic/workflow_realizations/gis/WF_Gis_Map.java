@@ -79,7 +79,7 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 	private GisImageView gisImageView;
 	private LinearLayout filtersC,layersC;
 	private final WF_Context myContext;
-	private View avstRiktF,createMenuL;
+	private View avstRL,createMenuL;
 	private TextView avstT,riktT;
 	private TextSwitcher avstTS;
 	private TextSwitcher riktTS;
@@ -178,12 +178,12 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 		
 		myContext.addGis(id,this);
 
-		this.avstRiktF = avstRL;
+		this.avstRL = avstRL;
 
 		this.createMenuL=createMenuL;
 
-		avstTS = (TextSwitcher)avstRiktF.findViewById(R.id.avstTS);
-		riktTS = (TextSwitcher)avstRiktF.findViewById(R.id.riktTS);
+		avstTS = (TextSwitcher)avstRL.findViewById(R.id.avstTS);
+		riktTS = (TextSwitcher)avstRL.findViewById(R.id.riktTS);
 
 		LayoutInflater li = LayoutInflater.from(ctx);
 		gisObjectsPopUp = li.inflate(R.layout.gis_object_menu_pop,null);
@@ -265,7 +265,7 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 				}
 			});
 		}
-		unlockB = (Button)avstRiktF.findViewById(R.id.unlockB);
+		unlockB = (Button)avstRL.findViewById(R.id.unlockB);
 
 		unlockB.setOnClickListener(new OnClickListener() {
 
@@ -276,7 +276,7 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 			}
 		});
 
-		startB = (Button)avstRiktF.findViewById(R.id.startB);
+		startB = (Button)avstRL.findViewById(R.id.startB);
 
 		startB.setOnClickListener(new OnClickListener() {
 
@@ -341,31 +341,7 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 		    
 		    return v.performClick();
 			}
-			private void startScrollIn() {
-				if (handler==null) {
-					
-					handler = new Handler();
-					runnable = new Runnable(){
-						public void run() {
-							//gisImageView.changeScale(scaleIncrement);
-							scaleIncrement+=0.05;
-							gisImageView.invalidate();
-							if (handler!=null)
-								handler.postDelayed(this, interval);
-						}
-					};
-					
-					handler.postDelayed(runnable, interval);
-					
-				}
-				
-
-			}
-			private void stopScrollIn() {
-				handler.removeCallbacks(runnable);
-				handler = null;
-				scaleIncrement=Initial;
-			}});
+			});
 
 		minusB = (ImageButton)mapView.findViewById(R.id.minusB);
 		
@@ -390,31 +366,7 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 		    
 		    return v.performClick();
 			}
-			private void startScrollOut() {
-				if (handler==null) {
-					
-					handler = new Handler();
-					runnable = new Runnable(){
-						public void run() {
-							//gisImageView.changeScale(-scaleIncrement);
-							scaleIncrement+=0.05;
-							gisImageView.invalidate();
-							if (handler!=null)
-								handler.postDelayed(this, interval);
-						}
-					};
-					
-					handler.postDelayed(runnable, interval);
-					
-				}
-				
-
-			}
-			private void stopScrollOut() {
-				handler.removeCallbacks(runnable);
-				handler = null;
-				scaleIncrement=Initial;
-			}});
+			});
 		
 
 
@@ -537,13 +489,13 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 		}
 		public void setVisibleAvstRikt(boolean isVisible) {
 			if (isVisible)
-				avstRiktF.setVisibility(View.VISIBLE);
+				avstRL.setVisibility(View.VISIBLE);
 			else
-				avstRiktF.setVisibility(View.INVISIBLE);
+				avstRL.setVisibility(View.INVISIBLE);
 		}
 
 		public void setVisibleCreate(boolean isVisible) {
-
+			Log.e("vortex","setvisiblecreate called");
 			if (isVisible)
 				createMenuL.setVisibility(View.VISIBLE);
 			else
