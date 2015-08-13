@@ -51,6 +51,8 @@ public class EventBroker {
 			}
 		}
 
+		//TODO: ADD THIS LATER
+		/*
 		if (e instanceof WF_Event_OnSave && e.getProvider()!=Constants.SYNC_ID) {
 			Log.d("nils","Save event...sending delayed sync request");
 			new Handler().postDelayed(new Runnable() {
@@ -59,6 +61,7 @@ public class EventBroker {
 				}
 			}, 2000);
 		} 
+		*/
 	}
 
 	public void removeAllListeners() {

@@ -226,11 +226,8 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 				.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) { 
 						if(save()) {
-							//sparaB.setEnabled(false);
-							//calculateB.setEnabled(false);
-							//nyUtlaggB.setEnabled(true);
-							//fillTable();
-							gs.triggerTransfer();
+							//Trigger bluetooth transfer.
+							gs.setupConnection(myContext.getContext());
 							myContext.getActivity().getFragmentManager().popBackStackImmediate();
 						}
 					}

@@ -560,10 +560,10 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 				globalPh.put(PersistenceHelper.GIS_CREATE_FIRST_TIME_KEY, "notfirstanymore!");
 				new AlertDialog.Builder(myContext.getContext())
 				.setTitle("Creating GIS objects")
-				.setMessage("You are creating your first GIS object!\nClick on the location where you want to place the object, or the objects first point. You will then get options how to proceed in the righthand side menu.")
+				.setMessage("You are creating your first GIS object!\nClick on the location on the map where you want to place it or its first point.")
 				.setIcon(android.R.drawable.ic_dialog_info)
 				.setCancelable(false)
-				.setNeutralButton("Ok!",new Dialog.OnClickListener() {				
+				.setNeutralButton("OK",new Dialog.OnClickListener() {				
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
 

@@ -60,7 +60,7 @@ public  class ButtonBlock extends Block {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 6454431627090793558L;
+	private static final long serialVersionUID = 6454431627090793559L;
 	String text,onClick,name,containerId,target;
 	private Boolean validationResult = true;
 	Type type;
@@ -81,6 +81,7 @@ public  class ButtonBlock extends Block {
 	private boolean enabled;
 	private String buttonContextS;
 	private Map<String, String> buttonContextOld=null;
+	private boolean syncRequired;
 
 
 	enum Type {
@@ -94,16 +95,16 @@ public  class ButtonBlock extends Block {
 		started_with_errors,
 		ready
 	}
-
+	//TODO: REMOVE THIS Constructor!!
 	//Function used with buttons that need to attach customized actions after click
 	public ButtonBlock(String id,String lbl,String action, String name,String container,String target, String type, String statusVariable,boolean isVisible,
 			OnclickExtra onclickExtra,Map<String,String> buttonContext, int dummy) {		
-		this(id,lbl,action,name,container,target,type,statusVariable,isVisible,null,null,true,null);
+		this(id,lbl,action,name,container,target,type,statusVariable,isVisible,null,null,true,null,false);
 		extraActionOnClick = onclickExtra;
 		this.buttonContextOld = buttonContext;
 	}
 	
-	public ButtonBlock(String id,String lbl,String action, String name,String container,String target, String type, String statusVariable,boolean isVisible,String exportContextS, String exportFormat,boolean enabled, String buttonContextS) {
+	public ButtonBlock(String id,String lbl,String action, String name,String container,String target, String type, String statusVariable,boolean isVisible,String exportContextS, String exportFormat,boolean enabled, String buttonContextS, boolean requestSync) {
 		Log.d("NILS","BUTTONBLOCK type Action. Action is set to "+action);
 		this.blockId=id;
 		this.text = lbl;
@@ -121,7 +122,8 @@ public  class ButtonBlock extends Block {
 		this.exportContextS = exportContextS;
 		this.exportFormat = exportFormat;
 		this.buttonContextS=buttonContextS;
-
+		this.syncRequired = requestSync;
+		Log.d("vortex","syncRequired is "+syncRequired);
 	}
 
 
@@ -283,7 +285,7 @@ public  class ButtonBlock extends Block {
 											}
 											myContext.registerEvent(new WF_Event_OnSave(ButtonBlock.this.getBlockId()));
 											mpopup.dismiss();
-											myContext.getActivity().getFragmentManager().popBackStackImmediate();
+											goBack();
 
 										}
 									});
@@ -362,7 +364,7 @@ public  class ButtonBlock extends Block {
 										Log.d("nils","Saving "+var.getLabel());
 										var.setValue(var.getValue());
 									}
-									myContext.getActivity().getFragmentManager().popBackStackImmediate();
+									goBack();
 								}
 							}
 							else if (onClick.equals("Start_Workflow")) {
@@ -457,6 +459,15 @@ public  class ButtonBlock extends Block {
 
 						clickOngoing = false;
 						button.setBackgroundDrawable(originalBackground);
+					}
+					
+					//Check if a sync is required. Pop current fragment.
+					private void goBack() {
+
+						myContext.getActivity().getFragmentManager().popBackStackImmediate();
+						if (syncRequired)
+							gs.setupConnection(myContext.getContext());
+						Log.d("vortex","syncRequired is "+syncRequired);
 					}
 
 				});

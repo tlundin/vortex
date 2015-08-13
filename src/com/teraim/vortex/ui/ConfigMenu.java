@@ -14,6 +14,7 @@ import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
+import com.teraim.vortex.GlobalState.SyncStatus;
 import com.teraim.vortex.bluetooth.BluetoothConnectionService;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.PersistenceHelper;
@@ -23,7 +24,6 @@ public class ConfigMenu extends PreferenceActivity {
 
 	public void onCreate(Bundle savedInstanceState) {			
 		super.onCreate(savedInstanceState);
-			
 		// Display the fragment as the main content.
 		getFragmentManager().beginTransaction()
 		.replace(android.R.id.content, new SettingsFragment())
@@ -116,11 +116,15 @@ public class ConfigMenu extends PreferenceActivity {
 				EditTextPreference etp = (EditTextPreference) pref;
 				pref.setSummary(etp.getText());
 				if (key.equals(PersistenceHelper.BUNDLE_NAME)) {
-					if (gs != null) 
+					if (gs != null)  {
 						//if a state exists, restart the app.
+						if (gs.getSyncStatus()!=SyncStatus.stopped) {
+							BluetoothConnectionService.getSingleton().stop();
+							Log.d("vortex","stopping bluetooth");
+						}
 						Tools.restart(this.getActivity());
 						
-					
+					}
 						
 					
 				}
@@ -142,8 +146,8 @@ public class ConfigMenu extends PreferenceActivity {
 						Log.d("nils","Changed to SOLO");
 					}
 					if (gs!=null) {
-						if (gs.getSyncStatus()!=BluetoothConnectionService.SYNK_STOPPED) {
-							getActivity().stopService(new Intent(this.getActivity(),BluetoothConnectionService.class));
+						if (gs.getSyncStatus()!=SyncStatus.stopped) {
+							BluetoothConnectionService.getSingleton().stop();
 							Log.d("vortex","stopping bluetooth");
 						}
 					}

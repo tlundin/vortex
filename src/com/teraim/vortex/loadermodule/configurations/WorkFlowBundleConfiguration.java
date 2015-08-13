@@ -1439,7 +1439,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 		String label=null,onClick=null,myname=null,containerName=null,
 				target=null,type=null,id=null,statusVariable=null,exportContextS=null,
 				exportFormat=null,buttonContext=null;
-		boolean isVisible = true, enabled=false;
+		boolean isVisible = true, enabled=false,requestSync=false;
 		parser.require(XmlPullParser.START_TAG, null,"block_button");
 		while (parser.next() != XmlPullParser.END_TAG) {
 			if (parser.getEventType() != XmlPullParser.START_TAG) {
@@ -1483,13 +1483,15 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			}
 			else if (name.equals("status_variable"))
 				statusVariable = readText("status_variable",parser);
+			else if (name.equals("request_sync"))
+				requestSync = readText("request_sync",parser).equals("true");
 			else
 				skip(name,parser,o);
 		}
 		checkForNull("block_ID",id,"type",type,"name",myname,"label",label,"container_name",
 				containerName,"target",target);
 
-		return new ButtonBlock(id,label,onClick,myname,containerName,target,type,statusVariable,isVisible,exportContextS,exportFormat,enabled,buttonContext);
+		return new ButtonBlock(id,label,onClick,myname,containerName,target,type,statusVariable,isVisible,exportContextS,exportFormat,enabled,buttonContext,requestSync);
 	}
 
 

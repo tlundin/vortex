@@ -275,7 +275,7 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 		}
 		if (this.freezeSteps==(counter+1)) {
 			Log.d("vortex","Transaction ends");
-			myDb.endTransaction();
+			myDb.endTransactionSuccess();
 			o.addRow("");
 			o.addRedText("Variables not found:");
 			for (String var:missingVariables) {

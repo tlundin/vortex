@@ -203,10 +203,10 @@ public class Tracker extends Service implements LocationListener {
 		switch(status) 
         {
             case GpsStatus.GPS_EVENT_STARTED:
-                System.out.println("TAG - GPS searching: ");                        
+                //System.out.println("TAG - GPS searching: ");                        
                 break;
             case GpsStatus.GPS_EVENT_STOPPED:    
-                System.out.println("TAG - GPS Stopped");
+               // System.out.println("TAG - GPS Stopped");
                 break;
             case GpsStatus.GPS_EVENT_FIRST_FIX:
             	 System.out.println("FIX!");

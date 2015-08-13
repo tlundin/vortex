@@ -288,7 +288,7 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 					alert.setPositiveButton("Ja", new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int whichButton) {
 							setEnded();
-							gs.sendMessage(new LinjeDone(currentLinje));
+							//gs.sendMessage(new LinjeDone(currentLinje));
 							getFragmentManager().popBackStackImmediate();
 						}
 
@@ -371,12 +371,13 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 											setStart(teoriOst,teoriNorr);	
 										} else 
 											Log.d("nils","startSPinner: "+startSp.getSelectedItemPosition());
+										/*
 										if (gs.syncIsAllowed()) {
 											gs.triggerTransfer();
 											//Send a LinjeStarted Message in an envelope.
 											gs.sendMessage(new EnvelopedMessage(new LinjeStarted(currentLinje)));
 										}
-
+										*/
 
 									}
 								}

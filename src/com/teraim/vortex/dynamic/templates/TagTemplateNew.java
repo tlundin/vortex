@@ -248,7 +248,7 @@ public class TagTemplateNew extends Executor implements EventListener, TagListen
 							sparaB.setEnabled(false);
 							calculateB.setEnabled(false);
 							nyUtlaggB.setEnabled(true);
-							gs.triggerTransfer();
+							gs.setupConnection(myContext.getContext());
 						}
 					}
 				})

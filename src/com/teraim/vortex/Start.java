@@ -18,6 +18,7 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MenuItem;
 
+import com.teraim.vortex.bluetooth.BluetoothConnectionService;
 import com.teraim.vortex.dynamic.templates.LinjePortalTemplate;
 import com.teraim.vortex.dynamic.types.CHash;
 import com.teraim.vortex.dynamic.types.Workflow;
@@ -248,6 +249,7 @@ public class Start extends MenuActivity {
 			GlobalState.getInstance().getDb().closeDatabaseBeforeExit();
 			GlobalState.destroy();
 		}
+		BluetoothConnectionService.kill();
 		super.onDestroy();
 	}
 

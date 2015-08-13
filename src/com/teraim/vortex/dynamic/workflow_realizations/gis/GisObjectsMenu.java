@@ -278,7 +278,7 @@ public class GisObjectsMenu extends View {
 				canvas.drawRoundRect(r,5f,5f,gopButtonEdgeP);
 				//Draw symbol or icon inside Rect.
 				int iconPadding=15; int radius = 15;
-				RectF rect = new RectF(r.left+r.width()/2-radius, r.top+iconPadding, r.left+r.width()/2+radius, r.top+radius*2+iconPadding);
+				RectF rect = new RectF(r.left+r.width()/2-radius, r.top+iconPadding, r.left+r.width()/2+radius, r.top+iconPadding+radius*2);
 
 				if (fop.getIcon()==null) {
 					if (fop.getShape()==PolyType.circle) {

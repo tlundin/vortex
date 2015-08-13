@@ -107,7 +107,8 @@ public class ProvytaTemplate extends Executor implements EventListener,OnGesture
 				keyChain = Tools.createKeyMap("ruta",gs.getVariableConfiguration().getCurrentRuta(),"provyta",provytaThatWasSelected);
 				gs.getVariableCache().invalidateOnKey(keyChain);
 				gs.getDb().eraseProvyta(al.getCurrentRuta(), provytaThatWasSelected, true);
-				gs.triggerTransfer();
+				//Ask the user to synchronize at this point.
+				gs.setupConnection(myContext.getContext());
 				mode.finish(); // Action picked, so close the CAB
 				return true;
 			default:

@@ -364,7 +364,7 @@ public class GestureImageViewTouchListener implements OnTouchListener {
 
 									float newX = scaleVector.end.x;
 									float newY = scaleVector.end.y;
-									Log.d("vortex","newscale, centerX,centerY,newX, newY "+newScale+","+centerX+","+centerY+","+newX+","+newY);
+									//Log.d("vortex","newscale, centerX,centerY,newX, newY "+newScale+","+centerX+","+centerY+","+newX+","+newY);
 									handleScale(newScale, newX, newY);
 								}
 							}
@@ -407,7 +407,7 @@ public class GestureImageViewTouchListener implements OnTouchListener {
 	}
 
 	protected void handleUp() {
-		Log.d("vortex","Touched is now false");
+		//Log.d("vortex","Touched is now false");
 		touched = false;
 		multiTouch = false;
 

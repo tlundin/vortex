@@ -18,13 +18,13 @@ public abstract class GisPointObject extends GisObject {
 
 	protected FullGisObjectConfiguration poc; 
 
-	private String label;
+	
 	private int[] xy=null;
 	
 	public GisPointObject(FullGisObjectConfiguration poc,Map<String, String> keyChain,List<Location> myCoordinates, Variable statusVar) {
 		super(poc,keyChain,myCoordinates,statusVar);
 		this.poc=poc;
-		this.label = Tools.parseString(poc.getLabel(),keyChain);
+		
 	}
 	public abstract Location getLocation();
 	public abstract boolean isDynamic();
@@ -82,22 +82,6 @@ public abstract class GisPointObject extends GisObject {
 		return poc.getStyle();
 	}
 	
-	public String getLabel() {
-		
-		if (label==null)
-			return "";
-		//@notation for id
-		if (label.startsWith("@")) {
-			String key = label.substring(1, label.length());
-			if (key.length()>0) {
-				String ret = keyChain.get(key);
-				if (ret!=null)
-					return ret;
-			}
-		}
-		return Tools.parseString(label);
-		
-	}
 	
 	private Map<GisFilter,Boolean> filterCache = new HashMap<GisFilter,Boolean>();
 	

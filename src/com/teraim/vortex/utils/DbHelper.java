@@ -784,6 +784,33 @@ public class DbHelper extends SQLiteOpenHelper {
 			c.close();
 		return -1;
 	}
+	
+	public class TimeAndId {
+	    int id;
+	    String time;
+	    
+	}
+	
+	public TimeAndId getIdAndTimeStamp(String name, Selection s) {
+		//Log.d("nils","In getId with name "+name+" and selection "+s.selection+" and selectionargs "+print(s.selectionArgs));
+		Cursor c = db.query(TABLE_VARIABLES,new String[]{"id","timestamp"},
+				s.selection,s.selectionArgs,null,null,null,null);
+		if (c != null && c.moveToFirst()) {
+			//Log.d("nils","Cursor count "+c.getCount()+" columns "+c.getColumnCount());
+			TimeAndId ret = new TimeAndId();
+			ret.id = c.getInt(0);
+			ret.time = c.getString(1);
+			//Log.d("nils","Found id in db for "+name+" :"+value);
+			c.close();
+			return ret;
+			
+			
+		} 
+		//Log.d("nils","Did NOT find value in db for "+name);
+		if (c!=null)
+			c.close();
+		return null;
+	}
 
 
 	private String print(String[] selectionArgs) {
@@ -921,10 +948,11 @@ public class DbHelper extends SQLiteOpenHelper {
 			String entryStamp,action,changes,target;
 			maxStamp=0;
 			do {
-				action = 	 c.getString(c.getColumnIndex("action"));
-				changes =	 c.getString(c.getColumnIndex("changes"));
-				entryStamp = c.getString(c.getColumnIndex("timestamp"));
-				target = c.getString(c.getColumnIndex("target"));
+				action 		=	c.getString(c.getColumnIndex("action"));
+				changes 	=	c.getString(c.getColumnIndex("changes"));
+				entryStamp	=	c.getString(c.getColumnIndex("timestamp"));
+				target 		= 	c.getString(c.getColumnIndex("target"));
+								
 				long es = Long.parseLong(entryStamp);
 				if (es>maxStamp)
 					maxStamp=es;
@@ -935,7 +963,7 @@ public class DbHelper extends SQLiteOpenHelper {
 			SyncEntryHeader seh = new SyncEntryHeader(maxStamp);
 			sa[0]=seh;	
 		} else 
-			Log.d("nils","no sync needed...no new audit data");
+			Log.d("nils","no sync needed...no new entries");
 		//mySyncEntries = ret;	
 		if (c!=null)
 			c.close();
@@ -1067,48 +1095,24 @@ public class DbHelper extends SQLiteOpenHelper {
 
 
 	int synC=0;
-	public void synchronise(SyncEntry[] ses,boolean isMaster, VarCache vc,GlobalState gs) {
+	
+	public void synchronise(SyncEntry[] ses,VarCache vc,GlobalState gs) {
+		Log.d("vortex","LOCK!");
+		db.beginTransaction();
 		String name=null;
-		//db.beginTransaction();
-		/*
-		if (isMaster) {
-			SyncEntry[] myChanges = getMyChanges();
-			//Check if incoming entry has changed by me.
-			//Arrange the variables I have touched into Set.
 
-			if (myChanges!=null) {
-				Set<String> myChangesSet=new HashSet<String>();
-
-				for (SyncEntry s:myChanges) {							
-					myChangesSet.add(s.getKeys());
-				}
-				//Go through incoming. Erase changes that conflicts with master.
-				for (SyncEntry s:ses) {
-					if (myChangesSet.contains(s.getKeys())) {
-						Log.d("nils","Master has touched variable ["+s.getTarget()+"]. Change will *NOT* be regarded!");
-						s.markAsInvalid();
-					} else {
-						Log.d("nils","Master changeset did not contain "+s.getTarget()+". It contains "+myChangesSet.toString());
-					}
-				}					
-			}
-		}
-		 */
 		synC=0;
 		if (ses==null||ses.length<2) {
 			Log.e("nils","either syncarray is short or null. no data to sync.");
+			db.endTransaction();
 			return;
 		}
-		Log.d("nils","In Synchronize with "+ses.length+" arguments. I am "+(isMaster?"Master":"Client"));
+		Log.d("nils","In Synchronize with "+ses.length+" arguments.");
 		for (SyncEntry s:ses) {
 
 			if (synC++%10==0)
 				gs.sendEvent(BluetoothConnectionService.PING_FROM_UPDATE);			
-			if (s.isInvalid()) {
-				Log.e("nils"," Target "+s.getTarget()+" is invalid. Skipping..");
-				continue;
-			}
-
+			
 			if (s.isInsert()||s.isInsertArray()) {				
 				Map<String, String> keySet=null; 
 				ContentValues cv = new ContentValues();
@@ -1169,9 +1173,9 @@ public class DbHelper extends SQLiteOpenHelper {
 						xor += sz+",";
 					Log.d("nils","Selection ARGS: "+xor);
 				}
-				int id = this.getId(name, sel);
+				TimeAndId ti = this.getIdAndTimeStamp(name, sel);
 				long rId=-1;
-				if (id==-1 || s.isInsertArray()) {// || gs.getVariableConfiguration().getnumType(row).equals(DataType.array)) {
+				if (ti==null || s.isInsertArray()) {// || gs.getVariableConfiguration().getnumType(row).equals(DataType.array)) {
 					Log.d("nils","Vairable doesn't exist or is an Array. Inserting..");
 					//now there should be ContentValues that can be inserted.
 					rId = db.insert(TABLE_VARIABLES, // table
@@ -1181,15 +1185,23 @@ public class DbHelper extends SQLiteOpenHelper {
 
 
 				} else {
-					Log.d("nils","Variable exists! Replacing..");
-					cv.put("id", id);
-					rId = db.replace(TABLE_VARIABLES, // table
-							null, //nullColumnHack
-							cv
-							); 	
+					if (ti.time!=null && s.getTimeStamp()!=null) {
+						long existingTimeStamp = Long.parseLong(ti.time);
+						long timeStampinMessage = Long.parseLong(s.getTimeStamp());
+						if (existingTimeStamp<timeStampinMessage) {
+						
+							Log.d("nils","Existing variable is older than new. Replacing");
+							cv.put("id", ti.id);
+							rId = db.replace(TABLE_VARIABLES, // table
+									null, //nullColumnHack
+									cv
+									); 	
 
-					if (rId!=id) 
-						Log.e("nils","CRY FOUL!!! New Id not equal to found! "+" ID: "+id+" RID: "+rId);
+							if (rId!=ti.id) 
+								Log.e("nils","CRY FOUL!!! New Id not equal to found! "+" ID: "+ti.id+" RID: "+rId);
+						} else
+							Log.d("vortex","Existing variable is newer than incoming. Not replacing.");
+					}
 				}
 				if (rId==-1) 
 					Log.e("nils","Could not insert row "+cv.toString());
@@ -1271,12 +1283,10 @@ public class DbHelper extends SQLiteOpenHelper {
 			}
 
 		}
-		//db.endTransaction();
+		Log.d("vortex","UNLOCK!");
+		endTransactionSuccess();
 	}
 
-	private boolean partOfValues(String key) {
-		return (MY_VALUES_SET.contains(key));		
-	}
 
 	public void syncDone(long timeStamp) {
 		String lastS = ph.get(PersistenceHelper.TIME_OF_LAST_SYNC);
@@ -1342,7 +1352,7 @@ public class DbHelper extends SQLiteOpenHelper {
 			gs.getVariableCache().invalidateOnKey(baseKey);															
 
 		}
-
+		
 	}
 
 	public void eraseProvyta(String currentRuta, String currentProvyta,boolean synk) {
@@ -1392,26 +1402,7 @@ public class DbHelper extends SQLiteOpenHelper {
 	final ContentValues valuez = new ContentValues();
 	final static String NULL = "null";
 
-	public void fastInsert(Map<String,String> key, String varId, String value) {
-		valuez.clear();
-		String timeStamp = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())+"";
 
-		for (String k:key.keySet()) 			
-			valuez.put(getColumnName(k), key.get(k));	
-		valuez.put("var", varId);
-		valuez.put("value", value);
-		valuez.put("lag",globalPh.get(PersistenceHelper.LAG_ID_KEY));
-		valuez.put("timestamp", timeStamp);
-		valuez.put("author", globalPh.get(PersistenceHelper.USER_ID_KEY));
-
-
-		Log.d("nils","inserting:  "+valuez.toString());
-		db.insert(TABLE_VARIABLES, // table
-				null, //nullColumnHack
-				valuez
-				); 	
-
-	}
 
 
 	public boolean deleteHistory() {
@@ -1438,12 +1429,41 @@ public class DbHelper extends SQLiteOpenHelper {
 		return true;
 	}
 
+	public boolean fastInsert(Map<String,String> key, String varId, String value) {
+		valuez.clear();
+		String timeStamp = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())+"";
 
+		for (String k:key.keySet()) 			
+			valuez.put(getColumnName(k), key.get(k));	
+		valuez.put("var", varId);
+		valuez.put("value", value);
+		valuez.put("lag",globalPh.get(PersistenceHelper.LAG_ID_KEY));
+		valuez.put("timestamp", timeStamp);
+		valuez.put("author", globalPh.get(PersistenceHelper.USER_ID_KEY));
+
+
+		Log.d("nils","inserting:  "+valuez.toString());
+		try {
+			db.insert(TABLE_VARIABLES, // table
+		
+				null, //nullColumnHack
+				valuez
+				);
+		} catch (SQLiteException e) {
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+
+	}
+	
+	
 	public boolean fastHistoricalInsert(Map<String,String> keys,
 			String varId, String value) {
 
 		valuez.clear();
-		valuez.put(getColumnName("år"),VariableConfiguration.HISTORICAL_MARKER);		
+		valuez.put(getColumnName("år"),VariableConfiguration.HISTORICAL_MARKER);	
+	
 		String keyVal=null;
 		for(String key:keys.keySet()) {
 			keyVal = keys.get(key);
@@ -1457,11 +1477,8 @@ public class DbHelper extends SQLiteOpenHelper {
 
 			}
 		}
-		//		values.put(getColumnName("linje"),lID);
-		//		values.put(getColumnName("abo"),aID);	
 		valuez.put("var", varId);
 		valuez.put("value", value);
-		//Log.d("vortex",valuez.toString());
 		try {
 			db.insert(TABLE_VARIABLES, // table
 					null, //nullColumnHack
@@ -1474,15 +1491,14 @@ public class DbHelper extends SQLiteOpenHelper {
 		return true;
 	}
 	
+ 	
 	
 	public void insertGisObject(GisObject go) {
-		boolean succ = true;
-		succ = fastHistoricalInsert(go.getKeyHash(),
-				GisConstants.Location,go.coordsToString());
-		succ = fastHistoricalInsert(go.getKeyHash(),
-				GisConstants.Geo_Type,go.getGisPolyType().name());
-		
-		if (!succ){
+		Variable gpsCoord = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(go.getKeyHash(), GisConstants.Location);
+		Variable geoType = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(go.getKeyHash(), GisConstants.Geo_Type);
+		insertVariable(gpsCoord,go.coordsToString(),true);
+		insertVariable(geoType,go.getGisPolyType().name(),true);		
+		if (gpsCoord == null || geoType == null){
 			Log.e("vortex","Insert failed for "+GisConstants.Location+". Hash: "+go.getKeyHash().toString());
 		} else
 			Log.d("vortex","succesfully inserted new gisobject");
@@ -1623,7 +1639,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		db.beginTransaction();
 	}
 
-	public void endTransaction() {
+	public void endTransactionSuccess() {
 		db.setTransactionSuccessful();
 		db.endTransaction();
 	}

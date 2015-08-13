@@ -23,7 +23,7 @@ import com.teraim.vortex.utils.Tools;
 
 public class VariablesConfiguration extends CSVConfigurationModule {
 
-	private final static int noOfRequiredColumns=5;			
+	
 	private final SpinnerDefinition sd=new SpinnerDefinition();
 	private LoggerI o;
 	private int pGroupIndex = 1;
@@ -63,21 +63,17 @@ public class VariablesConfiguration extends CSVConfigurationModule {
 		return true;
 	}
 
-
+	GroupsConfiguration gc=null;
+	
 	@Override
 	protected LoadResult prepare() throws IOException {		
-		GroupsConfiguration gc=null;
+
 		cheaderL = new ArrayList<String>();
 
 		scanHeader = true;
 
 		//check if there is a groups configuration.
-		if ((gc=GroupsConfiguration.getSingleton()) == null) {
-			//TODO: Find a way to do this better.
-			groupsFileHeaderS = Constants.defaultGroupHeader;
-			groups = new HashMap<String, List<List<String>>>();
-
-		} else {
+		if ((gc=GroupsConfiguration.getSingleton()) != null) {
 			groupsFileHeaderS = gc.getGroupFileColumns();
 			groups = gc.getGroups();
 			nameIndex = gc.getNameIndex();
@@ -100,10 +96,19 @@ public class VariablesConfiguration extends CSVConfigurationModule {
 				o.addRedText("Header corrupt in Variables.csv: "+varPatternHeaderS);
 				return new LoadResult(this,ErrorCode.ParseError,"Corrupt header");
 			}
-			//Remove duplicte group column and varname. 
-			Collections.addAll(cheaderL,groupsFileHeaderS); 
-			cheaderL.remove(VariableConfiguration.Col_Functional_Group);
-			cheaderL.remove(VariableConfiguration.Col_Variable_Name);
+			//Remove duplicte group column and varname if group file present. 
+			if (gc!=null) {
+				Collections.addAll(cheaderL,groupsFileHeaderS);
+				Log.d("vortex","header now "+cheaderL.toString());
+
+				for ( int i = 0; i < cheaderL.size(); i++) {
+					if (cheaderL.get(i).equals(VariableConfiguration.Col_Functional_Group))
+						cheaderL.remove(i);
+					else
+						if (cheaderL.get(i).equals(VariableConfiguration.Col_Variable_Name))
+							cheaderL.remove(i);
+				}
+			}
 			List<String> vheaderL = new ArrayList<String>(trimmed(varPatternHeaderS));
 			vheaderL.addAll(cheaderL);
 			myTable = new Table(vheaderL,0,pNameIndex);

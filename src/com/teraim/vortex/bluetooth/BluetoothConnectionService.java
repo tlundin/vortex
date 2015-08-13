@@ -35,6 +35,7 @@ import android.widget.Toast;
 
 import com.teraim.vortex.R;
 import com.teraim.vortex.GlobalState;
+import com.teraim.vortex.GlobalState.SyncStatus;
 import com.teraim.vortex.exceptions.BluetoothDeviceExtra;
 import com.teraim.vortex.exceptions.BluetoothDevicesNotPaired;
 import com.teraim.vortex.log.LoggerI;
@@ -42,11 +43,11 @@ import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.non_generics.NamedVariables;
 import com.teraim.vortex.utils.PersistenceHelper;
 
-public class BluetoothConnectionService extends Service implements RemoteDevice {
+public class BluetoothConnectionService  {
 
 
 
-	private static BluetoothConnectionService me =null;
+	private static BluetoothConnectionService singleton =null;
 	private static BluetoothAdapter mBluetoothAdapter=BluetoothAdapter.getDefaultAdapter();
 	//final Activity mActivity;
 
@@ -71,92 +72,75 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 	public static final String VERSION_MISMATCH = "com.teraim.vortex.version_mismatch";
 
 
-
-
-
-
-
-
-	public final static int SYNK_SEARCHING = 0;
-	public final static int SYNC_READY_TO_ROCK = 1;
-	public final static int SYNK_STOPPED = 2;
-	public static final int BUSY = 3;
-
-	
-
 	//Ping_delay
-	protected static final long PING_DELAY = 5000;
-
-	// Unique Identification Number for the Notification.
-	// We use it on Notification start, and to cancel it.
-	private int NOTIFICATION = R.string.local_service_started;
-
-
-
-	@Override
-	public IBinder onBind(Intent arg0) {
-
-		return iBinder;
-	}
-
-	private IBinder iBinder = new LocalBinder();
-
-	public class LocalBinder extends Binder {
-		BluetoothConnectionService getBinder() {
-			return BluetoothConnectionService.this;
-		}
-	}
-
-	private NotificationManager mNM;
+	protected static final long PING_DELAY = 3000;
+	
 	private BroadcastReceiver brr=null;
 	//Try pinging five times. Before giving up.
 	private int pingC = 5;
 	private GlobalState gs;
 	private LoggerI o;
-
-	private boolean serverStarted;
-	@Override
-	public void onCreate() {
-		
+	private Context ctx;
+	
+	public static void initialize(Context context) {
+		if (singleton == null)
+			new  BluetoothConnectionService(context);
+		else
+			Log.d("vortex","No new BT obj create...singleton exists.");
+	}
+	public static void kill() {
+		if (singleton != null)
+			singleton.stop();
+	}
+	public BluetoothConnectionService(Context ctx) {
+		this.ctx=ctx;
 		gs = GlobalState.getInstance();	
 		if (gs!=null) {
 		o = gs.getLogger();
-		Log.d("NILS","Service on create");
+		Log.d("NILS","Bluetooth on create");
 		o.addRow("BlueTooth service starting up");
-		me = this;
-		mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
 		
-		gs.setSyncStatus(SYNK_SEARCHING);
+		
+		
+
 		//showNotification();
 		brr = new BroadcastReceiver() {
 			@Override
-			public void onReceive(Context ctx, Intent intent) {
+			public void onReceive(final Context ctx, Intent intent) {
 				final String action = intent.getAction();
 				//If message fails, try to ping until sister replies.
 				if (action.equals(BluetoothConnectionService.SYNC_SERVICE_CONNECTION_BROKEN)) {
-					Toast.makeText(me, "Avbröt kontakten med andra dosan", Toast.LENGTH_LONG).show();
 					stop();
 				}
 				else if (action.equals(BluetoothConnectionService.SAME_SAME_SYNDROME)) {
 					pingC=0;
 					stop();
 				}
+				else if (action.equals(BluetoothConnectionService.SYNK_SERVICE_STARTED)) {
+					pingC=0;
+				}
+				
 				else if (action.equals(BluetoothConnectionService.SYNC_SERVICE_CONNECTION_ATTEMPT_FAILED)) {
 					//Try to ping again in a while if still running.
 					new Handler().postDelayed(new Runnable() {
 						public void run() {
 							if (pingC>0) {
 								pingC--;
-								if(gs.getSyncStatus()==SYNK_SEARCHING) {
-									Toast.makeText(me, "Försök kontakta andra dosan. Försök kvar ("+pingC+")", Toast.LENGTH_LONG).show();
-									ping();					
+								if(gs.getSyncStatus()==SyncStatus.searching) {
+									Toast.makeText(ctx, "Connection attempts left: "+pingC, Toast.LENGTH_LONG).show();
+									try {
+										startClient();					
+									} catch (Exception e) {
+										o.addRow("");
+										o.addRedText("Bluetooth Connection failed in prepare");
+										stop();
+									}
 								}
 							} else
 								//after five attempts, stop the sync, and shutdown bluetooth.
 								stop();
 						}
 					}, PING_DELAY);
-					
 				}
 
 				
@@ -166,7 +150,7 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 					switch (state) {
 					case BluetoothAdapter.STATE_OFF:
 						Log.d("BT","Bluetooth off");
-						
+						pingC=0;
 						stop();
 						break;
 					case BluetoothAdapter.STATE_TURNING_OFF:
@@ -174,8 +158,7 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 						break;
 					case BluetoothAdapter.STATE_ON:
 						Log.d("BT","Bluetooth on...starting server");
-						startServer();
-						ping();
+						start();
 						break;
 					case BluetoothAdapter.STATE_TURNING_ON:
 						Log.d("BT","Bluetooth turning on");
@@ -192,24 +175,52 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 			ifi.addAction(BluetoothConnectionService.SYNC_SERVICE_CONNECTION_BROKEN);
 			ifi.addAction(BluetoothConnectionService.SYNK_SERVICE_STOPPED);
 			ifi.addAction(BluetoothConnectionService.SAME_SAME_SYNDROME);
-			this.registerReceiver(brr, ifi);
+			//ifi.addAction(BluetoothConnectionService.SYNK_SERVICE_STARTED);
+			ctx.registerReceiver(brr, ifi);
 			
 			
 			BluetoothAdapter ba = BluetoothAdapter.getDefaultAdapter();
 			if (ba==null) {
 				Log.e("NILS","bt adaptor null in bluetoothremotedevice service CREATE");
-				return;
+				stop();
 			} 
-			if (!ba.isEnabled())	
+			if (!ba.isEnabled())	{
+				Log.d("vortex","Enabling bluetooth");
 				ba.enable();
+			}
 			else {
-				startServer();
-				ping();
+				Log.d("NILS","No socket...trying to aquire..");
+				start();
+				
 			}
 			
 		}
 	}
 
+	private void start() {
+		if (client!=null && server!=null) {
+			Log.d("vortex","client and server already running");
+			return;
+		} 
+		
+		try {
+			startClient();
+			startServer();
+
+		} catch (BluetoothDevicesNotPaired e) {
+			Toast.makeText(ctx,"No bounded (paired) device found",Toast.LENGTH_LONG).show();
+			Intent intent = new Intent();
+			intent.setAction(BluetoothConnectionService.SYNK_NO_BONDED_DEVICE);
+			ctx.sendBroadcast(intent);
+			stop();		
+		} catch (BluetoothDeviceExtra e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			stop();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
 	private void ping() {
 		//Send a ping to see if we can connect straight away.
@@ -225,99 +236,13 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 	}
 
 
-	@Override
-	public int onStartCommand(Intent intent, int flags, int startId) {
-		Log.i("LocalService", "Received start id " + startId + ": " + intent);
-		// We want this service to continue running until it is explicitly
-		// stopped, so return sticky.
-		//if server already started, try to connect.
-		
-		return START_STICKY;
-	}
-
-	@Override
-	public void onDestroy() {
-		// Cancel the persistent notification.
-		mNM.cancel(NOTIFICATION);
-		// Tell the user we stopped.
-		Toast.makeText(this, "Synkservice avstängd", Toast.LENGTH_SHORT).show();
-		if (client!=null)
-			client.cancel();
-		if (server!=null)
-			server.cancel();
-		if (connected_T !=null)
-			connected_T.cancel();
-		connected_T=null;
-		if(BluetoothAdapter.getDefaultAdapter().isEnabled())
-			BluetoothAdapter.getDefaultAdapter().disable();
-		gs.setSyncStatus(SYNK_STOPPED);
-		Intent intent = new Intent();
-		intent.setAction(SYNK_SERVICE_STOPPED);
-		this.sendBroadcast(intent);
-		try {
-		this.unregisterReceiver(brr);
-		} catch (IllegalArgumentException e) {
-			Log.d("nils","unregisterReceiver - dropping exception");
-		}
-	}
-
-
-	/**
-	 * Show a notification while this service is running.
-	 */
-	private void showNotification() {
-		// In this sample, we'll use the same text for the ticker and the expanded notification
-		CharSequence text = getText(R.string.local_service_started);
-
-		// Set the icon, scrolling text and timestamp
-
-		// Notification noti = new 
-
-		Notification noti = new Notification.Builder(getApplicationContext())
-		.setContentTitle("Not sure what this is ")
-		.setContentText("or this one?")
-		.getNotification();
-		// The PendingIntent to launch our activity if the user selects this notification
-		PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-				new Intent(this, BluetoothConnectionService.class), 0);
-
-		// Set the info for the views that show in the notification panel.
-		noti.setLatestEventInfo(this, "absolutely no idea what this should be",
-				text, contentIntent);
-
-		// Send the notification.
-		mNM.notify(NOTIFICATION, noti);
-	}
-
+	
+	
 	
 
-	public void stop() {
-		Log.d("nils","pincounter was reset");
-		gs.getHandler().resetPingCounter();
-		this.stopSelf();
-	}
+	
+	
 
-	public void restart() {
-		Log.d("nils","pincounter was reset");
-		gs.getHandler().resetPingCounter();
-		startServer();
-	}
-	/*
-	private void init() throws BluetoothNotSupportedException {
-		if (mBluetoothAdapter==null) {
-			Log.e("NILS","This device does not support bluetooth!!");
-			throw new BluetoothNotSupportedException();
-		}
-		if (me==null)
-			me = new BluetoothRemoteDevice();	
-		if (!mBluetoothAdapter.isEnabled()) {
-		    me.startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-		} else
-			me.startServer();	
-
-
-	}
-	 */
 
 	ClientConnectThread client=null;
 	AcceptThread server=null;
@@ -326,8 +251,9 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 
 	//Start a Client thread for communication.
 	//Create an instance of this singleton if not already existing.
-	public void prepare() throws BluetoothDevicesNotPaired, BluetoothDeviceExtra {
+	public void startClient() throws BluetoothDevicesNotPaired, BluetoothDeviceExtra {
 
+		
 		//check if there is a bonded device.
 		Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
 		BluetoothDevice pair;
@@ -339,12 +265,7 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 		else {
 			pair = pairedDevices.iterator().next();
 			Log.d("NILS","FIRST PAIRED DEVICE IS: "+pair.getName());
-			if (pair.getBluetoothClass()!=null) {
-			Log.d("NILS","Device type major class: "+pair.getBluetoothClass().getMajorDeviceClass());
-			Log.d("NILS","Device type majorminor class: "+pair.getBluetoothClass().getDeviceClass());
-			} else
-				Log.e("NILS","Bluetooth device class null. Hmm..");
-			client = new ClientConnectThread(this,pair);
+			client = new ClientConnectThread(ctx,pair);
 			client.start();
 			if (pairedDevices.size()>1)
 				Log.e("NILS","Error: More than one bonded device");
@@ -362,9 +283,7 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 		server = new AcceptThread();
 		server.start();
 		//Tell the world.
-		Intent startI = new Intent();
-		startI.setAction(SYNK_SERVICE_STARTED);
-		me.sendBroadcast(startI);
+		
 
 	}
 
@@ -380,6 +299,9 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 				tmp = mBluetoothAdapter.listenUsingRfcommWithServiceRecord("NILS", Constants.getmyUUID());
 			} catch (IOException e) { }
 			mmServerSocket = tmp;
+			Intent startI = new Intent();
+			startI.setAction(SYNK_SERVICE_STARTED);
+			ctx.sendBroadcast(startI);
 		}
 
 		public void run() {
@@ -429,77 +351,17 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 		connected_T = new ConnectedThread(gs,socket);
 		connected_T.start();
 		Log.d("NILS","connected thread started.");
-		//if any delayed messages - send them.
-		Iterator<Object> it = msgBuf.iterator();
-		//Send any buffered messages.
-		Object msg;
-		while(it.hasNext()) {
-			msg = it.next();
-			connected_T.write(msg);
-			Log.d("NILS","Wrote "+msg+" to socket");
-		}
-		//Send a message that service is now connected.
-		gs.setSyncStatus(SYNC_READY_TO_ROCK);
+		//wait for ping
+		gs.setSyncStatus(SyncStatus.waiting_for_ping);
+		singleton=this;
 		Intent intent = new Intent();
 		intent.setAction(SYNK_SERVICE_CONNECTED);
-		this.sendBroadcast(intent);
-
+		ctx.sendBroadcast(intent);
+		//send ping
+		ping();
 	}
 
-	//This Handler will recieve a byte array and decide what to do with it.
-
-
-
-	/*
-   	Handler mHandler =  new Handler() {
-		@Override
-	    public void handleMessage(Message msg) {
-	  		Intent intent = new Intent(getApplicationContext(), null);
-			intent.setAction("com.teraim.vortex.bluetooth");
-
-	    	if (msg.obj instanceof Parameter) {
-	    		Parameter par = (Parameter)msg.obj;
-	    		Log.d("Parameter","Key "+par.mkey+" Val: "+par.mvalue);
-	    		intent.putExtra("MSG","Received parameter: "+par.mkey+" value: "+par.mvalue);
-	    	}
-	    	else if (msg.obj instanceof String) {
-	    		intent.putExtra("MSG",(String)msg.obj);
-	    	}
-	    	me.sendBroadcast(intent);
-	    }
-	 */
-
-	/*String rec = new String((byte[])msg.obj).substring(0, msg.arg1);
-	    	Log.d("NILS","Got Message "+rec);
-	    	String msgType = rec.substring(0, 1);
-    		rec = rec.substring(1,rec.length());
-	    	if (msgType.equals("M")) 
-	    		//Not sure what to do with normal messages...
-	    		Log.d("NILS","Got message: "+msg);
-	    	else {
-	    		String[] tmp = rec.split("zzz");
-	    		Log.d("NILS","Found key value");
-	    		if (tmp!=null&&tmp.length>0) {
-	    			Log.d("NILS","Length: "+tmp.length);
-	    			Log.d("NILS","Key: "+tmp[0]);
-	    			Log.d("NILS","Value: "+tmp[1]);
-	    		}
-	    		//Depending on message type, save in different files.
-
-	    		if (msgType.equals("@")) 
-	    			CommonVars.cv().putG(tmp[0], tmp[1]);
-	    		else if (msgType.equals("D"))
-	    			CommonVars.cv().putD(tmp[0], tmp[1]);
-	    		else if (msgType.equals("P"))
-	    			CommonVars.cv().putP(tmp[0], tmp[1]);	    			
-	    		else if (msgType.equals("R"))
-	    			CommonVars.cv().putR(tmp[0], tmp[1]);	    	
-	    	}
-
-	    }
-
-   	};
-	 */
+	
 
 	final static int MESSAGE_READ = 1;
 
@@ -608,11 +470,16 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 
 			// Keep listening to the InputStream until an exception occurs
 			Object o=null;
+			Handler mHandler = MessageHandler.getHandler();
+			android.os.Message m;
 			while (true) {
 
 					// Read from the InputStream
 					try {
 						o = obj_in.readObject();
+						m = mHandler.obtainMessage();
+						m.obj=o;
+						m.sendToTarget();
 					} catch (ClassNotFoundException e) {
 						Log.e("NILS","CLASS NOT FOUND IN Stream");
 						e.printStackTrace();
@@ -621,12 +488,11 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 						Intent intent = new Intent();
 						intent.setAction(SYNC_SERVICE_CONNECTION_BROKEN);
 						gs.getContext().sendBroadcast(intent);
+						
 						break;
 					}
 					// Send the obtained bytes to the UI activity
 					//mHandler.obtainMessage(MESSAGE_READ, -1, -1, o).sendToTarget();
-					gs.getHandler().handleMessage(o);
-
 			}
 		}
 
@@ -635,7 +501,6 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 			try {
 				obj_out.writeObject(o);
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -673,64 +538,52 @@ public class BluetoothConnectionService extends Service implements RemoteDevice 
 
 
 
-	@Override
-	public void sendParameter(String key, String value, int Scope) {
-		send(new Parameter(key,value));
-	}
-
 	
-	@Override
-	public void sendMessage(String msg) {
-		send(msg);
-	}	
-
-
+	
 	public void send(Object o) {
-		//If we have a socket - fine. 
-		//Else this device need to act client to generate socket.
-		//Sending will be delayed. Push message to stack while waiting.
-		Log.d("NILS","Trying to send: "+o.toString());
+		Log.d("NILS","Sending: "+o.toString());
+		
 		if(connected_T!=null)
-			//connected_T.write(msg.getBytes());
 			connected_T.write(o);
-		else {
-			Log.d("NILS","No socket...trying to aquire..");
-			try {
-				this.prepare();
-				msgBuf.add(o);
+		
+		else
+			Log.e("vortex","Write failed, no connection");
 
-			} catch (BluetoothDevicesNotPaired e) {
-				Toast.makeText(getBaseContext(),"No bounded (paired) device found",Toast.LENGTH_LONG).show();
-				Intent intent = new Intent();
-				intent.setAction(BluetoothConnectionService.SYNK_NO_BONDED_DEVICE);
-				gs.setSyncStatus(SYNK_STOPPED);
-				
-				sendBroadcast(intent);
-				BluetoothConnectionService.this.onDestroy();
-			} catch (BluetoothDeviceExtra e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+	}
+
+
+	public static BluetoothConnectionService getSingleton() {
+		return singleton;
+	}
+
+	public void stop() {
+		//drop reference to this object.
+		singleton = null;
+		gs.setSyncStatus(SyncStatus.stopped);
+		Toast.makeText(ctx, "Sync done", Toast.LENGTH_SHORT).show();
+		if (client!=null)
+			client.cancel();
+		if (server!=null)
+			server.cancel();
+		if (connected_T !=null)
+			connected_T.cancel();
+		connected_T=null;
+		if(BluetoothAdapter.getDefaultAdapter().isEnabled())
+			BluetoothAdapter.getDefaultAdapter().disable();
+		gs.setSyncStatus(SyncStatus.stopped);
+		Intent intent = new Intent();
+		intent.setAction(SYNK_SERVICE_STOPPED);
+		ctx.sendBroadcast(intent);
+		try {
+			ctx.unregisterReceiver(brr);
+		} catch (IllegalArgumentException e) {
+			Log.d("nils","unregisterReceiver - dropping exception");
 		}
-
-	}
-
-	
-	
-	
-	
-	@Override
-	public void getParameter(String key) {
-
+		
 	}
 
 
-	//this cannot be called before openChannel.
-
-	public static RemoteDevice getSingleton() {
-		return me;
-	}
-
+	
 
 
 }

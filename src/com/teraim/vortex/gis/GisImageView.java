@@ -176,7 +176,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 		polyPaint = new Paint();
 		polyPaint.setColor(Color.WHITE);
 		polyPaint.setStyle(Paint.Style.STROKE);
-		polyPaint.setStrokeWidth(1);
+		polyPaint.setStrokeWidth(0);
 		currCursorPaint = wCursorPaint;
 
 		fgPaintSel = new Paint();
@@ -885,7 +885,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 											if (xy==null)
 												continue;
 											else
-												canvas.drawCircle((float)xy[0],(float)xy[1],5,paintSimple);
+												canvas.drawCircle((float)xy[0],(float)xy[1],2,paintSimple);
 										} else {
 											drawGop(canvas,layerO,go,false);
 										}
@@ -1063,6 +1063,8 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 				else
 					color = go.getColor();
 				canvas.drawPath(p, createPaint(color,Paint.Style.STROKE,0));
+				xy = translateMapToRealCoordinates(go.getLocation());
+				drawGopLabel(canvas,xy,go.getLabel(),0,wCursorPaint,selectedPaint);
 			}
 		}
 
@@ -1070,14 +1072,22 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 	}
 
 
-
-	private void drawGopLabel(Canvas canvas, int[] xy, String mLabel, float radius, Paint bgPaint, Paint txtPaint) {
+/**
+ * Draws a Label above the object location at the distance given by offSet
+ * @param canvas
+ * @param xy
+ * @param mLabel
+ * @param offSet
+ * @param bgPaint
+ * @param txtPaint
+ */
+	private void drawGopLabel(Canvas canvas, int[] xy, String mLabel, float offSet, Paint bgPaint, Paint txtPaint) {
 		Rect bounds = new Rect();
 		txtPaint.getTextBounds(mLabel, 0, mLabel.length(), bounds);
 		bounds.set(bounds.left-2,bounds.top-2,bounds.right+2,bounds.bottom+2);
-		bounds.offset((int)xy[0]-bounds.width()/2,(int)xy[1]-(bounds.height()/2+(int)radius));
+		bounds.offset((int)xy[0]-bounds.width()/2,(int)xy[1]-(bounds.height()/2+(int)offSet));
 		canvas.drawRect(bounds, bgPaint);
-		canvas.drawText(mLabel, xy[0], (int)xy[1]-(bounds.height()/2+(int)radius),txtPaint);								
+		canvas.drawText(mLabel, xy[0], (int)xy[1]-(bounds.height()/2+(int)offSet),txtPaint);								
 
 	}
 
@@ -1490,6 +1500,8 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 		Log.d("vortex","top bottom left right "+top+","+bottom+","+left+","+right);
 		return r;
 	}
+	
+	/*
 	public Rect getCurrentViewSizeP(float wf,float hf) {
 		final float w = 600;
 		final float h = 920;
@@ -1566,7 +1578,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 
 		return r;
 	}
-
+*/
 
 
 

@@ -106,6 +106,7 @@ public class Variable implements Serializable {
 				//find value for global auto_inc counter in persistent memory.
 				//increment global counter.
 				int globalAC = gs.getPreferences().getI(PersistenceHelper.GLOBAL_AUTO_INC_COUNTER);
+				Log.d("vortex","global AC was "+globalAC);
 				gs.getPreferences().put(PersistenceHelper.GLOBAL_AUTO_INC_COUNTER, globalAC+1);
 				//set the Value 				
 				setValue(globalAC+1+"");

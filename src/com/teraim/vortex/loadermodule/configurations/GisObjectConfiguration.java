@@ -302,7 +302,7 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 
 		if (this.freezeSteps==(counter+1)) {
 			Log.d("vortex","Transaction ends");
-			myDb.endTransaction();
+			myDb.endTransactionSuccess();
 		}
 
 		return true;

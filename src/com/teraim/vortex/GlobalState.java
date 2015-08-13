@@ -4,20 +4,19 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.TreeMap;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.util.Log;
 
 import com.teraim.vortex.bluetooth.BluetoothConnectionService;
-import com.teraim.vortex.bluetooth.MasterMessageHandler;
 import com.teraim.vortex.bluetooth.MessageHandler;
-import com.teraim.vortex.bluetooth.SlaveMessageHandler;
+import com.teraim.vortex.bluetooth.NothingToSync;
 import com.teraim.vortex.bluetooth.SyncEntry;
-import com.teraim.vortex.bluetooth.SyncEntryHeader;
 import com.teraim.vortex.bluetooth.SyncMessage;
 import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.types.CHash;
@@ -35,7 +34,6 @@ import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.non_generics.StatusHandler;
 import com.teraim.vortex.ui.DrawerMenu;
-import com.teraim.vortex.ui.MenuActivity;
 import com.teraim.vortex.utils.DbHelper;
 import com.teraim.vortex.utils.PersistenceHelper;
 import com.teraim.vortex.utils.RuleExecutor;
@@ -72,10 +70,9 @@ public class GlobalState  {
 	private MessageHandler myHandler;
 	private DrawerMenu myDrawerMenu;
 	//Global state for sync.
-	private int syncStatus=BluetoothConnectionService.SYNK_STOPPED;	
+	private SyncStatus syncStatus;	
 	public String TEXT_LARGE;
 	private WF_Context currentContext;
-	private ParameterSafe mySafe;
 	private String myPartner="?";
 	private VarCache myVarCache;
 	private PersistenceHelper globalPh=null;
@@ -116,19 +113,21 @@ public class GlobalState  {
 		artLista = new VariableConfiguration(this,myVarCache,t);			
 		myWfs = mapWorkflowsToNames(workflows);		
 		//Event Handler on the Bluetooth interface.
-		myHandler = getHandler();
+		//myHandler = getHandler();
 		//Handles status for 
 		myStatusHandler = new StatusHandler(this);
 
 		mySpinnerDef = sd;
 
 		singleton =this;
-		
+
 		//GPS listener service
 		myTracker = new Tracker();
-		
+
 		myExecutor = new RuleExecutor(this);
-		
+
+		setSyncStatus(SyncStatus.stopped);
+
 	}
 
 
@@ -196,7 +195,7 @@ public class GlobalState  {
 	public Context getContext() {
 		return myC;
 	}
-	
+
 	public RuleExecutor getRuleExecutor() {
 		return myExecutor;
 	}
@@ -299,40 +298,27 @@ public class GlobalState  {
 	 * Getter/Setter for sync status and Globally accessible method for sending data asynchronously to twin device.
 	 */
 
-	public int getSyncStatus() {
+	public enum SyncStatus {
+		stopped,
+		searching,
+		waiting_for_ping,
+		waiting_for_data,
+		reading_data_from_db,
+		writing_data,
+		waiting_for_ack,		
+		ack_received, 
+		sending, 
+		waiting_for_connection_to_close, 
+
+	}
+	public SyncStatus getSyncStatus() {
 		return syncStatus;
 	}
 
-	public String getSyncStatusS() {
-		switch (syncStatus) {
-		case BluetoothConnectionService.SYNK_STOPPED:
-			return "AV";
-		case BluetoothConnectionService.SYNK_SEARCHING:
-			return "SÖKER";
-		case BluetoothConnectionService.SYNC_READY_TO_ROCK:
-			return "REDO";
-		case BluetoothConnectionService.BUSY:
-			return "AKTIV";
-		default:
-			return "?";
-		}
-	}
-
-	public void setSyncStatus(int status) {
+	public void setSyncStatus(SyncStatus status) {
 		syncStatus = status;
-		sendEvent(MenuActivity.REDRAW);
 	}
 
-	public synchronized boolean sendMessage(Object message) {
-		if (syncIsAllowed()){
-			setSyncStatus(BluetoothConnectionService.BUSY);
-			Log.d("nils","Message is being sent now..");
-			BluetoothConnectionService.getSingleton().send(message);
-			setSyncStatus(BluetoothConnectionService.SYNC_READY_TO_ROCK);
-			return true;
-		} else
-			return false;
-	}
 
 
 	public synchronized Aritmetic makeAritmetic(String name, String label) {
@@ -348,8 +334,8 @@ public class GlobalState  {
 		return new Aritmetic(name,label);
 	}
 
-	
-	
+
+
 
 	public VarCache getVariableCache() {
 		return myVarCache;
@@ -433,25 +419,25 @@ public class GlobalState  {
 	public boolean isSlave() {
 		return globalPh.get(PersistenceHelper.DEVICE_COLOR_KEY).equals("Client");
 	}
-
+	/*
 	public MessageHandler getHandler() {
 		if (myHandler==null)
 			myHandler = getNewMessageHandler(isMaster());
 		return myHandler;
 	}
-	/*
+
 	public void resetHandler() {
 		myHandler = getNewMessageHandler(isMaster());
 		getHandler();
 	}
-	 */
+
 	private MessageHandler getNewMessageHandler(boolean master) {
 		if (master)
-			return new MasterMessageHandler(this);
+			return new MasterMessageHandler();
 		else
-			return new SlaveMessageHandler(this);
+			return new SlaveMessageHandler();
 	}
-
+	 */
 	public enum ErrorCode {
 		ok,
 		missing_required_column,
@@ -460,13 +446,10 @@ public class GlobalState  {
 		config_not_found,spinners_not_found,
 		missing_lag_id,
 		missing_user_id,
-		no_handler_available
 
 	}
 
-	public boolean syncIsAllowed() {
-		return (syncStatus == BluetoothConnectionService.SYNC_READY_TO_ROCK);
-	}
+
 
 
 
@@ -475,38 +458,12 @@ public class GlobalState  {
 			return ErrorCode.missing_lag_id;
 		else if (globalPh.get(PersistenceHelper.USER_ID_KEY).equals(PersistenceHelper.UNDEFINED))
 			return ErrorCode.missing_user_id;
-		else if (myHandler ==null)
-			return ErrorCode.no_handler_available;
+
 		else 
 			return ErrorCode.ok;
 	}
 
-	public void triggerTransfer() {
-		Log.d("nils","Doing da sync..");	
-		if (syncIsAllowed()) {
-			setSyncStatus(BluetoothConnectionService.BUSY);
-			sendEvent(BluetoothConnectionService.SYNK_INITIATE);
-			SyncEntry[] changes = db.getChanges();
 
-			Log.d("nils","Syncrequest received. Sending "+(changes==null?"no changes":changes.toString()));
-			if (changes==null) {
-				log.addRow("[SENDING_SYNC-->Empty package. No changes.]");
-				Log.d("nils","SENDING SYNC EMPTY");
-				SyncEntryHeader seh = new SyncEntryHeader(-1);
-				changes = new SyncEntry[]{seh};
-			}
-			else{ 
-				log.addRow("[SENDING_SYNC-->"+changes.length+" rows]");	
-				Log.d("nils","[SENDING_SYNC-->"+changes.length+" rows]");			
-				//sendmessage will change state to not busy..if not, change it ourselves.
-			}
-			setSyncStatus(BluetoothConnectionService.SYNC_READY_TO_ROCK);
-			if(!sendMessage(changes))
-				setSyncStatus(BluetoothConnectionService.SYNC_READY_TO_ROCK);
-
-		} else 
-			Log.d("nils","Sync was not allowed.");
-	}
 
 	public void sendEvent(String action) {
 		Intent intent = new Intent();
@@ -542,13 +499,87 @@ public class GlobalState  {
 		return myStatusHandler;
 	}
 
-	boolean syncDone=false;
-
 
 	private Configuration myModules;
+
+	/**
+	 * This will start bluetooth if not already started. The BT thread will trigger the data transfer of all unsynchronized data automatically and then die.
+	 */
+	public void setupConnection(final Context ctx) {
+
+		Log.d("nils","In setup connection..");	
+		if (getSyncStatus()==SyncStatus.stopped) {
+
+			OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					switch (which){
+					case DialogInterface.BUTTON_POSITIVE:
+						Log.d("nils","Trying to start bt-service");
+						setSyncStatus(SyncStatus.searching);
+						//Create a singleton that will send all data.
+						BluetoothConnectionService.initialize(getContext());
+						break;
+
+					case DialogInterface.BUTTON_NEGATIVE:
+						break;
+					}
+				}
+			};
+
+
+			ErrorCode err = checkSyncPreconditions();
+			if (err == ErrorCode.ok) {
+				AlertDialog.Builder builder = new AlertDialog.Builder(ctx);
+				builder.setTitle("Syncronisation")
+				.setMessage("A synchronization was requested. If you wish to proceed, press Accept simultaneously on this and the other device").setPositiveButton("ACCEPT", dialogClickListener)
+				.setNegativeButton("CANCEL", dialogClickListener).show()
+				.setCanceledOnTouchOutside(false);
+			}else {							
+				new AlertDialog.Builder(ctx)
+				.setTitle("Sync is not possible")
+				.setMessage("Reason: "+err.name()) 
+				.setIcon(android.R.drawable.ic_dialog_alert)
+				.setCancelable(false)
+				.setPositiveButton(R.string.iunderstand, new DialogInterface.OnClickListener() {						
+					@Override
+					public void onClick(DialogInterface dialog, int which)  {
+
+					}
+
+				})				 
+				.show();							
+			}
+		} else
+			Log.e("vortex","Status not stopped for sync in setupconnection: "+getSyncStatus().name());
+	}
+
+
+	public boolean triggerTransfer() {
+		Log.d("nils","In trigger transfer..");	
+		setSyncStatus(SyncStatus.reading_data_from_db);
+		sendEvent(BluetoothConnectionService.SYNK_INITIATE);
+		SyncEntry[] changes = db.getChanges();
+
+		Log.d("nils","Syncrequest received. Sending "+(changes==null?"no changes":changes.toString()));
+		if (changes==null) {
+			return false;
+
+		}
+		else{ 
+			log.addRow("[SENDING_SYNC-->"+changes.length+" rows]");	
+			Log.d("nils","[SENDING_SYNC-->"+changes.length+" rows]");			
+
+			setSyncStatus(SyncStatus.sending);
+			BluetoothConnectionService.getSingleton().send(changes);
+			return true;
+		}
+	}
+
+
 	public void synchronise(SyncEntry[] ses, boolean isMaster) {	
 		Log.e("nils,","SYNCHRONIZE. MESSAGES: ");
-		setSyncStatus(BluetoothConnectionService.BUSY);
+		setSyncStatus(SyncStatus.writing_data);
 		for(SyncEntry se:ses) {
 			Log.e("nils","Action:"+se.getAction());
 			Log.e("nils","Target: "+se.getTarget());
@@ -557,19 +588,11 @@ public class GlobalState  {
 			Log.e("nils","Change: "+se.getChange());
 
 		}
-		syncDone = false;	
-		new Timer().schedule(new TimerTask() {
 
-			@Override
-			public void run() {
-				if (!syncDone)
-					sendEvent(BluetoothConnectionService.SYNK_BLOCK_UI);
-			}}, 2000);
-
-		db.synchronise(ses, isMaster, myVarCache,this);
-		syncDone = true;
+		sendEvent(BluetoothConnectionService.SYNK_BLOCK_UI);
+		db.synchronise(ses, myVarCache,this);
 		sendEvent(BluetoothConnectionService.SYNK_UNBLOCK_UI);
-		setSyncStatus(BluetoothConnectionService.SYNC_READY_TO_ROCK);
+
 
 	}
 
@@ -657,58 +680,58 @@ public class GlobalState  {
 										Variable v=null;// = getVariableConfiguration().getVariableInstance(val);
 										String varVal=null;
 										//if (v==null) {
-											//Parse value..either constant, function or variable.
-											
-											List<TokenizedItem> tokens = myExecutor.findTokens(val, null);
-											if (tokens!=null && !tokens.isEmpty()) {										
-												TokenizedItem firstToken = tokens.get(0);
-												if (firstToken.getType()==TokenType.variable) {
-													Log.d("vortex","Found variable!");
-													v = firstToken.getVariable();
-													varVal = v.getValue();
-													if (varVal==null) {
-														o.addRow("");
-														o.addRedText("One of the variables used in current context("+v.getId()+") has no value in database");
-														Log.e("nils","var was null or empty: "+v.getId());
-														err = "One of the variables used in current context("+v.getId()+") has no value in database";
-														contextError=true;
-													}
-												} else if (firstToken.getType().getParent()==TokenType.function) {
-													Log.d("vortex","Found function!");
-													SubstiResult subsRes = myExecutor.substituteForValue(tokens, val, false);
-													if (subsRes!=null) {
-														varVal = subsRes.result;
-													} else {
-														Log.e("vortex","subsresult was null for function"+val+" in evalContext");
-														contextError=true;
-														err = "subsresult was null for function"+val+" in evalContext";
-													}
-												} else if (firstToken.getType()==TokenType.literal) {
-													Log.d("vortex","Found literal!");
-													varVal = val;
-												} else {
-													Log.e("vortex","Could not find "+firstToken.getType().name());
-													contextError=true;
-													err = "Could not find "+firstToken.getType().name();
-												}
+										//Parse value..either constant, function or variable.
 
+										List<TokenizedItem> tokens = myExecutor.findTokens(val, null);
+										if (tokens!=null && !tokens.isEmpty()) {										
+											TokenizedItem firstToken = tokens.get(0);
+											if (firstToken.getType()==TokenType.variable) {
+												Log.d("vortex","Found variable!");
+												v = firstToken.getVariable();
+												varVal = v.getValue();
+												if (varVal==null) {
+													o.addRow("");
+													o.addRedText("One of the variables used in current context("+v.getId()+") has no value in database");
+													Log.e("nils","var was null or empty: "+v.getId());
+													err = "One of the variables used in current context("+v.getId()+") has no value in database";
+													contextError=true;
+												}
+											} else if (firstToken.getType().getParent()==TokenType.function) {
+												Log.d("vortex","Found function!");
+												SubstiResult subsRes = myExecutor.substituteForValue(tokens, val, false);
+												if (subsRes!=null) {
+													varVal = subsRes.result;
+												} else {
+													Log.e("vortex","subsresult was null for function"+val+" in evalContext");
+													contextError=true;
+													err = "subsresult was null for function"+val+" in evalContext";
+												}
+											} else if (firstToken.getType()==TokenType.literal) {
+												Log.d("vortex","Found literal!");
+												varVal = val;
 											} else {
-												o.addRow("");
-												o.addRedText("Could not evaluate expression "+val+" in context");
-												Log.e("vortex","Could not evaluate expression "+val+" in context");
+												Log.e("vortex","Could not find "+firstToken.getType().name());
 												contextError=true;
-												err="Could not evaluate expression "+val+" in context";
+												err = "Could not find "+firstToken.getType().name();
 											}
-											
-											
-											/*
+
+										} else {
+											o.addRow("");
+											o.addRedText("Could not evaluate expression "+val+" in context");
+											Log.e("vortex","Could not evaluate expression "+val+" in context");
+											contextError=true;
+											err="Could not evaluate expression "+val+" in context";
+										}
+
+
+										/*
 											contextError=true;
 											o.addRow("");
 											o.addRedText("One of the variables missing: "+val);
 											err = "Context missing (at least) variable: "+val;
 											Log.d("nils","Couldn't find variable "+val);
 											break;
-											 */
+										 */
 
 										//} else 
 										//	varVal = v.getValue();
@@ -732,7 +755,7 @@ public class GlobalState  {
 						contextError=true;
 						err="Found empty or null pair";
 					}
-					
+
 				} 
 
 			}
