@@ -1,7 +1,11 @@
 package com.teraim.vortex.ui;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.DialogInterface.OnClickListener;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
@@ -13,8 +17,8 @@ import android.preference.PreferenceFragment;
 import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
-import com.teraim.vortex.R;
 import com.teraim.vortex.GlobalState.SyncStatus;
+import com.teraim.vortex.R;
 import com.teraim.vortex.bluetooth.BluetoothConnectionService;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.PersistenceHelper;
@@ -40,11 +44,11 @@ public class ConfigMenu extends PreferenceActivity {
 			// Load the preferences from an XML resource
 			addPreferencesFromResource(R.xml.myprefs);
 			//Set default values for the prefs.
-//			getPreferenceScreen().getSharedPreferences()
-//			.registerOnSharedPreferenceChangeListener(this);
+			//			getPreferenceScreen().getSharedPreferences()
+			//			.registerOnSharedPreferenceChangeListener(this);
 			this.getActivity().getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_PRIVATE)
 			.registerOnSharedPreferenceChangeListener(this);
-		
+
 			EditTextPreference epref = (EditTextPreference) findPreference(PersistenceHelper.LAG_ID_KEY);
 			epref.setSummary(epref.getText());
 
@@ -53,15 +57,15 @@ public class ConfigMenu extends PreferenceActivity {
 
 			epref = (EditTextPreference) findPreference(PersistenceHelper.USER_ID_KEY);
 			epref.setSummary(epref.getText());
-			
+
 
 			epref = (EditTextPreference) findPreference(PersistenceHelper.SERVER_URL);
 			epref.setSummary(epref.getText());
-			
-			
+
+
 			epref = (EditTextPreference) findPreference(PersistenceHelper.BUNDLE_NAME);
 			epref.setSummary(epref.getText());
-			
+
 			epref = (EditTextPreference) findPreference(PersistenceHelper.BACKUP_LOCATION);
 			if (epref.getText()==null||epref.getText().isEmpty()) {
 				Log.e("vortex","gets here");
@@ -70,13 +74,53 @@ public class ConfigMenu extends PreferenceActivity {
 			}
 			Log.d("vortex","backup epref txt: "+epref.getText()+" le: "+epref.getText().length());
 			epref.setSummary(epref.getText());
-			
-			//CheckBoxPreference cpref = (CheckBoxPreference) findPreference(PersistenceHelper.DEVELOPER_SWITCH);
-			
+
+			final Preference button = (Preference)findPreference(getString(R.string.resetSyncButton));
+			 String bName = getActivity().getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_PRIVATE).getString(PersistenceHelper.BUNDLE_NAME,null);
+			 String syncPValue = getActivity().getSharedPreferences(bName,Context.MODE_PRIVATE).getString(PersistenceHelper.TIME_OF_LAST_SYNC,null);
+			if (bName!=null && syncPValue!=null) {
+			button.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+				@Override
+				public boolean onPreferenceClick(Preference preference) {   
+					new AlertDialog.Builder(getActivity())
+					.setTitle("Reset Sync")
+					.setMessage("Pressing ok will rewind the synchronization pointer to zero. This will synchronize all values with partner device.") 
+					.setIcon(android.R.drawable.ic_dialog_alert)
+					.setCancelable(false)
+					.setPositiveButton("OK",new Dialog.OnClickListener() {				
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							 String bName = getActivity().getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_PRIVATE).getString(PersistenceHelper.BUNDLE_NAME,null);
+							 String syncPValue = getActivity().getSharedPreferences(bName,Context.MODE_PRIVATE).getString(PersistenceHelper.TIME_OF_LAST_SYNC,null);
+ 							Log.d("vortex","syncPValue is "+syncPValue);
+							if (bName!=null && syncPValue!=null) {
+								getActivity().getSharedPreferences(bName,Context.MODE_PRIVATE).edit().remove(PersistenceHelper.TIME_OF_LAST_SYNC).commit();
+								Intent intent = new Intent();
+								intent.setAction(MenuActivity.REDRAW);
+								getActivity().sendBroadcast(intent);
+								button.setEnabled(false);
+							}
+							
+
+						}
+					} )
+					.setNegativeButton("CANCEL", new OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+
+						}
+					})
+					.show();
+					return true;
+				}
+			});
+			} else
+				button.setEnabled(false);
+
 		}
-		
-	
-		
+
+
+
 
 		/* (non-Javadoc)
 		 * @see android.app.Fragment#onPause()
@@ -111,7 +155,7 @@ public class ConfigMenu extends PreferenceActivity {
 				SharedPreferences sharedPreferences, String key) {
 			Preference pref = findPreference(key);
 			GlobalState gs = GlobalState.getInstance();
-			
+
 			if (pref instanceof EditTextPreference) {
 				EditTextPreference etp = (EditTextPreference) pref;
 				pref.setSummary(etp.getText());
@@ -123,13 +167,13 @@ public class ConfigMenu extends PreferenceActivity {
 							Log.d("vortex","stopping bluetooth");
 						}
 						Tools.restart(this.getActivity());
-						
+
 					}
-						
-					
+
+
 				}
 
-					
+
 			}
 			else if (pref instanceof ListPreference) {
 				ListPreference letp = (ListPreference) pref;
@@ -137,7 +181,7 @@ public class ConfigMenu extends PreferenceActivity {
 				if (letp.getKey().equals(PersistenceHelper.DEVICE_COLOR_KEY)) {
 					if (letp.getValue().equals("Master")) 
 						Log.d("nils","Changed to MASTER");
-						
+
 					else if (letp.getValue().equals("Client")) 
 						Log.d("nils","Changed to CLIENT");
 					else if (letp.getValue().equals("Solo")) {
@@ -152,13 +196,13 @@ public class ConfigMenu extends PreferenceActivity {
 						}
 					}
 					Tools.restart(this.getActivity());
-					
+
 				}
-				
+
 			}
-			
+
 			//force redraw of menuactivity.
-			
+
 			if (gs!=null) {
 				gs.sendEvent(MenuActivity.REDRAW);
 			}
@@ -175,7 +219,7 @@ public class ConfigMenu extends PreferenceActivity {
 						GlobalState.getInstance(getActivity()).removeLogger();
 					}
 				}
-*/
+			 */
 		}
 
 

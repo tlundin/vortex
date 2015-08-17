@@ -17,10 +17,6 @@ import com.teraim.vortex.non_generics.Constants;
 
 public class PersistenceHelper {
 	public static final String UNDEFINED = "";
-	//	public static final String CURRENT_RUTA_ID_KEY = "ruta_id";
-	//	public static final String CURRENT_PROVYTA_ID_KEY = "provyta_id";
-	//	public static final String CURRENT_DELYTA_ID_KEY = "delyta_id";
-	//	public static final String CURRENT_YEAR_ID_KEY = "current_year_id";
 	public static final String USER_ID_KEY = "user_id";
 	public static final String LAG_ID_KEY = "lag_id";
 	public static final String MITTPUNKT_KEY = "mittpunkt";

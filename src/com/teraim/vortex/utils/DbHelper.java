@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
@@ -22,6 +23,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
+import com.teraim.vortex.GlobalState.SyncStatus;
 import com.teraim.vortex.bluetooth.BluetoothConnectionService;
 import com.teraim.vortex.bluetooth.SyncEntry;
 import com.teraim.vortex.bluetooth.SyncEntryHeader;
@@ -1108,14 +1110,23 @@ public class DbHelper extends SQLiteOpenHelper {
 			return;
 		}
 		Log.d("nils","In Synchronize with "+ses.length+" arguments.");
+		ContentValues cv = new ContentValues();
+		Map<String, String> keySet= new HashMap<String,String>();
 		for (SyncEntry s:ses) {
 
-			if (synC++%10==0)
-				gs.sendEvent(BluetoothConnectionService.PING_FROM_UPDATE);			
+			if (synC++%10==0) {
+				Intent intent = new Intent();
+				intent.setAction(BluetoothConnectionService.STATUS);
+				intent.putExtra("status", SyncStatus.insert_update_message.name());
+				intent.putExtra("total", ses.length);
+				intent.putExtra("current", synC);
+				gs.sendSyncEvent(intent);
+			}
 			
 			if (s.isInsert()||s.isInsertArray()) {				
-				Map<String, String> keySet=null; 
-				ContentValues cv = new ContentValues();
+				keySet.clear();
+				cv.clear();
+				
 				if (s.getKeys()==null||s.getValues()==null) {
 					Log.e("nils","Synkmessage with "+s.getTarget()+" is invalid. Skipping");				
 					continue;
@@ -1137,11 +1148,9 @@ public class DbHelper extends SQLiteOpenHelper {
 
 						if (pair[0].equals("var")) {
 							name = pair[1];
-						} else {
-							if (keySet == null)
-								keySet = new HashMap<String, String>();
+						} else 							
 							keySet.put(getColumnName(pair[0]),pair[1]);
-						}
+						
 						//cv contains all elements, except id.
 						cv.put(getColumnName(pair[0]),pair[1]);													
 					}									
@@ -1204,15 +1213,16 @@ public class DbHelper extends SQLiteOpenHelper {
 					}
 				}
 				if (rId==-1) 
-					Log.e("nils","Could not insert row "+cv.toString());
-
+					Log.e("nils","Did not insert row "+cv.toString());
+				else
+					vc.invalidateOnName(name);
 				//else
 				//	Log.d("nils","Insert row: "+cv.toString());
 
 				//Invalidate variables with this id in the cache..
-				vc.invalidateOnName(name);
+				
 			} else if (s.isDelete()) {
-				Map<String, String> keySet=null; 
+				keySet.clear();
 				Log.d("nils","Got Delete for: "+s.getTarget());
 				String[] keys = s.getChange().split("\\|");
 				String[] pair;
@@ -1230,8 +1240,6 @@ public class DbHelper extends SQLiteOpenHelper {
 						if (pair[0].equals("var")) {
 							name = pair[1];
 						} else {
-							if (keySet == null)
-								keySet = new HashMap<String, String>();
 							keySet.put(getColumnName(pair[0]),pair[1]);
 						}
 											
@@ -1289,6 +1297,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
 
 	public void syncDone(long timeStamp) {
+		Log.d("vortex","in syncdone with timestamp "+timeStamp);
 		String lastS = ph.get(PersistenceHelper.TIME_OF_LAST_SYNC);
 		if (lastS==null||lastS.equals(PersistenceHelper.UNDEFINED))
 			lastS= "0";

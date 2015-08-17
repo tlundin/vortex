@@ -189,8 +189,12 @@ public abstract class Loader extends AsyncTask<ConfigurationModule ,Integer,Load
 			m.freeze(-1);
 			
 		
-		if (m.version!=null)
+		if (m.version!=null) {
 			m.setFrozenVersion(m.version);
+			Log.d("vortex","Frozen version set to "+m.version);
+		} else
+			Log.d("vortex","Version number was null in setfrozenversion");
+		
 		if (m.getEssence()!=null||m.isDatabaseModule)
 			return new LoadResult(m,ErrorCode.frozen);
 		else {

@@ -18,4 +18,8 @@
 	<string name="u2">u2</string>	
 	<string name="yes">ja</string>
 	<string name="no">nej</string>		
+	
+	<string name="resetSyncButton">reset_sync</string>		
+	
+		
 </resources>

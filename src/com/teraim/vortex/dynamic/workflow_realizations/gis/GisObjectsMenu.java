@@ -33,6 +33,7 @@ public class GisObjectsMenu extends View {
 	private static final int Padding = 15,InnerPadding = 12;
 	private static final int NoOfButtonsPerRow = 6;
 	private static final int MAX_ROWS = 5;
+	private static final int SpaceBetweenHeaderAndButton = 3;
 	Map<GisObjectType,Set<FullGisObjectConfiguration>> menuGroupsM;
 	private Paint headerTextP;
 	private Paint gopButtonBackgroundP;
@@ -238,17 +239,18 @@ public class GisObjectsMenu extends View {
 				//Left padding + numer of buttons + number of spaces in between.
 				FullGisObjectConfiguration fop = it.next();
 				int left = col*ColW+Padding;
-				int top = row*RowH+Padding+totalHeaderHeight;
+				int top = row*RowH+Padding+totalHeaderHeight+SpaceBetweenHeaderAndButton;
 				RectF r = new RectF(left,top, left+buttonWidth,top+buttonWidth);
 				menuButtonArray[col][row] = new MenuButton(fop,r);
 				col++;
 				if (col==NoOfButtonsPerRow) {
 					col=0;
 					row++;
+					i++;
 				}
 
 			}
-			totalHeaderHeight += headerTextP.getTextSize()+3;
+			totalHeaderHeight += headerTextP.getTextSize()+SpaceBetweenHeaderAndButton;
 			col=0;
 			row++;
 		}
@@ -258,10 +260,11 @@ public class GisObjectsMenu extends View {
 
 	@Override
 	protected void onDraw(Canvas canvas) {
+		int totalHeaderHeight = 0;
 		int w = canvas.getWidth();
 		for (int row = 0 ; row < MAX_ROWS; row++) {
 			if (menuHeaderArray[row]!=null)
-				canvas.drawText(menuHeaderArray[row]+" types", w/2, row*RowH+Padding, headerTextP);
+				canvas.drawText(menuHeaderArray[row]+" types", w/2, row*RowH+Padding+totalHeaderHeight, headerTextP);
 			MenuButton currB=null;
 			for (int col = 0; col < NoOfButtonsPerRow;col++) {
 				currB = menuButtonArray[col][row];
@@ -301,6 +304,7 @@ public class GisObjectsMenu extends View {
 				canvas.drawText(fop.getName(), r.left+r.width()/2, r.top+radius*2+iconPadding+blackTextP.getTextSize(),currB.isSelected?whiteTextP:blackTextP);
 
 			}
+			totalHeaderHeight += headerTextP.getTextSize()+SpaceBetweenHeaderAndButton;
 		}
 
 		super.onDraw(canvas);

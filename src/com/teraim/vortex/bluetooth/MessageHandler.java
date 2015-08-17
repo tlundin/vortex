@@ -1,5 +1,6 @@
 package com.teraim.vortex.bluetooth;
 
+import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -23,28 +24,22 @@ public abstract class MessageHandler {
 		gs = GlobalState.getInstance();
 		bt = BluetoothConnectionService.getSingleton();
 		o = gs.getLogger();
-	
+		if(Looper.myLooper() == Looper.getMainLooper())
+			Log.d("vortex","IN UI THREAD!!");
+		else
+			Log.d("vortex","NOT IN UI THREAD!!");
+		//gs.setHandler(mHandler);
+		
 	}
 	
-	public static Handler getHandler() {
-		if (singleton == null) {
-			singleton = GlobalState.getInstance().isMaster()?new MasterMessageHandler():new SlaveMessageHandler();
-		}
-		return singleton.mHandler;	
+	public static MessageHandler getHandler() {
+		
+		singleton = GlobalState.getInstance().isMaster()?new MasterMessageHandler():new SlaveMessageHandler();
+		
+		return singleton;	
 	}
 	
-	private Handler mHandler = new Handler(Looper.getMainLooper()) {
-		
-	      
-        @Override
-		public void handleMessage(Message msg) {
-        	Log.d("vortex","got message: "+msg.toString());
-        	singleton.handleMessage(msg.obj);
-			super.handleMessage(msg);
-		}
-
-		
-	};
+	
 
 
 	public void handleMessage(Object message) {
@@ -59,6 +54,11 @@ public abstract class MessageHandler {
 				gs.sendEvent(BluetoothConnectionService.BLUETOOTH_MESSAGE_RECEIVED);
 			}
 
+			else  if (message instanceof SyncRestartRequest) {
+				Log.d("vortex","Restart request received...pinging!");
+				bt.ping();
+			}
+		
 			else
 				handleSpecialized(message);
 		
@@ -69,7 +69,7 @@ public abstract class MessageHandler {
 	public abstract void handleSpecialized(Object message);
 
 
-
+	
 
 
 }

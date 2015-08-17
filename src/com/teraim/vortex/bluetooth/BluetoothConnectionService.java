@@ -5,15 +5,11 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.util.Iterator;
+import java.io.StreamCorruptedException;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
 
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
@@ -22,25 +18,16 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Bitmap;
-import android.graphics.Bitmap.Config;
-import android.graphics.Canvas;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.os.Binder;
 import android.os.Handler;
-import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.teraim.vortex.R;
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.GlobalState.SyncStatus;
 import com.teraim.vortex.exceptions.BluetoothDeviceExtra;
 import com.teraim.vortex.exceptions.BluetoothDevicesNotPaired;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
-import com.teraim.vortex.non_generics.NamedVariables;
 import com.teraim.vortex.utils.PersistenceHelper;
 
 public class BluetoothConnectionService  {
@@ -51,10 +38,13 @@ public class BluetoothConnectionService  {
 	private static BluetoothAdapter mBluetoothAdapter=BluetoothAdapter.getDefaultAdapter();
 	//final Activity mActivity;
 
+	public static final String STATUS = "sync_status_message";
+
 	public final static String SYNK_SERVICE_STOPPED = "com.teraim.vortex.synkstopped";
-	public final static String SYNK_SERVICE_STARTED = "com.teraim.vortex.synkstarted";
+	
 	public final static String SYNK_SERVICE_MESSAGE_RECEIVED = "com.teraim.vortex.message";
-	public final static String SYNK_SERVICE_CONNECTED = "com.teraim.vortex.synk_connected";
+	public final static String SYNK_SERVICE_READ = "com.teraim.vortex.synk_read";
+	public final static String SYNK_SERVICE_WRITE = "com.teraim.vortex.synk_write";
 	public final static String SYNC_SERVICE_CONNECTION_ATTEMPT_FAILED = "com.teraim.vortex.synk_no_connect";
 	public final static String SYNC_SERVICE_CONNECTION_BROKEN = "com.teraim.vortex.synk_attempt_fail";
 //	public final static String SYNK_PING_MESSAGE_RECEIVED = "com.teraim.vortex.ping";
@@ -62,14 +52,13 @@ public class BluetoothConnectionService  {
 	public static final String SYNK_INITIATE = "com.teraim.vortex.synkinitiate";
 	public static final String SAME_SAME_SYNDROME = "com.teraim.vortex.master_syndrome";
 	public static final String SYNK_DATA_RECEIVED = "com.teraim.vortex.synk_data_received";
-	public static final String SYNK_DATA_TRANSFER_DONE = "com.teraim.vortex.sync_data_transfer_done";
 	public static final String BLUETOOTH_MESSAGE_RECEIVED = "com.teraim.vortex.templatemessage";
 	public static final String RUTA_DONE = "com.teraim.vortex.ruta_done";
 	public static final String MASTER_CHANGED_MY_CONFIG = "com.teraim.vortex.master_changed_my_config";
-	public static final String SYNK_BLOCK_UI = "com.teraim.vortex.synk_block_ui";
-	public static final String SYNK_UNBLOCK_UI = "com.teraim.vortex.synk_unblock_ui";
 	public static final String PING_FROM_UPDATE = "com.teraim.vortex.ping_from_update";
 	public static final String VERSION_MISMATCH = "com.teraim.vortex.version_mismatch";
+	public static final String BLUETOOTH_RESTART_REQUIRED = "restart_required";
+
 
 
 	//Ping_delay
@@ -83,10 +72,10 @@ public class BluetoothConnectionService  {
 	private Context ctx;
 	
 	public static void initialize(Context context) {
-		if (singleton == null)
+		kill();
+		singleton =
 			new  BluetoothConnectionService(context);
-		else
-			Log.d("vortex","No new BT obj create...singleton exists.");
+		
 	}
 	public static void kill() {
 		if (singleton != null)
@@ -115,9 +104,6 @@ public class BluetoothConnectionService  {
 				else if (action.equals(BluetoothConnectionService.SAME_SAME_SYNDROME)) {
 					pingC=0;
 					stop();
-				}
-				else if (action.equals(BluetoothConnectionService.SYNK_SERVICE_STARTED)) {
-					pingC=0;
 				}
 				
 				else if (action.equals(BluetoothConnectionService.SYNC_SERVICE_CONNECTION_ATTEMPT_FAILED)) {
@@ -222,7 +208,7 @@ public class BluetoothConnectionService  {
 		}
 	}
 
-	private void ping() {
+	void ping() {
 		//Send a ping to see if we can connect straight away.
 		Log.d("NILS","Sending ping");
 		String myName, myLag;
@@ -232,7 +218,15 @@ public class BluetoothConnectionService  {
 		bundleVersion = gs.getPreferences().get(PersistenceHelper.CURRENT_VERSION_OF_WF_BUNDLE);
 		softwareVersion = Float.toString(gs.getGlobalPreferences().getF(PersistenceHelper.CURRENT_VERSION_OF_PROGRAM));
 		boolean requestAll = gs.getPreferences().get(PersistenceHelper.TIME_OF_LAST_SYNC).equals(PersistenceHelper.UNDEFINED);
-		send(gs.isMaster()?new MasterPing(myName,myLag,bundleVersion,softwareVersion,requestAll):new SlavePing(myName,myLag,bundleVersion,softwareVersion,requestAll));
+
+		boolean succ = send(gs.isMaster()?new MasterPing(myName,myLag,bundleVersion,softwareVersion,requestAll):new SlavePing(myName,myLag,bundleVersion,softwareVersion,requestAll));
+		if (!succ) {
+			Log.e("vortex","ping failed, no connection!");
+			stop();
+		} 
+		else
+			gs.setSyncStatus(SyncStatus.waiting_for_ping);
+
 	}
 
 
@@ -299,9 +293,7 @@ public class BluetoothConnectionService  {
 				tmp = mBluetoothAdapter.listenUsingRfcommWithServiceRecord("NILS", Constants.getmyUUID());
 			} catch (IOException e) { }
 			mmServerSocket = tmp;
-			Intent startI = new Intent();
-			startI.setAction(SYNK_SERVICE_STARTED);
-			ctx.sendBroadcast(startI);
+			
 		}
 
 		public void run() {
@@ -352,11 +344,7 @@ public class BluetoothConnectionService  {
 		connected_T.start();
 		Log.d("NILS","connected thread started.");
 		//wait for ping
-		gs.setSyncStatus(SyncStatus.waiting_for_ping);
-		singleton=this;
-		Intent intent = new Intent();
-		intent.setAction(SYNK_SERVICE_CONNECTED);
-		ctx.sendBroadcast(intent);
+		
 		//send ping
 		ping();
 	}
@@ -470,24 +458,27 @@ public class BluetoothConnectionService  {
 
 			// Keep listening to the InputStream until an exception occurs
 			Object o=null;
-			Handler mHandler = MessageHandler.getHandler();
-			android.os.Message m;
+			MessageHandler mHandler = MessageHandler.getHandler();
+			
 			while (true) {
 
 					// Read from the InputStream
 					try {
+						
 						o = obj_in.readObject();
-						m = mHandler.obtainMessage();
-						m.obj=o;
-						m.sendToTarget();
+						mHandler.handleMessage(o);
 					} catch (ClassNotFoundException e) {
 						Log.e("NILS","CLASS NOT FOUND IN Stream");
 						e.printStackTrace();
 					} catch (Exception e) {
 						Log.e("NILS","got strange exception in Inputstream");
-						Intent intent = new Intent();
-						intent.setAction(SYNC_SERVICE_CONNECTION_BROKEN);
-						gs.getContext().sendBroadcast(intent);
+						
+						if (e instanceof StreamCorruptedException) {
+							gs.sendEvent(BLUETOOTH_RESTART_REQUIRED);
+							singleton.stop();
+						}
+						else
+							gs.sendEvent(SYNC_SERVICE_CONNECTION_BROKEN);
 						
 						break;
 					}
@@ -499,6 +490,7 @@ public class BluetoothConnectionService  {
 		// Write object with ObjectOutputStream
 		public void write(Object o) {
 			try {
+				
 				obj_out.writeObject(o);
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -540,15 +532,18 @@ public class BluetoothConnectionService  {
 
 	
 	
-	public void send(Object o) {
+	public boolean send(Object o) {
 		Log.d("NILS","Sending: "+o.toString());
 		
-		if(connected_T!=null)
+		if(connected_T!=null) {
 			connected_T.write(o);
+			return true;
+		}
 		
-		else
+		else {
 			Log.e("vortex","Write failed, no connection");
-
+			return false;
+		}
 	}
 
 
@@ -557,10 +552,21 @@ public class BluetoothConnectionService  {
 	}
 
 	public void stop() {
-		//drop reference to this object.
-		singleton = null;
 		gs.setSyncStatus(SyncStatus.stopped);
-		Toast.makeText(ctx, "Sync done", Toast.LENGTH_SHORT).show();
+		Toast.makeText(ctx, "Sync stopped", Toast.LENGTH_SHORT).show();
+		stopp();
+	}
+	
+	public void success() {
+		gs.setSyncStatus(SyncStatus.stopped);
+		Toast.makeText(ctx, "Sync successful", Toast.LENGTH_SHORT).show();
+		stopp();
+	}
+	
+	private void stopp() {
+		//drop reference to this object.
+		Log.e("vortex","STOP CALLED ON BLUETOOTH. Syncstatus: "+gs.getSyncStatus().name());
+		singleton = null;
 		if (client!=null)
 			client.cancel();
 		if (server!=null)
@@ -570,10 +576,9 @@ public class BluetoothConnectionService  {
 		connected_T=null;
 		if(BluetoothAdapter.getDefaultAdapter().isEnabled())
 			BluetoothAdapter.getDefaultAdapter().disable();
-		gs.setSyncStatus(SyncStatus.stopped);
-		Intent intent = new Intent();
-		intent.setAction(SYNK_SERVICE_STOPPED);
-		ctx.sendBroadcast(intent);
+		
+		
+
 		try {
 			ctx.unregisterReceiver(brr);
 		} catch (IllegalArgumentException e) {
@@ -581,6 +586,7 @@ public class BluetoothConnectionService  {
 		}
 		
 	}
+	
 
 
 	

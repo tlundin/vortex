@@ -1,6 +1,8 @@
 package com.teraim.vortex;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.ConnectException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +13,9 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 
 import com.teraim.vortex.bluetooth.BluetoothConnectionService;
@@ -308,7 +313,7 @@ public class GlobalState  {
 		waiting_for_ack,		
 		ack_received, 
 		sending, 
-		waiting_for_connection_to_close, 
+		waiting_for_connection_to_close, started, restarting, insert_update_message, 
 
 	}
 	public SyncStatus getSyncStatus() {
@@ -317,6 +322,10 @@ public class GlobalState  {
 
 	public void setSyncStatus(SyncStatus status) {
 		syncStatus = status;
+		Intent intent = new Intent();
+		intent.setAction(BluetoothConnectionService.STATUS);
+		intent.putExtra("status", status.name());
+		sendSyncEvent(intent);
 	}
 
 
@@ -464,11 +473,45 @@ public class GlobalState  {
 	}
 
 
+	Handler mHandler= new Handler(Looper.getMainLooper()) {
+	      
+        @Override
+		public void handleMessage(Message msg) {
+        	Intent intent =null;
+
+        	if(msg.obj instanceof String) {
+        	Log.d("vortex","IN HANDLE MESSAGE WITH MSG: "+msg.toString());
+        	String s = (String)msg.obj;
+        	intent = new Intent();
+    		intent.setAction(s);
+        	} else
+        		if (msg.obj instanceof Intent)
+        			intent = (Intent)msg.obj;
+    		if (intent!=null)
+    			getContext().sendBroadcast(intent);
+    		else
+    			Log.e("vortex","Intent was null in handleMessage");
+        	
+		}
+
+		
+	};
+
+	
+	public void sendSyncEvent(Intent intent) {
+		Message m = Message.obtain(mHandler);
+		m.obj=intent;
+		m.sendToTarget();
+	}
 
 	public void sendEvent(String action) {
-		Intent intent = new Intent();
-		intent.setAction(action);
-		getContext().sendBroadcast(intent);
+		Log.d("vortex","IN SEND EVENT WITH ACTION "+action);
+		if (mHandler!=null) {
+			Message m = Message.obtain(mHandler);
+			m.obj=action;
+			m.sendToTarget();
+		} else
+			Log.e("vortex","NO MESSAGE NO HANDLER!!");
 	}
 
 	SyncMessage message;
@@ -516,8 +559,8 @@ public class GlobalState  {
 					switch (which){
 					case DialogInterface.BUTTON_POSITIVE:
 						Log.d("nils","Trying to start bt-service");
-						setSyncStatus(SyncStatus.searching);
 						//Create a singleton that will send all data.
+						setSyncStatus(SyncStatus.searching);
 						BluetoothConnectionService.initialize(getContext());
 						break;
 
@@ -555,7 +598,7 @@ public class GlobalState  {
 	}
 
 
-	public boolean triggerTransfer() {
+	public boolean triggerTransfer() throws IOException {
 		Log.d("nils","In trigger transfer..");	
 		setSyncStatus(SyncStatus.reading_data_from_db);
 		sendEvent(BluetoothConnectionService.SYNK_INITIATE);
@@ -571,9 +614,11 @@ public class GlobalState  {
 			Log.d("nils","[SENDING_SYNC-->"+changes.length+" rows]");			
 
 			setSyncStatus(SyncStatus.sending);
-			BluetoothConnectionService.getSingleton().send(changes);
-			return true;
+			boolean success = BluetoothConnectionService.getSingleton().send(changes);
+			
+			if (!success) throw new IOException();
 		}
+		return true;
 	}
 
 
@@ -588,12 +633,8 @@ public class GlobalState  {
 			Log.e("nils","Change: "+se.getChange());
 
 		}
-
-		sendEvent(BluetoothConnectionService.SYNK_BLOCK_UI);
 		db.synchronise(ses, myVarCache,this);
-		sendEvent(BluetoothConnectionService.SYNK_UNBLOCK_UI);
-
-
+		
 	}
 
 	public DrawerMenu getDrawerMenu() {
@@ -789,6 +830,8 @@ public class GlobalState  {
 	public File getCachedFileFromUrl(String url) {
 		return Tools.getCachedFile(url, Constants.VORTEX_ROOT_DIR+globalPh.get(PersistenceHelper.BUNDLE_NAME)+"/cache/");
 	}
+
+	
 
 
 

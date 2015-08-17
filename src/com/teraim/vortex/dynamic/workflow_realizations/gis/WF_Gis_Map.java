@@ -1,9 +1,5 @@
 package com.teraim.vortex.dynamic.workflow_realizations.gis;
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,13 +12,10 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.BitmapRegionDecoder;
 import android.graphics.Color;
 import android.graphics.Rect;
-import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Handler;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.ActionMode;
 import android.view.Gravity;
@@ -94,7 +87,7 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 	private List<FullGisObjectConfiguration> myGisObjectTypes;
 	private Button createBackB;
 	private Button createOkB;
-
+	private TextView selectedT;
 
 
 	private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
@@ -265,6 +258,9 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 				}
 			});
 		}
+		
+		selectedT = (TextView)avstRL.findViewById(R.id.selectedT);
+		
 		unlockB = (Button)avstRL.findViewById(R.id.unlockB);
 
 		unlockB.setOnClickListener(new OnClickListener() {
@@ -487,15 +483,18 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 				riktTS.setText(text);
 			}
 		}
+		
+		public void setSelectedObjectText(String txt) {
+			selectedT.setText(txt);
+		}
 		public void setVisibleAvstRikt(boolean isVisible) {
-			if (isVisible)
+			if (isVisible) 
 				avstRL.setVisibility(View.VISIBLE);
 			else
 				avstRL.setVisibility(View.INVISIBLE);
 		}
 
 		public void setVisibleCreate(boolean isVisible) {
-			Log.e("vortex","setvisiblecreate called");
 			if (isVisible)
 				createMenuL.setVisibility(View.VISIBLE);
 			else

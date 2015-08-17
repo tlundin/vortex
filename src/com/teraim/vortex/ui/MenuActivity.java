@@ -8,6 +8,7 @@ import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
+
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Typeface;
@@ -22,10 +23,9 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.teraim.vortex.GlobalState;
-import com.teraim.vortex.Start;
-import com.teraim.vortex.GlobalState.ErrorCode;
 import com.teraim.vortex.GlobalState.SyncStatus;
 import com.teraim.vortex.R;
+import com.teraim.vortex.Start;
 import com.teraim.vortex.bluetooth.BluetoothConnectionService;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.utils.PersistenceHelper;
@@ -42,6 +42,8 @@ public class MenuActivity extends Activity {
 	private GlobalState gs;
 	private PersistenceHelper globalPh;
 	private AlertDialog x;
+	private boolean syncIsRunning=false;
+
 	
 	public final static String REDRAW = "com.teraim.vortex.menu_redraw";
 	public static final String INITDONE = "com.teraim.vortex.init_done";
@@ -57,14 +59,20 @@ public class MenuActivity extends Activity {
 		.setTitle("Synchronizing")
 		.setMessage("Receiving data..standby") 
 				.setIcon(android.R.drawable.ic_dialog_alert)
-				.setCancelable(false)
+				.setCancelable(true)
+				.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+					
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						BluetoothConnectionService.getSingleton().stop();
+					}
+				})
 				.create();
 		
 		
 		
 		brr = new BroadcastReceiver() {
 			boolean inSameSame=false;
-			private int currentBlockCount;
 			boolean inVersionMismatch=false;
 			@Override
 			public void onReceive(Context ctx, Intent intent) {
@@ -94,6 +102,19 @@ public class MenuActivity extends Activity {
 						.show();
 
 				}
+				else if (intent.getAction().equals(BluetoothConnectionService.BLUETOOTH_RESTART_REQUIRED)) {
+					new AlertDialog.Builder(MenuActivity.this)
+					.setTitle("Blåtandsproblem")
+					.setMessage("Ett fel har uppstått i blåtandskopplingen. Vänligen starta om båda dosorna.") 
+					.setIcon(android.R.drawable.ic_dialog_alert)
+					.setCancelable(false)
+					.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which)  {
+						}
+
+					}).show();
+				}
 				else if (intent.getAction().equals(BluetoothConnectionService.SAME_SAME_SYNDROME)) {
 
 					if (!inSameSame) {
@@ -118,18 +139,38 @@ public class MenuActivity extends Activity {
 					initdone=true;
 				else if (intent.getAction().equals(INITSTARTS))
 					initdone=false;
-				else if (intent.getAction().equals(BluetoothConnectionService.SYNK_SERVICE_STARTED)) {
-					currentBlockCount = 0;
-					x.setMessage("Bluetooth started...looking for other device");
-					x.show();
-					Log.d("vortex","SYNK_BLOCK_UI X!!!!");
+
+				else if (intent.getAction().equals(BluetoothConnectionService.STATUS)) {
+					String status=(intent.getStringExtra("status"));
+					
+					SyncStatus ss = SyncStatus.valueOf(status);
+					switch (ss) {
+					case stopped:
+						syncIsRunning=false;	
+						x.cancel();
+						break;
+						
+					case searching:
+						x.setMessage("Bluetooth started...looking for other device");
+						x.show();
+						syncIsRunning=true;
+						break;
+						
+					case waiting_for_ping:
+						x.setMessage("Waiting for ping");
+						break;
+						
+					case insert_update_message:
+						x.setMessage("Inserting into DB: ["+intent.getIntExtra("current",0)+"/"+intent.getIntExtra("total",0)+"]");
+						break;
+					default:
+						x.setMessage(status);
+						break;
+					}
+					
+					
 				}
-				else if (intent.getAction().equals(BluetoothConnectionService.SYNK_SERVICE_STOPPED)) 
-					x.cancel();
-				else if (intent.getAction().equals(BluetoothConnectionService.PING_FROM_UPDATE)) {
-					currentBlockCount+=10;
-					x.setMessage("Writing data: "+currentBlockCount+"\n("+gs.getSyncStatus().name()+")");
-				} else if (intent.getAction().equals(BluetoothConnectionService.VERSION_MISMATCH)) {
+				 else if (intent.getAction().equals(BluetoothConnectionService.VERSION_MISMATCH)) {
 					if (!inSameSame && !inVersionMismatch) {
 						inVersionMismatch=true;
 						new AlertDialog.Builder(MenuActivity.this)
@@ -155,19 +196,14 @@ public class MenuActivity extends Activity {
 		};
 		//Listen for bluetooth events.
 		IntentFilter filter = new IntentFilter();
-		filter.addAction(BluetoothConnectionService.SYNK_SERVICE_STARTED);
-		filter.addAction(BluetoothConnectionService.SYNK_SERVICE_STOPPED);
-		filter.addAction(BluetoothConnectionService.SYNK_SERVICE_CONNECTED);
+		filter.addAction(BluetoothConnectionService.STATUS);
 		filter.addAction(BluetoothConnectionService.SYNK_NO_BONDED_DEVICE);
 		filter.addAction(BluetoothConnectionService.SYNK_INITIATE);
 		filter.addAction(BluetoothConnectionService.SYNK_DATA_RECEIVED);
 		filter.addAction(BluetoothConnectionService.SAME_SAME_SYNDROME);
-		filter.addAction(BluetoothConnectionService.SYNK_DATA_TRANSFER_DONE);
 		filter.addAction(BluetoothConnectionService.MASTER_CHANGED_MY_CONFIG);
-		filter.addAction(BluetoothConnectionService.SYNK_BLOCK_UI);
-		filter.addAction(BluetoothConnectionService.SYNK_UNBLOCK_UI);
-		filter.addAction(BluetoothConnectionService.PING_FROM_UPDATE);
 		filter.addAction(BluetoothConnectionService.VERSION_MISMATCH);
+		filter.addAction(BluetoothConnectionService.BLUETOOTH_RESTART_REQUIRED);
 		filter.addAction(INITDONE);		
 		filter.addAction(INITSTARTS);	
 		filter.addAction(REDRAW);
@@ -250,7 +286,10 @@ public class MenuActivity extends Activity {
 		}
 		globalPh = gs.getGlobalPreferences();
 		Log.d("vortex","Global prefs: "+gs.getGlobalPreferences()+" isdev "+globalPh.getB(PersistenceHelper.DEVELOPER_SWITCH));
-		mnu[0].setTitle("Osynkat: "+gs.getDb().getNumberOfUnsyncedEntries());
+		if (!syncIsRunning)
+			mnu[0].setTitle("Osynkat: "+gs.getDb().getNumberOfUnsyncedEntries());
+		else 
+			mnu[0].setTitle("Synkar..");
 		String mContextH = "Context: []";
 		Map<String, String> hash = gs.getCurrentKeyHash();
 		if (hash!=null)

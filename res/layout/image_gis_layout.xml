@@ -108,6 +108,16 @@
                     android:textSize="30sp"
                     android:textStyle="bold" />
 
+                <TextView
+                    android:id="@+id/selectedT"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
+                    android:text="Large Text"
+                    android:textAppearance="?android:attr/textAppearanceLarge"
+                    android:textStyle="bold"
+                    android:textColor="@color/white" />
+	
                 <Button
                     android:id="@+id/startB"
                     android:layout_width="match_parent"

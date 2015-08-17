@@ -83,6 +83,9 @@ xmlns:android="http://schemas.android.com/apk/res/android" >
             android:dialogMessage="Backup folder path. Do not change this if you are not absolutely sure you know what you are doing."    
             android:defaultValue="" />
 
+<Preference android:title="Reset sync"
+                android:key="@string/resetSyncButton"
+                android:summary="Use when you need to realign to another sync partner."/>
 </PreferenceCategory>
 
 
