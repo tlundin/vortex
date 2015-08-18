@@ -340,6 +340,7 @@ public class DbHelper extends SQLiteOpenHelper {
 				} else {
 					Log.e("nils","Export of file failed");
 					c.close();
+					GlobalState.getInstance().getLogger().addRow("EXPORT FILENAME: ["+Constants.EXPORT_FILES_DIR+exportFileName+"."+exporter.getType()+"]");
 					res = new Report(ExportReport.FILE_WRITE_ERROR);
 				}
 				globalPh.backup(exportFileName+"."+exporter.getType(),r.result);

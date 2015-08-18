@@ -11,6 +11,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import android.os.AsyncTask;
 import android.util.JsonReader;
 import android.util.Log;
+import android.util.MalformedJsonException;
 import android.util.Xml;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -163,13 +164,15 @@ public abstract class Loader extends AsyncTask<ConfigurationModule ,Integer,Load
 		if (lr!=null)
 			return lr;
 		rowC=0;
-		
+
 		while((lr=m.parse(parser))==null) {
 			if ((rowC++%20)==0) 
 				this.publishProgress(rowC);				
 			
 		}
+
 		return lr;
+		
 	}
 	
 	

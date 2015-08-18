@@ -165,6 +165,7 @@ public class Table implements Serializable {
 	}
 
 	public int getColumnIndex(String c) {
+		Log.d("vortex","My columns: "+myColumns.toString());
 		for (int i=0;i<myColumns.size();i++)
 			if (c.equals(myColumns.get(i)))
 				return i;

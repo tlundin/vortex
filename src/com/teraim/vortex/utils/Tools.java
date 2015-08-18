@@ -14,6 +14,7 @@ import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.StreamCorruptedException;
+import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -844,6 +845,15 @@ public class Tools {
 		}
 		else 
 			return null;
+	}
+
+	public static void printErrorToLog(LoggerI o, Exception e) {
+		o.addRow("");
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter(sw);
+		e.printStackTrace(pw);		
+		o.addRedText(sw.toString());
+		e.printStackTrace();
 	}
 
 }

@@ -795,7 +795,8 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 				canvas.drawPath(p, createPaint(color,Paint.Style.STROKE,0));
 				if (layerO.showLabels()) {
 					xy = translateMapToRealCoordinates(go.getLocation());
-					drawGopLabel(canvas,xy,go.getLabel(),0,bCursorPaint,txtPaint);
+					if (xy!=null)
+						drawGopLabel(canvas,xy,go.getLabel(),0,bCursorPaint,txtPaint);
 				}
 				
 			}

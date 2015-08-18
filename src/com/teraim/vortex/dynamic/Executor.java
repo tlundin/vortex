@@ -77,6 +77,7 @@ import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.ui.MenuActivity;
 import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
+import com.teraim.vortex.utils.Tools;
 
 /**
  * Executor - executes workflow blocks.  
@@ -668,12 +669,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 			}
 
 		} catch (Exception e) {
-			o.addRow("");
-			StringWriter sw = new StringWriter();
-			PrintWriter pw = new PrintWriter(sw);
-			e.printStackTrace(pw);		
-			o.addRedText(sw.toString());
-			e.printStackTrace();
+			Tools.printErrorToLog(o,e);
 		}
 	}
 

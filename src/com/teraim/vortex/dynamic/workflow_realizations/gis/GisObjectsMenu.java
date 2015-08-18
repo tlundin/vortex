@@ -30,10 +30,10 @@ import com.teraim.vortex.gis.GisImageView;
  */
 
 public class GisObjectsMenu extends View {
-	private static final int Padding = 15,InnerPadding = 12;
-	private static final int NoOfButtonsPerRow = 6;
+	private static final int Padding = 15,InnerPadding = 20;
+	private static final int NoOfButtonsPerRow = 5;
 	private static final int MAX_ROWS = 5;
-	private static final int SpaceBetweenHeaderAndButton = 3;
+	private static final int SpaceBetweenHeaderAndButton = 5;
 	Map<GisObjectType,Set<FullGisObjectConfiguration>> menuGroupsM;
 	private Paint headerTextP;
 	private Paint gopButtonBackgroundP;
@@ -247,6 +247,7 @@ public class GisObjectsMenu extends View {
 					col=0;
 					row++;
 					i++;
+					totalHeaderHeight+=SpaceBetweenHeaderAndButton;
 				}
 
 			}
@@ -280,17 +281,17 @@ public class GisObjectsMenu extends View {
 				canvas.drawRoundRect(r,5f,5f,currB.isSelected?gopButtonBackgroundSP:gopButtonBackgroundP);
 				canvas.drawRoundRect(r,5f,5f,gopButtonEdgeP);
 				//Draw symbol or icon inside Rect.
-				int iconPadding=15; int radius = 15;
-				RectF rect = new RectF(r.left+r.width()/2-radius, r.top+iconPadding, r.left+r.width()/2+radius, r.top+iconPadding+radius*2);
+				int iconPadding=10; int radius = 15;
+				RectF rect = new RectF(r.left+iconPadding, r.top+iconPadding, r.right-iconPadding, r.bottom-iconPadding);
 
 				if (fop.getIcon()==null) {
 					if (fop.getShape()==PolyType.circle) {
 						Log.d("vortex","circle!!");
 						//draw circle at rect mid.
-						canvas.drawCircle(r.left+r.width()/2, r.top+radius+iconPadding, radius, myGis.createPaint(fop.getColor(),fop.getStyle()));
+						canvas.drawCircle(r.left+r.width()/2, r.top+r.height()/2, r.width()/2-iconPadding*2,(fop.getStyle()==Style.FILL? (currB.isSelected?thinWhiteEdgeP:thinBlackEdgeP):myGis.createPaint(fop.getColor(),fop.getStyle())) );
 						//since background is white, add a black edge.
-						if (fop.getStyle()==Style.FILL)
-							canvas.drawCircle(r.left+r.width()/2, r.top+radius+iconPadding, radius, currB.isSelected?thinWhiteEdgeP:thinBlackEdgeP);
+						//if (fop.getStyle()==Style.FILL)
+						//	canvas.drawCircle(r.left+r.width()/2, r.top+r.height()/2, r.width()/2-iconPadding*2, currB.isSelected?thinWhiteEdgeP:thinBlackEdgeP);
 					} else {
 						Log.d("vortex","rect!!");
 						canvas.drawRect(rect, myGis.createPaint(fop.getColor(),fop.getStyle()));
@@ -301,7 +302,7 @@ public class GisObjectsMenu extends View {
 				} else {
 					canvas.drawBitmap(fop.getIcon(),null , rect, null);
 				}
-				canvas.drawText(fop.getName(), r.left+r.width()/2, r.top+radius*2+iconPadding+blackTextP.getTextSize(),currB.isSelected?whiteTextP:blackTextP);
+				canvas.drawText(fop.getName(), r.left+r.width()/2, r.bottom+blackTextP.getTextSize(),currB.isSelected?blackTextP:whiteTextP);
 
 			}
 			totalHeaderHeight += headerTextP.getTextSize()+SpaceBetweenHeaderAndButton;

@@ -13,6 +13,7 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import android.os.Build;
 import android.util.Log;
+import android.util.MalformedJsonException;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -69,7 +70,10 @@ public class WebLoader extends Loader {
 			return new LoadResult(module,ErrorCode.BadURL);
 
 		} catch (IOException e) {
-			return new LoadResult(module,ErrorCode.IOError);
+			if (e instanceof MalformedJsonException)
+				return new LoadResult(module,ErrorCode.ParseError);
+			else
+				return new LoadResult(module,ErrorCode.IOError);
 		} catch (XmlPullParserException e) {
 			return new LoadResult(module,ErrorCode.ParseError);
 		} catch (JSONException e) {

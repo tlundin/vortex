@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -97,17 +98,33 @@ public class VariablesConfiguration extends CSVConfigurationModule {
 				return new LoadResult(this,ErrorCode.ParseError,"Corrupt header");
 			}
 			//Remove duplicte group column and varname if group file present. 
+			
 			if (gc!=null) {
+				boolean foundFunctionalGroupHeader=false,foundVarNameHeader=false;
 				Collections.addAll(cheaderL,groupsFileHeaderS);
 				Log.d("vortex","header now "+cheaderL.toString());
-
-				for ( int i = 0; i < cheaderL.size(); i++) {
-					if (cheaderL.get(i).equals(VariableConfiguration.Col_Functional_Group))
-						cheaderL.remove(i);
+				
+				Iterator<String> it = cheaderL.iterator();
+				while(it.hasNext()) {
+					String header = it.next();
+					if (header.equals(VariableConfiguration.Col_Functional_Group)) {
+						Log.d("vortex","found column Functional Group "); 
+						foundFunctionalGroupHeader=true;
+						it.remove();
+						}
 					else
-						if (cheaderL.get(i).equals(VariableConfiguration.Col_Variable_Name))
-							cheaderL.remove(i);
+						if (header.equals(VariableConfiguration.Col_Variable_Name)) {
+							Log.d("vortex","found column VariableName");
+							foundVarNameHeader=true;
+							it.remove();
+						}
 				}
+				if (!foundFunctionalGroupHeader||!foundVarNameHeader) {
+					o.addRow("");
+					o.addRedText("Could not find required columns "+VariableConfiguration.Col_Functional_Group+" or "+VariableConfiguration.Col_Variable_Name);
+					return new LoadResult(this,ErrorCode.ParseError,"Corrupt header");
+				}
+
 			}
 			List<String> vheaderL = new ArrayList<String>(trimmed(varPatternHeaderS));
 			vheaderL.addAll(cheaderL);

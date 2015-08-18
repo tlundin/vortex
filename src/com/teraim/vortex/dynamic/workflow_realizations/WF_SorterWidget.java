@@ -108,8 +108,20 @@ public class WF_SorterWidget extends WF_Widget {
 				if (cIndex != -1) {
 					Set<String> txts = new TreeSet<String>();
 					Button b;
-					for(List<String>row:rows)
-						txts.add(row.get(cIndex));
+					
+					for(List<String>row:rows) {
+						if (row.size()>cIndex)
+							txts.add(row.get(cIndex));
+						else {
+							o.addRow("");
+							o.addRedText("SorterWidget: column to sort on ["+displayField+"] was found in column# "+(cIndex+1)+" but the current row only contains "+row.size()+" elements");
+							Log.e("vortex","SorterWidget: column to sort on ["+displayField+"] was found in column# "+(cIndex+1)+" but the row is shorter:"+row.size());
+							Log.e("vortex","Current row: "+row.toString() );
+							o.addRow("");
+							o.addRow("Current Columns:"+t.getColumnHeaders().toString());
+							o.addRow("Current row: "+row.toString() );
+						}
+					}
 					for (String txt:txts)				
 						if (txt !=null && txt.trim().length()>0) {
 							b = new Button(ctx.getContext());

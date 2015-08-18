@@ -15,6 +15,7 @@ import org.json.JSONException;
 import android.util.JsonReader;
 import android.util.JsonToken;
 import android.util.Log;
+import android.util.MalformedJsonException;
 
 import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.types.Location;
@@ -28,6 +29,7 @@ import com.teraim.vortex.loadermodule.LoadResult.ErrorCode;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.utils.DbHelper;
 import com.teraim.vortex.utils.PersistenceHelper;
+import com.teraim.vortex.utils.Tools;
 
 public class GisObjectConfiguration extends JSONConfigurationModule {
 
@@ -49,6 +51,7 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 			myType =( myType.substring(0,1).toUpperCase() + myType.substring(1));
 			Log.e("vortex","MYTYPE: "+myType);
 		}
+		
 	}
 
 	private static String fixedLength(String fileName) {
@@ -93,21 +96,23 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 			} else
 				reader.skipValue();
 		}
+		o.addRow("");
+		o.addRedText("Could not find beginning of data (features) in input file");
 		return new LoadResult(this,ErrorCode.IOError);
 	}
 
 	//Parses one row of data, then updates status.
 	@Override
-	public LoadResult parse(JsonReader reader) throws IOException {
+	public LoadResult parse(JsonReader reader) throws JSONException,IOException {
 		Location myLocation;
-
+		try {
 		JsonToken tag = reader.peek();
 		if (tag.equals(JsonToken.END_ARRAY)) {
 			//end array means we are done.
 			this.setEssence();
 			reader.close();
 			o.addRow("");
-			o.addText("Found "+myGisObjects.size()+" objekt");
+			o.addText("Found "+myGisObjects.size()+" objects");
 			freezeSteps = myGisObjects.size();
 			Log.d("vortex","Found "+myGisObjects.size()+" objekt");
 			//freezeSteps=myBlocks.size();
@@ -258,8 +263,12 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 			return null;
 		} else {
 			o.addRow("");
-			o.addRedText("Parse error, expected object");
+			o.addRedText("Parse error when parsing file "+fileName+". Expected Object type at line ");
 			return new LoadResult(this,ErrorCode.ParseError);
+		}
+		} catch (MalformedJsonException je) {
+			Tools.printErrorToLog(o, je);
+			throw(je);
 		}
 	}
 

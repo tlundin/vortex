@@ -9,6 +9,7 @@ import android.content.Context;
 import android.util.JsonWriter;
 import android.util.Log;
 
+import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisConstants;
 import com.teraim.vortex.non_generics.NamedVariables;
 import com.teraim.vortex.utils.DbHelper.DBColumnPicker;
@@ -173,7 +174,9 @@ public class GeoJSONExporter extends Exporter {
 			}else
 				Log.e("vortex","EMPTY!!!");
 		} catch (IOException e) {
-			e.printStackTrace();
+			
+			Tools.printErrorToLog(GlobalState.getInstance().getLogger(), e);
+			
 			cp.close();
 		} finally {
 			cp.close();
