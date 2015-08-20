@@ -8,11 +8,13 @@ import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
-
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,6 +29,7 @@ import com.teraim.vortex.GlobalState.SyncStatus;
 import com.teraim.vortex.R;
 import com.teraim.vortex.Start;
 import com.teraim.vortex.bluetooth.BluetoothConnectionService;
+import com.teraim.vortex.bluetooth.DataSyncSessionManager;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.utils.PersistenceHelper;
 
@@ -35,16 +38,16 @@ import com.teraim.vortex.utils.PersistenceHelper;
  * @author Terje
  *
  */
-public class MenuActivity extends Activity {
+public class MenuActivity extends Activity  {
 
 
 	private BroadcastReceiver brr;
 	private GlobalState gs;
 	private PersistenceHelper globalPh;
-	private AlertDialog x;
+	private AlertDialog uiBlockerWindow;
 	private boolean syncIsRunning=false;
+	private MenuActivity me;
 
-	
 	public final static String REDRAW = "com.teraim.vortex.menu_redraw";
 	public static final String INITDONE = "com.teraim.vortex.init_done";
 	public static final String INITSTARTS = "com.teraim.vortex.init_done";
@@ -52,25 +55,13 @@ public class MenuActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);	
-		final MenuActivity me = this;
+		me = this;
 
-		
-		x =  new AlertDialog.Builder(MenuActivity.this)
-		.setTitle("Synchronizing")
-		.setMessage("Receiving data..standby") 
-				.setIcon(android.R.drawable.ic_dialog_alert)
-				.setCancelable(true)
-				.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
-					
-					@Override
-					public void onClick(DialogInterface dialog, int which) {
-						BluetoothConnectionService.getSingleton().stop();
-					}
-				})
-				.create();
-		
-		
-		
+
+
+
+
+
 		brr = new BroadcastReceiver() {
 			boolean inSameSame=false;
 			boolean inVersionMismatch=false;
@@ -134,7 +125,7 @@ public class MenuActivity extends Activity {
 						.show();
 					}
 				}
-				
+
 				else if (intent.getAction().equals(INITDONE))
 					initdone=true;
 				else if (intent.getAction().equals(INITSTARTS))
@@ -142,35 +133,35 @@ public class MenuActivity extends Activity {
 
 				else if (intent.getAction().equals(BluetoothConnectionService.STATUS)) {
 					String status=(intent.getStringExtra("status"));
-					
+
 					SyncStatus ss = SyncStatus.valueOf(status);
 					switch (ss) {
 					case stopped:
 						syncIsRunning=false;	
-						x.cancel();
+						uiBlockerWindow.cancel();
 						break;
-						
+
 					case searching:
-						x.setMessage("Bluetooth started...looking for other device");
-						x.show();
+						uiBlockerWindow.setMessage("Bluetooth started...looking for other device");
+						uiBlockerWindow.show();
 						syncIsRunning=true;
 						break;
-						
+
 					case waiting_for_ping:
-						x.setMessage("Waiting for ping");
+						uiBlockerWindow.setMessage("Waiting for ping");
 						break;
-						
+
 					case insert_update_message:
-						x.setMessage("Inserting into DB: ["+intent.getIntExtra("current",0)+"/"+intent.getIntExtra("total",0)+"]");
+						uiBlockerWindow.setMessage("Inserting into DB: ["+intent.getIntExtra("current",0)+"/"+intent.getIntExtra("total",0)+"]");
 						break;
 					default:
-						x.setMessage(status);
+						uiBlockerWindow.setMessage(status);
 						break;
 					}
-					
-					
+
+
 				}
-				 else if (intent.getAction().equals(BluetoothConnectionService.VERSION_MISMATCH)) {
+				else if (intent.getAction().equals(BluetoothConnectionService.VERSION_MISMATCH)) {
 					if (!inSameSame && !inVersionMismatch) {
 						inVersionMismatch=true;
 						new AlertDialog.Builder(MenuActivity.this)
@@ -196,14 +187,14 @@ public class MenuActivity extends Activity {
 		};
 		//Listen for bluetooth events.
 		IntentFilter filter = new IntentFilter();
-		filter.addAction(BluetoothConnectionService.STATUS);
-		filter.addAction(BluetoothConnectionService.SYNK_NO_BONDED_DEVICE);
-		filter.addAction(BluetoothConnectionService.SYNK_INITIATE);
-		filter.addAction(BluetoothConnectionService.SYNK_DATA_RECEIVED);
-		filter.addAction(BluetoothConnectionService.SAME_SAME_SYNDROME);
-		filter.addAction(BluetoothConnectionService.MASTER_CHANGED_MY_CONFIG);
-		filter.addAction(BluetoothConnectionService.VERSION_MISMATCH);
-		filter.addAction(BluetoothConnectionService.BLUETOOTH_RESTART_REQUIRED);
+		//		filter.addAction(BluetoothConnectionService.STATUS);
+		//		filter.addAction(BluetoothConnectionService.SYNK_NO_BONDED_DEVICE);
+		//		filter.addAction(BluetoothConnectionService.SYNK_INITIATE);
+		//		filter.addAction(BluetoothConnectionService.SYNK_DATA_RECEIVED);
+		//		filter.addAction(BluetoothConnectionService.SAME_SAME_SYNDROME);
+		//		filter.addAction(BluetoothConnectionService.MASTER_CHANGED_MY_CONFIG);
+		//		filter.addAction(BluetoothConnectionService.VERSION_MISMATCH);
+		//		filter.addAction(BluetoothConnectionService.BLUETOOTH_RESTART_REQUIRED);
 		filter.addAction(INITDONE);		
 		filter.addAction(INITSTARTS);	
 		filter.addAction(REDRAW);
@@ -211,7 +202,7 @@ public class MenuActivity extends Activity {
 		this.registerReceiver(brr, filter);
 		//Listen for Service started/stopped event.
 
-		
+
 
 	}
 
@@ -258,7 +249,7 @@ public class MenuActivity extends Activity {
 	private boolean initdone=false;
 	private void CreateMenu(Menu menu)
 	{
-		
+
 		for(int c=0;c<mnu.length-1;c++) {
 			mnu[c]=menu.add(0,c,c,"");
 			mnu[c].setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM|MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);	
@@ -302,15 +293,27 @@ public class MenuActivity extends Activity {
 		//If (title is empty, don't show r-p-d-l status
 		mnu[1].setVisible(globalPh.getB(PersistenceHelper.SHOW_CONTEXT));		
 		mnu[2].setVisible(globalPh.getB(PersistenceHelper.DEVELOPER_SWITCH));	
-		
+
 	}
+
+	DataSyncSessionManager syncMgr=null;
 
 	private boolean MenuChoice(MenuItem item) {
 
 		switch (item.getItemId()) {
 		case 0:
-			if (gs!=null)
-				gs.setupConnection(MenuActivity.this);
+			if (syncMgr==null) 
+				syncMgr = new DataSyncSessionManager(MenuActivity.this, new UIProvider(this) {
+					@Override
+					public void onClose() {
+						me.onCloseSync();
+
+					};
+				});
+			else
+				Log.d("vortex","Discarded...syncmgr is not null");
+			//if (gs!=null)
+			//	gs.setupConnection(MenuActivity.this);
 			break;
 		case 1:
 			Map<String, String> hash = gs.getCurrentKeyHash();
@@ -325,7 +328,7 @@ public class MenuActivity extends Activity {
 			.setNeutralButton("Ok",new Dialog.OnClickListener() {				
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
-					
+
 				}
 			} )
 			.show();
@@ -364,10 +367,10 @@ public class MenuActivity extends Activity {
 				@Override
 				public void onClick(View v) {
 					sv.post(new Runnable() {
-					    @Override
-					    public void run() {
-					        sv.fullScroll(ScrollView.FOCUS_DOWN);
-					    }
+						@Override
+						public void run() {
+							sv.fullScroll(ScrollView.FOCUS_DOWN);
+						}
 					});
 				}
 			});
@@ -393,6 +396,195 @@ public class MenuActivity extends Activity {
 		}
 		return false;
 	}
+
+
+	protected void onCloseSync() {
+		Log.d("vortex","IN on close SYNC!!");
+		if (syncMgr!=null) {
+			Log.d("vortex","syncmgr not null!");
+			syncMgr.destroy();
+			syncMgr=null;
+			refreshStatusRow();
+		}
+	}
+
+
+	/**
+	 * 
+	 * @author Terje
+	 *
+	 * Helper class that allows other threads to interact with the UI main thread. 
+	 * Caller must override onClose for specific actions to happen when aborting sync.
+	 */
+
+	public class UIProvider {
+
+		public static final int LOCK =1, UNLOCK=2, ALERT = 3, UPDATE_SUB = 4, CONFIRM = 5, UPDATE = 6; 
+		private String row1="",row2="";
+		private AlertDialog uiBlockerWindow=null;  
+
+		Handler mHandler= new Handler(Looper.getMainLooper()) {
+			boolean twoButton=false;
+
+			private void oneButton() {
+				dismiss();
+				uiBlockerWindow =  new AlertDialog.Builder(mContext)
+				.setTitle("Synchronizing")
+				.setMessage("Receiving data..standby") 
+				.setIcon(android.R.drawable.ic_dialog_alert)
+				.setCancelable(false)
+				.setNegativeButton("CLOSE", new DialogInterface.OnClickListener() {
+
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+
+						onClose();
+					}
+				})
+				.show();
+				twoButton=false;
+			}
+
+			private void twoButton(final ConfirmCallBack cb) {
+				dismiss();
+				uiBlockerWindow =  new AlertDialog.Builder(mContext)
+				.setTitle("Synchronizing")
+				.setMessage("Receiving data..standby") 
+				.setIcon(android.R.drawable.ic_dialog_alert)
+				.setCancelable(false)
+				.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						//onClose must be overridden. 
+						onClose();				
+					}
+				})
+				.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+
+						cb.confirm();
+
+					}
+				})
+				.show();
+				twoButton=true;
+			}
+
+
+			private void dismiss() {
+				if (uiBlockerWindow!=null)
+					uiBlockerWindow.dismiss();
+			}
+
+			@Override
+			public void handleMessage(Message msg) {
+
+				switch (msg.what) {
+				case LOCK:
+					oneButton();
+					Log.d("vortex","I get here?");
+					break;
+				case UNLOCK:
+					uiBlockerWindow.cancel();
+					break;
+				case ALERT:
+					if (twoButton)
+						oneButton();
+					row1 = (String)msg.obj;
+					row2="";
+					uiBlockerWindow.setMessage(row1+"\n"+row2);
+					break;
+				case UPDATE:
+					row1 = (String)msg.obj;
+					uiBlockerWindow.setMessage(row1+"\n"+row2);
+					break;
+				case UPDATE_SUB:
+					row2 = (String)msg.obj;
+					uiBlockerWindow.setMessage(row1+"\n"+row2);
+					break;
+
+				case CONFIRM:
+					if (!twoButton)
+						twoButton((ConfirmCallBack)msg.obj);
+
+					break;
+
+				}
+
+
+			}
+
+
+		};
+		private Context mContext;
+
+		public UIProvider(Context context) {
+
+			mContext = context;
+		}
+
+
+
+
+
+		public void lock() {
+			Log.d("vortex","Lock called");
+			mHandler.obtainMessage(LOCK).sendToTarget();
+
+		}
+
+		/**
+		 * 
+		 * @param msg
+		 * Shows message and switched to one button dialog.
+		 */
+		public void alert(String msg) {
+			mHandler.obtainMessage(ALERT,msg).sendToTarget();
+
+		}
+		public void open() {
+			mHandler.obtainMessage(UNLOCK).sendToTarget();
+		}
+
+		public void setCounter(String msg) {
+			mHandler.obtainMessage(UPDATE_SUB,msg).sendToTarget();
+
+		}
+
+		public void onClose() {
+
+		}
+
+		/**
+		 * 
+		 * @param msg
+		 * Shows message and switched to two button dialog. Callback if positive ok is pressed. Otherwise onClose.
+		 */
+		public void confirm(String msg, final ConfirmCallBack cb) {
+			mHandler.obtainMessage(CONFIRM,cb).sendToTarget();
+			mHandler.obtainMessage(UPDATE,msg).sendToTarget();
+		}
+
+		/**
+		 * 
+		 * @param msg
+		 * Does not change dialog type.
+		 */
+		public void update(String msg) {
+			mHandler.obtainMessage(UPDATE,msg).sendToTarget();			
+		}
+
+
+
+
+
+	}
+
+
+
 
 
 }

@@ -50,16 +50,16 @@ public class GisMultiPointObject extends GisObject {
 		if (this.getWorkflow()==null)
 			return false;
 		//Only linestrings can be touched.
-		Log.d("vortex", "in istouch for linestr");
+		Log.d("vortex", "in istouch for linestr "+this.getLabel());
 		if (!isLineString()) {
-			Log.d("vortex", "this is no linestring...exiting.");
+			Log.e("vortex", "this is no linestring...exiting.");
 			return false;
 		}
 		if (myCoordinates == null||myCoordinates.isEmpty()) {
-			Log.d("vortex", "found no coordinates...exiting");
+			Log.e("vortex", "found no coordinates...exiting");
 			return false;
 		}
-		double distanceToClick = ClickThresholdInMeters;
+		distanceToClick = ClickThresholdInMeters;
 		for (int i=0;i<myCoordinates.size()-1;i++) {
 
 			Location A = Geomatte.subtract(myCoordinates.get(i),mapLocationForClick);

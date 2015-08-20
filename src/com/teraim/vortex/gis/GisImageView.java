@@ -448,10 +448,16 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 
 	public void createOk() {
 		GlobalState.getInstance().getDb().insertGisObject(newGisObj);
-		this.runSelectedWf(newGisObj);	
 		gisTypeToCreate=null;
-		newGisObj=null;
+		touchedBag = currentCreateBag;
 		currentCreateBag=null;
+		touchedGop = newGisObj;
+		newGisObj=null;
+		myMap.setSelectedObjectText(touchedGop.getLabel());
+		myMap.setVisibleAvstRikt(true);
+
+		this.redraw();
+		
 	}
 
 	private GisPointObject userGop;

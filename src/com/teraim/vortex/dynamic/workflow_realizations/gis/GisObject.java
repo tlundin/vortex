@@ -17,7 +17,7 @@ import com.teraim.vortex.utils.Tools;
 public class GisObject {
 
 	
-	protected static final double ClickThresholdInMeters = 25;
+	protected static final double ClickThresholdInMeters = 50;
 	protected double distanceToClick=-1;
 	private String label;
 	private Variable statusVar=null;

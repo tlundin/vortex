@@ -41,7 +41,7 @@ import com.teraim.vortex.utils.PersistenceHelper;
 
 public class Constants {
 
-	public final static float VORTEX_VERSION = 1.96f;
+	public final static float VORTEX_VERSION = 2.01f;
 
 
 	//String constants
@@ -210,6 +210,9 @@ public class Constants {
 
 
 	private static final String GPS_CONFIG_WEB_FOLDER = "gis_objects";
+
+
+	public static final String BLUETOOTH_NAME = "vortex";
 
 
 

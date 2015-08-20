@@ -416,8 +416,9 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 
 			@Override
 			public void onClick(View v) {
-				gisImageView.createOk();
 				setVisibleCreate(false);
+				//Will open the distance dialog, select the new object and close polygons.
+				gisImageView.createOk();
 			}
 		});
 
@@ -491,14 +492,14 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 			if (isVisible) 
 				avstRL.setVisibility(View.VISIBLE);
 			else
-				avstRL.setVisibility(View.INVISIBLE);
+				avstRL.setVisibility(View.GONE);
 		}
 
 		public void setVisibleCreate(boolean isVisible) {
 			if (isVisible)
 				createMenuL.setVisibility(View.VISIBLE);
 			else
-				createMenuL.setVisibility(View.INVISIBLE);
+				createMenuL.setVisibility(View.GONE);
 		}
 
 		public void showCenterButton(boolean isVisible) {

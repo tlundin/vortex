@@ -2,7 +2,6 @@ package com.teraim.vortex;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.ConnectException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,8 +18,8 @@ import android.os.Message;
 import android.util.Log;
 
 import com.teraim.vortex.bluetooth.BluetoothConnectionService;
+import com.teraim.vortex.bluetooth.ConnectionManager;
 import com.teraim.vortex.bluetooth.MessageHandler;
-import com.teraim.vortex.bluetooth.NothingToSync;
 import com.teraim.vortex.bluetooth.SyncEntry;
 import com.teraim.vortex.bluetooth.SyncMessage;
 import com.teraim.vortex.dynamic.VariableConfiguration;
@@ -82,6 +81,9 @@ public class GlobalState  {
 	private VarCache myVarCache;
 	private PersistenceHelper globalPh=null;
 	private Tracker myTracker;
+	private ConnectionManager myConnectionManager; 
+	
+	
 	public static GlobalState getInstance() {
 		if (singleton == null) {			
 			//singleton = new GlobalState(c.getApplicationContext());
@@ -131,6 +133,8 @@ public class GlobalState  {
 
 		myExecutor = new RuleExecutor(this);
 
+		myConnectionManager = new ConnectionManager(this);
+		
 		setSyncStatus(SyncStatus.stopped);
 
 	}
@@ -602,7 +606,7 @@ public class GlobalState  {
 		Log.d("nils","In trigger transfer..");	
 		setSyncStatus(SyncStatus.reading_data_from_db);
 		sendEvent(BluetoothConnectionService.SYNK_INITIATE);
-		SyncEntry[] changes = db.getChanges();
+		SyncEntry[] changes = db.getChanges(null);
 
 		Log.d("nils","Syncrequest received. Sending "+(changes==null?"no changes":changes.toString()));
 		if (changes==null) {
@@ -831,6 +835,10 @@ public class GlobalState  {
 		return Tools.getCachedFile(url, Constants.VORTEX_ROOT_DIR+globalPh.get(PersistenceHelper.BUNDLE_NAME)+"/cache/");
 	}
 
+	
+	public ConnectionManager getConnectionManager() {
+		return myConnectionManager;
+	}
 	
 
 

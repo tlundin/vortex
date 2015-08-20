@@ -3,7 +3,6 @@ package com.teraim.vortex.utils;
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -15,7 +14,6 @@ import java.util.concurrent.TimeUnit;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
@@ -23,21 +21,20 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
-import com.teraim.vortex.GlobalState.SyncStatus;
-import com.teraim.vortex.bluetooth.BluetoothConnectionService;
 import com.teraim.vortex.bluetooth.SyncEntry;
 import com.teraim.vortex.bluetooth.SyncEntryHeader;
+import com.teraim.vortex.bluetooth.VariableRowEntry;
 import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.types.ArrayVariable;
 import com.teraim.vortex.dynamic.types.Table;
 import com.teraim.vortex.dynamic.types.VarCache;
 import com.teraim.vortex.dynamic.types.Variable;
-import com.teraim.vortex.dynamic.types.Variable.DataType;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisConstants;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisObject;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.non_generics.DelyteManager;
 import com.teraim.vortex.non_generics.NamedVariables;
+import com.teraim.vortex.ui.MenuActivity.UIProvider;
 import com.teraim.vortex.utils.Exporter.ExportReport;
 import com.teraim.vortex.utils.Exporter.Report;
 
@@ -54,7 +51,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
 	private static final String VARID = "var",VALUE="value",TIMESTAMP="timestamp",LAG="lag",AUTHOR="author";
 	private static final String[] VAR_COLS = new String[] { TIMESTAMP, AUTHOR, LAG, VALUE };
-	private static final Set<String> MY_VALUES_SET = new HashSet<String>(Arrays.asList(VAR_COLS));
+	//	private static final Set<String> MY_VALUES_SET = new HashSet<String>(Arrays.asList(VAR_COLS));
 
 	private static final int NO_OF_KEYS = 10;
 	private static final String SYNC_SPLIT_SYMBOL = "_$_";
@@ -310,12 +307,12 @@ public class DbHelper extends SQLiteOpenHelper {
 				if (context.get(key).equals("*")) {
 					selection += col + " LIKE '%'";
 					if (it.hasNext())
-							selection += " AND ";
+						selection += " AND ";
 				} else {
-				selection += col+(it.hasNext()?"=? AND ":"=?");			
-				if (selArgs==null) 
-					selArgs = new ArrayList<String>();
-				selArgs.add(context.get(key));
+					selection += col+(it.hasNext()?"=? AND ":"=?");			
+					if (selArgs==null) 
+						selArgs = new ArrayList<String>();
+					selArgs.add(context.get(key));
 				}
 			}
 		}
@@ -399,32 +396,32 @@ public class DbHelper extends SQLiteOpenHelper {
 			//Ask for 500 rows per query.
 			String row;
 			//while (notDone) {
-				
-				c = db.query(TABLE_VARIABLES,null,
-						null,null,null,null,null,null);//offSet+",100"
-				if (c!=null) {
-					
-					int i = 0;
-					while (c.moveToNext()) {
-						row=(
-								c.getString(c.getColumnIndex("L1"))+"|"+
-										c.getString(c.getColumnIndex("L2"))+"|"+
-										c.getString(c.getColumnIndex("L3"))+"|"+
-										c.getString(c.getColumnIndex("L4"))+"|"+
-										c.getString(c.getColumnIndex("L5"))+"|"+
-										c.getString(c.getColumnIndex("L6"))+"|"+
-										c.getString(c.getColumnIndex("L7"))+"|"+
-										c.getString(c.getColumnIndex("L8"))+"|"+
-										c.getString(c.getColumnIndex("L9"))+"|"+
-										c.getString(c.getColumnIndex("L10"))+"|"+
-										c.getString(c.getColumnIndex("var"))+"|"+
-										c.getString(c.getColumnIndex("value")));
-						writer.println(row);
-						i++;
-					}
-					c.close();
+
+			c = db.query(TABLE_VARIABLES,null,
+					null,null,null,null,null,null);//offSet+",100"
+			if (c!=null) {
+
+				int i = 0;
+				while (c.moveToNext()) {
+					row=(
+							c.getString(c.getColumnIndex("L1"))+"|"+
+									c.getString(c.getColumnIndex("L2"))+"|"+
+									c.getString(c.getColumnIndex("L3"))+"|"+
+									c.getString(c.getColumnIndex("L4"))+"|"+
+									c.getString(c.getColumnIndex("L5"))+"|"+
+									c.getString(c.getColumnIndex("L6"))+"|"+
+									c.getString(c.getColumnIndex("L7"))+"|"+
+									c.getString(c.getColumnIndex("L8"))+"|"+
+									c.getString(c.getColumnIndex("L9"))+"|"+
+									c.getString(c.getColumnIndex("L10"))+"|"+
+									c.getString(c.getColumnIndex("var"))+"|"+
+									c.getString(c.getColumnIndex("value")));
+					writer.println(row);
+					i++;
 				}
-					/*
+				c.close();
+			}
+			/*
 					Log.d("vortex","i is "+i);
 					if (i<100)
 						notDone = false;
@@ -434,14 +431,14 @@ public class DbHelper extends SQLiteOpenHelper {
 				}
 				offSet+=100;
 			}
-			*/
+			 */
 		} catch (Exception e) {
 			e.printStackTrace();
 			if (c!=null)
 				c.close();
 		}
 
-		
+
 		writer.close();
 	}
 
@@ -510,7 +507,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		storeAuditEntry("P",rId+"|"+pyId,null);
 		Log.d("nils","inserted Erase Provyta into audit for R:"+rId+" P:"+pyId);
 	}
-	
+
 	private Map<String, String> createAuditEntry(Variable var,String newValue,
 			String timeStamp) {
 		Map <String,String> valueSet = new HashMap<String,String>();
@@ -521,11 +518,11 @@ public class DbHelper extends SQLiteOpenHelper {
 		valueSet.put("author", globalPh.get(PersistenceHelper.USER_ID_KEY));
 		return valueSet;
 	}
-	
+
 	private void insertDeleteAuditEntry(Selection s,String varName) {
 		//package the value array.
 		String dd = "";
-		
+
 		if (s.selectionArgs!=null) {
 			String realColNames[] = new String[s.selectionArgs.length];
 			//get the true column names.
@@ -555,12 +552,12 @@ public class DbHelper extends SQLiteOpenHelper {
 					Log.d("vortex","real name: "+z);
 
 				} else {
-				String col = z.substring(iz,z.length());
-				Log.d("vortex","Found column: "+col);
-				Log.d("vortex","real name: "+colKeyM.get(col));
-				realColNames[ii]=colKeyM.get(col);
+					String col = z.substring(iz,z.length());
+					Log.d("vortex","Found column: "+col);
+					Log.d("vortex","real name: "+colKeyM.get(col));
+					realColNames[ii]=colKeyM.get(col);
 				}
-				
+
 			}
 			for (int i = 0; i<s.selectionArgs.length;i++)
 				dd+=realColNames[i]+"="+s.selectionArgs[i]+"|";
@@ -571,7 +568,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		storeAuditEntry("D",dd,varName);
 		//Log.d("nils","INSERT Delete audit entry. Args:  "+dd);
 	}
-	
+
 	private void insertAuditEntry(Variable v,Map<String,String> valueSet,String action) {
 		String changes = "";
 		//First the keys.
@@ -742,7 +739,7 @@ public class DbHelper extends SQLiteOpenHelper {
 			c.close();		
 			return value;
 		} 
-		
+
 		Log.d("nils","Did NOT find value in db for "+name+". Key arguments:");
 
 		String sel = s.selection;
@@ -762,7 +759,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
 			Log.d("nils"," Key: ("+k[i]+") "+colKeyM.get(k[i])+" = "+s.selectionArgs[i]);
 		}	
-		 
+
 		if (c!=null)
 			c.close();
 		return null;
@@ -787,13 +784,13 @@ public class DbHelper extends SQLiteOpenHelper {
 			c.close();
 		return -1;
 	}
-	
+
 	public class TimeAndId {
-	    int id;
-	    String time;
-	    
+		int id;
+		String time;
+
 	}
-	
+
 	public TimeAndId getIdAndTimeStamp(String name, Selection s) {
 		//Log.d("nils","In getId with name "+name+" and selection "+s.selection+" and selectionargs "+print(s.selectionArgs));
 		Cursor c = db.query(TABLE_VARIABLES,new String[]{"id","timestamp"},
@@ -806,8 +803,8 @@ public class DbHelper extends SQLiteOpenHelper {
 			//Log.d("nils","Found id in db for "+name+" :"+value);
 			c.close();
 			return ret;
-			
-			
+
+
 		} 
 		//Log.d("nils","Did NOT find value in db for "+name);
 		if (c!=null)
@@ -885,7 +882,7 @@ public class DbHelper extends SQLiteOpenHelper {
 			//	Log.d("nils","Variable "+var.getId()+" not inserted in Audit: local");
 		}
 	}
-	
+
 
 	private void createValueMap(Variable var,String newValue,ContentValues values, String timeStamp) {
 		//Add column,value mapping.
@@ -912,7 +909,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
 	}
 
-	
+
 	//Adds a value for the variable but does not delete any existing value. 
 	//This in effect creates an array of values for different timestamps. 
 	public void insertVariableSnap(ArrayVariable var, String newValue,
@@ -934,9 +931,65 @@ public class DbHelper extends SQLiteOpenHelper {
 
 
 
-	//private SyncEntry[] mySyncEntries;
+	public void importEverything(VariableRowEntry[] vRows,UIProvider ui) {
+		ContentValues cv;
+		if (vRows == null)
+			return ;
 
-	public SyncEntry[] getChanges() {
+		int counter = 0;
+		int total = vRows.length;
+		for (VariableRowEntry vRow:vRows) {
+			cv = new ContentValues();
+			for (int i = 0; i < vRow.valueColumns.size();i++)
+				cv.put("L"+i, vRow.valueColumns.get(i));
+			cv.put(VARID, vRow.var);
+			cv.put(VALUE, vRow.value);
+			cv.put(LAG, vRow.lag);
+			cv.put(TIMESTAMP, vRow.timeStamp);
+			cv.put(AUTHOR, vRow.author);
+
+			db.insert(TABLE_VARIABLES, // table
+					null, //nullColumnHack
+					cv
+					); 	
+			counter++;
+			if (ui!=null)
+				ui.setCounter(counter+"/"+total);
+		}
+
+	}
+
+	public VariableRowEntry[] exportEverything(UIProvider ui) {
+		VariableRowEntry[] vRows = null;
+		List<String> values;
+		//Ask for everything.
+		Cursor c = db.query(TABLE_VARIABLES,null,null,
+				null,null,null,null,null);
+		if (c != null && c.getCount()>0 && c.moveToFirst()) {
+			vRows = new VariableRowEntry[c.getCount()+1];
+			int cn=0;
+			do {
+				values = new ArrayList<String>(NO_OF_KEYS);
+				for (int i=1;i<=NO_OF_KEYS;i++) 
+					values.add(c.getString( c.getColumnIndex("L"+i)));
+
+				vRows[cn] = new VariableRowEntry(c.getString(c.getColumnIndex(VARID)),
+						c.getString(c.getColumnIndex(VALUE)),
+						c.getString(c.getColumnIndex(LAG)),
+						c.getString(c.getColumnIndex(TIMESTAMP)),
+						c.getString(c.getColumnIndex(AUTHOR)),
+						values);
+
+				cn++;
+				if (ui!= null)
+					ui.setCounter(cn+"/"+c.getCount());
+			} while (c.moveToNext());
+		}
+		c.close();
+		return vRows;
+	}
+
+	public SyncEntry[] getChanges(UIProvider ui) {
 		long maxStamp = 0;
 		SyncEntry[] sa=null;
 		String timestamp = ph.get(PersistenceHelper.TIME_OF_LAST_SYNC);
@@ -955,12 +1008,14 @@ public class DbHelper extends SQLiteOpenHelper {
 				changes 	=	c.getString(c.getColumnIndex("changes"));
 				entryStamp	=	c.getString(c.getColumnIndex("timestamp"));
 				target 		= 	c.getString(c.getColumnIndex("target"));
-								
+
 				long es = Long.parseLong(entryStamp);
 				if (es>maxStamp)
 					maxStamp=es;
 				sa[cn] = new SyncEntry(action,changes,entryStamp,target);
 				//Log.d("nils","Added sync entry : "+action+" changes: "+changes+" index: "+cn);
+				if (ui!= null)
+					ui.setCounter(cn+"/"+c.getCount());
 				cn++;				
 			} while(c.moveToNext());
 			SyncEntryHeader seh = new SyncEntryHeader(maxStamp);
@@ -1098,8 +1153,20 @@ public class DbHelper extends SQLiteOpenHelper {
 
 
 	int synC=0;
-	
 	public void synchronise(SyncEntry[] ses,VarCache vc,GlobalState gs) {
+		synchronise(ses,null);
+	}
+
+	public void synchronise(SyncEntry[] ses, UIProvider ui) {
+		if (ses == null) {
+			Log.d("vortex","ses är tom! i synchronize");
+			return;
+		}
+		GlobalState gs = GlobalState.getInstance();
+		VarCache vc = gs.getVariableCache();
+
+		int size = ses.length-1;
+
 		Log.d("vortex","LOCK!");
 		db.beginTransaction();
 		String name=null;
@@ -1114,20 +1181,14 @@ public class DbHelper extends SQLiteOpenHelper {
 		ContentValues cv = new ContentValues();
 		Map<String, String> keySet= new HashMap<String,String>();
 		for (SyncEntry s:ses) {
-
-			if (synC++%10==0) {
-				Intent intent = new Intent();
-				intent.setAction(BluetoothConnectionService.STATUS);
-				intent.putExtra("status", SyncStatus.insert_update_message.name());
-				intent.putExtra("total", ses.length);
-				intent.putExtra("current", synC);
-				gs.sendSyncEvent(intent);
-			}
-			
+			synC++;
+			if (synC%10==0) 
+				ui.setCounter(synC+"/"+size);
+				
 			if (s.isInsert()||s.isInsertArray()) {				
 				keySet.clear();
 				cv.clear();
-				
+
 				if (s.getKeys()==null||s.getValues()==null) {
 					Log.e("nils","Synkmessage with "+s.getTarget()+" is invalid. Skipping");				
 					continue;
@@ -1151,7 +1212,7 @@ public class DbHelper extends SQLiteOpenHelper {
 							name = pair[1];
 						} else 							
 							keySet.put(getColumnName(pair[0]),pair[1]);
-						
+
 						//cv contains all elements, except id.
 						cv.put(getColumnName(pair[0]),pair[1]);													
 					}									
@@ -1174,7 +1235,7 @@ public class DbHelper extends SQLiteOpenHelper {
 				//	Log.d("nils","Keyset was null");
 				Log.d("nils","SYNC WITH PARAMETER NAMED "+name);
 				Log.d("nils","Keyset:  "+keySet.toString());
-				
+
 				Selection sel = this.createSelection(keySet, name);
 				Log.d("nils","Selection:  "+sel.selection);
 				if (sel.selectionArgs!=null) {
@@ -1195,11 +1256,10 @@ public class DbHelper extends SQLiteOpenHelper {
 
 
 				} else {
+					boolean newer = (Tools.compareTimeStamps(ti.time,s.getTimeStamp()));
 					if (ti.time!=null && s.getTimeStamp()!=null) {
-						long existingTimeStamp = Long.parseLong(ti.time);
-						long timeStampinMessage = Long.parseLong(s.getTimeStamp());
-						if (existingTimeStamp<timeStampinMessage) {
-						
+						if (Tools.compareTimeStamps(ti.time, s.getTimeStamp())) {
+
 							Log.d("nils","Existing variable is older than new. Replacing");
 							cv.put("id", ti.id);
 							rId = db.replace(TABLE_VARIABLES, // table
@@ -1211,7 +1271,8 @@ public class DbHelper extends SQLiteOpenHelper {
 								Log.e("nils","CRY FOUL!!! New Id not equal to found! "+" ID: "+ti.id+" RID: "+rId);
 						} else
 							Log.d("vortex","Existing variable is newer than incoming. Not replacing.");
-					}
+					} else
+						Log.e("vortex","A timestamp was null!!");
 				}
 				if (rId==-1) 
 					Log.e("nils","Did not insert row "+cv.toString());
@@ -1221,7 +1282,7 @@ public class DbHelper extends SQLiteOpenHelper {
 				//	Log.d("nils","Insert row: "+cv.toString());
 
 				//Invalidate variables with this id in the cache..
-				
+
 			} else if (s.isDelete()) {
 				keySet.clear();
 				Log.d("nils","Got Delete for: "+s.getTarget());
@@ -1243,14 +1304,14 @@ public class DbHelper extends SQLiteOpenHelper {
 						} else {
 							keySet.put(getColumnName(pair[0]),pair[1]);
 						}
-											
+
 					}									
 					else 
 						Log.e("nils","Something not good in synchronize (dbHelper). Could not split on '=': "+keyPair);
 				}
 				Log.d("nils","DELETE WITH PARAMETER NAMED "+name);
 				Log.d("nils","Keyset:  "+keySet.toString());
-				
+
 				Selection sel = this.createSelection(keySet, name);
 				Log.d("nils","Selection:  "+sel.selection);
 				if (sel.selectionArgs!=null) {
@@ -1259,13 +1320,22 @@ public class DbHelper extends SQLiteOpenHelper {
 						xor += sz+",";
 					Log.d("nils","Selection ARGS: "+xor);
 					//Log.d("nils","Calling delete with Selection: "+sel.selection+" args: "+print(sel.selectionArgs));
-					this.deleteVariable(s.getTarget(), sel,false);
+					//Check timestamp. If timestamp is older, delete. Otherwise skip.
+					s.getTimeStamp();
+					StoredVariableData sv = this.getVariable(s.getTarget(), sel);
+					boolean replace = true;
+					if (sv!=null)
+						replace=Tools.compareTimeStamps(sv.timeStamp, s.getTimeStamp());
+					if (replace)
+						this.deleteVariable(s.getTarget(), sel,false);
+					else
+						Log.d("vortex","Did not delete...a newer entry exists in database.");
 					//Invalidate variables with this id in the cache..
 					vc.invalidateOnName(s.getTarget());
-					
+
 				} else
 					Log.e("nils","SelectionArgs null in Delete Sync. S: "+s.getTarget()+" K: "+s.getKeys());
-				
+
 			} else if (s.isDeleteDelytor()) {
 				String ids = s.getChange();
 				if (ids!=null) {
@@ -1292,6 +1362,8 @@ public class DbHelper extends SQLiteOpenHelper {
 			}
 
 		}
+		if (ui!=null)
+			ui.setCounter(synC+"/"+size);
 		Log.d("vortex","UNLOCK!");
 		endTransactionSuccess();
 	}
@@ -1362,7 +1434,7 @@ public class DbHelper extends SQLiteOpenHelper {
 			gs.getVariableCache().invalidateOnKey(baseKey);															
 
 		}
-		
+
 	}
 
 	public void eraseProvyta(String currentRuta, String currentProvyta,boolean synk) {
@@ -1388,7 +1460,7 @@ public class DbHelper extends SQLiteOpenHelper {
 				yCol+"=? AND "+rCol+"=? AND "+pyCol+"=? AND var = 'Delyta'", new String[] {Constants.getYear(),currentRuta,currentProvyta});
 		Log.d("nils","Affected rows in eraseSmaProvyDelytaAssoc: "+affRows);
 	}
-	
+
 	public void deleteAllVariablesUsingKey(Map<String,String> keyHash) {
 		if (keyHash == null)
 			return;
@@ -1455,10 +1527,10 @@ public class DbHelper extends SQLiteOpenHelper {
 		Log.d("nils","inserting:  "+valuez.toString());
 		try {
 			db.insert(TABLE_VARIABLES, // table
-		
-				null, //nullColumnHack
-				valuez
-				);
+
+					null, //nullColumnHack
+					valuez
+					);
 		} catch (SQLiteException e) {
 			e.printStackTrace();
 			return false;
@@ -1466,14 +1538,14 @@ public class DbHelper extends SQLiteOpenHelper {
 		return true;
 
 	}
-	
-	
+
+
 	public boolean fastHistoricalInsert(Map<String,String> keys,
 			String varId, String value) {
 
 		valuez.clear();
 		valuez.put(getColumnName("år"),VariableConfiguration.HISTORICAL_MARKER);	
-	
+
 		String keyVal=null;
 		for(String key:keys.keySet()) {
 			keyVal = keys.get(key);
@@ -1500,9 +1572,9 @@ public class DbHelper extends SQLiteOpenHelper {
 		}
 		return true;
 	}
-	
- 	
-	
+
+
+
 	public void insertGisObject(GisObject go) {
 		Variable gpsCoord = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(go.getKeyHash(), GisConstants.Location);
 		Variable geoType = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(go.getKeyHash(), GisConstants.Geo_Type);
@@ -1513,7 +1585,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		} else
 			Log.d("vortex","succesfully inserted new gisobject");
 	}
-	
+
 	/*	
 	public String getHistoricalValue(String varName,Map<String, String> keyChain) {
 		HashMap<String, String> histKeyChain = new HashMap<String,String>(keyChain);
@@ -1592,9 +1664,9 @@ public class DbHelper extends SQLiteOpenHelper {
 
 	}
 
-	
-	
-	
+
+
+
 	//Fetch all instances of Variables matching namePrefix (group id). Map varId to a Map of Variator, Value.
 	public Map<String, Map<String,String>> preFetchValues(Map<String,String> keyChain, String namePrefix, String variatorColumn) {		
 
@@ -1621,8 +1693,8 @@ public class DbHelper extends SQLiteOpenHelper {
 		return ret;
 
 	}
-	
-	
+
+
 	//Fetch all instances of Variables matching namePrefix. Map varId to a Map of Variator, Value.
 	public Cursor getPrefetchCursor(Map<String,String> keyChain, String namePrefix, String variatorColumn) {		
 
@@ -1640,10 +1712,10 @@ public class DbHelper extends SQLiteOpenHelper {
 		Log.d("nils","Query: "+query);
 		//Return cursor.
 		return db.rawQuery(query, selArgs);
-	
+
 	}
-	
-	
+
+
 
 	public void beginTransaction() {
 		db.beginTransaction();
@@ -1656,5 +1728,5 @@ public class DbHelper extends SQLiteOpenHelper {
 
 
 
-	
+
 }

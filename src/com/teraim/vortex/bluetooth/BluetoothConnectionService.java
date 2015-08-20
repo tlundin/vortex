@@ -24,7 +24,6 @@ import android.widget.Toast;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.GlobalState.SyncStatus;
-import com.teraim.vortex.exceptions.BluetoothDeviceExtra;
 import com.teraim.vortex.exceptions.BluetoothDevicesNotPaired;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
@@ -199,11 +198,7 @@ public class BluetoothConnectionService  {
 			intent.setAction(BluetoothConnectionService.SYNK_NO_BONDED_DEVICE);
 			ctx.sendBroadcast(intent);
 			stop();		
-		} catch (BluetoothDeviceExtra e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			stop();
-		} catch (Exception e) {
+		}  catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
@@ -245,7 +240,7 @@ public class BluetoothConnectionService  {
 
 	//Start a Client thread for communication.
 	//Create an instance of this singleton if not already existing.
-	public void startClient() throws BluetoothDevicesNotPaired, BluetoothDeviceExtra {
+	public void startClient() throws BluetoothDevicesNotPaired {
 
 		
 		//check if there is a bonded device.
@@ -263,8 +258,7 @@ public class BluetoothConnectionService  {
 			client.start();
 			if (pairedDevices.size()>1)
 				Log.e("NILS","Error: More than one bonded device");
-			//TODO: TURN  THIS ON
-			//throw new BluetoothDeviceExtra();
+			
 		}
 		//caller need to wait for socket.
 
@@ -352,9 +346,6 @@ public class BluetoothConnectionService  {
 	
 
 	final static int MESSAGE_READ = 1;
-
-
-
 
 
 	private class ClientConnectThread extends Thread {

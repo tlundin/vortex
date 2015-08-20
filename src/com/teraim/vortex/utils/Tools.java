@@ -856,4 +856,13 @@ public class Tools {
 		e.printStackTrace();
 	}
 
+	public static boolean compareTimeStamps(String existingTime, String newTime) {
+		long existingTimeStamp = Long.parseLong(existingTime);
+		long newTimeStamp = Long.parseLong(newTime);
+		if (existingTimeStamp>=newTimeStamp)
+			return false;
+		else
+			return true;
+	}
+
 }
