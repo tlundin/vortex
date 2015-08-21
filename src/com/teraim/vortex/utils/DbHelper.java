@@ -31,6 +31,7 @@ import com.teraim.vortex.dynamic.types.VarCache;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisConstants;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisObject;
+import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.non_generics.DelyteManager;
 import com.teraim.vortex.non_generics.NamedVariables;
@@ -1153,29 +1154,40 @@ public class DbHelper extends SQLiteOpenHelper {
 
 
 	int synC=0;
-	public void synchronise(SyncEntry[] ses,VarCache vc,GlobalState gs) {
-		synchronise(ses,null);
-	}
 
-	public void synchronise(SyncEntry[] ses, UIProvider ui) {
-		if (ses == null) {
-			Log.d("vortex","ses är tom! i synchronize");
-			return;
+
+	public class SyncReport {
+		public int deletes = 0;
+		public int inserts = 0;
+		public int faults = 0;
+		public int refused = 0;
+		public int updates=0;
+		public boolean hasChanges() {
+			return (deletes+inserts+updates) > 0 ;
 		}
+		
+	}
+	
+	public SyncReport synchronise(SyncEntry[] ses, UIProvider ui, LoggerI o) {
+		if (ses == null) {
+			Log.d("sync","ses är tom! i synchronize");
+			return null;
+		}
+		SyncReport changes = new SyncReport();
 		GlobalState gs = GlobalState.getInstance();
 		VarCache vc = gs.getVariableCache();
 
 		int size = ses.length-1;
 
-		Log.d("vortex","LOCK!");
+		Log.d("sync","LOCK!");
 		db.beginTransaction();
 		String name=null;
 
 		synC=0;
 		if (ses==null||ses.length<2) {
-			Log.e("nils","either syncarray is short or null. no data to sync.");
+			Log.e("sync","either syncarray is short or null. no data to sync.");
 			db.endTransaction();
-			return;
+			return null;
 		}
 		Log.d("nils","In Synchronize with "+ses.length+" arguments.");
 		ContentValues cv = new ContentValues();
@@ -1190,7 +1202,8 @@ public class DbHelper extends SQLiteOpenHelper {
 				cv.clear();
 
 				if (s.getKeys()==null||s.getValues()==null) {
-					Log.e("nils","Synkmessage with "+s.getTarget()+" is invalid. Skipping");				
+					Log.e("nils","Synkmessage with "+s.getTarget()+" is invalid. Skipping");
+					changes.faults++;
 					continue;
 				}
 				String[] keys = s.getKeys().split("\\|");
@@ -1216,8 +1229,10 @@ public class DbHelper extends SQLiteOpenHelper {
 						//cv contains all elements, except id.
 						cv.put(getColumnName(pair[0]),pair[1]);													
 					}									
-					else 
-						Log.e("nils","Something not good in synchronize (dbHelper). A valuepair was null ");
+					else {
+						changes.faults++;
+						Log.e("sync","Something not good in synchronize (dbHelper). A valuepair was null ");
+					}
 				}
 				for (String value:values) {
 					pair = value.split("=");
@@ -1233,49 +1248,52 @@ public class DbHelper extends SQLiteOpenHelper {
 				}
 				//if (keySet == null) 
 				//	Log.d("nils","Keyset was null");
-				Log.d("nils","SYNC WITH PARAMETER NAMED "+name);
-				Log.d("nils","Keyset:  "+keySet.toString());
+				Log.d("sync","SYNC WITH PARAMETER NAMED "+name);
+				//Log.d("sync","Keyset:  "+keySet.toString());
 
 				Selection sel = this.createSelection(keySet, name);
-				Log.d("nils","Selection:  "+sel.selection);
+				//Log.d("sync","Selection:  "+sel.selection);
 				if (sel.selectionArgs!=null) {
 					String xor="";
 					for (String sz:sel.selectionArgs)
 						xor += sz+",";
-					Log.d("nils","Selection ARGS: "+xor);
+					//Log.d("sync","Selection ARGS: "+xor);
 				}
 				TimeAndId ti = this.getIdAndTimeStamp(name, sel);
 				long rId=-1;
 				if (ti==null || s.isInsertArray()) {// || gs.getVariableConfiguration().getnumType(row).equals(DataType.array)) {
-					Log.d("nils","Vairable doesn't exist or is an Array. Inserting..");
+					Log.d("sync","Vairable doesn't exist or is an Array. Inserting..");
 					//now there should be ContentValues that can be inserted.
 					rId = db.insert(TABLE_VARIABLES, // table
 							null, //nullColumnHack
 							cv
 							); 	
-
+					changes.inserts++;
 
 				} else {
-					boolean newer = (Tools.compareTimeStamps(ti.time,s.getTimeStamp()));
+					boolean existingTimestampIsMoreRecent = (Tools.existingTimestampIsMoreRecent(ti.time,s.getTimeStamp()));
 					if (ti.time!=null && s.getTimeStamp()!=null) {
-						if (Tools.compareTimeStamps(ti.time, s.getTimeStamp())) {
-
-							Log.d("nils","Existing variable is older than new. Replacing");
+						if (!existingTimestampIsMoreRecent) {
+							Log.d("sync","Existing variable is less recent. Replace!");
 							cv.put("id", ti.id);
 							rId = db.replace(TABLE_VARIABLES, // table
 									null, //nullColumnHack
 									cv
 									); 	
+							changes.updates++;
 
 							if (rId!=ti.id) 
-								Log.e("nils","CRY FOUL!!! New Id not equal to found! "+" ID: "+ti.id+" RID: "+rId);
-						} else
-							Log.d("vortex","Existing variable is newer than incoming. Not replacing.");
+								Log.e("sync","CRY FOUL!!! New Id not equal to found! "+" ID: "+ti.id+" RID: "+rId);
+						} else {
+							changes.refused++;
+							o.addRow("");
+							o.addYellowText("DB_INSERT REFUSED: "+name+" Timestamp incoming: "+s.getTimeStamp()+" Time existing: "+ti.time);
+						}
 					} else
-						Log.e("vortex","A timestamp was null!!");
+						Log.e("sync","A timestamp was null!!");
 				}
 				if (rId==-1) 
-					Log.e("nils","Did not insert row "+cv.toString());
+					Log.e("sync","Did not insert row "+cv.toString());
 				else
 					vc.invalidateOnName(name);
 				//else
@@ -1285,7 +1303,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
 			} else if (s.isDelete()) {
 				keySet.clear();
-				Log.d("nils","Got Delete for: "+s.getTarget());
+				Log.d("sync","Got Delete for: "+s.getTarget());
 				String[] keys = s.getChange().split("\\|");
 				String[] pair;
 				for (String keyPair:keys) {
@@ -1307,13 +1325,13 @@ public class DbHelper extends SQLiteOpenHelper {
 
 					}									
 					else 
-						Log.e("nils","Something not good in synchronize (dbHelper). Could not split on '=': "+keyPair);
+						Log.e("sync","Something not good in synchronize (dbHelper). Could not split on '=': "+keyPair);
 				}
-				Log.d("nils","DELETE WITH PARAMETER NAMED "+name);
-				Log.d("nils","Keyset:  "+keySet.toString());
+				Log.d("sync","DELETE WITH PARAMETER NAMED "+name);
+				//Log.d("sync","Keyset:  "+keySet.toString());
 
 				Selection sel = this.createSelection(keySet, name);
-				Log.d("nils","Selection:  "+sel.selection);
+				//Log.d("sync","Selection:  "+sel.selection);
 				if (sel.selectionArgs!=null) {
 					String xor="";
 					for (String sz:sel.selectionArgs)
@@ -1323,28 +1341,48 @@ public class DbHelper extends SQLiteOpenHelper {
 					//Check timestamp. If timestamp is older, delete. Otherwise skip.
 					s.getTimeStamp();
 					StoredVariableData sv = this.getVariable(s.getTarget(), sel);
-					boolean replace = true;
+					boolean keep = true;
 					if (sv!=null)
-						replace=Tools.compareTimeStamps(sv.timeStamp, s.getTimeStamp());
-					if (replace)
-						this.deleteVariable(s.getTarget(), sel,false);
+						keep=Tools.existingTimestampIsMoreRecent(sv.timeStamp, s.getTimeStamp());
 					else
-						Log.d("vortex","Did not delete...a newer entry exists in database.");
+						Log.d("vortex","Did not find variable to delete: "+s.getTarget());
+					if (!keep) {
+						Log.d("sync","Deleting "+name);
+						this.deleteVariable(s.getTarget(), sel,false);
+						changes.deletes++;
+					}
+					else {
+						changes.refused++;
+						Log.d("sync","Did not delete...a newer entry exists in database.");
+						o.addRow("");
+						o.addYellowText("DB_DELETE REFUSED: "+name);
+						if(sv!=null)
+							o.addYellowText(" Timestamp incoming: "+s.getTimeStamp()+" Time existing: "+sv.timeStamp);
+						else
+							o.addYellowText(", since this variable has no value in my database");
+					}
 					//Invalidate variables with this id in the cache..
 					vc.invalidateOnName(s.getTarget());
 
 				} else
-					Log.e("nils","SelectionArgs null in Delete Sync. S: "+s.getTarget()+" K: "+s.getKeys());
+					Log.e("sync","SelectionArgs null in Delete Sync. S: "+s.getTarget()+" K: "+s.getKeys());
 
 			} else if (s.isDeleteDelytor()) {
 				String ids = s.getChange();
 				if (ids!=null) {
 					String[] idA = ids.split("\\|"); 
 					if (idA!=null && idA.length==2) {
-						Log.d("nils","Got EraseDelytor sync message for ruta "+idA[0]+" and provyta "+idA[1]);					
+						Log.d("sync","Got EraseDelytor sync message for ruta "+idA[0]+" and provyta "+idA[1]);					
 						this.eraseDelytor(gs,idA[0], idA[1],false);
 						//Invalidate Cache.
 						vc.invalidateOnKey(Tools.createKeyMap("ruta",idA[0],"provyta",idA[1]));
+						o.addRow("");
+						o.addGreenText("DB_DELETE All values for Delyta "+idA[0]+" and Provyta "+idA[1]+" was deleted.");
+						
+					} else {
+						o.addRow("");
+						o.addRedText("DB_DELETE Delete Delytor Failed. Message corrupt");
+						changes.faults++;
 					}
 				}
 			} else if (s.isDeleteProvyta()) {
@@ -1352,11 +1390,17 @@ public class DbHelper extends SQLiteOpenHelper {
 				if (ids!=null) {
 					String[] idA = ids.split("\\|"); 
 					if (idA!=null && idA.length==2) {
-						Log.d("nils","Got EraseProvyta sync message for ruta "+idA[0]+" and provyta "+idA[1]);					
+						Log.d("sync","Got EraseProvyta sync message for ruta "+idA[0]+" and provyta "+idA[1]);					
 						this.eraseProvyta(idA[0], idA[1],false);
 						//Invalidate cache.
 						vc.invalidateOnKey(Tools.createKeyMap("ruta",idA[0],"provyta",idA[1]));
+						o.addRow("");
+						o.addGreenText("DB_DELETE All values deleted for Provyta"+idA[1]+" in ruta "+idA[0]);					
 
+					} else {
+						changes.faults++;
+						o.addRow("");
+						o.addRedText("DB_DELETE Delete Provyta Failed. Message corrupted");
 					}
 				}			
 			}
@@ -1364,8 +1408,9 @@ public class DbHelper extends SQLiteOpenHelper {
 		}
 		if (ui!=null)
 			ui.setCounter(synC+"/"+size);
-		Log.d("vortex","UNLOCK!");
+		Log.d("sync","UNLOCK!");
 		endTransactionSuccess();
+		return changes;
 	}
 
 

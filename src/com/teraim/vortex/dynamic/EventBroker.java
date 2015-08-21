@@ -33,8 +33,12 @@ public class EventBroker {
 			els = new LinkedList<EventListener>();
 			eventListeners.put(et, els);
 		}
-		Log.d("nils","Added eventlistener for event "+et.name());
-		els.add(el);
+		if (els.contains(el))
+			Log.d("vortex","registerEventListener discarded...listener already exist");
+		else {
+			els.add(el);
+			Log.d("nils","Added eventlistener for event "+et.name());
+		}
 
 	}
 

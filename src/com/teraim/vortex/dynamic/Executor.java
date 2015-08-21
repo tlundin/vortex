@@ -1,7 +1,5 @@
 package com.teraim.vortex.dynamic;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.Fragment;
@@ -25,7 +22,7 @@ import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
-import com.teraim.vortex.bluetooth.BluetoothConnectionService;
+import com.teraim.vortex.Start;
 import com.teraim.vortex.dynamic.blocks.AddEntryToFieldListBlock;
 import com.teraim.vortex.dynamic.blocks.AddGisFilter;
 import com.teraim.vortex.dynamic.blocks.AddGisLayerBlock;
@@ -67,8 +64,6 @@ import com.teraim.vortex.dynamic.workflow_abstracts.Event.EventType;
 import com.teraim.vortex.dynamic.workflow_abstracts.EventListener;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Container;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
-import com.teraim.vortex.dynamic.workflow_realizations.WF_Event;
-import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnBluetoothMessageReceived;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnSave;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Static_List;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Table;
@@ -92,13 +87,14 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 
 	public static final String STOP_ID = "STOP";
 
+	public static final String REDRAW_PAGE = "executor_redraw_page";
+
 	protected Workflow wf;
 
 	//Extended context.
 	protected WF_Context myContext;
 
-	//Normal context
-	protected Activity activity;
+
 	//Keep track of input in below arraylist.
 
 	protected final Map<Rule,Boolean>executedRules = new LinkedHashMap<Rule,Boolean>();	
@@ -128,44 +124,49 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		//If app has been murdered brutally, restart it. 
+		if(!Start.alive) {
+			Intent intent = new Intent(this.getActivity(), Start.class);
+			intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+			startActivity(intent);
+		} else {
 		Log.d("nils","GETS TO ONCREATE EXECUTOR");
-		activity = this.getActivity();
+		
 		gs = GlobalState.getInstance();
 		if (gs == null) {
 			Log.e("vortex","globalstate null, exit");
 			return;
 		}
-		myContext = new WF_Context((Context)activity,this,R.id.content_frame);
+		myContext = new WF_Context((Context)this.getActivity(),this,R.id.content_frame);
 		o = gs.getLogger();
 		wf = getFlow();
 		myContext.setWorkflow(wf);
 		al = gs.getVariableConfiguration();
 
 		ifi = new IntentFilter();
-		ifi.addAction(BluetoothConnectionService.SYNK_DATA_RECEIVED);
-		ifi.addAction(BluetoothConnectionService.BLUETOOTH_MESSAGE_RECEIVED);
-		ifi.addAction(BluetoothConnectionService.MASTER_CHANGED_MY_CONFIG);
+		ifi.addAction(REDRAW_PAGE);
+		//ifi.addAction(BluetoothConnectionService.BLUETOOTH_MESSAGE_RECEIVED);
 		//This receiver will forward events to the current context.
 		//Bluetoothmessages are saved in the global context by the message handler.
 		brr = new BroadcastReceiver() {
 			@Override
 			public void onReceive(Context ctx, Intent intent) {
 				Log.d("nils","GETS HERE::::::");
-				if (intent.getAction().equals(BluetoothConnectionService.SYNK_DATA_RECEIVED)) {
-					gs.getVariableConfiguration().invalidateCache();	
-					Log.d("nils","Cache invalidated");
+				if (intent.getAction().equals(REDRAW_PAGE)) {
+
 					myContext.registerEvent(new WF_Event_OnSave(Constants.SYNC_ID));
-					Log.d("nils","Reg event - onsave");
-				} else if (intent.getAction().equals(BluetoothConnectionService.BLUETOOTH_MESSAGE_RECEIVED)) {
+					Log.d("nils","Redraw page received in Executor. Sending onSave event.");
+				} 
+				/*
+				else if (intent.getAction().equals(BluetoothConnectionService.BLUETOOTH_MESSAGE_RECEIVED)) {
 					Log.d("nils","New bluetoot message received event!");
 					myContext.registerEvent(new WF_Event_OnBluetoothMessageReceived());
 				}
-				else if (intent.getAction().equals(BluetoothConnectionService.MASTER_CHANGED_MY_CONFIG)) {
-					myContext.registerEvent(new WF_Event(EventType.onMasterChangedData,null,"Executor"));
-				} 
+				*/
+				
 			}
 		};
-
+		}
 	}
 
 
@@ -176,7 +177,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 		
 		gs = GlobalState.getInstance();
 		if (gs!=null) {
-			activity.registerReceiver(brr, ifi);
+			this.getActivity().registerReceiver(brr, ifi);
 			if(myContext!=null&&myContext.hasGPSTracker())
 				gs.getTracker().startScan(gs.getContext());
 			
@@ -190,7 +191,8 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 	{
 		Log.d("NILS", "In the onPause() event");
 		//Stop listening for bluetooth events.
-		activity.unregisterReceiver(brr);
+		if (brr!=null)
+			this.getActivity().unregisterReceiver(brr);
 		if (gs!=null&&myContext!=null&&myContext.hasGPSTracker())
 			gs.getTracker().stopUsingGPS();
 		super.onPause();

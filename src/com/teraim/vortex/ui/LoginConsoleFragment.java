@@ -373,7 +373,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 			if (this.getActivity()!=null) {
 				GlobalState gs = 
 						GlobalState.createInstance(this.getActivity().getApplicationContext(),globalPh,ph,debugConsole,myDb, workflows, t,sd);
-
+				Start.alive=true;
 				//drawermenu
 				gs.setDrawerMenu(Start.singleton.getDrawerMenu());
 

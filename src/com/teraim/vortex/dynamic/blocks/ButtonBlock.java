@@ -41,6 +41,7 @@ import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnSave;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Widget;
 import com.teraim.vortex.expr.SyntaxException;
 import com.teraim.vortex.non_generics.Constants;
+import com.teraim.vortex.ui.MenuActivity;
 import com.teraim.vortex.utils.Exporter;
 import com.teraim.vortex.utils.Exporter.ExportReport;
 import com.teraim.vortex.utils.Exporter.Report;
@@ -466,8 +467,8 @@ public  class ButtonBlock extends Block {
 
 						myContext.getActivity().getFragmentManager().popBackStackImmediate();
 						if (syncRequired)
-							gs.setupConnection(myContext.getContext());
-						Log.d("vortex","syncRequired is "+syncRequired);
+							gs.sendEvent(MenuActivity.SYNC_REQUIRED);
+						
 					}
 
 				});

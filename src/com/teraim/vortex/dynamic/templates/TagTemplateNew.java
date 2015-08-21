@@ -45,6 +45,7 @@ import com.teraim.vortex.dynamic.workflow_realizations.WF_Container;
 import com.teraim.vortex.non_generics.DelyteManager;
 import com.teraim.vortex.non_generics.DelyteManager.Coord;
 import com.teraim.vortex.non_generics.NamedVariables;
+import com.teraim.vortex.ui.MenuActivity;
 import com.teraim.vortex.ui.ProvytaView;
 import com.teraim.vortex.ui.TagCreateView;
 import com.teraim.vortex.ui.TagCreateView.TagListenerI;
@@ -99,7 +100,7 @@ public class TagTemplateNew extends Executor implements EventListener, TagListen
 
 		dym = DelyteManager.getInstance();
 
-		tagCreateView = new TagCreateView(activity, null,this);		
+		tagCreateView = new TagCreateView(this.getActivity(), null,this);		
 
 		py.addView(tagCreateView);
 
@@ -248,7 +249,7 @@ public class TagTemplateNew extends Executor implements EventListener, TagListen
 							sparaB.setEnabled(false);
 							calculateB.setEnabled(false);
 							nyUtlaggB.setEnabled(true);
-							gs.setupConnection(myContext.getContext());
+							gs.sendEvent(MenuActivity.SYNC_REQUIRED);
 						}
 					}
 				})

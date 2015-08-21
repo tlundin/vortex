@@ -25,10 +25,8 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.teraim.vortex.GlobalState;
-import com.teraim.vortex.GlobalState.SyncStatus;
 import com.teraim.vortex.R;
 import com.teraim.vortex.Start;
-import com.teraim.vortex.bluetooth.BluetoothConnectionService;
 import com.teraim.vortex.bluetooth.DataSyncSessionManager;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.utils.PersistenceHelper;
@@ -51,6 +49,7 @@ public class MenuActivity extends Activity  {
 	public final static String REDRAW = "com.teraim.vortex.menu_redraw";
 	public static final String INITDONE = "com.teraim.vortex.init_done";
 	public static final String INITSTARTS = "com.teraim.vortex.init_done";
+	public static final String SYNC_REQUIRED = "com.teraim.vortex.sync_required";
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -63,123 +62,17 @@ public class MenuActivity extends Activity  {
 
 
 		brr = new BroadcastReceiver() {
-			boolean inSameSame=false;
-			boolean inVersionMismatch=false;
 			@Override
 			public void onReceive(Context ctx, Intent intent) {
 				Log.d("nils", "received "+intent.getAction()+" in MenuActivity BroadcastReceiver");
 
-
-				if (intent.getAction().equals(BluetoothConnectionService.SYNK_NO_BONDED_DEVICE)) {
-					new AlertDialog.Builder(MenuActivity.this)
-					.setTitle("Blåtandsproblem")
-					.setMessage("För att synkroniseringen ska fungera måste dosorna bindas via blåtandsmenyn. Vill du göra det nu?") 
-					.setIcon(android.R.drawable.ic_dialog_alert)
-					.setCancelable(false)
-					.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-
-						@Override
-						public void onClick(DialogInterface dialog, int which)  {
-							Intent intentBluetooth = new Intent();
-							intentBluetooth.setAction(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS);
-							startActivity(intentBluetooth); 
-						}
-
-					})
-					.setNegativeButton(android.R.string.no,new DialogInterface.OnClickListener() {
-
-						@Override
-						public void onClick(DialogInterface dialog, int which) {}} ) 
-						.show();
-
-				}
-				else if (intent.getAction().equals(BluetoothConnectionService.BLUETOOTH_RESTART_REQUIRED)) {
-					new AlertDialog.Builder(MenuActivity.this)
-					.setTitle("Blåtandsproblem")
-					.setMessage("Ett fel har uppstått i blåtandskopplingen. Vänligen starta om båda dosorna.") 
-					.setIcon(android.R.drawable.ic_dialog_alert)
-					.setCancelable(false)
-					.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-						@Override
-						public void onClick(DialogInterface dialog, int which)  {
-						}
-
-					}).show();
-				}
-				else if (intent.getAction().equals(BluetoothConnectionService.SAME_SAME_SYNDROME)) {
-
-					if (!inSameSame) {
-						inSameSame=true;
-						new AlertDialog.Builder(MenuActivity.this)
-						.setTitle("Configuration error")
-						.setMessage("Devices are slave-slave or master-master. Must be master-slave! Please reconfigure 'Device type' for one of them in the configuration menu.") 
-						.setIcon(android.R.drawable.ic_dialog_alert)
-						.setCancelable(false)
-						.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog, int which)  {
-								inSameSame = false;
-							}
-
-						})
-						.show();
-					}
-				}
-
-				else if (intent.getAction().equals(INITDONE))
+				if (intent.getAction().equals(INITDONE))
 					initdone=true;
 				else if (intent.getAction().equals(INITSTARTS))
 					initdone=false;
-
-				else if (intent.getAction().equals(BluetoothConnectionService.STATUS)) {
-					String status=(intent.getStringExtra("status"));
-
-					SyncStatus ss = SyncStatus.valueOf(status);
-					switch (ss) {
-					case stopped:
-						syncIsRunning=false;	
-						uiBlockerWindow.cancel();
-						break;
-
-					case searching:
-						uiBlockerWindow.setMessage("Bluetooth started...looking for other device");
-						uiBlockerWindow.show();
-						syncIsRunning=true;
-						break;
-
-					case waiting_for_ping:
-						uiBlockerWindow.setMessage("Waiting for ping");
-						break;
-
-					case insert_update_message:
-						uiBlockerWindow.setMessage("Inserting into DB: ["+intent.getIntExtra("current",0)+"/"+intent.getIntExtra("total",0)+"]");
-						break;
-					default:
-						uiBlockerWindow.setMessage(status);
-						break;
-					}
-
-
-				}
-				else if (intent.getAction().equals(BluetoothConnectionService.VERSION_MISMATCH)) {
-					if (!inSameSame && !inVersionMismatch) {
-						inVersionMismatch=true;
-						new AlertDialog.Builder(MenuActivity.this)
-						.setTitle("Varning")
-						.setMessage("You are running different versions of the application or the engine. This can lead to serious problems!!!. Check log for details.") 
-						.setIcon(android.R.drawable.ic_dialog_alert)
-						.setCancelable(false)
-						.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog, int which)  {
-								inVersionMismatch = false;
-							}
-
-						})
-						.show();
-					}
-				}
-
+				else if (intent.getAction().equals(SYNC_REQUIRED))
+					startSyncIfNotRunning();
+				
 				me.refreshStatusRow();
 			}
 
@@ -187,14 +80,6 @@ public class MenuActivity extends Activity  {
 		};
 		//Listen for bluetooth events.
 		IntentFilter filter = new IntentFilter();
-		//		filter.addAction(BluetoothConnectionService.STATUS);
-		//		filter.addAction(BluetoothConnectionService.SYNK_NO_BONDED_DEVICE);
-		//		filter.addAction(BluetoothConnectionService.SYNK_INITIATE);
-		//		filter.addAction(BluetoothConnectionService.SYNK_DATA_RECEIVED);
-		//		filter.addAction(BluetoothConnectionService.SAME_SAME_SYNDROME);
-		//		filter.addAction(BluetoothConnectionService.MASTER_CHANGED_MY_CONFIG);
-		//		filter.addAction(BluetoothConnectionService.VERSION_MISMATCH);
-		//		filter.addAction(BluetoothConnectionService.BLUETOOTH_RESTART_REQUIRED);
 		filter.addAction(INITDONE);		
 		filter.addAction(INITSTARTS);	
 		filter.addAction(REDRAW);
@@ -302,18 +187,7 @@ public class MenuActivity extends Activity  {
 
 		switch (item.getItemId()) {
 		case 0:
-			if (syncMgr==null) 
-				syncMgr = new DataSyncSessionManager(MenuActivity.this, new UIProvider(this) {
-					@Override
-					public void onClose() {
-						me.onCloseSync();
-
-					};
-				});
-			else
-				Log.d("vortex","Discarded...syncmgr is not null");
-			//if (gs!=null)
-			//	gs.setupConnection(MenuActivity.this);
+			startSyncIfNotRunning();
 			break;
 		case 1:
 			Map<String, String> hash = gs.getCurrentKeyHash();
@@ -396,6 +270,23 @@ public class MenuActivity extends Activity  {
 		}
 		return false;
 	}
+
+
+	private void startSyncIfNotRunning() {
+		if (syncMgr==null) 
+			syncMgr = new DataSyncSessionManager(MenuActivity.this, new UIProvider(this) {
+				@Override
+				public void onClose() {
+					me.onCloseSync();
+					
+				};
+			});
+		else
+			Log.d("vortex","Discarded...syncmgr is not null");
+
+	}
+
+
 
 
 	protected void onCloseSync() {
@@ -575,6 +466,15 @@ public class MenuActivity extends Activity  {
 		 */
 		public void update(String msg) {
 			mHandler.obtainMessage(UPDATE,msg).sendToTarget();			
+		}
+
+
+
+
+
+		public void resynchAtClose() {
+			// TODO Auto-generated method stub
+			
 		}
 
 

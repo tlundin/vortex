@@ -18,7 +18,6 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MenuItem;
 
-import com.teraim.vortex.bluetooth.BluetoothConnectionService;
 import com.teraim.vortex.dynamic.templates.LinjePortalTemplate;
 import com.teraim.vortex.dynamic.types.CHash;
 import com.teraim.vortex.dynamic.types.Workflow;
@@ -31,11 +30,13 @@ import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.ui.DrawerMenu;
 import com.teraim.vortex.ui.LoginConsoleFragment;
 import com.teraim.vortex.ui.MenuActivity;
-import com.teraim.vortex.utils.PersistenceHelper;
+
+
 
 public class Start extends MenuActivity {
 
-	private PersistenceHelper ph;
+	public static boolean alive = false;
+	
 	//	private Map<String,List<String>> menuStructure;
 
 	//	private ArrayList<String> rutItems;
@@ -249,7 +250,7 @@ public class Start extends MenuActivity {
 			GlobalState.getInstance().getDb().closeDatabaseBeforeExit();
 			GlobalState.destroy();
 		}
-		BluetoothConnectionService.kill();
+
 		super.onDestroy();
 	}
 
@@ -258,12 +259,16 @@ public class Start extends MenuActivity {
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		if ((keyCode == KeyEvent.KEYCODE_BACK)) {
 			Log.d("vortex","gets here key back");
-			WF_Context wfCtx = null;
-			if (GlobalState.getInstance()!=null) {
-				wfCtx = GlobalState.getInstance().getCurrentContext();
-			}
+
+			
+			final WF_Context wfCtx = GlobalState.getInstance().getCurrentContext();
+			
 			Log.d("vortex","gets here wftctx is "+wfCtx);
+			boolean map=false;
 			if (wfCtx!=null) {
+				if (wfCtx.getCurrentGis()!=null) {
+					map=true;
+				}
 				Workflow wf = wfCtx.getWorkflow();
 				Log.d("vortex","gets here wf is "+wf);
 				if (wf!=null) {
@@ -272,6 +277,9 @@ public class Start extends MenuActivity {
 						.setMessage("This will exit the page.")
 						.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
 							public void onClick(DialogInterface dialog, int which) {
+
+								wfCtx.mapLayer--;
+								Log.d("vortex","mapLayer is now "+wfCtx.mapLayer);
 								getFragmentManager().popBackStackImmediate();
 								GlobalState.getInstance().setCurrentContext(null);
 							}})
@@ -282,8 +290,11 @@ public class Start extends MenuActivity {
 								.setCancelable(false)
 								.setIcon(android.R.drawable.ic_dialog_alert)
 								.show();					
-					} else
+					} else {
+						if (map)
+							wfCtx.mapLayer--;
 						Log.d("vortex","back was allowed");
+					}
 				}
 			}
 			if (getFragmentManager().findFragmentById(R.id.content_frame) instanceof LinjePortalTemplate) {
@@ -344,7 +355,13 @@ public class Start extends MenuActivity {
 			debugLogger = new Logger(this,"DEBUG");
 		return debugLogger;
 	}
+
 	
+	public void restartMe() {
+		Intent intent = new Intent(this, Start.class);
+		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+		startActivity(intent);
+	}
 
 
 }

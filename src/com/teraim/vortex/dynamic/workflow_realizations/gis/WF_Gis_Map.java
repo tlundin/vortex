@@ -7,6 +7,8 @@ import android.app.ActionBar.LayoutParams;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -47,6 +49,7 @@ import com.teraim.vortex.dynamic.types.Location;
 import com.teraim.vortex.dynamic.types.PhotoMeta;
 import com.teraim.vortex.dynamic.workflow_abstracts.Drawable;
 import com.teraim.vortex.dynamic.workflow_abstracts.Event;
+import com.teraim.vortex.dynamic.workflow_abstracts.Event.EventType;
 import com.teraim.vortex.dynamic.workflow_abstracts.EventListener;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Widget;
@@ -429,6 +432,9 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 		popupHide.setAnimationListener(this);
 
 		myGisObjectTypes = new ArrayList<FullGisObjectConfiguration>();
+		
+		//Register this as eventlistener for sync.
+		myContext.addEventListener(this, EventType.onSave);
 		}
 
 
@@ -513,6 +519,30 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 		public void onEvent(Event e) {
 
 			Log.d("vortex","In GIS_Map Event Handler");
+			if (e.getProvider().equals(Constants.SYNC_ID)) {
+				Log.d("Vortex","new sync event. Refreshing map.");
+				//TODO: Add sync refresh of cache.!!
+				new AlertDialog.Builder(ctx)
+				.setTitle("Synchronisation detected.")
+				.setMessage("A synchronisation has changed the underlying data. Do you want to reload the map?") 
+				.setIcon(android.R.drawable.ic_dialog_alert)
+				.setCancelable(true)
+				.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+									
+					}
+				})
+				.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						   myContext.reload();
+					}
+				})
+				.show();
+				//gisImageView.redraw();
+			}
 		}
 
 		//Relay event to myContext without exposing context to caller.

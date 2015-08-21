@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.app.FragmentTransaction;
+import android.content.Intent;
 import android.gesture.Gesture;
 import android.gesture.GestureLibraries;
 import android.gesture.GestureLibrary;
@@ -22,6 +23,7 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.teraim.vortex.R;
+import com.teraim.vortex.Start;
 import com.teraim.vortex.dynamic.Executor;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Container;
 import com.teraim.vortex.ui.FixPunktFragment;
@@ -43,10 +45,7 @@ public class FixPunktTemplate extends Executor implements OnGesturePerformedList
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-		if (myContext == null) {
-			Log.e("vortex","No context, exit");
-			return null;
-		}
+
 		myContext.resetState();
 		v = inflater.inflate(R.layout.template_fixpunkt_wf, container, false);	
 
@@ -82,6 +81,14 @@ public class FixPunktTemplate extends Executor implements OnGesturePerformedList
 		Toast.makeText(this.getActivity(), "<<<<<< Svep åt vänster för fixpunkt grafik!", Toast.LENGTH_LONG).show();
 		return v;
 
+	}
+
+
+
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		
 	}
 
 

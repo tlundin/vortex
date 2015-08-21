@@ -4,8 +4,8 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
@@ -17,9 +17,7 @@ import android.preference.PreferenceFragment;
 import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
-import com.teraim.vortex.GlobalState.SyncStatus;
 import com.teraim.vortex.R;
-import com.teraim.vortex.bluetooth.BluetoothConnectionService;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.PersistenceHelper;
 import com.teraim.vortex.utils.Tools;
@@ -161,13 +159,7 @@ public class ConfigMenu extends PreferenceActivity {
 				pref.setSummary(etp.getText());
 				if (key.equals(PersistenceHelper.BUNDLE_NAME)) {
 					if (gs != null)  {
-						//if a state exists, restart the app.
-						if (gs.getSyncStatus()!=SyncStatus.stopped) {
-							BluetoothConnectionService.getSingleton().stop();
-							Log.d("vortex","stopping bluetooth");
-						}
 						Tools.restart(this.getActivity());
-
 					}
 
 
@@ -189,12 +181,6 @@ public class ConfigMenu extends PreferenceActivity {
 						this.getActivity().getSharedPreferences(Constants.GLOBAL_PREFS,Context.MODE_PRIVATE).edit().putBoolean(PersistenceHelper.SYNC_FEATURE,false).apply();
 						Log.d("nils","Changed to SOLO");
 					}
-					if (gs!=null) {
-						if (gs.getSyncStatus()!=SyncStatus.stopped) {
-							BluetoothConnectionService.getSingleton().stop();
-							Log.d("vortex","stopping bluetooth");
-						}
-					}
 					Tools.restart(this.getActivity());
 
 				}
@@ -202,24 +188,9 @@ public class ConfigMenu extends PreferenceActivity {
 			}
 
 			//force redraw of menuactivity.
-
-			if (gs!=null) {
-				gs.sendEvent(MenuActivity.REDRAW);
-			}
-			/*
-			else if (pref instanceof CheckBoxPreference) {
-				CheckBoxPreference cpref = (CheckBoxPreference)pref;
-				if (key.equals(PersistenceHelper.DEVELOPER_SWITCH))
-					if (cpref.isChecked()) {
-						GlobalState.getInstance(getActivity()).createLogger();
-						Log.d("NILS","CREATED LOGGER");
-					}
-					else {
-						Log.d("NILS","UNCREATED LOGGER");
-						GlobalState.getInstance(getActivity()).removeLogger();
-					}
-				}
-			 */
+        	Intent intent = new Intent();
+    		intent.setAction(MenuActivity.REDRAW);
+    		getActivity().sendBroadcast(intent);
 		}
 
 

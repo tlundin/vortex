@@ -437,12 +437,7 @@ public class VariableConfiguration implements Serializable {
 		return getVariableValue(null,NamedVariables.CURRENT_PROVYTA);
 	}
 
-	public void invalidateCache() {
-		//myCache.invalidate();
-		//for (Variable v:varCache.values())
-		//	v.invalidate();
-		Log.d("nils","invalidate called. Will only invalidate individual variables now.");
-	}
+
 
 	public void invalidateCacheKeys(String key) {
 		gs.refreshKeyHash();

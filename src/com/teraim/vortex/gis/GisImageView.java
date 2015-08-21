@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -28,6 +27,8 @@ import android.graphics.Paint.Style;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.os.Handler;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
@@ -38,7 +39,6 @@ import com.teraim.vortex.dynamic.types.CHash;
 import com.teraim.vortex.dynamic.types.GisLayer;
 import com.teraim.vortex.dynamic.types.Location;
 import com.teraim.vortex.dynamic.types.PhotoMeta;
-import com.teraim.vortex.dynamic.types.Point;
 import com.teraim.vortex.dynamic.types.SweLocation;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.types.Workflow;
@@ -259,6 +259,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 	double pXR,pYR;
 	private WF_Gis_Map myMap;
 	private boolean allowZoom;
+	private double[] stateToSave = new double[4];
 	/**
 	 *  
 	 * @param wf_Gis_Map 	The map object
@@ -276,6 +277,11 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 		myX = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(YearKeyHash, NamedVariables.MY_GPS_LAT);
 		myY = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(YearKeyHash, NamedVariables.MY_GPS_LONG);
 		this.allowZoom = zoom;
+		stateToSave[0]=pm.N;
+		stateToSave[1]=pm.E;
+		stateToSave[2]=pm.S;
+		stateToSave[3]=pm.W;
+		
 	}
 
 	private float fixedX=-1;
@@ -1320,7 +1326,9 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 	}
 */
 
+	
 
+	
 
 
 }

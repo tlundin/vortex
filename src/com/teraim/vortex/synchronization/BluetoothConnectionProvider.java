@@ -170,10 +170,13 @@ public class BluetoothConnectionProvider extends ConnectionProvider {
 
 
 
-
+	
 
 	@Override
 	public void closeConnection() {
+		//Stop multiple calls..it will cause exception
+		if (internalState  != InternalState.closed) {
+
 		if(BluetoothAdapter.getDefaultAdapter().isEnabled())
 			BluetoothAdapter.getDefaultAdapter().disable();
 			//drop reference to this object.
@@ -191,13 +194,14 @@ public class BluetoothConnectionProvider extends ConnectionProvider {
 				Log.d("nils","unregisterReceiver - dropping exception");
 			}
 		internalState  = InternalState.closed;
+		broadcastEvent(ConnectionEvent.connectionClosedGracefully);
 
+		}
 	}
 
 
 	@Override
 	public void abortConnection() {
-		broadcastEvent(ConnectionEvent.connectionBroken);
 		closeConnection();
 	}
 
@@ -501,7 +505,7 @@ public class BluetoothConnectionProvider extends ConnectionProvider {
 					}
 					else
 						e.printStackTrace();
-					abortConnection();
+					broadcastEvent(ConnectionEvent.connectionError);
 					break;
 				}
 			}
@@ -522,6 +526,10 @@ public class BluetoothConnectionProvider extends ConnectionProvider {
 		/* Call this from the main activity to shutdown the connection */
 
 		public void cancel() {
+			if (mConnected_T==null ) {
+				Log.d("vortex","I was already closed...");
+				return;
+			}
 			try {
 				obj_out.close();
 			} catch (IOException e) {

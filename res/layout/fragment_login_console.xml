@@ -9,7 +9,7 @@
         android:layout_height="match_parent"
         android:layout_centerInParent="true"
         android:scaleType="centerCrop"
-        android:src="@drawable/winter" />
+        android:src="@drawable/frontpic" />
 
     <TextView
         android:id="@+id/logger"

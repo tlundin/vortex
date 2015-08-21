@@ -49,6 +49,7 @@ import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.non_generics.DelyteManager;
 import com.teraim.vortex.non_generics.DelyteManager.Coord;
 import com.teraim.vortex.non_generics.NamedVariables;
+import com.teraim.vortex.ui.MenuActivity;
 import com.teraim.vortex.ui.ProvytaView;
 import com.teraim.vortex.utils.Tools;
 
@@ -103,7 +104,7 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 
 		dym = DelyteManager.getInstance();
 
-		pyv = new ProvytaView(activity, null, man, Constants.isAbo(dym.getPyID()));		
+		pyv = new ProvytaView(this.getActivity(), null, man, Constants.isAbo(dym.getPyID()));		
 
 		py.addView(pyv);
 
@@ -227,7 +228,7 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 					public void onClick(DialogInterface dialog, int which) { 
 						if(save()) {
 							//Trigger bluetooth transfer.
-							gs.setupConnection(myContext.getContext());
+							gs.sendEvent(MenuActivity.SYNC_REQUIRED);
 							myContext.getActivity().getFragmentManager().popBackStackImmediate();
 						}
 					}

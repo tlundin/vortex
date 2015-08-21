@@ -53,6 +53,7 @@ public class WF_Context {
 	private CHash myHash;
 	private Workflow myWorkflow;
 	private boolean hasSatNav;
+	public int mapLayer=0;
 
 
 
@@ -291,6 +292,7 @@ public class WF_Context {
 	public void addGis(String id, WF_Gis_Map wf_Gis_Map) {
 		currentGis = wf_Gis_Map;
 		gisses.add(wf_Gis_Map);
+		mapLayer++;
 	}
 	
 	public WF_Gis_Map getCurrentGis() {
@@ -331,6 +333,9 @@ public class WF_Context {
 	}
 	public void enableSatNav() {
 		hasSatNav=true;
+	}
+	public void reload() {
+		myTemplate.restart();
 	}
 
 

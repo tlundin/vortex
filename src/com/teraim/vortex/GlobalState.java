@@ -1,26 +1,19 @@
 package com.teraim.vortex;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
-import com.teraim.vortex.bluetooth.BluetoothConnectionService;
 import com.teraim.vortex.bluetooth.ConnectionManager;
-import com.teraim.vortex.bluetooth.MessageHandler;
-import com.teraim.vortex.bluetooth.SyncEntry;
 import com.teraim.vortex.bluetooth.SyncMessage;
 import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.types.CHash;
@@ -71,7 +64,6 @@ public class GlobalState  {
 	private Map<String,Workflow> myWfs; 
 	//Spinner definitions
 	private SpinnerDefinition mySpinnerDef;
-	private MessageHandler myHandler;
 	private DrawerMenu myDrawerMenu;
 	//Global state for sync.
 	private SyncStatus syncStatus;	
@@ -134,8 +126,7 @@ public class GlobalState  {
 		myExecutor = new RuleExecutor(this);
 
 		myConnectionManager = new ConnectionManager(this);
-		
-		setSyncStatus(SyncStatus.stopped);
+	
 
 	}
 
@@ -324,13 +315,7 @@ public class GlobalState  {
 		return syncStatus;
 	}
 
-	public void setSyncStatus(SyncStatus status) {
-		syncStatus = status;
-		Intent intent = new Intent();
-		intent.setAction(BluetoothConnectionService.STATUS);
-		intent.putExtra("status", status.name());
-		sendSyncEvent(intent);
-	}
+	
 
 
 
@@ -549,83 +534,11 @@ public class GlobalState  {
 
 	private Configuration myModules;
 
-	/**
-	 * This will start bluetooth if not already started. The BT thread will trigger the data transfer of all unsynchronized data automatically and then die.
-	 */
-	public void setupConnection(final Context ctx) {
-
-		Log.d("nils","In setup connection..");	
-		if (getSyncStatus()==SyncStatus.stopped) {
-
-			OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-					switch (which){
-					case DialogInterface.BUTTON_POSITIVE:
-						Log.d("nils","Trying to start bt-service");
-						//Create a singleton that will send all data.
-						setSyncStatus(SyncStatus.searching);
-						BluetoothConnectionService.initialize(getContext());
-						break;
-
-					case DialogInterface.BUTTON_NEGATIVE:
-						break;
-					}
-				}
-			};
 
 
-			ErrorCode err = checkSyncPreconditions();
-			if (err == ErrorCode.ok) {
-				AlertDialog.Builder builder = new AlertDialog.Builder(ctx);
-				builder.setTitle("Syncronisation")
-				.setMessage("A synchronization was requested. If you wish to proceed, press Accept simultaneously on this and the other device").setPositiveButton("ACCEPT", dialogClickListener)
-				.setNegativeButton("CANCEL", dialogClickListener).show()
-				.setCanceledOnTouchOutside(false);
-			}else {							
-				new AlertDialog.Builder(ctx)
-				.setTitle("Sync is not possible")
-				.setMessage("Reason: "+err.name()) 
-				.setIcon(android.R.drawable.ic_dialog_alert)
-				.setCancelable(false)
-				.setPositiveButton(R.string.iunderstand, new DialogInterface.OnClickListener() {						
-					@Override
-					public void onClick(DialogInterface dialog, int which)  {
-
-					}
-
-				})				 
-				.show();							
-			}
-		} else
-			Log.e("vortex","Status not stopped for sync in setupconnection: "+getSyncStatus().name());
-	}
 
 
-	public boolean triggerTransfer() throws IOException {
-		Log.d("nils","In trigger transfer..");	
-		setSyncStatus(SyncStatus.reading_data_from_db);
-		sendEvent(BluetoothConnectionService.SYNK_INITIATE);
-		SyncEntry[] changes = db.getChanges(null);
-
-		Log.d("nils","Syncrequest received. Sending "+(changes==null?"no changes":changes.toString()));
-		if (changes==null) {
-			return false;
-
-		}
-		else{ 
-			log.addRow("[SENDING_SYNC-->"+changes.length+" rows]");	
-			Log.d("nils","[SENDING_SYNC-->"+changes.length+" rows]");			
-
-			setSyncStatus(SyncStatus.sending);
-			boolean success = BluetoothConnectionService.getSingleton().send(changes);
-			
-			if (!success) throw new IOException();
-		}
-		return true;
-	}
-
-
+/*
 	public void synchronise(SyncEntry[] ses, boolean isMaster) {	
 		Log.e("nils,","SYNCHRONIZE. MESSAGES: ");
 		setSyncStatus(SyncStatus.writing_data);
@@ -640,7 +553,7 @@ public class GlobalState  {
 		db.synchronise(ses, myVarCache,this);
 		
 	}
-
+*/
 	public DrawerMenu getDrawerMenu() {
 		// TODO Auto-generated method stub
 		return myDrawerMenu;

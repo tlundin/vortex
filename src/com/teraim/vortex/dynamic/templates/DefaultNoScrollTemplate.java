@@ -3,6 +3,7 @@ package com.teraim.vortex.dynamic.templates;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -13,6 +14,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.teraim.vortex.R;
+import com.teraim.vortex.Start;
 import com.teraim.vortex.dynamic.Executor;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Container;
 
@@ -35,6 +37,7 @@ public class DefaultNoScrollTemplate extends Executor {
 		super.onCreate(savedInstanceState);
 		Log.d("nils","In onCreate");
 
+			
 		
 	}
 
@@ -43,6 +46,8 @@ public class DefaultNoScrollTemplate extends Executor {
 		super.onPause();
 		Log.d("nils","I'm in the onPause method");
 	}
+	
+	
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -58,10 +63,11 @@ public class DefaultNoScrollTemplate extends Executor {
 		my_root = (LinearLayout)v.findViewById(R.id.myRoot);
 //		my_pie = (LinearLayout)v.findViewById(R.id.pieRoot);
 		myContext.addContainers(getContainers());
-
-		if (wf!=null) {
+		
+		if (wf!=null ) {
 			Log.d("vortex","Executing workflow!!");
 			run();
+			
 		} else
 			Log.d("vortex","No workflow found in oncreate default!!!!");
 			

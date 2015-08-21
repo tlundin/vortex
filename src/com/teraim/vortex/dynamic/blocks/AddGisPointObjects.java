@@ -319,10 +319,10 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 					do {
 
 						storedVar1 = pickerLocation1.getVariable();
-						Log.d("vortex","Found "+storedVar1.value+" for "+storedVar1.name);
+						//Log.d("vortex","Found "+storedVar1.value+" for "+storedVar1.name);
 						map1 = pickerLocation1.getKeyColumnValues();
-						Log.d("vortex","Found columns "+map1.toString()+" for "+storedVar1.name);
-						Log.d("vortex","bitmap null? "+(icon==null));
+						//Log.d("vortex","Found columns "+map1.toString()+" for "+storedVar1.name);
+						//Log.d("vortex","bitmap null? "+(icon==null));
 						Variable v1=null,v2=null,statusVar=null;
 						//If status variable has a value in database, use it. 
 						if (statusVarM!=null) 
