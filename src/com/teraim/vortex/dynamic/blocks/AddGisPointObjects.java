@@ -63,6 +63,8 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 	private CHash objKeyHash;
 	private boolean isUser;
 	private boolean createAllowed;
+	private GisLayer myLayer;
+	private boolean dynamic;
 
 
 	public AddGisPointObjects(String id, String nName, String label,
@@ -103,8 +105,16 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 		this.polyType=PolyType.circle;
 		this.radius=10;
 		if (polyType!=null) {
-			if (polyType.toUpperCase().equals("SQUARE")||polyType.toUpperCase().equals("RECT")||polyType.toUpperCase().equals("RECTANGLE"))
-				this.polyType=PolyType.rect;
+			try {
+			this.polyType=PolyType.valueOf(polyType);
+			} catch (IllegalArgumentException e) {
+				if (polyType.toUpperCase().equals("SQUARE")||polyType.toUpperCase().equals("RECT")||polyType.toUpperCase().equals("RECTANGLE"))
+					this.polyType=PolyType.rect;
+				if (polyType.toUpperCase().equals("TRIANGLE"))
+					this.polyType=PolyType.triangle;
+				o.addRow("");
+				o.addRedText("Unknown polytype: ["+polyType+"]. Will default to circle");
+			}
 		}
 
 		if (Tools.isNumeric(radius)) {
@@ -124,10 +134,9 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 		WF_Gis_Map gisB = myContext.getCurrentGis();
 		if (gisB==null) {
 			Log.e("vortex","gisB null!!");
-			o.addRow("");
-			o.addRedText("Cannot add objects to GIS Layer...GIS has not been initialized. Likely missing or erroneus block_add_gis_image_view");
 			return;
 		}
+
 
 		if (imgSource!=null&&imgSource.length()>0 ) {
 			File cached = gs.getCachedFileFromUrl(imgSource);
@@ -246,7 +255,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 		}
 		//Static..we can generate a static GIS Point Object.
 		Log.d("vortex","refreshrate is "+refreshRate);
-		boolean dynamic = false;
+		dynamic = false;
 		if (refreshRate!=null&&refreshRate.equalsIgnoreCase("dynamic")) {
 			Log.d("vortex","Setting type to dynamic for "+nName);
 			dynamic = true;
@@ -387,7 +396,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 		//Add type to layer. Add even if empty.
 		if (target!=null) {//&&target.length()>0 && myGisObjects!=null && !myGisObjects.isEmpty()) {
 			//Add bag to layer.
-			GisLayer myLayer=myContext.getCurrentGis().getGis().getLayer(target);
+			myLayer=myContext.getCurrentGis().getLayer(target);
 			if (myLayer!=null) {
 				myLayer.addObjectBag(nName,myGisObjects,dynamic);
 

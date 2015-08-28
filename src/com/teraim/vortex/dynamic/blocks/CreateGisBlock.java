@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 
@@ -17,10 +18,12 @@ import com.teraim.vortex.FileLoadedCb;
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
 import com.teraim.vortex.dynamic.AsyncResumeExecutorI;
+import com.teraim.vortex.dynamic.types.GisLayer;
 import com.teraim.vortex.dynamic.types.Location;
 import com.teraim.vortex.dynamic.types.PhotoMeta;
 import com.teraim.vortex.dynamic.types.Workflow.Unit;
 import com.teraim.vortex.dynamic.workflow_abstracts.Container;
+import com.teraim.vortex.dynamic.workflow_abstracts.Event.EventType;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.WF_Gis_Map;
 import com.teraim.vortex.loadermodule.ConfigurationModule;
@@ -39,7 +42,7 @@ public class CreateGisBlock extends Block {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 2013870148670474252L;
+	private static final long serialVersionUID = 2013870148670474253L;
 	private final String name,containerId,source,N,E,S,W;
 	Unit unit;
 	GlobalState gs;
@@ -51,6 +54,7 @@ public class CreateGisBlock extends Block {
 	private WF_Context myContext;
 	private LoggerI o;
 	private boolean hasSatNav;
+	private WF_Gis_Map gis=null;
 
 	public boolean hasCarNavigation() {
 		return hasSatNav;
@@ -106,9 +110,9 @@ public class CreateGisBlock extends Block {
 		FrameLayout mapView = (FrameLayout)li.inflate(R.layout.image_gis_layout, null);
 		final View avstRL = mapView.findViewById(R.id.avstRL);
 		final View createMenuL = mapView.findViewById(R.id.createMenuL);
-		WF_Gis_Map gis;
-		Rect r;
-		boolean zoom;
+		
+		Rect r=null;
+		boolean zoom=true;
 		if (cutOut==null) {
 			BitmapFactory.Options options = new BitmapFactory.Options();
 			options.inJustDecodeBounds = true;
@@ -128,9 +132,11 @@ public class CreateGisBlock extends Block {
 			photoMetaData = new PhotoMeta(topC.getY(),botC.getX(),botC.getY(),topC.getX());
 			cutOut=null;
 		}
-		gis = new WF_Gis_Map(this,r,blockId, mapView, isVisible, picUrlorName,myContext,photoMetaData,avstRL,createMenuL,zoom);	
-				
+		gis = new WF_Gis_Map(this,r,blockId, mapView, isVisible, picUrlorName,myContext,photoMetaData,avstRL,createMenuL,zoom);
+		
 		myContainer.add(gis);
+		myContext.addGis(gis.getId(),gis);
+		myContext.addEventListener(gis, EventType.onSave);
 		myContext.addDrawable(name,gis);
 		final View menuL = mapView.findViewById(R.id.menuL);
 		
@@ -221,12 +227,15 @@ public class CreateGisBlock extends Block {
 	}
 
 	
-
-	public void setCutOut(Rect r, List<Location> geoR) {
+	//Reloads current flow with a new viewport.
+	//Cache for layers.
+	List<GisLayer> myLayers;
+	
+	public void setCutOut(Rect r, List<Location> geoR, List<GisLayer> myLayers) {
 		cutOut = new Cutout();
 		cutOut.r = r;
 		cutOut.geoR = geoR;
-		
+		this.myLayers = myLayers;
 	}
 
 

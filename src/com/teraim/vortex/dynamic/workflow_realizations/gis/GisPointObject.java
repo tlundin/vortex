@@ -37,12 +37,7 @@ public abstract class GisPointObject extends GisObject {
 		return poc.getRadius();
 	}
 
-	public boolean isCircle() {
-		return poc.getShape()== PolyType.circle;
-	}
-	public boolean isRect() {
-		return poc.getShape()== PolyType.rect;
-	}
+	
 
 
 

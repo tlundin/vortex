@@ -143,7 +143,7 @@ public abstract class ConfigurationModule {
 				@Override
 				public void run()
 				{
-					// your code here
+					
 					try {
 						Tools.witeObjectToFile(essence, fPath);
 					} catch (IOException e) {

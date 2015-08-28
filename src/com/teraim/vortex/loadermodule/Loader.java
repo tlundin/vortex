@@ -43,19 +43,28 @@ public abstract class Loader extends AsyncTask<ConfigurationModule ,Integer,Load
 	}
 
 
-	public static String getVersion(String h) {
+	public static String getVersion(String h1,String h2) {
 
-		if (h==null)
-			return null;
-		String[] header = h.split(",");
+		
+		String[] header = h1.split(",");
 
 		if (header!=null&&header.length>=2) {
 			String potVer = header[1].trim(); 
 			if (Tools.isVersionNumber(potVer))
 				return potVer;
 		}
+		if (h2!=null) {
+			int p = h2.indexOf("version");
+			if (p>0) {
+				String vNo = h2.substring(p+9, h2.indexOf('\"', p+9));
+				Log.d("vortex","Version line: "+vNo);
+				if (Tools.isVersionNumber(vNo))
+						return vNo;
+			}
+		}
 		Log.d("vortex","No version found for simple lookup.");
-		Log.d("vortex","Header: "+h);
+		Log.d("vortex","Header row1: "+h1);
+		Log.d("vortex","Header row2: "+h2);
 		return null;
 
 	}

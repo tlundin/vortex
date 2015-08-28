@@ -1,5 +1,7 @@
 package com.teraim.vortex.utils;
 
+import java.util.List;
+
 import android.util.Log;
 
 import com.teraim.vortex.dynamic.types.LatLong;
@@ -51,6 +53,38 @@ public class Geomatte {
 		return Math.sqrt(Math.pow((myX-destX),2)+Math.pow(myY-destY, 2));
 
 	}
+	
+	private static double sweDist(Location location, Location location2) {
+		return sweDist(location.getX(),location.getY(),location2.getX(),location2.getY());
+	}
+	
+	public static double lengthOfPath(List<Location> myDots) {
+		if (myDots==null || myDots.size()<2)
+			return 0;
+		
+		double length = 0;
+		
+		for (int i = 0 ; i < myDots.size()-1; i++) {
+			length += sweDist(myDots.get(i),myDots.get(i+1));
+		}
+		return length;
+	}
+
+	public static double getArea(List<Location> myDots) {
+		double T=0; 
+		int p,n;
+		for (int i=0;i<myDots.size();i++) {
+			p = i==0?myDots.size()-1:i-1;
+			n = i==(myDots.size()-1)?0:i+1;
+			T+= myDots.get(i).getX()*(myDots.get(n).getY()-myDots.get(p).getY());
+		}
+		return Math.abs(T/2);
+	}
+	public static double getCircumference(List<Location> myDots) {
+			return lengthOfPath(myDots);
+	}
+
+	
 
 	public static double getRikt2(double userY, double userX, double destY, double destX) {
 		double alfa=-100;
@@ -233,6 +267,8 @@ public class Geomatte {
 	private static double math_atanh(double value) {
 		return 0.5 * Math.log((1.0 + value) / (1.0 - value));
 	}
+
+
 
 
 }

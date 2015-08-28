@@ -27,17 +27,15 @@ import com.teraim.vortex.dynamic.workflow_realizations.WF_Container;
 
 public class DefaultNoScrollTemplate extends Executor {
 
-
-
 	View view; 
 	private LinearLayout my_root;
+
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		Log.d("nils","In onCreate");
 
-			
 		
 	}
 
@@ -53,28 +51,29 @@ public class DefaultNoScrollTemplate extends Executor {
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 		Log.d("nils","I'm in the onCreateView method");
-		if (myContext == null) {
-			Log.e("vortex","No context, exit");
-			return null;
-		}
-			
-		View v = inflater.inflate(R.layout.template_wf_default_no_scroll, container, false);	
-//		errorView = (TextView)v.findViewById(R.id.errortext);
-		my_root = (LinearLayout)v.findViewById(R.id.myRoot);
-//		my_pie = (LinearLayout)v.findViewById(R.id.pieRoot);
-		myContext.addContainers(getContainers());
+		if (view == null) {
+		view = inflater.inflate(R.layout.template_wf_default_no_scroll, container, false);	
 		
-		if (wf!=null ) {
+		
+//		errorView = (TextView)v.findViewById(R.id.errortext);
+		my_root = (LinearLayout)view.findViewById(R.id.myRoot);
+//		my_pie = (LinearLayout)v.findViewById(R.id.pieRoot);
+		if (myContext != null )
+			myContext.addContainers(getContainers());
+		
+		
+		if (wf!=null) {
 			Log.d("vortex","Executing workflow!!");
 			run();
 			
 		} else
 			Log.d("vortex","No workflow found in oncreate default!!!!");
 			
-		
-		return v;
+		}
+		return view;
 	}
 	
+
 	@Override
 	protected List<WF_Container> getContainers() {
 		ArrayList<WF_Container> ret = new ArrayList<WF_Container>();

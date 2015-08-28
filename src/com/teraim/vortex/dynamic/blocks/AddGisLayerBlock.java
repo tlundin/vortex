@@ -42,11 +42,12 @@ public class AddGisLayerBlock extends Block {
 	
 
 	public void create(WF_Context myContext) {
+
 		Drawable gisMap = myContext.getDrawable(target);
 		if (gisMap!=null && gisMap instanceof WF_Gis_Map) {
 			myGis = ((WF_Gis_Map)gisMap);
 			final GisLayer gisLayer = new GisLayer(name,label,isVisible,hasWidget,showLabels);		
-			myGis.getGis().addLayer(gisLayer);
+			myGis.addLayer(gisLayer);
 			if (hasWidget) {
 				Log.d("vortex","Layer "+name+" has a widget");
 				LinearLayout layersL = (LinearLayout)myGis.getWidget().findViewById(R.id.LayersL);

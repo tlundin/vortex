@@ -42,15 +42,16 @@ public class WebLoader extends Loader {
 			in = ucon.getInputStream();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
 			StringBuilder sb = new StringBuilder();
+			//reader.readLine();
+			String headerRow1 = reader.readLine();
 			
-			String header = reader.readLine();
 			//If the file is not readable or reachable, header is null.
-			if (header==null) {
+			if (headerRow1==null) {
 				Log.e("vortex","cannot read data..exiting");
 				return new LoadResult(module,ErrorCode.IOError);
 			}
 			//from this point, equal code independent of source. Implemented in parent.
-			ErrorCode ec = read(module,getVersion(header),reader,sb);
+			ErrorCode ec = read(module,getVersion(headerRow1,null),reader,sb);
 			
 			
 			//setresult runs a parser before returning. Parser is depending on module type.
@@ -72,8 +73,10 @@ public class WebLoader extends Loader {
 		} catch (IOException e) {
 			if (e instanceof MalformedJsonException)
 				return new LoadResult(module,ErrorCode.ParseError);
-			else
+			else {
+				e.printStackTrace();
 				return new LoadResult(module,ErrorCode.IOError);
+			}
 		} catch (XmlPullParserException e) {
 			return new LoadResult(module,ErrorCode.ParseError);
 		} catch (JSONException e) {

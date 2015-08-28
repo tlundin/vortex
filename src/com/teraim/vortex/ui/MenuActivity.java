@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -36,13 +37,13 @@ import com.teraim.vortex.utils.PersistenceHelper;
  * @author Terje
  *
  */
-public class MenuActivity extends Activity  {
+public class MenuActivity extends Activity   {
 
 
 	private BroadcastReceiver brr;
 	private GlobalState gs;
 	private PersistenceHelper globalPh;
-	private AlertDialog uiBlockerWindow;
+
 	private boolean syncIsRunning=false;
 	private MenuActivity me;
 
@@ -59,7 +60,7 @@ public class MenuActivity extends Activity  {
 
 
 
-
+		
 
 		brr = new BroadcastReceiver() {
 			@Override

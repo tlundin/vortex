@@ -2,10 +2,11 @@ package com.teraim.vortex.dynamic.workflow_realizations.gis;
 
 import java.util.List;
 
-import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
-
 import android.graphics.Bitmap;
 import android.graphics.Paint.Style;
+
+import com.teraim.vortex.dynamic.workflow_realizations.gis.FullGisObjectConfiguration.PolyType;
+import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 
 public interface GisFilter {
 
@@ -21,8 +22,8 @@ public interface GisFilter {
 
 	Style getStyle();
 
-	boolean isCircle();
-
+	PolyType getShape();
+	
 	boolean isActive();
 
 	boolean hasCachedFilterResult();

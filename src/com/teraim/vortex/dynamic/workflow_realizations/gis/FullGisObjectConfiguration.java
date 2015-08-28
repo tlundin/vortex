@@ -18,7 +18,8 @@ public interface FullGisObjectConfiguration extends GisObjectBaseAttributes {
 	
 	public enum PolyType {
 		circle,
-		rect
+		rect,
+		triangle
 	}
 	
 	public float getRadius();

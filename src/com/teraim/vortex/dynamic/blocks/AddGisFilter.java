@@ -38,6 +38,8 @@ public class AddGisFilter extends Block implements GisFilter {
 	PolyType polyType;
 	boolean hasWidget=true,isActive=true;
 	private WF_Gis_Map myGis;
+
+
 	public AddGisFilter(String id, String nName, String label, String targetObjectType,String targetLayer,
 			String expression, String imgSource, 
 			String radius, String color, String polyType, String fillType,
@@ -51,10 +53,6 @@ public class AddGisFilter extends Block implements GisFilter {
 		this.expression = expression;
 		this.imgSource = imgSource;
 		this.color = color;
-		this.polyType=PolyType.circle;
-		this.radius=2.5f;
-		if (Tools.isNumeric(radius))
-			this.radius = Float.parseFloat(radius);
 		this.fillType=Paint.Style.FILL;
 		if  (fillType !=null) {
 			if (fillType.equalsIgnoreCase("STROKE"))
@@ -62,12 +60,25 @@ public class AddGisFilter extends Block implements GisFilter {
 			else if (fillType.equalsIgnoreCase("FILL_AND_STROKE"))
 				this.fillType = Paint.Style.FILL_AND_STROKE;
 		}
-
-
+		this.polyType=PolyType.circle;
+		this.radius=10;
 		if (polyType!=null) {
-			if (polyType.toUpperCase().equals("SQUARE")||polyType.equals("RECT")||polyType.equals("RECTANGLE"))
-				this.polyType=PolyType.rect;
-		}		
+			try {
+			this.polyType=PolyType.valueOf(polyType);
+			} catch (IllegalArgumentException e) {
+				if (polyType.toUpperCase().equals("SQUARE")||polyType.toUpperCase().equals("RECT")||polyType.toUpperCase().equals("RECTANGLE"))
+					this.polyType=PolyType.rect;
+				if (polyType.toUpperCase().equals("TRIANGLE"))
+					this.polyType=PolyType.triangle;
+				o.addRow("");
+				o.addRedText("Unknown polytype: ["+polyType+"]. Will default to circle");
+			}
+		}
+
+		if (Tools.isNumeric(radius)) {
+			this.radius=Float.parseFloat(radius);
+
+		}
 		this.hasWidget = hasWidget;
 
 
@@ -76,43 +87,45 @@ public class AddGisFilter extends Block implements GisFilter {
 
 	//Collect the gisobjects affected by the filter. Apply the filtering.
 	public void create(WF_Context myContext) {
-			myGis = myContext.getCurrentGis();
-			if (myGis!=null) {
-			final GisLayer gisLayer = myGis.getGis().getLayer(targetLayer);
+
+			
+		myGis = myContext.getCurrentGis();
+		if (myGis!=null) {
+
+			final GisLayer gisLayer = myGis.getLayer(targetLayer);
 			if (gisLayer!=null) {
-			if (hasWidget) {
-				Log.d("vortex","Filter "+nName+" has a widget");
-				LinearLayout layersL = (LinearLayout)myGis.getWidget().findViewById(R.id.FiltersL);
-				LayoutInflater li = LayoutInflater.from(myContext.getContext());
-				View filtersRow = li.inflate(R.layout.filters_row, null);
-				TextView filterNameT = (TextView)filtersRow.findViewById(R.id.filterName);
-				CheckBox lShow = (CheckBox)filtersRow.findViewById(R.id.cbShow);
-				filterNameT.setText(this.getLabel());
-				lShow.setChecked(isActive);
-				lShow.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+				if (hasWidget) {
+					Log.d("vortex","Filter "+nName+" has a widget");
+					LinearLayout layersL = (LinearLayout)myGis.getWidget().findViewById(R.id.FiltersL);
+					LayoutInflater li = LayoutInflater.from(myContext.getContext());
+					View filtersRow = li.inflate(R.layout.filters_row, null);
+					TextView filterNameT = (TextView)filtersRow.findViewById(R.id.filterName);
+					CheckBox lShow = (CheckBox)filtersRow.findViewById(R.id.cbShow);
+					filterNameT.setText(this.getLabel());
+					lShow.setChecked(isActive);
+					lShow.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 
-					@Override
-					public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {						
-						setActive(isChecked);
-						isActive = isChecked;
-						myGis.getGis().invalidate();
-					}
+						@Override
+						public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {						
+							setActive(isChecked);
+							isActive = isChecked;
+							myGis.getGis().invalidate();
+						}
 
-					
-				});
-				
-				gisLayer.addObjectFilter(targetObjectType, this);
 
-				layersL.addView(filtersRow);
-				layersL.setVisibility(View.VISIBLE);
-			}
+					});
+
+					gisLayer.addObjectFilter(targetObjectType, this);
+					layersL.addView(filtersRow);
+					layersL.setVisibility(View.VISIBLE);
+				}
 			} else {
 				o.addRow("");
 				o.addRedText("Cannot add GisFilter in Block "+blockId+". Cannot find the Layer. Make sure this block comes AFTER the AddGisLayer Block");
 			}
 		}
 	}
-	
+
 	private void setActive(boolean isChecked) {
 		this.isActive=isChecked;
 	}
@@ -147,11 +160,7 @@ public class AddGisFilter extends Block implements GisFilter {
 		return fillType;
 	}
 
-	@Override
-	public boolean isCircle() {
-		return polyType == PolyType.circle;
-	}
-
+	
 	@Override
 	public boolean isActive() {
 		return isActive;
@@ -172,8 +181,13 @@ public class AddGisFilter extends Block implements GisFilter {
 	public List<TokenizedItem> getTokens() {
 		return myT;
 	}
-	
-	
+
+	@Override
+	public PolyType getShape() {
+		return polyType;
+	}
+
+
 
 
 

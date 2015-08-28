@@ -12,6 +12,7 @@ import com.teraim.vortex.dynamic.types.Location;
 import com.teraim.vortex.dynamic.types.SweLocation;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.FullGisObjectConfiguration.GisObjectType;
+import com.teraim.vortex.dynamic.workflow_realizations.gis.FullGisObjectConfiguration.PolyType;
 import com.teraim.vortex.utils.Tools;
 
 public class GisObject {
@@ -101,6 +102,10 @@ public class GisObject {
 	
 	public  GisObjectType getGisPolyType() {
 		return foc.getGisPolyType();
+	}
+	
+	public PolyType getShape() {
+		return foc.getShape();
 	}
 	
 	public Variable getStatusVariable() {

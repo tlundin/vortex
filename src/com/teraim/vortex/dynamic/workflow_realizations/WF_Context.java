@@ -23,6 +23,7 @@ import android.util.Log;
 import com.teraim.vortex.dynamic.EventBroker;
 import com.teraim.vortex.dynamic.Executor;
 import com.teraim.vortex.dynamic.types.CHash;
+import com.teraim.vortex.dynamic.types.GisLayer;
 import com.teraim.vortex.dynamic.types.Rule;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.types.Workflow;
@@ -54,7 +55,6 @@ public class WF_Context {
 	private Workflow myWorkflow;
 	private boolean hasSatNav;
 	public int mapLayer=0;
-
 
 
 	public WF_Context(Context ctx,Executor e,int rootContainerId) {

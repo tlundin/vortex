@@ -33,7 +33,7 @@ public class FileLoader extends Loader {
 		StringBuilder sb = new StringBuilder();		
 		if (module.hasSimpleVersion) {
 			String header = reader.readLine();
-			version = versionControl?getVersion(header):null;
+			version = versionControl?getVersion(header,null):null;
 		}
 		ErrorCode ec = read(module,version,reader,sb);
 		LoadResult lr = new LoadResult(module,ec);
