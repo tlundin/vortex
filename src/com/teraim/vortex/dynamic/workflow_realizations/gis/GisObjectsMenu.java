@@ -292,13 +292,17 @@ public class GisObjectsMenu extends View {
 						//since background is white, add a black edge.
 						//if (fop.getStyle()==Style.FILL)
 						//	canvas.drawCircle(r.left+r.width()/2, r.top+r.height()/2, r.width()/2-iconPadding*2, currB.isSelected?thinWhiteEdgeP:thinBlackEdgeP);
-					} else {
+					} else if (fop.getShape()==PolyType.rect){
 						Log.d("vortex","rect!!");
 						canvas.drawRect(rect, myGis.createPaint(fop.getColor(),fop.getStyle()));
 						//since background is white, add a black edge.
 						if (fop.getStyle()==Style.FILL)
 							canvas.drawRect(rect, currB.isSelected?thinWhiteEdgeP:thinBlackEdgeP);
-					} 				
+					} else if (fop.getShape()==PolyType.triangle) {
+						Log.d("vortex","triangle!!");
+						myGis.drawTriangle(canvas, fop.getColor(),fop.getStyle(),
+								r.width()/2-iconPadding*2,(int) (r.left+r.width()/2), (int)(r.top+r.height()/2));
+					}
 				} else {
 					canvas.drawBitmap(fop.getIcon(),null , rect, null);
 				}

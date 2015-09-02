@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import android.graphics.Path;
 import android.util.Log;
 
 import com.teraim.vortex.dynamic.types.LatLong;
@@ -167,6 +168,14 @@ public class GisObject {
 			double pyr) {
 		Log.e("vortex","Should never be here");
 		return false;
+	}
+
+	Path myPath = null;
+	public Path getPath() {
+		return myPath;
+	}
+	public void setPath(Path p) {
+		myPath = p;
 	}
 
 	

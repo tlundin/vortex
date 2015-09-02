@@ -21,6 +21,7 @@ import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.FullGisObjectConfiguration.PolyType;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisFilter;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.WF_Gis_Map;
+import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 import com.teraim.vortex.utils.Tools;
 
@@ -43,7 +44,7 @@ public class AddGisFilter extends Block implements GisFilter {
 	public AddGisFilter(String id, String nName, String label, String targetObjectType,String targetLayer,
 			String expression, String imgSource, 
 			String radius, String color, String polyType, String fillType,
-			boolean hasWidget) {
+			boolean hasWidget, LoggerI o) {
 		super();
 		this.id = id;
 		this.nName = nName;
@@ -68,10 +69,12 @@ public class AddGisFilter extends Block implements GisFilter {
 			} catch (IllegalArgumentException e) {
 				if (polyType.toUpperCase().equals("SQUARE")||polyType.toUpperCase().equals("RECT")||polyType.toUpperCase().equals("RECTANGLE"))
 					this.polyType=PolyType.rect;
-				if (polyType.toUpperCase().equals("TRIANGLE"))
+				else if (polyType.toUpperCase().equals("TRIANGLE"))
 					this.polyType=PolyType.triangle;
+				else {
 				o.addRow("");
 				o.addRedText("Unknown polytype: ["+polyType+"]. Will default to circle");
+				}
 			}
 		}
 

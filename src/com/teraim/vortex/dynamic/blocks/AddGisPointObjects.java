@@ -35,6 +35,7 @@ import com.teraim.vortex.dynamic.workflow_realizations.gis.GisObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisPolygonObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.StaticGisPoint;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.WF_Gis_Map;
+import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.DbHelper.DBColumnPicker;
 import com.teraim.vortex.utils.DbHelper.Selection;
@@ -71,7 +72,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 			String target, String objContext,String coordType, String locationVars, 
 			String imgSource, String refreshRate, String radius, boolean isVisible, 
 			GisObjectType type, String color, String polyType, String fillType, 
-			String onClick, String statusVariable, boolean isUser, boolean createAllowed) {
+			String onClick, String statusVariable, boolean isUser, boolean createAllowed, LoggerI o) {
 		super();
 		this.blockId = id;
 		this.nName = nName;
@@ -110,10 +111,12 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 			} catch (IllegalArgumentException e) {
 				if (polyType.toUpperCase().equals("SQUARE")||polyType.toUpperCase().equals("RECT")||polyType.toUpperCase().equals("RECTANGLE"))
 					this.polyType=PolyType.rect;
-				if (polyType.toUpperCase().equals("TRIANGLE"))
+				else if (polyType.toUpperCase().equals("TRIANGLE"))
 					this.polyType=PolyType.triangle;
-				o.addRow("");
-				o.addRedText("Unknown polytype: ["+polyType+"]. Will default to circle");
+				else {
+					o.addRow("");
+					o.addRedText("Unknown polytype: ["+polyType+"]. Will default to circle");
+				}
 			}
 		}
 

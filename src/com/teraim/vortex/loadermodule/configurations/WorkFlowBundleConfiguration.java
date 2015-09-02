@@ -332,7 +332,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 		}
 
 		checkForNull("block_ID",id,"targetName",targetName,"targetLayer",targetLayer,"expression",expression);
-		return new AddGisFilter(id,nName,label,targetName,targetLayer,expression,imgSource,radius,color,polyType,fillType,hasWidget);
+		return new AddGisFilter(id,nName,label,targetName,targetLayer,expression,imgSource,radius,color,polyType,fillType,hasWidget,o);
 
 	}
 
@@ -410,7 +410,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 		checkForNull("block_ID",id,"target",target,"location",location);
 		if (imgSource!=null&&!imgSource.isEmpty())
 			Tools.cacheImage(imgSource,cacheFolder);
-		return new AddGisPointObjects(id,nName,label,target,objContext,coordType,location,imgSource,refreshRate,radius,isVisible,type,color,polyType,fillType,onClick,statusVariable,isUser,createAllowed);
+		return new AddGisPointObjects(id,nName,label,target,objContext,coordType,location,imgSource,refreshRate,radius,isVisible,type,color,polyType,fillType,onClick,statusVariable,isUser,createAllowed,o);
 
 	}
 

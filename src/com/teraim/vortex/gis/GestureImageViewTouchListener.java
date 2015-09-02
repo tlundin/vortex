@@ -493,7 +493,7 @@ public class GestureImageViewTouchListener implements OnTouchListener {
 			last.y = current.y;
 
 			if(canDragX || canDragY) {
-				Log.d("vortex","XY "+next.x+","+next.y);
+				//Log.d("vortex","XY "+next.x+","+next.y);
 				image.setPosition(next.x, next.y);
 
 				if(imageListener != null) {
