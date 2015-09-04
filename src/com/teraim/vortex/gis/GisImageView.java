@@ -7,6 +7,7 @@ import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +43,7 @@ import com.teraim.vortex.dynamic.types.SweLocation;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.types.Workflow;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnSave;
+import com.teraim.vortex.dynamic.workflow_realizations.gis.DynamicGisPoint;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.FullGisObjectConfiguration;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.FullGisObjectConfiguration.GisObjectType;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.FullGisObjectConfiguration.PolyType;
@@ -49,6 +51,7 @@ import com.teraim.vortex.dynamic.workflow_realizations.gis.GisConstants;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisFilter;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisMultiPointObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisObject;
+import com.teraim.vortex.dynamic.workflow_realizations.gis.GisPathObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisPointObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisPolygonObject;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.StaticGisPoint;
@@ -64,14 +67,11 @@ import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 
 public class GisImageView extends GestureImageView implements TrackerListener {
 
-
 	private final static String Deg = "\u00b0";
-	private Calendar calendar = Calendar.getInstance();
+
+	//Various paints.
 	private Paint txtPaint;
-	private Handler handler;
-	private Context ctx;
 	private Paint polyPaint;
-	private PhotoMeta photoMetaData;
 	private Paint rCursorPaint;
 	private Paint blCursorPaint;
 	private Paint btnTxt,vtnTxt;
@@ -80,12 +80,43 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 	private Paint borderPaint;
 	private Paint fgPaintSel;
 	private Paint  wCursorPaint,bCursorPaint,markerPaint;
-	private Variable myX,myY;
-	private GisObject touchedGop = null;
-	private static final Map<String,String>YearKeyHash = new HashMap<String,String>();
 	private Paint paintBlur;
 	private Paint paintSimple;
+
+	private Handler handler;
+	private Context ctx;
+	private Calendar calendar = Calendar.getInstance();
+
+	//Photometadata for the current view.
+	private PhotoMeta photoMetaData;
+	private Variable myX,myY;
+	private static final Map<String,String>YearKeyHash = new HashMap<String,String>();
+
+	//Long click or short click?
 	private boolean clickWasShort=false;
+
+	//To avoid creating a new rect in onDraw.
+	private Rect rectReuse = new Rect();
+
+	//The user Gis Point Object
+	private GisPointObject userGop;
+
+	//The bag and layer that contains the object currently clicked.
+	private Set<GisObject> touchedBag;
+	private GisLayer touchedLayer;
+	private GisObject touchedGop = null;
+
+
+	private boolean showLabelForAWhile=true;
+
+	private Set<GisObject> candidates = new TreeSet<GisObject>(new Comparator<GisObject>() {
+		@Override
+		public int compare(GisObject lhs, GisObject rhs) {
+			return (int)(lhs.getDistanceToClick()-rhs.getDistanceToClick());
+		}
+	});
+
+
 
 	public GisImageView(Context context) {
 		super(context);
@@ -188,24 +219,33 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 	private WF_Gis_Map myMap;
 	private boolean allowZoom;
 	private double[] stateToSave = new double[4];
+
+	private List<GisLayer> myLayers;
 	/**
 	 *  
 	 * @param wf_Gis_Map 	The map object
 	 * @param pm			The geo coordinates for the image corners
 	 * @param zoom			If extreme zoom is enabled
+	 * @return 
 	 */
-	public void initialize(WF_Gis_Map wf_Gis_Map, PhotoMeta pm,boolean zoom) {
+	public List<GisLayer> initialize(WF_Gis_Map wf_Gis_Map, PhotoMeta pm,boolean allowZoom, List<GisLayer> layers) {
+
 
 		mapLocationForClick=null;
 		this.photoMetaData=pm;
 		pXR = this.getImageWidth()/pm.getWidth();
 		pYR = this.getImageHeight()/pm.getHeight();
+
+		//Filer away all objects not visible and create cached values for all gisobjects on this map and zoom level.
 		myMap = wf_Gis_Map;
+
+
+		
 		imgHReal = pm.N-pm.S;
 		imgWReal = pm.E-pm.W;
 		myX = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(YearKeyHash, NamedVariables.MY_GPS_LAT);
 		myY = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(YearKeyHash, NamedVariables.MY_GPS_LONG);
-		this.allowZoom = zoom;
+		this.allowZoom = allowZoom;
 		stateToSave[0]=pm.N;
 		stateToSave[1]=pm.E;
 		stateToSave[2]=pm.S;
@@ -252,10 +292,11 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 							myDots = ((GisPolygonObject)newGisObj).getPolygons().get("Poly 1");
 							myDots.add(mapLocationForClick);
 						}
-						//Set menu visible only after at least 2 points defined.
-						if (myDots!=null && myDots.size()>1)
+						//Show menu and length only after at least 2 points defined.
+						if (myDots!=null && myDots.size()>1) {
 							myMap.setVisibleCreate(true);
-						myMap.showLength(Geomatte.lengthOfPath(myDots));
+							myMap.showLength(Geomatte.lengthOfPath(myDots));
+						}
 					} else 
 						Log.e("vortex","New GisObj is null!");
 				} else
@@ -286,9 +327,66 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 
 
 		});
-
+		
+		myLayers = new ArrayList<GisLayer>();
+		initializeAndSiftGisObjects(layers);
+		return myLayers;
 	}
 
+
+	/**
+	 * 
+	 * @param layers
+	 * @return copy only the gis objects in the layers that are visible in this view.
+	 */
+	private void initializeAndSiftGisObjects(List<GisLayer> layers) {
+		for (GisLayer layer :layers) {
+			
+			filterAndCopyLayer(layer);
+
+		}
+		
+	}
+	
+	public void filterAndCopyLayer(GisLayer layer) {
+		Log.d("vortex","In filterAndCopy, layer has "+layer.getGisBags().size()+" bags");
+		GisLayer copy = layer.copy();
+		myLayers.add(copy);
+		Map<String, Set<GisObject>> gops = layer.getGisBags();
+
+		for (String key:gops.keySet()) {
+			Set<GisObject> bag = gops.get(key);
+			Set<GisObject> myBag = new HashSet<GisObject>();
+			Iterator<GisObject> iterator = bag.iterator();
+			int[] xy;
+			boolean hasDynamic = false;
+			while (iterator.hasNext()) {
+				GisObject go = iterator.next();
+				//All dynamic objects are always in the map potentially.
+				if (go instanceof DynamicGisPoint) {
+					hasDynamic=true;
+					myBag.add(go);
+				}
+				else {
+					Location location = go.getLocation();
+					if (location==null) {
+						Log.e("vortex","Gop is missing geo location!");
+						continue;
+					} 
+					xy = translateMapToRealCoordinates(location);
+					if (xy!=null) 
+						myBag.add(go);
+					
+				}
+			}
+			Log.d("vortex","Bag: "+key+" size: "+myBag.size());
+			copy.addObjectBag(key,myBag,hasDynamic);
+		}
+	}
+	
+	
+	
+	
 	private float fixedX=-1;
 	private float fixedY;
 
@@ -471,22 +569,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 
 	}
 
-	private GisPointObject userGop;
 
-	private Set<GisObject> touchedBag;
-
-	private boolean showLabelForAWhile=true;
-
-	private Set<GisObject> candidates = new TreeSet<GisObject>(new Comparator<GisObject>() {
-		@Override
-		public int compare(GisObject lhs, GisObject rhs) {
-			return (int)(lhs.getDistanceToClick()-rhs.getDistanceToClick());
-		}
-	});
-
-	private GisLayer touchedLayer;
-
-	private Rect rectReuse = new Rect();
 
 	@Override
 	protected void dispatchDraw(Canvas canvas) {
@@ -506,7 +589,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 
 			candidates.clear();
 
-			for (GisLayer layerO:myMap.getLayers()) {
+			for (GisLayer layerO:myLayers) {
 				String layerId = layerO.getId();
 				//Log.d("vortex","drawing layer "+layerId);
 				//get all objects that should be drawn on this layer.
@@ -520,13 +603,18 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 				//}
 				Map<String, Set<GisObject>> bags = layerO.getGisBags();
 				Map<String, Set<GisFilter>> filterMap = layerO.getFilters();
+				//only allow clicks if something is not already touched.
+				pXR = this.getImageWidth()/photoMetaData.getWidth();
+				pYR = this.getImageHeight()/photoMetaData.getHeight();
 
 				if (!bags.isEmpty()) {
+
 					for (String key:bags.keySet()) {
 						Set<GisFilter> filters = filterMap.get(key);
 						Set<GisObject> bagOfObjects = bags.get(key);
 						//Log.d("vortex","Found "+gisObjects.size()+" objects");
 						Iterator<GisObject> iterator = bagOfObjects.iterator();
+
 						while (iterator.hasNext()) {
 							GisObject go = iterator.next();
 							if (go instanceof GisPointObject) {
@@ -564,10 +652,15 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 										}
 										gop.setTranslatedLocation(xy);
 									}
+								} else {
+									//This has a cached value. If this is a zoom level, this might be outside current viewport since layers are reused from parent.
+									//If not inside, then don't draw.
+									/*if (outsideViewPort(xy[0],xy[1])) {
+										Log.d("vortex","outside viewport!");
+										continue;
+									}*/
+
 								}
-								//only allow clicks if something is not already touched.
-								pXR = this.getImageWidth()/photoMetaData.getWidth();
-								pYR = this.getImageHeight()/photoMetaData.getHeight();
 
 
 								Bitmap bitmap = gop.getIcon();
@@ -692,7 +785,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 				startShowLabelTimer();
 
 				//Find the layer and bag touched. 
-				for (GisLayer layer:myMap.getLayers()) {
+				for (GisLayer layer:myLayers) {
 					touchedBag = layer.getBagContainingGo(touchedGop);
 					if (touchedBag!=null) 
 						touchedLayer = layer;
@@ -779,10 +872,12 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 
 			//Other objects might or might not be selected.
 		} else {
+			GisPathObject gpo = (GisPathObject)go;
 			//Add glow effect if it is currently being drawn.
 			boolean beingDrawn = go.equals(newGisObj);
 
-			Path p = go.getPath();
+			Path p = gpo.getPath();
+
 			//objects being drawn cannot be cached.
 			if (p==null || beingDrawn) {
 				p = new Path();
@@ -802,7 +897,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 							p.lineTo(xy[0],xy[1]);
 					}
 				}
-				go.setPath(p);
+				gpo.setPath(p);
 			}
 
 			if (go instanceof GisPolygonObject && !beingDrawn)
@@ -1255,4 +1350,12 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 	}
 
 
+
+	/*
+	public boolean outsideViewPort(int x, int y) {
+		x = x+this.getImageWidth()/2;
+		y = this.getImageHeight()/2-y;
+
+		return (x < 0 || x > this.getImageWidth() || y<0 || y>this.getImageHeight()); 
+	}*/
 }

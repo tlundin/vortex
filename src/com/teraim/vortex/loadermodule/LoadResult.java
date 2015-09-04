@@ -15,7 +15,7 @@ public class LoadResult {
 		whatever, 
 		configurationError, 
 		Aborted, 
-		LoadInBackground, newConfigVersionLoaded, BadURL,frozen, parsed, noData, thawed, ClassNotFound, nothingToFreeze, Unsupported
+		LoadInBackground, newConfigVersionLoaded, BadURL,frozen, parsed, noData, thawed, ClassNotFound, nothingToFreeze, Unsupported, reloadDependant, existingVersionIsMoreCurrent
 	}
 	
 	

@@ -24,6 +24,7 @@ public class GisObject {
 	private String label;
 	private Variable statusVar=null;
 	
+	
 	public enum CoordinateType {
 		sweref,
 		latlong
@@ -170,17 +171,11 @@ public class GisObject {
 		return false;
 	}
 
-	Path myPath = null;
-	public Path getPath() {
-		return myPath;
-	}
-	public void setPath(Path p) {
-		myPath = p;
-	}
+
+	//Should be overridden. 
+	
+	public void clearCache() {};
 
 	
-
-
-
 
 }

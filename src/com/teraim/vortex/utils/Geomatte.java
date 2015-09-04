@@ -48,13 +48,16 @@ public class Geomatte {
 
 
 	public static double sweDist(double myY,double myX,double destY, double destX) {	
-		//Log.d("NILS","diffX: diffY: "+(myX-destX)+" "+(myY-destY));
-		//Log.d("NILS","Values  x1 y1 x2 y2: "+myX+" "+myY+" "+destX+" "+destY);
-		return Math.sqrt(Math.pow((myX-destX),2)+Math.pow(myY-destY, 2));
+		Log.d("NILS","diffX: diffY: "+(myX-destX)+" "+(myY-destY));
+		Log.d("NILS","Values  x1 y1 x2 y2: "+myX+" "+myY+" "+destX+" "+destY);
+		double res = Math.sqrt(Math.pow((myX-destX),2)+Math.pow(myY-destY, 2));
+		Log.d("NILS","res: "+res);
+		return res;
 
 	}
 	
 	private static double sweDist(Location location, Location location2) {
+		Log.d("Vortex","swedist: x1,y1  - x2,y2"+location.getX()+","+location.getY()+" - "+location2.getX()+","+location2.getY());
 		return sweDist(location.getX(),location.getY(),location2.getX(),location2.getY());
 	}
 	

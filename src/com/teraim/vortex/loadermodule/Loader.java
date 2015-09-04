@@ -19,6 +19,7 @@ import android.widget.TextView;
 import com.teraim.vortex.FileLoadedCb;
 import com.teraim.vortex.loadermodule.ConfigurationModule.Type;
 import com.teraim.vortex.loadermodule.LoadResult.ErrorCode;
+import com.teraim.vortex.loadermodule.configurations.Dependant_Configuration_Missing;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.utils.Tools;
 
@@ -84,15 +85,24 @@ public abstract class Loader extends AsyncTask<ConfigurationModule ,Integer,Load
 	}
 
 	int rowC = 1;
-	protected ErrorCode read(ConfigurationModule m, String newVersion, BufferedReader reader,StringBuilder sb) throws IOException {
+	protected LoadResult read(ConfigurationModule m, String newVersion, BufferedReader reader,StringBuilder sb) throws IOException {
 		String line = null;
 		if (newVersion != null) {
 			m.setVersion(newVersion);
 			if (versionControl) {
 				String version = m.getFrozenVersion();
-				if (version!=null && version.equals(newVersion)) {
-					//We can set the version number safely.
-					return ErrorCode.sameold;
+				if (version!=null) {
+					if (version.equals(newVersion)) 
+						//We can set the version number safely.
+						return new LoadResult(m,ErrorCode.sameold);
+					try {
+						float newV = Float.parseFloat(newVersion); 
+						float oldV = Float.parseFloat(version);
+						if (oldV >= newV)
+							return new LoadResult(m,ErrorCode.existingVersionIsMoreCurrent,newVersion);
+					} catch (NumberFormatException e) {
+						Log.e("vortex","Version is not a float");
+					}
 				}
 			}
 		}
@@ -101,16 +111,16 @@ public abstract class Loader extends AsyncTask<ConfigurationModule ,Integer,Load
 			sb.append(line + "\n");
 			if(isCancelled()) {
 				reader.close();
-				return ErrorCode.Aborted;
+				return new LoadResult(m,ErrorCode.Aborted);
 			}
 			if ((rowC++%20)==0) 
 				this.publishProgress(0,rowC);
 		}
 		m.setRawData(sb.toString(), rowC);
-		return ErrorCode.loaded;
+		return new LoadResult(m,ErrorCode.loaded);
 	}
 
-	protected LoadResult parse(ConfigurationModule m) throws IOException, XmlPullParserException, JSONException {
+	protected LoadResult parse(ConfigurationModule m) throws IOException, XmlPullParserException, JSONException, Dependant_Configuration_Missing {
 		if (m.type==Type.csv)
 			return parseCSV((CSVConfigurationModule)m);
 		else if (m.type==Type.json)
@@ -119,7 +129,7 @@ public abstract class Loader extends AsyncTask<ConfigurationModule ,Integer,Load
 			return parseXML((XMLConfigurationModule)m);
 	}
 
-	protected LoadResult parseCSV(CSVConfigurationModule m) throws IOException {
+	protected LoadResult parseCSV(CSVConfigurationModule m) throws IOException, Dependant_Configuration_Missing {
 		String[] myRows=null;
 		int noOfRows=rowC;
 		LoadResult res = null;

@@ -40,8 +40,8 @@ public class ModuleLoader implements FileLoadedCb{
 
 		ConfigurationModule module;
 		//check if any module needs to load.
-		if (myModules.hasNext()) {
 			module = myModules.next();
+		if (module!=null) {
 			o.addRow(module.getLabel()+" :");
 			Log.d("vortex",module.getLabel()+" :");
 			module.load(this);
@@ -69,20 +69,25 @@ public class ModuleLoader implements FileLoadedCb{
 		if (module != null) { 
 			debug.addRow("Module "+res.module.fileName+" loaded. Returns code "+res.errCode.name()+(res.errorMessage!=null?" and errorMessage: "+res.errorMessage:""));
 			Log.d("vortex","Module "+res.module.fileName+" loaded. Returns code "+res.errCode.name()+(res.errorMessage!=null?" and errorMessage: "+res.errorMessage:""));
-			o.addText(" [");
-			if (module.version!=null)
-				o.addText(module.version);
-			else
-				o.addText("?");
-			o.addText("]");
+			
 
 			switch (res.errCode) {
-			
+			case existingVersionIsMoreCurrent:
 			case sameold:
 				if (thawModule(module)) {
-					module.setLoaded();
-					o.addText(" No update");
+					module.setLoaded(true);
+					if (res.errCode==ErrorCode.existingVersionIsMoreCurrent) {
+						o.addRow("");
+						o.addText(" Remote version older: [");
+						o.addRedText(res.errorMessage);
+						o.addText("]");
+					}
+					else 
+						o.addText(" No update");
+					o.addRow("");
+					o.addYellowText("Current version will be used: "+module.getFrozenVersion());
 				} else { 
+					Log.d("vortex","Retrying.");
 					o.addYellowText(" fail..retrying..");
 					module.setFrozenVersion(null);
 					module.load(this);
@@ -93,8 +98,14 @@ public class ModuleLoader implements FileLoadedCb{
 				break;
 			case frozen:
 			case nothingToFreeze:
-				module.setLoaded();
+				module.setLoaded(true);
 				o.addGreenText(" New!");
+				o.addText(" [");
+				if (module.version!=null)
+					o.addText(module.version);
+				else
+					o.addText("?");
+				o.addText("]");
 				break;
 			case Unsupported:
 			case IOError:
@@ -115,11 +126,25 @@ public class ModuleLoader implements FileLoadedCb{
 				printError(res.errCode);
 				if (module.frozenFileExists()) {
 					if (thawModule(module)) {
-						o.addRow("");o.addYellowText("Current version will be used.");
+						o.addRow("");o.addYellowText("Current version will be used: "+module.getFrozenVersion());
+						module.setLoaded(true);
 					} 
 				} else 
 					module.setNotFound();
 					
+				break;
+			case reloadDependant:
+				Log.d("vortex","Dependant ["+res.errorMessage+"] needs to be reloaded.");
+				ConfigurationModule reloadModule = myModules.getModule(res.errorMessage);
+				if (reloadModule!=null) {
+					reloadModule.setLoaded(false);
+					reloadModule.setFrozenVersion(null);
+					module.setFrozenVersion(null);
+					module.setLoaded(false);
+					Log.d("vortex","Now retry load of modules");
+					o.addRow("");
+					o.addRedText("Reload required for dependant "+res.errorMessage);
+				}
 				break;
 			default:
 				o.addText("?: "+res.errCode.name());
@@ -133,7 +158,7 @@ public class ModuleLoader implements FileLoadedCb{
 
 	private void printError(ErrorCode errCode) {
 		if (errCode==ErrorCode.IOError) {
-			if (!Tools.isNetworkAvailable(ctx)) 
+			if (ctx!=null && !Tools.isNetworkAvailable(ctx)) 
 				o.addRow("No network");
 			else
 				o.addRow("File not found");

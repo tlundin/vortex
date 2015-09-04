@@ -31,7 +31,6 @@ public abstract class ConfigurationModule {
 	}
 	public Source source;
 	public Type type;
-	private  String urlOrPath;
 	public String rawData,version,fileName,fullPath,printedLabel,frozenPath;
 	protected PersistenceHelper globalPh,ph;
 	protected boolean IamLoaded=false,versionControl;
@@ -47,7 +46,7 @@ public abstract class ConfigurationModule {
 	public ConfigurationModule(PersistenceHelper gPh,PersistenceHelper ph, Type type, Source source, String urlOrPath,String fileName,String moduleName) {
 		this.source=source;
 		this.type=type;
-		this.urlOrPath=urlOrPath;
+		
 		this.fileName=fileName;
 		this.globalPh=gPh;
 		this.ph=ph;
@@ -72,8 +71,8 @@ public abstract class ConfigurationModule {
 	}
 
 	//Freeze version number when load succesful
-	public void setLoaded() {
-		IamLoaded=true;
+	public void setLoaded(boolean loadStatus) {
+		IamLoaded=loadStatus;
 	}
 
 	public void setNotFound() {
@@ -91,7 +90,7 @@ public abstract class ConfigurationModule {
 
 	public void cancelLoader() {
 		if (mLoader!=null) {
-			Log.e("vortex","Canncelled mLoader!");
+			Log.e("vortex","Cancelled mLoader!");
 			mLoader.cancel(true);
 			mLoader = null;
 		}

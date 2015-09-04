@@ -13,6 +13,7 @@ import android.widget.TextView;
 
 import com.teraim.vortex.FileLoadedCb;
 import com.teraim.vortex.loadermodule.LoadResult.ErrorCode;
+import com.teraim.vortex.loadermodule.configurations.Dependant_Configuration_Missing;
 
 public class FileLoader extends Loader {
 
@@ -35,10 +36,10 @@ public class FileLoader extends Loader {
 			String header = reader.readLine();
 			version = versionControl?getVersion(header,null):null;
 		}
-		ErrorCode ec = read(module,version,reader,sb);
-		LoadResult lr = new LoadResult(module,ec);
+ 
+		LoadResult lr = read(module,version,reader,sb);
 		//setresult runs a parser before returning. Parser is depending on module type.
-		if (ec==ErrorCode.loaded) {
+		if (lr!=null && lr.errCode==ErrorCode.loaded) {
 			lr = parse(module);
 			if (lr.errCode == ErrorCode.parsed) {
 				lr = freeze(module);
@@ -56,6 +57,8 @@ public class FileLoader extends Loader {
 		} catch (JSONException e) {
 			e.printStackTrace();
 			return new LoadResult(module,ErrorCode.ParseError);
+		} catch (Dependant_Configuration_Missing e) {
+			return new LoadResult(module, ErrorCode.reloadDependant,e.getDependendant());
 		}
 		finally {
 			try {if (reader!=null)reader.close();}catch (Exception e){};

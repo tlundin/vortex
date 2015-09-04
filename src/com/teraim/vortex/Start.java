@@ -260,10 +260,9 @@ public class Start extends MenuActivity {
 		if ((keyCode == KeyEvent.KEYCODE_BACK)) {
 			Log.d("vortex","gets here key back");
 
-			
-			final WF_Context wfCtx = GlobalState.getInstance().getCurrentContext();
-			
-			Log.d("vortex","gets here wftctx is "+wfCtx);
+			GlobalState gs = GlobalState.getInstance();
+			if (gs!=null) {
+			final WF_Context wfCtx = gs.getCurrentContext();
 			boolean map=false;
 			if (wfCtx!=null) {
 				if (wfCtx.getCurrentGis()!=null) {
@@ -297,6 +296,7 @@ public class Start extends MenuActivity {
 					}
 				}
 			}
+			
 			if (getFragmentManager().findFragmentById(R.id.content_frame) instanceof LinjePortalTemplate) {
 				final LinjePortalTemplate lp = (LinjePortalTemplate)getFragmentManager().findFragmentById(R.id.content_frame);
 				if (lp.isRunning()) {
@@ -316,6 +316,7 @@ public class Start extends MenuActivity {
 				}
 			}
 			setTitle("");
+			}
 		}
 
 		return super.onKeyDown(keyCode, event);

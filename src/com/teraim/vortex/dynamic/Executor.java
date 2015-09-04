@@ -67,6 +67,7 @@ import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnSave;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Static_List;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Table;
+import com.teraim.vortex.dynamic.workflow_realizations.gis.WF_Gis_Map;
 import com.teraim.vortex.gis.Tracker;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
@@ -642,6 +643,9 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 					l.draw();
 				for (WF_Table t:myContext.getTables())
 					t.draw();
+				WF_Gis_Map gis = myContext.getCurrentGis();
+				if (gis!=null)
+					gis.initialize();
 				//Trgger redraw event on lists.
 				//myContext.registerEvent(new WF_Event_OnSave("fackabuudle"));
 				if (root!=null) 

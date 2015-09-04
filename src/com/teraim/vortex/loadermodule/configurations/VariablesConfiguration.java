@@ -50,6 +50,10 @@ public class VariablesConfiguration extends CSVConfigurationModule {
 
 	@Override
 	public String getFrozenVersion() {
+		//Force reload of this file if Groups has been loaded.
+		if (GroupsConfiguration.getSingleton()!=null) {
+			return null;
+		}
 		return (ph.get(PersistenceHelper.CURRENT_VERSION_OF_VARPATTERN_FILE));
 	}
 
@@ -67,7 +71,7 @@ public class VariablesConfiguration extends CSVConfigurationModule {
 	GroupsConfiguration gc=null;
 	
 	@Override
-	protected LoadResult prepare() throws IOException {		
+	protected LoadResult prepare() throws IOException, Dependant_Configuration_Missing {		
 
 		cheaderL = new ArrayList<String>();
 
@@ -79,6 +83,8 @@ public class VariablesConfiguration extends CSVConfigurationModule {
 			groups = gc.getGroups();
 			nameIndex = gc.getNameIndex();
 			groupIndex = gc.getGroupIndex();
+		} else {
+			throw new Dependant_Configuration_Missing("Groups");
 		}
 		return null;
 	}

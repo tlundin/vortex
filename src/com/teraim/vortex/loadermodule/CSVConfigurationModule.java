@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
+import com.teraim.vortex.loadermodule.configurations.Dependant_Configuration_Missing;
 import com.teraim.vortex.utils.PersistenceHelper;
 
 public abstract class CSVConfigurationModule extends ConfigurationModule {
@@ -14,7 +15,7 @@ public abstract class CSVConfigurationModule extends ConfigurationModule {
 		super(gPh,ph, Type.csv, source, urlOrPath, fileName, moduleName);
 	}
 
-	protected abstract LoadResult prepare() throws IOException;
+	protected abstract LoadResult prepare() throws IOException, Dependant_Configuration_Missing;
 	public abstract LoadResult parse(String row, Integer currentRow) throws IOException;
 	
 }

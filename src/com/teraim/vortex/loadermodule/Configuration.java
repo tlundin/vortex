@@ -9,20 +9,21 @@ import android.util.Log;
 public class Configuration {
 	
 	private List<ConfigurationModule> mModules;
-	private int current=-1;
+
 	
 	public Configuration(List<ConfigurationModule> modules) {
 		mModules=modules;
 	}
-	public Configuration(ConfigurationModule module) {
-		mModules=new ArrayList<ConfigurationModule>();
-		mModules.add(module);
-	}
+
 		
 	
 	public ConfigurationModule next() {
-		current++;
-		return mModules.get(current);
+		
+		for (ConfigurationModule cm:mModules) {
+			if (!cm.isLoaded())
+				return cm;
+		}
+		return null;
 	}
 	
 	public ConfigurationModule getModule(String moduleName) {
@@ -34,12 +35,6 @@ public class Configuration {
 	public List<ConfigurationModule> getAll() {
 		return mModules;
 	}
-	public boolean hasNext() {
-		return current<mModules.size()-1;
-	}
-	public void flush() {
-		Log.d("vortex","Calling flush!");
-		current = -1;
-	}
+	
 	
 }

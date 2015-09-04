@@ -8,6 +8,8 @@ public interface Drawable {
 	public void show();
 	public void hide();
 	boolean isVisible();
+
+	
 	
 	
 }

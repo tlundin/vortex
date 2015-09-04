@@ -21,5 +21,9 @@
 	
 	<string name="resetSyncButton">reset_sync</string>		
 	
+	<string name="length_">Length:</string>		
+	
+	<string name="ok">OK</string>		
+	
 		
 </resources>

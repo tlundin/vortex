@@ -51,7 +51,7 @@ public abstract class GisPointObject extends GisObject {
 		}
 		if (this.getWorkflow()==null)
 			return false;
-		Log.d("vortex","pxr pyr"+pxr+","+pyr);
+		//Log.d("vortex","pxr pyr"+pxr+","+pyr);
 		double xD = (mapLocationForClick.getX()-myLocation.getX())*pxr;
 		double yD = (mapLocationForClick.getY()-myLocation.getY())*pyr;
 
@@ -98,7 +98,8 @@ public abstract class GisPointObject extends GisObject {
 		this.xy=xy;
 	}
 
-
+	@Override
+	public void clearCache() {xy=null;};
 
 }
 

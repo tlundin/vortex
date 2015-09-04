@@ -732,9 +732,7 @@ public class GlobalState  {
 		this.myModules = myModules;
 	}
 
-	public void flushModules() {
-		myModules.flush();
-	}
+
 
 	public static void destroy() {
 		singleton=null;

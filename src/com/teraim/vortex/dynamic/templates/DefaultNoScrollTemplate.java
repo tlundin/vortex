@@ -69,6 +69,13 @@ public class DefaultNoScrollTemplate extends Executor {
 		} else
 			Log.d("vortex","No workflow found in oncreate default!!!!");
 			
+		} else {
+			//If view exists, we are moving backwards in the stack. GIS objects need to drop their cached values.
+			if (myContext!=null && myContext.getCurrentGis()!=null) {
+				Log.d("vortex","Clearing gis cache in onCreateView");
+				myContext.getCurrentGis().clearLayerCaches();
+			}
+				
 		}
 		return view;
 	}

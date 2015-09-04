@@ -22,9 +22,10 @@ public class GisLayer {
 
 	private String name, label;
 	private boolean isVisible, hasWidget,hasDynamic=false;
-	Map<String,Set<GisObject>> myObjects;
+	private Map<String,Set<GisObject>> myObjects;
 	private boolean showLabels;
 	private Map<String, Set<GisFilter>> myFilters;
+	
 	
 	public GisLayer(String name, String label, boolean isVisible,
 			boolean hasWidget, boolean showLabels) {
@@ -38,6 +39,18 @@ public class GisLayer {
 		myFilters = new HashMap<String,Set<GisFilter>>();
 	}
 
+
+	public GisLayer copy() {
+		GisLayer copy = new GisLayer(name,label,isVisible,hasWidget,showLabels);
+		//shallow copy of filters
+		copy.myFilters = this.myFilters;
+		copy.hasDynamic= this.hasDynamic;
+		copy.myObjects = this.myObjects;
+		copy.myFilters = this.myFilters;
+		return copy;
+		
+	}
+	
 	public void addObjectBag(String key, Set<GisObject> myGisObjects, boolean dynamic) {
 		if (myGisObjects==null) {
 			myGisObjects = new HashSet<GisObject>();
@@ -113,5 +126,21 @@ public class GisLayer {
 	public String getId() {
 		return name;
 	}
+
+	public void clearCaches() {
+		for (String key:myObjects.keySet()) {
+			Set<GisObject> bag = myObjects.get(key);
+			for (GisObject go:bag) {
+				go.clearCache();
+			}
+		}
+	}
+
+
+	public boolean hasWidget() {
+		return hasWidget;
+	}
+
+
 
 }

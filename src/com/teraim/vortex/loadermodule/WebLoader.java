@@ -19,6 +19,7 @@ import android.widget.TextView;
 
 import com.teraim.vortex.FileLoadedCb;
 import com.teraim.vortex.loadermodule.LoadResult.ErrorCode;
+import com.teraim.vortex.loadermodule.configurations.Dependant_Configuration_Missing;
 
 
 public class WebLoader extends Loader {
@@ -50,13 +51,10 @@ public class WebLoader extends Loader {
 				Log.e("vortex","cannot read data..exiting");
 				return new LoadResult(module,ErrorCode.IOError);
 			}
-			//from this point, equal code independent of source. Implemented in parent.
-			ErrorCode ec = read(module,getVersion(headerRow1,null),reader,sb);
-			
-			
+		
 			//setresult runs a parser before returning. Parser is depending on module type.
-			LoadResult loadResult;
-			if (ec==ErrorCode.loaded) {
+			LoadResult loadResult = read(module,getVersion(headerRow1,null),reader,sb);;
+			if (loadResult!=null && loadResult.errCode==ErrorCode.loaded) {
 				loadResult = parse(module);
 				if (loadResult.errCode==ErrorCode.parsed)
 					return freeze(module);
@@ -64,7 +62,7 @@ public class WebLoader extends Loader {
 					return loadResult;
 			}
 			else
-				return new LoadResult(module,ec);
+				return loadResult;
 
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
@@ -82,6 +80,8 @@ public class WebLoader extends Loader {
 		} catch (JSONException e) {
 			e.printStackTrace();
 			return new LoadResult(module,ErrorCode.ParseError);
+		} catch (Dependant_Configuration_Missing e) {
+			return new LoadResult(module, ErrorCode.reloadDependant,e.getDependendant());
 		}
 		finally {
 			try {if (in!=null)in.close();}catch (Exception e){};

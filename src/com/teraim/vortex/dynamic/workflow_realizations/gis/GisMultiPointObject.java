@@ -10,7 +10,7 @@ import com.teraim.vortex.dynamic.types.SweLocation;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.FullGisObjectConfiguration.GisObjectType;
 import com.teraim.vortex.utils.Geomatte;
 
-public class GisMultiPointObject extends GisObject {
+public class GisMultiPointObject extends GisPathObject {
 
 	private FullGisObjectConfiguration poc;
 	

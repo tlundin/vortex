@@ -138,6 +138,15 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 		if (gisB==null) {
 			Log.e("vortex","gisB null!!");
 			return;
+		} else {
+			if (createAllowed) {
+				Log.d("vortex","Adding type to create menu for "+nName);
+				gisB.addGisObjectType(this);
+			}
+			if (gisB.isZoomLevel()) {
+				Log.d("vortex","Zoom level!..use existing gis objects!");
+				return;
+			}
 		}
 
 
@@ -149,7 +158,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 				if (!imgSource.toLowerCase().startsWith(protocol))
 					imgSource = protocol+imgSource;
 				Log.d("vortex","IMGURL: "+imgSource);
-				new DownloadImageTask(gisB)
+				new DownloadImageTask()
 				.execute(imgSource);
 			} else {
 				try {
@@ -269,10 +278,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 
 
 		if (pickerLocation1 !=null ) {
-			if (createAllowed) {
-				Log.d("vortex","Adding type to create menu for "+nName);
-				gisB.addGisObjectType(this);
-			}
+			
 			myGisObjects = new HashSet<GisObject> ();
 			boolean hasValues = pickerLocation1.moveToFirst();
 			//No values! A dynamic variable can create new ones, so create object anyway.
@@ -428,12 +434,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 
 	private class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
 
-		WF_Gis_Map gisB;
-		int tries =10;
-		public DownloadImageTask(WF_Gis_Map gisB) {
-			this.gisB=gisB;
-		}
-
+		
 		protected Bitmap doInBackground(String... urls) {
 			String urldisplay = urls[0];
 			Bitmap mIcon11 = null;
@@ -514,12 +515,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 		return res;
 	}
 
-	public class PointConfiguration {
-
-		String tag;
-		int radius;
-		String color;
-	}
+	
 
 
 

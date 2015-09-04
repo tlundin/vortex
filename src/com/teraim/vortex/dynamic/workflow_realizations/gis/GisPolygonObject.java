@@ -12,7 +12,7 @@ import com.teraim.vortex.dynamic.types.SweLocation;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.utils.Geomatte;
 
-public class GisPolygonObject extends GisObject {
+public class GisPolygonObject extends GisPathObject {
 
 	Map<String, List<Location>> polygons;
 	private FullGisObjectConfiguration conf;

@@ -112,7 +112,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			String frozenVersion = getFrozenVersion();
 			if (version!=null && version.equals(frozenVersion)) 
 				return new LoadResult(this,ErrorCode.sameold);
-
+			
 		}
 		return null;
 	}

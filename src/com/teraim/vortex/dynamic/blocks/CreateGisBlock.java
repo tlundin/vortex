@@ -112,7 +112,7 @@ public class CreateGisBlock extends Block {
 		final View createMenuL = mapView.findViewById(R.id.createMenuL);
 		
 		Rect r=null;
-		boolean zoom=true;
+		
 		if (cutOut==null) {
 			BitmapFactory.Options options = new BitmapFactory.Options();
 			options.inJustDecodeBounds = true;
@@ -122,18 +122,18 @@ public class CreateGisBlock extends Block {
 			int imageWidth = options.outWidth;
 			Log.d("vortex","image rect h w is "+imageHeight+","+imageWidth);
 			r = new Rect(0,0,imageWidth,imageHeight);
-			zoom = true;
+
 		} else {
 			//This is a cutout. pop the correct slice specification from the stack. 
-			zoom=false;
 			r = cutOut.r;
 			Location topC = cutOut.geoR.get(0);
 			Location botC = cutOut.geoR.get(1);
 			photoMetaData = new PhotoMeta(topC.getY(),botC.getX(),botC.getY(),topC.getX());
 			cutOut=null;
 		}
-		gis = new WF_Gis_Map(this,r,blockId, mapView, isVisible, picUrlorName,myContext,photoMetaData,avstRL,createMenuL,zoom);
-		
+		gis = new WF_Gis_Map(this,r,blockId, mapView, isVisible, picUrlorName,myContext,photoMetaData,avstRL,createMenuL,myLayers);
+		//need to throw away the reference to myLayers.
+		myLayers=null;
 		myContainer.add(gis);
 		myContext.addGis(gis.getId(),gis);
 		myContext.addEventListener(gis, EventType.onSave);
@@ -229,7 +229,7 @@ public class CreateGisBlock extends Block {
 	
 	//Reloads current flow with a new viewport.
 	//Cache for layers.
-	List<GisLayer> myLayers;
+	List<GisLayer> myLayers=null;
 	
 	public void setCutOut(Rect r, List<Location> geoR, List<GisLayer> myLayers) {
 		cutOut = new Cutout();
