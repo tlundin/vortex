@@ -10,7 +10,7 @@ public  class AddRuleBlock extends Block {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 2045031005203874390L;
+	private static final long serialVersionUID = 2045031005203874391L;
 	private Rule r;
 
 
@@ -25,7 +25,7 @@ public  class AddRuleBlock extends Block {
 
 	public void create(WF_Context myContext) {
 		Log.d("nils","Create called in addRuleBlock. Target name: "+r.targetName);
-		myContext.addRule(r.targetName, r);
+		myContext.addRule(r);
 	}
 
 }

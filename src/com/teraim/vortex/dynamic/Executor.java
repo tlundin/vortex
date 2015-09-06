@@ -120,7 +120,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 
 	private List<Block> blocks;
 
-	
+	private List<Integer> executedBlocks;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -252,15 +252,18 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 			boolean notDone = true;
 			Set<Variable>blockVars;
 			boolean hasDrawer=false;
-
+			myContext.clearExecutedBlocks();
 			try {
-				
+			
 			while(notDone) {
 				if (blockP>=blocks.size()) {
 					notDone=false;
 					break;
 				}
 				Block b = blocks.get(blockP);
+				//Add block to list of executed blocks.
+				try { myContext.addExecutedBlock(Integer.parseInt(b.getBlockId())); } catch (NumberFormatException e) {Log.e("vortex","blockId was not Integer");}
+				
 				if (b instanceof PageDefineBlock) {
 					PageDefineBlock bl = (PageDefineBlock)b;
 					Log.d("vortex","Found pagedefine!");

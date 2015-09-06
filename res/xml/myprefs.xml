@@ -55,7 +55,7 @@ xmlns:android="http://schemas.android.com/apk/res/android" >
     		android:defaultValue="false" />
 <CheckBoxPreference
     		android:key="no_version_control"
-    		android:title="Version Control"
+    		android:title="Ignore Versions"
     		android:summary="Always load the configuration files"
     		android:dialogTitle=""
     		android:dialogMessage=""

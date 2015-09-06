@@ -74,6 +74,7 @@ public class DefaultNoScrollTemplate extends Executor {
 			if (myContext!=null && myContext.getCurrentGis()!=null) {
 				Log.d("vortex","Clearing gis cache in onCreateView");
 				myContext.getCurrentGis().clearLayerCaches();
+				myContext.getCurrentGis().getGis().initializeAndSiftGisObjects();
 			}
 				
 		}

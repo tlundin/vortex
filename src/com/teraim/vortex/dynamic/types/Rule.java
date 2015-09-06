@@ -19,7 +19,7 @@ public class Rule implements Serializable {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -1965204853256767315L;
+	private static final long serialVersionUID = -1965204853256767316L;
 	public String targetName, condition, action, errorMsg,label,id;
 	private Context ctx;
 	private Type myType;
@@ -27,6 +27,7 @@ public class Rule implements Serializable {
 	private RuleExecutor re;
 	private boolean initDone = false;
 	private LoggerI o;
+	private int myTarget=-1;
 
 	public Rule(String id,String ruleLabel, String target, String condition,
 			String action, String errorMsg) {
@@ -39,7 +40,9 @@ public class Rule implements Serializable {
 		myType = Type.WARNING;
 		if (action!=null && action.equalsIgnoreCase("Error_severity"))
 			myType = Type.ERROR;
-
+		try {
+			myTarget = Integer.parseInt(target);
+		} catch (NumberFormatException e) {};
 	}
 
 	public enum Type {
@@ -98,6 +101,10 @@ public class Rule implements Serializable {
 
 		public Type getType() {
 			return myType;
+		}
+		
+		public int getTarget() {
+			return myTarget;
 		}
 
 	}

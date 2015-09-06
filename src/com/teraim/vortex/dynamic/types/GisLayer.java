@@ -35,8 +35,8 @@ public class GisLayer {
 		this.isVisible = isVisible;
 		this.hasWidget = hasWidget;
 		this.showLabels=showLabels;
-		myObjects = new HashMap<String,Set<GisObject>>();
-		myFilters = new HashMap<String,Set<GisFilter>>();
+		
+		
 	}
 
 
@@ -45,14 +45,19 @@ public class GisLayer {
 		//shallow copy of filters
 		copy.myFilters = this.myFilters;
 		copy.hasDynamic= this.hasDynamic;
-		copy.myObjects = this.myObjects;
-		copy.myFilters = this.myFilters;
+		//copy.myObjects = this.myObjects;
+		//copy.myFilters = this.myFilters;
 		return copy;
 		
 	}
 	
 	public void addObjectBag(String key, Set<GisObject> myGisObjects, boolean dynamic) {
-		if (myGisObjects==null) {
+		if (myObjects==null) {
+			myObjects = new HashMap<String,Set<GisObject>>();
+			
+		} 
+		
+		if (myGisObjects == null) {
 			myGisObjects = new HashSet<GisObject>();
 			Log.d("vortex","Added empty set");
 		}
@@ -78,10 +83,14 @@ public class GisLayer {
 		return myObjects;
 	}
 	public Set<GisObject> getBagOfType(String type) {
-		return myObjects.get(type);
+		if (myObjects !=  null )
+			return myObjects.get(type);
+		return null;
 	}
 	public Map<String,Set<GisFilter>> getFilters() {
-		return myFilters;
+		if (myFilters !=  null )
+			return myFilters;
+		return null;
 	}
 
 	public void setVisible(boolean isVisible) {
@@ -93,6 +102,8 @@ public class GisLayer {
 	 * @return -- the first instance of the object if found. 
 	 * */
 	public Set<GisObject> getBagContainingGo(GisObject go) {
+		if (myObjects == null)
+			return null;
 		for (String k:myObjects.keySet()) {
 			Set<GisObject> gos = myObjects.get(k);
 			for (GisObject g:gos) 
@@ -132,6 +143,7 @@ public class GisLayer {
 			Set<GisObject> bag = myObjects.get(key);
 			for (GisObject go:bag) {
 				go.clearCache();
+				go.unmark();
 			}
 		}
 	}

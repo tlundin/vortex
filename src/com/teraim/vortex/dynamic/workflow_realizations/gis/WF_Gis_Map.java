@@ -535,8 +535,10 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 				}
 			}
 		}
-		else
+		else {
+
 			avstRL.setVisibility(View.GONE);
+		}
 	}
 
 	public void setVisibleCreate(boolean isVisible) {
@@ -756,10 +758,8 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 
 	public void initialize() {
 		//Inititalize map, and set the layers view.
-		List<GisLayer> layers = gisImageView.initialize(this,photoMeta,!isZoomLevel,myLayers);
-		Log.d("vortex","Layers has "+layers.size()+" members and mylayers has "+myLayers.size());
-		if (layers!=null)
-			initializeLayersMenu(layers);
+		gisImageView.initialize(this,photoMeta,!isZoomLevel);
+		initializeLayersMenu(myLayers);
 		
 	}
 

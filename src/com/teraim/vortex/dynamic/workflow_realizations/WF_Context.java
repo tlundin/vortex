@@ -44,7 +44,8 @@ public class WF_Context {
 	private List<WF_Container> containers;
 	private final Executor myTemplate;
 	private EventBroker eventBroker;
-	private Map<String,Set<Rule>> rules=new HashMap<String,Set<Rule>>();
+	private Set<Rule> rules=new HashSet<Rule>();
+	private Set<Integer> executedBlocks = new HashSet<Integer>();
 	private final int rootContainerId; 
 	private String statusVariable=null;
 	private List<Filterable> filterables;
@@ -78,6 +79,13 @@ public class WF_Context {
 		myWorkflow = flow;
 	}
 
+	public void addExecutedBlock(int blockId) {
+		executedBlocks.add(blockId);
+	}
+	
+	public void clearExecutedBlocks() {
+		executedBlocks.clear();
+	}
 	
 	public Activity getActivity() {
 		return (Activity)ctx;
@@ -267,19 +275,23 @@ public class WF_Context {
 		}
 	}
 
-	public void addRule(String key, Rule r) {
-		Set<Rule> l = rules.get(key);
-		if (l==null) {
-			l = new HashSet<Rule>();
-			rules.put(key, l);
-		}
-		l.add(r);
+	public void addRule(Rule r) {
+		rules.add(r);
 	}
 
-	public Set<Rule> getRules(String key) {
-		if (rules != null)
-			return rules.get(key);
-		return null;
+	/*public Set<Rule> getRules() {
+		return rules;
+	}
+	*/
+	public Set<Rule> getRulesThatApply() {
+		Set<Rule> ret=new HashSet<Rule>();
+		boolean add;
+		for (Rule r:rules) {
+			add=(r.getTarget()==-1)||(executedBlocks.contains(r.getTarget()));
+			if (add)
+				ret.add(r);
+		}
+		return ret;
 	}
 
 	public void setStatusVariable(String statusVar) {
@@ -337,6 +349,7 @@ public class WF_Context {
 	public void reload() {
 		myTemplate.restart();
 	}
+	
 
 
 }

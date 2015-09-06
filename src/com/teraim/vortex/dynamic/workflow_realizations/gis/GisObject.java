@@ -57,6 +57,7 @@ public class GisObject {
 	protected List<Location> myCoordinates = new ArrayList<Location>();
 	protected Map<String, String> keyChain = new HashMap<String,String>();
 	protected Map<String, String> attributes;
+	private boolean isUseful;
 	
 
 	//This default behavior is overridden for objects with more than one point or dynamic value. See subclasses for implementation.
@@ -174,7 +175,21 @@ public class GisObject {
 
 	//Should be overridden. 
 	
-	public void clearCache() {};
+	public void clearCache() {Log.e("vortex","Getszzzzz");}
+
+	public void markAsUseful() {
+		this.isUseful = true;
+		
+	}
+	
+	public void unmark() {
+		this.isUseful = false;
+		
+	}
+
+	public boolean isUseful() {
+		return isUseful;
+	};
 
 	
 

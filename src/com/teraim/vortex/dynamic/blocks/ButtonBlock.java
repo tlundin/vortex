@@ -247,7 +247,7 @@ public  class ButtonBlock extends Block {
 									statusVariable = al.getVariableUsingKey(buttonContext,statusVar);
 								} else
 									statusVariable = null;
-								Set<Rule> myRules = myContext.getRules(name);
+								Set<Rule> myRules = myContext.getRulesThatApply();
 								boolean showPop=false;
 								LayoutInflater inflater = (LayoutInflater)ctx.getSystemService
 										(Context.LAYOUT_INFLATER_SERVICE);
