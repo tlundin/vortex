@@ -404,7 +404,7 @@ public class RuleExecutor {
 						if (tokenType == SimpleTokenType.eitherfuncorvar && function == null) {
 							Variable var = gs.getVariableConfiguration().getVariableUsingKey(keyHash,tokenName);
 							if (var!=null) {
-								Log.d("vortex","Found variable match for "+tokenName+" in formula");
+								//Log.d("vortex","Found variable match for "+tokenName+" in formula");
 								myFormulaTokens.add(new TokenizedItem(var));
 
 							} else {

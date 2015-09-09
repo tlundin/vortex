@@ -116,14 +116,14 @@ public class ModuleLoader implements FileLoadedCb{
 				if (module.isRequired()&&!module.frozenFileExists()) {
 					o.addRedText(" !");o.addText(res.errCode.name());o.addRedText("!");
 					o.addRow("Upstart aborted..Unable to load mandatory file.");
-					printError(res.errCode);
+					printError(res);
 					o.draw();
 					return;
 				} else {
 					if (res.errCode!=ErrorCode.IOError)
 						o.addYellowText(" "+res.errCode.name());
 				}
-				printError(res.errCode);
+				printError(res);
 				if (module.frozenFileExists()) {
 					if (thawModule(module)) {
 						o.addRow("");o.addYellowText("Current version will be used: "+module.getFrozenVersion());
@@ -156,14 +156,15 @@ public class ModuleLoader implements FileLoadedCb{
 
 	}
 
-	private void printError(ErrorCode errCode) {
+	private void printError(LoadResult res) {
+		ErrorCode errCode = res.errCode;
 		if (errCode==ErrorCode.IOError) {
 			if (ctx!=null && !Tools.isNetworkAvailable(ctx)) 
 				o.addRow("No network");
 			else
 				o.addRow("File not found");
 		} else if (errCode==ErrorCode.Unsupported) {
-			o.addRow("The file contains instructions that this Vortex version is not able to run. Please upgrade.");
+			o.addRow("Remote file requires Vortex version ["+res.errorMessage+"]. Please upgrade.");
 		} else if (errCode==ErrorCode.ParseError) {
 			o.addRow("");
 			o.addRedText("The file contains an error. Please check log for details");

@@ -156,13 +156,13 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 	Bitmap bmp;
 	//final PhotoMeta photoMeta;
 	final Context ctx;
-	final String fullPicFileName;
+	
 	final CreateGisBlock myDaddy;
 	private PhotoMeta photoMeta;
 
 
 
-	public WF_Gis_Map(CreateGisBlock createGisBlock,Rect rect, String id, final FrameLayout mapView, boolean isVisible, String picUrlorName,
+	public WF_Gis_Map(CreateGisBlock createGisBlock,Rect rect, String id, final FrameLayout mapView, boolean isVisible, final String fullPicFileName,
 			final WF_Context myContext, final PhotoMeta photoMeta, View avstRL, View createMenuL,  List<GisLayer> daddyLayers) {
 		super(id, mapView, isVisible, myContext);
 		GlobalState gs = GlobalState.getInstance();
@@ -180,7 +180,6 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 			myLayers = new ArrayList<GisLayer>();
 		this.photoMeta = photoMeta; 
 		globalPh = gs.getGlobalPreferences();
-		fullPicFileName = Constants.VORTEX_ROOT_DIR+globalPh.get(PersistenceHelper.BUNDLE_NAME)+picUrlorName;
 		ctx = myContext.getContext();	
 		ph = gs.getPreferences();
 		//Bitmap bmp = Tools.getScaledImage(ctx,fullPicFileName);
@@ -378,7 +377,12 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 
 				switch(event.getAction()) {
 				case MotionEvent.ACTION_DOWN:
-					gisImageView.handleScale(Initial);
+					if (gisImageView.handleScaleOut(Initial)&&isZoomLevel) {
+						//trigger pop on fragment.
+						gisImageView.unSelectGop();
+						myContext.getActivity().getFragmentManager().popBackStackImmediate();
+						
+					};
 					//startScrollOut();
 					break;
 				case MotionEvent.ACTION_UP:

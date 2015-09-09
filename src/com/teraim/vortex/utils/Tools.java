@@ -52,6 +52,7 @@ import com.teraim.vortex.dynamic.types.Numerable.Type;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.types.Workflow.Unit;
 import com.teraim.vortex.log.LoggerI;
+import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.DbHelper.Selection;
 import com.teraim.vortex.utils.RuleExecutor.SubstiResult;
 import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
@@ -708,15 +709,15 @@ public class Tools {
 				GlobalState.getInstance().getLogger().addRedText("missing end bracket in parseString: "+varString);
 				break;
 			}
-			Log.e("vortex","PARSESTRING: "+varString.substring(hakeS, hakeE));
+			//Log.e("vortex","PARSESTRING: "+varString.substring(hakeS, hakeE));
 			String interPS = interpret(varString.substring(hakeS, hakeE),keyHash);
 			String preS = varString.substring(cIndex, hakeS-1);
 			res = res+preS+interPS;
-			Log.d("vortex","Res is now "+res);
+			//Log.d("vortex","Res is now "+res);
 			cIndex=hakeE+1;
 		} while(cIndex<varString.length());
 		String postS = varString.substring(cIndex,varString.length());
-		Log.d("vortex","returning "+res+postS);
+		Log.d("vortex","Parse String returns "+res+postS);
 		return res+postS;
 	}
 	private static String interpret(String varString, Map<String,String> keyHash) {
@@ -733,20 +734,42 @@ public class Tools {
 			return varString;
 	}
 
-	public static void cacheImage(final String url, final String folder) {
-		Log.d("vortex","In Cache image with url "+url+" and folder "+folder);
-		(new DownloadTask(new WebLoaderCb(){@Override
-		public void loaded(Boolean result) {
-			if (result)
-				Log.d("vortex","Cached "+url);
-		}})).execute(url,url,folder); 
+	public static void onLoadCacheImage(String serverFileRootDir, final String fileName, final String cacheFolder, WebLoaderCb cb) {
+		final String fullPicURL = serverFileRootDir+fileName;
+		new DownloadTask(cb).execute(fileName,fullPicURL,cacheFolder); 
 
+	}
+	public static void preCacheImage(String serverFileRootDir, final String fileName, final String cacheFolder, final LoggerI logger) {
+		
+		onLoadCacheImage (serverFileRootDir,fileName,cacheFolder,new WebLoaderCb(){
+		@Override
+		public void loaded(Boolean result) {
+			if (logger!=null) {
+				Log.d("vortex","Cached "+fileName);
+				if (result) 
+					logger.addRow("Succesfully cached "+fileName);
+				else {
+					logger.addRow("");
+					logger.addRedText("Failed to cache "+fileName);
+				}
+			}
+		}
+		@Override
+		public void progress(int bytesRead) {
+			
+		}
+		});
+
+		
 		
 	}
 	
-	private interface WebLoaderCb {
+	public interface WebLoaderCb {
 
+		//called when done.
 		public void loaded(Boolean result);
+		//called every time 1kb has been read.
+		public void progress(int bytesRead);
 	}
 	
 	
@@ -790,7 +813,7 @@ public class Tools {
 			
 				
 			try {
-				saveUrl(fileName,url);
+				saveUrl(fileName,url,cb);
 			} catch (MalformedURLException e) {
 				e.printStackTrace();
 				return false;
@@ -800,6 +823,12 @@ public class Tools {
 			}
 			return true;
 		}
+		
+		 protected void onProgressUpdate(Integer... progress) {
+		        //This method runs on the UI thread, it receives progress updates
+		        //from the background thread and publishes them to the status bar
+		        cb.progress(progress[0]);
+		    }
 
 		protected void onPostExecute(Boolean result) {
 			
@@ -808,7 +837,7 @@ public class Tools {
 	}
 
 	
-	public static void saveUrl(final String filename, final String urlString)
+	public static void saveUrl(final String filename, final String urlString, WebLoaderCb cb)
 	        throws MalformedURLException, IOException {
 	    BufferedInputStream in = null;
 	    FileOutputStream fout = null;
@@ -821,6 +850,7 @@ public class Tools {
 	        int count;
 	        while ((count = in.read(data, 0, 1024)) != -1) {
 	            fout.write(data, 0, count);
+	            cb.progress(count);
 	        }
 	    } finally {
 	        if (in != null) {
@@ -833,9 +863,7 @@ public class Tools {
 	}
 	
 	public static File getCachedFile(String fileName, String folder) {
-		final String protoH = "http://";	
-		fileName = fileName.replace("protoH", "");
-		fileName = fileName.replace("|", "/");
+		
 		fileName = folder+fileName;
 		File f = new File(fileName);
 		Log.d("vortex", "getCached: "+fileName);

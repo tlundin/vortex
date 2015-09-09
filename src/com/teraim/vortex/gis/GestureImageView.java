@@ -501,6 +501,21 @@ public class GestureImageView extends ImageView  {
 		//gestureImageViewTouchListener.handleScale(newScale,newX, newY);
 	}
 	
+	/**
+	 * 
+	 * @param scaleDiff
+	 * @return true if max scaleout reached.
+	 */
+
+	public boolean handleScaleOut(float scaleDiff) {
+		Log.d("vortex","ScaleAdjust: "+scaleAdjust+" fitScaleHori: "+fitScaleHorizontal+" minSc: "+gestureImageViewTouchListener.getMinScale());
+		gestureImageViewTouchListener.startZoom(centerX, centerY, scaleDiff);
+		boolean maxReached = (Math.abs(scaleAdjust - fitScaleHorizontal) < 0.1);
+		Log.d("vortex2","ScaleAdjust: "+scaleAdjust+" fitScaleHori: "+fitScaleHorizontal+" minSc: "+gestureImageViewTouchListener.getMinScale());
+		Log.d("vortex","maxReached: "+maxReached);
+		return (maxReached) ;		
+	}
+	
 	public float getScale() {
 		return scaleAdjust;
 	}

@@ -48,10 +48,10 @@ public class Geomatte {
 
 
 	public static double sweDist(double myY,double myX,double destY, double destX) {	
-		Log.d("NILS","diffX: diffY: "+(myX-destX)+" "+(myY-destY));
-		Log.d("NILS","Values  x1 y1 x2 y2: "+myX+" "+myY+" "+destX+" "+destY);
+		//Log.d("NILS","diffX: diffY: "+(myX-destX)+" "+(myY-destY));
+		//Log.d("NILS","Values  x1 y1 x2 y2: "+myX+" "+myY+" "+destX+" "+destY);
 		double res = Math.sqrt(Math.pow((myX-destX),2)+Math.pow(myY-destY, 2));
-		Log.d("NILS","res: "+res);
+		//Log.d("NILS","res: "+res);
 		return res;
 
 	}

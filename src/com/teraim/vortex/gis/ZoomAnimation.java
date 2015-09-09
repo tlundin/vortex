@@ -57,8 +57,8 @@ public class ZoomAnimation implements Animation {
 			startY = view.getImageY();
 			startScale = view.getScale();
 			scaleDiff = (zoom * startScale) - startScale;
-			
-			if(scaleDiff > 0) {
+			//scaleDiff > 0
+			if(true) {
 				// Calculate destination for midpoint
 				VectorF vector = new VectorF();
 				

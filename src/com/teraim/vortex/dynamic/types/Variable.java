@@ -99,7 +99,7 @@ public class Variable implements Serializable {
 	public String getValue() {
 		if (unknown) {
 			//update keyhash.
-			Log.d("nils","fetching: "+System.currentTimeMillis()+" var: "+this.getId());
+			//Log.d("nils","fetching: "+System.currentTimeMillis()+" var: "+this.getId());
 			myValue = myDb.getValue(name,mySelection,myValueColumn);	
 			//Variable doesnt exist in database
 			if (myValue==null && myType == DataType.auto_increment) {

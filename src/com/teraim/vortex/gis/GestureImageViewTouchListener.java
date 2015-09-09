@@ -598,5 +598,7 @@ public class GestureImageViewTouchListener implements OnTouchListener {
 	public void setScale(float scale) {
 		currentScale = scale;
 	}
+	
+	
 
 }

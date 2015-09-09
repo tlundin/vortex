@@ -42,7 +42,7 @@ public class GisPolygonObject extends GisPathObject {
 		String[] polys = polygons.split("\\|");
 		Map<String, List<Location>> ret = new HashMap<String, List<Location>>();
 		for (String poly:polys) {
-			Log.d("vortex","in poly with poly: ["+poly+"]");
+			//Log.d("vortex","in poly with poly: ["+poly+"]");
 			ret.put("Poly "+i, GisObject.createListOfLocations(poly, coordType));
 			
 			i++;

@@ -286,7 +286,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 			globalPh.put(PersistenceHelper.VERSION_CONTROL_SWITCH_OFF, false);
 
 
-		folder = new File(Constants.VORTEX_ROOT_DIR+globalPh.get(PersistenceHelper.BUNDLE_NAME)+Constants.AIR_PHOTO_FILE_DIR);
+		folder = new File(Constants.VORTEX_ROOT_DIR+globalPh.get(PersistenceHelper.BUNDLE_NAME)+"/"+Constants.CACHE_ROOT_DIR);
 		if(!folder.mkdirs())
 			Log.e("NILS","Failed to create gis image folder");		
 

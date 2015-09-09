@@ -576,7 +576,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 				}
 				else if (b instanceof AddRuleBlock) {
 
-					((AddRuleBlock) b).create(myContext);
+					((AddRuleBlock) b).create(myContext,blocks);
 
 				}
 				else if (b instanceof MenuHeaderBlock) {
@@ -604,8 +604,9 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 						myContext.enableSatNav();
 					else
 						Log.e("vortex","This has no SATNAV");
-					bl.create(myContext,this);
-					return;
+					if(!bl.create(myContext,this))
+						//Pause execution and wait for callback..
+						return;
 				}
 				
 				else if (b instanceof AddGisLayerBlock) {

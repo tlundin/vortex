@@ -48,11 +48,13 @@ import android.widget.TextView;
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
 import com.teraim.vortex.dynamic.VariableConfiguration;
+import com.teraim.vortex.dynamic.types.Rule;
 import com.teraim.vortex.dynamic.types.SpinnerDefinition;
 import com.teraim.vortex.dynamic.types.SpinnerDefinition.SpinnerElement;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.types.Variable.DataType;
 import com.teraim.vortex.dynamic.workflow_abstracts.EventGenerator;
+import com.teraim.vortex.expr.SyntaxException;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.ui.MenuActivity;
 import com.teraim.vortex.utils.CombinedRangeAndListFilter;
@@ -75,7 +77,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 	public abstract LinearLayout getFieldLayout();
 
 	private final SpinnerDefinition sd;
-	private RuleExecutor ruleExecutor;
+
 	//Special behavior: If only a single boolean, don't open up the dialog. Just set the value on click.
 	private boolean singleBoolean = false;
 
@@ -83,7 +85,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 	protected View longClickedRow;
 	protected boolean iAmOpen=false;
 	private Spinner firstSpinner = null;
-
+	protected List<Rule> myRules;
 
 	@Override
 	public Set<Variable> getAssociatedVariables() {
@@ -214,7 +216,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 		super(label,descriptionT,context,view,isVisible);	
 		//Log.e("nils ","Creating WF_ClickableField: "+label+" "+id);
 		gs = GlobalState.getInstance();
-		ruleExecutor = gs.getRuleExecutor();
+
 		sd = gs.getSpinnerDefinitions();
 		al = gs.getVariableConfiguration();
 		o = gs.getLogger();
@@ -315,7 +317,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 
 			}
 
-		
+
 		});	
 
 	}
@@ -333,7 +335,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 		String[] opt=null;
 		String[] val=null;
 		boolean spin = false;
-		
+
 		if (showHistorical) 
 			hist = var.getHistoricalValue();
 
@@ -391,7 +393,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 				firstSpinner=spinner;
 
 			myVars.put(var,sl);
-			
+
 
 			sHeader.setText(varLabel+(hist!=null?" ("+hist+")":""));
 			String listValues = al.getTable().getElement("List Values", var.getBackingDataSet());
@@ -655,119 +657,167 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 		Map<Variable,String>oldValue = new HashMap<Variable,String>();
 		Iterator<Map.Entry<Variable,View>> it = myVars.entrySet().iterator();
 		String invalidateKeys=null;
-		while (it.hasNext()) {
-			Map.Entry<Variable,View> pairs = (Map.Entry<Variable,View>)it.next();
-			Variable variable = pairs.getKey();
-			existingValue = variable.getValue();
-			oldValue.put(variable, existingValue);
-			DataType type = variable.getType();
-			View view = pairs.getValue();
-			Log.d("nils","Existing value: "+existingValue);
-			if (type == DataType.bool) {
-				//Get the yes radiobutton.				
-				RadioGroup rbg = (RadioGroup)view.findViewById(R.id.radioG);
-				//If checked set value to True.
-				int id = rbg.getCheckedRadioButtonId();
+		Context ctx = myContext.getContext();
+		Rule r = checkRules();
+		if (r != null) {
+			Vibrator myVibrator = (Vibrator) ctx.getSystemService(Context.VIBRATOR_SERVICE);
+			myVibrator.vibrate(250);
+			new AlertDialog.Builder(ctx)
+			.setTitle(r.getRuleHeader())
+			.setMessage(r.getRuleText()) 
+			.setIcon(android.R.drawable.ic_dialog_alert)
+			.setCancelable(false)
+			.setNeutralButton("Ok",new Dialog.OnClickListener() {				
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					// TODO Auto-generated method stub
 
-				if (id == R.id.nej) {
-					newValue = "0";
-				} else if (id == R.id.ja) {
-					newValue = "1";
-				} else
-					newValue = null;
-			} else 
-				if (type == DataType.numeric||
-				type == DataType.text || type == DataType.decimal){
-					EditText etview = (EditText)view.findViewById(R.id.edit);
-					String txt = etview.getText().toString();
-					if (txt.trim().length()>0)
-						newValue = txt;
-					else
-						newValue = null;
-				} else				
-					if (type == DataType.list) {
-						LinearLayout sl = (LinearLayout)view;
-						Spinner sp = (Spinner)sl.findViewById(R.id.spinner);
-						int s = sp.getSelectedItemPosition();
-						String v[] = values.get(variable);
-						if (v!=null) {
-							if (s>=0&&s<v.length) 						
-								newValue = v[s];
-							else
-								newValue = null;
-							Log.d("nils","VALUE FOR SPINNER A "+newValue);
-						}
-						else {
-							newValue = (String)sp.getSelectedItem();
-							Log.d("nils","VALUE FOR SPINNER B "+newValue);
-						}
+				}
+			} )
+			.show();
+		} else {
+			while (it.hasNext()) {
+				Map.Entry<Variable,View> pairs = (Map.Entry<Variable,View>)it.next();
+				Variable variable = pairs.getKey();
+				existingValue = variable.getValue();
+				oldValue.put(variable, existingValue);
+				DataType type = variable.getType();
+				View view = pairs.getValue();
+				Log.d("nils","Existing value: "+existingValue);
+				if (type == DataType.bool) {
+					//Get the yes radiobutton.				
+					RadioGroup rbg = (RadioGroup)view.findViewById(R.id.radioG);
+					//If checked set value to True.
+					int id = rbg.getCheckedRadioButtonId();
+
+					if (id == R.id.nej) {
+						newValue = "0";
+					} else if (id == R.id.ja) {
+						newValue = "1";
 					} else
-						if (type == DataType.auto_increment) {
-							/*EditText etview = (EditText)view.findViewById(R.id.edit);
+						newValue = null;
+				} else 
+					if (type == DataType.numeric||
+					type == DataType.text || type == DataType.decimal){
+						EditText etview = (EditText)view.findViewById(R.id.edit);
+						String txt = etview.getText().toString();
+						if (txt.trim().length()>0)
+							newValue = txt;
+						else
+							newValue = null;
+					} else				
+						if (type == DataType.list) {
+							LinearLayout sl = (LinearLayout)view;
+							Spinner sp = (Spinner)sl.findViewById(R.id.spinner);
+							int s = sp.getSelectedItemPosition();
+							String v[] = values.get(variable);
+							if (v!=null) {
+								if (s>=0&&s<v.length) 						
+									newValue = v[s];
+								else
+									newValue = null;
+								Log.d("nils","VALUE FOR SPINNER A "+newValue);
+							}
+							else {
+								newValue = (String)sp.getSelectedItem();
+								Log.d("nils","VALUE FOR SPINNER B "+newValue);
+							}
+						} else
+							if (type == DataType.auto_increment) {
+								/*EditText etview = (EditText)view.findViewById(R.id.edit);
 							String s = etview.getText().toString();
 							if (s!=null && s.length()>0) {
 								int val = Integer.parseInt(etview.getText().toString());
 								val++;
 								newValue = val+"";
 							}
-							*/
-							newValue = existingValue;
-						}
-			if (newValue == null || !newValue.equals(existingValue)||variable.isUsingDefault()) {
-				Log.d("nils","New value: "+newValue);
-				saveEvent=true;
-				if (newValue==null) {
-					Log.e("vortex","Calling delete on "+variable.getId()+"Obj:"+variable+" with keychain\n"+variable.getKeyChain().toString());
-					variable.deleteValue();
-					Log.e("vortex","Getvalue now returns: "+variable.getValue());
-				}
-				else {
-					//Re-evaluate rules.
-					if (variable.hasValueOutOfRange()) {
-						String earlierValue = variable.getValue();
-						if (earlierValue==null)
-							earlierValue="";
-						Context ctx = myContext.getContext();
-						Vibrator myVibrator = (Vibrator) ctx.getSystemService(Context.VIBRATOR_SERVICE);
-						myVibrator.vibrate(250);
-						new AlertDialog.Builder(ctx)
-						.setTitle("Felaktigt värde!!")
-						.setMessage("Värdet du angivit är utanför angivna gränsvärden för variabeln. Tidigare angivet värde kommer användas: ["+earlierValue+"]") 
-						.setIcon(android.R.drawable.ic_dialog_alert)
-						.setCancelable(false)
-						.setNeutralButton("Ok",new Dialog.OnClickListener() {				
-							@Override
-							public void onClick(DialogInterface dialog, int which) {
-								// TODO Auto-generated method stub
-
+								 */
+								newValue = existingValue;
 							}
-						} )
-						.show();
+
+				if (newValue == null || !newValue.equals(existingValue)||variable.isUsingDefault()) {
+					Log.d("nils","New value: "+newValue);
+					saveEvent=true;
+
+					if (newValue==null) {
+						Log.e("vortex","Calling delete on "+variable.getId()+"Obj:"+variable+" with keychain\n"+variable.getKeyChain().toString());
+						variable.deleteValue();
+						Log.e("vortex","Getvalue now returns: "+variable.getValue());
 					}
-					variable.setValue(newValue);
-					//This is a keychain variable. 
-					if (variable.getPartOfKeyChain()!=null) {
-						invalidateKeys=variable.getPartOfKeyChain();
+					else {					
+						//Re-evaluate rules.
+						if (variable.hasValueOutOfRange() ) {
+							saveEvent=false;
+							String earlierValue = variable.getValue();
+							if (earlierValue==null)
+								earlierValue="";
+							Vibrator myVibrator = (Vibrator) ctx.getSystemService(Context.VIBRATOR_SERVICE);
+							myVibrator.vibrate(250);
+							new AlertDialog.Builder(ctx)
+							.setTitle("Incorrect value")
+							.setMessage("The value you entered is outside the allowed range. Earlier value will be used: ["+earlierValue+"]") 
+							.setIcon(android.R.drawable.ic_dialog_alert)
+							.setCancelable(false)
+							.setNeutralButton("Ok",new Dialog.OnClickListener() {				
+								@Override
+								public void onClick(DialogInterface dialog, int which) {
+									// TODO Auto-generated method stub
+
+								}
+							} )
+							.show();
+						} else {
+							//check rules if value is in range.
+							variable.setValue(newValue);
+							//This is a keychain variable. 
+							if (variable.getPartOfKeyChain()!=null) {
+								invalidateKeys=variable.getPartOfKeyChain();
+							}
+						}
+
+
+
 					}
 
 				}
-
 			}
-		}
-		if (saveEvent) {
-			//for (Variable v:myVars.keySet())
-			//	ruleExecutor.propagateRuleToDependants(v.getId());
-			if (invalidateKeys!=null) {
-				Log.d("nils","Keychain variable changed. Invalidating cache");
-				al.invalidateCacheKeys(invalidateKeys);
+
+
+			if (saveEvent) {
+				//for (Variable v:myVars.keySet())
+				//	ruleExecutor.propagateRuleToDependants(v.getId());
+				if (invalidateKeys!=null) {
+					Log.d("nils","Keychain variable changed. Invalidating cache");
+					al.invalidateCacheKeys(invalidateKeys);
+				}
+				Log.d("nils","IN SAVE() SENDING EVENT");
+				gs.sendEvent(MenuActivity.REDRAW);
+				myContext.registerEvent(new WF_Event_OnSave(this.getId(),oldValue));
 			}
-			Log.d("nils","IN SAVE() SENDING EVENT");
-			gs.sendEvent(MenuActivity.REDRAW);
-			myContext.registerEvent(new WF_Event_OnSave(this.getId(),oldValue));
+
 		}
-
-
 	}
+
+	private Rule checkRules() {
+
+		if (myRules==null)
+			return null;
+		Log.d("vortex","In checkRules. I have "+myRules.size()+" rules");
+		for (Rule r:myRules) {
+			Log.d("vortex"," Rule: "+r.condition);
+			try {
+				if (!r.execute())
+					return r;
+			} catch (SyntaxException e) {
+				Log.e("vortex","Syntax exception on rule "+r.id);
+
+			}
+		}
+		return null;
+	}
+
+
+
 
 	//@Override
 	public void refreshInputFields(){
@@ -910,7 +960,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 		return tmp.length==0?null:(CombinedRangeAndListFilter)tmp[0];						
 	}
 	 */
-	
+
 	protected void setAutoOpenSpinner(boolean open) {
 		autoOpenSpinner = open;
 	}

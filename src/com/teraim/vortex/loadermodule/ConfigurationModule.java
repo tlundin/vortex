@@ -37,6 +37,7 @@ public abstract class ConfigurationModule {
 
 	private Integer linesOfRawData;
 	protected Object essence;
+	protected String baseBundlePath;
 	private boolean notFound=false;
 	//freezeSteps contains the number of steps required to freeze the object. Should be -1 if not set specifically by specialized classes.
 	protected int freezeSteps=-1;
@@ -51,8 +52,9 @@ public abstract class ConfigurationModule {
 		this.globalPh=gPh;
 		this.ph=ph;
 		this.printedLabel=moduleName;
+		this.baseBundlePath=urlOrPath;
 		fullPath = urlOrPath+fileName+"."+type.name();
-		frozenPath = Constants.VORTEX_ROOT_DIR+gPh.get(PersistenceHelper.BUNDLE_NAME)+"/config/"+fileName;
+		frozenPath = Constants.VORTEX_ROOT_DIR+gPh.get(PersistenceHelper.BUNDLE_NAME)+"/cache/"+fileName;
 		Log.d("vortex","full path "+fullPath);
 		this.versionControl=!globalPh.getB(PersistenceHelper.VERSION_CONTROL_SWITCH_OFF);
 	}

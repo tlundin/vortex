@@ -40,6 +40,7 @@ import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.DbHelper.DBColumnPicker;
 import com.teraim.vortex.utils.DbHelper.Selection;
 import com.teraim.vortex.utils.DbHelper.StoredVariableData;
+import com.teraim.vortex.utils.PersistenceHelper;
 import com.teraim.vortex.utils.Tools;
 
 public class AddGisPointObjects extends Block implements FullGisObjectConfiguration {
@@ -154,12 +155,10 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 			File cached = gs.getCachedFileFromUrl(imgSource);
 			if (cached==null) {
 				Log.d("vortex","no cached image...trying live.");
-				String protocol="http://";
-				if (!imgSource.toLowerCase().startsWith(protocol))
-					imgSource = protocol+imgSource;
+				String fullPicURL = Constants.VORTEX_ROOT_DIR+GlobalState.getInstance().getGlobalPreferences().get(PersistenceHelper.BUNDLE_NAME)+"/extras/"+imgSource;
 				Log.d("vortex","IMGURL: "+imgSource);
 				new DownloadImageTask()
-				.execute(imgSource);
+				.execute(fullPicURL);
 			} else {
 				try {
 					icon = BitmapFactory.decodeStream(new FileInputStream(cached));

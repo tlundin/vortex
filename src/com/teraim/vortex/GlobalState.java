@@ -742,8 +742,8 @@ public class GlobalState  {
 		return myTracker;
 	}
 
-	public File getCachedFileFromUrl(String url) {
-		return Tools.getCachedFile(url, Constants.VORTEX_ROOT_DIR+globalPh.get(PersistenceHelper.BUNDLE_NAME)+"/cache/");
+	public File getCachedFileFromUrl(String fileName) {
+		return Tools.getCachedFile(fileName, Constants.VORTEX_ROOT_DIR+globalPh.get(PersistenceHelper.BUNDLE_NAME)+"/cache/");
 	}
 
 	

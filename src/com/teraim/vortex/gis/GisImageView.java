@@ -220,7 +220,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 	double pXR,pYR;
 	private WF_Gis_Map myMap;
 	private boolean allowZoom;
-	private double[] stateToSave = new double[4];
+	
 
 
 	/**
@@ -238,7 +238,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 		pXR = this.getImageWidth()/pm.getWidth();
 		pYR = this.getImageHeight()/pm.getHeight();
 
-		//Filer away all objects not visible and create cached values for all gisobjects on this map and zoom level.
+		//Filter away all objects not visible and create cached values for all gisobjects on this map and zoom level.
 		myMap = wf_Gis_Map;
 
 
@@ -248,10 +248,6 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 		myX = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(YearKeyHash, NamedVariables.MY_GPS_LAT);
 		myY = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(YearKeyHash, NamedVariables.MY_GPS_LONG);
 		this.allowZoom = allowZoom;
-		stateToSave[0]=pm.N;
-		stateToSave[1]=pm.E;
-		stateToSave[2]=pm.S;
-		stateToSave[3]=pm.W;
 
 
 		setOnClickListener(new OnClickListener() {
@@ -261,8 +257,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 				Log.d("vortex","Gets short!");
 				if (clickXY!=null)
 					return;
-				//if (doubleTap())
-				//	return;
+
 				calculateMapLocationForClick(polyVertexX,polyVertexY);
 
 
@@ -365,12 +360,12 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 
 			Iterator<GisObject> iterator = bag.iterator();
 			int[] xy;
-			boolean hasDynamic = false;
+
 			while (iterator.hasNext()) {
 				GisObject go = iterator.next();
 				//All dynamic objects are always in the map potentially.
 				if (go instanceof DynamicGisPoint) {
-					hasDynamic=true;
+					
 					//Dynamic objects are always useful and do not have a cached value.
 					go.markAsUseful();
 				}
@@ -416,6 +411,12 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 
 			}
 			Log.d("vortex","Bag: "+key+" size: "+bag.size());
+			int c=0;
+			for (GisObject gob:bag) {
+				if (gob.isUseful())
+					c++;
+			}
+			Log.d("vortex","bag has "+c+" useful members");
 
 		}
 	}
@@ -868,15 +869,12 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 	private void drawGop(Canvas canvas, GisLayer layerO, GisObject go, boolean selected) {
 
 		boolean beingDrawn = false;
-		if (newGisObj !=null) {
+		if (newGisObj !=null) 
 			beingDrawn = go.equals(newGisObj);
-			Log.d("vortex","beingdrawn is "+beingDrawn);
-		}
 		//will only be called from here if selected.
 		GisPointObject gop=null;
 		//Only gets her for Gispoint, if it is selected.
 		if (go instanceof GisPointObject) {
-			Log.d("vortex","gets here! Beingdrawn is "+beingDrawn);
 			gop = (GisPointObject)go;
 			drawPoint(canvas, null,gop.getRadius(), "red", Style.FILL, gop.getShape(), gop.getTranslatedLocation(),1);
 		}
@@ -1365,6 +1363,8 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 		Log.d("vortex","top bottom left right "+top+","+bottom+","+left+","+right);
 		return r;
 	}
+
+	
 
 
 

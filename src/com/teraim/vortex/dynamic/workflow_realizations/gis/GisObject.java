@@ -144,7 +144,7 @@ public class GisObject {
 					ret.add(new LatLong(gX,coord));
 			}
 		}
-		Log.d("vortex","createlistlocations returning: "+ret.toString());
+		//Log.d("vortex","createlistlocations returning: "+ret.toString());
 
 		return ret;
 	}

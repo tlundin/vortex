@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.VariableConfiguration;
+import com.teraim.vortex.dynamic.types.Rule;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.types.Workflow.Unit;
 import com.teraim.vortex.dynamic.workflow_abstracts.Container;
@@ -24,6 +25,8 @@ public class CreateEntryFieldBlock extends Block {
 	GlobalState gs;
 	boolean isVisible = false,showHistorical,autoOpenSpinner=true;
 	String format;
+	
+	WF_ClickableField_Selection myField;
 
 
 	public CreateEntryFieldBlock(String id,String name, 
@@ -76,7 +79,7 @@ public class CreateEntryFieldBlock extends Block {
 
 				o.addRedText("Current keyChain: ["+gs.getCurrentKeyHash()+"]");
 			} else	{	
-				WF_ClickableField_Selection myField = new WF_ClickableField_Selection_OnSave(label==null||label.equals("")?v.getLabel():label,
+				myField = new WF_ClickableField_Selection_OnSave(label==null||label.equals("")?v.getLabel():label,
 						al.getDescription(v.getBackingDataSet()),myContext,name,isVisible,autoOpenSpinner);
 				Log.d("nils", "In CreateEntryField. Description: "+al.getDescription(v.getBackingDataSet()));
 				Log.d("nils","Backing data: "+v.getBackingDataSet().toString());
@@ -97,6 +100,14 @@ public class CreateEntryFieldBlock extends Block {
 			o.addRow("");
 			o.addRedText("Adding Entryfield for "+name+" failed. Container not configured");
 			return null;
+		}
+	}
+
+	public void attachRule(Rule r) {
+		if (myField == null) {
+			Log.e("vortex","no entryfield created. Rule block before entryfield block?");
+		} else {
+			myField.attachRule(r);
 		}
 	}
 

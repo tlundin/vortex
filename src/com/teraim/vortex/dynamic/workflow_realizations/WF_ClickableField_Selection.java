@@ -1,9 +1,13 @@
 package com.teraim.vortex.dynamic.workflow_realizations;
 
+import java.util.ArrayList;
+
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.widget.LinearLayout;
 
 import com.teraim.vortex.R;
+import com.teraim.vortex.dynamic.types.Rule;
 
 public class WF_ClickableField_Selection extends WF_ClickableField {
 
@@ -25,6 +29,13 @@ public class WF_ClickableField_Selection extends WF_ClickableField {
 		//u.setText(" ("+varId.getPrintedUnit()+")");
 
 		return (LinearLayout)LayoutInflater.from(myContext.getContext()).inflate(R.layout.output_field_selection_element,null);
+	}
+
+	public void attachRule(Rule r) {
+		if (myRules == null)
+			myRules = new ArrayList<Rule>();
+		myRules.add(r);
+		Log.d("vortex","Added rule "+r.condition);
 	}
 
 

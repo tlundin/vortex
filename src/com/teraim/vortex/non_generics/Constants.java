@@ -41,7 +41,7 @@ import com.teraim.vortex.utils.PersistenceHelper;
 
 public class Constants {
 
-	public final static float VORTEX_VERSION = 2.14f;
+	public final static float VORTEX_VERSION = 2.16f;
 
 
 	//String constants
@@ -56,7 +56,7 @@ public class Constants {
 	public static final String EXPORT_FILES_DIR = VORTEX_ROOT_DIR + "export/";
 	public static final String PIC_ROOT_DIR = VORTEX_ROOT_DIR + "pics/";
 	public static final String OLD_PIC_ROOT_DIR = VORTEX_ROOT_DIR + "old_pics/";
-	public static final String AIR_PHOTO_FILE_DIR = "/flygdata/";
+	public static final String CACHE_ROOT_DIR = "cache/";
 	public static final String GIS_FILE_DIR = "/gisdata/";
 	//Folder for backup on SD card.
 	public static final String DEFAULT_EXT_BACKUP_DIR = "/mnt/external_sdcard/vortex/backup";

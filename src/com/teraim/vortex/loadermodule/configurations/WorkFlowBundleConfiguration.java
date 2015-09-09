@@ -59,13 +59,15 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 
 	private String myApplication;
 	private LoggerI o;
-	private String cacheFolder;
+	private String cacheFolder,myServer;
 	
 	public WorkFlowBundleConfiguration(PersistenceHelper globalPh,PersistenceHelper ph,
 			String server, String bundle,LoggerI debugConsole) {
 		super(globalPh,ph, Source.internet, server+bundle.toLowerCase()+"/", bundle,"Workflow bundle       ");
 		this.o=debugConsole;
 		cacheFolder = Constants.VORTEX_ROOT_DIR+globalPh.get(PersistenceHelper.BUNDLE_NAME)+"/cache/";
+		
+			
 	}
 
 	@Override
@@ -102,7 +104,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				try {
 					float verf = Float.parseFloat(minVersion);
 					if (Constants.VORTEX_VERSION<verf)
-						return new LoadResult(this,ErrorCode.Unsupported);
+						return new LoadResult(this,ErrorCode.Unsupported,minVersion);
 
 				} catch (NumberFormatException e) {
 					o.addRow("");
@@ -387,8 +389,8 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				location = readText("gis_variables",parser);
 			}  else if (name.equalsIgnoreCase("obj_context")) {
 				objContext = readText("obj_context",parser);
-			} else if (name.equalsIgnoreCase("img_source")) {
-				imgSource = readText("img_source",parser);
+			} else if (name.equalsIgnoreCase("source")) {
+				imgSource = readText("source",parser);
 			} else if (name.equalsIgnoreCase("on_click")) {
 				onClick = readText("on_click",parser);
 			} else if (name.equalsIgnoreCase("refresh_rate")) {
@@ -409,7 +411,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 		
 		checkForNull("block_ID",id,"target",target,"location",location);
 		if (imgSource!=null&&!imgSource.isEmpty())
-			Tools.cacheImage(imgSource,cacheFolder);
+			Tools.preCacheImage(baseBundlePath+"extras/",imgSource,cacheFolder,o);
 		return new AddGisPointObjects(id,nName,label,target,objContext,coordType,location,imgSource,refreshRate,radius,isVisible,type,color,polyType,fillType,onClick,statusVariable,isUser,createAllowed,o);
 
 	}
@@ -1660,7 +1662,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 	 */
 	private AddRuleBlock readBlockAddRule(XmlPullParser parser) throws IOException, XmlPullParserException {
 		//o.addRow("Parsing block: block_add_rule...");
-		String target=null, condition=null, action=null, errorMsg=null,myname=null,id=null;
+		String target=null, condition=null, myScope = null,action=null, errorMsg=null,myname=null,id=null;
 		parser.require(XmlPullParser.START_TAG, null,"block_add_rule");
 		while (parser.next() != XmlPullParser.END_TAG) {
 			if (parser.getEventType() != XmlPullParser.START_TAG) {
@@ -1679,12 +1681,14 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				errorMsg = readText("errorMsg",parser);
 			} else if (name.equals("name")) {
 				myname = readText("name",parser);
+			} else if (name.equals("scope")) {
+				myScope = readText("scope",parser);
 			} else 
 				skip(name,parser,o);
 
 		}
 		checkForNull("block_ID",id,"name",myname,"target",target,"condition",condition,"action",action,"errorMsg",errorMsg);
-		return new AddRuleBlock(id,myname,target,condition,action,errorMsg);
+		return new AddRuleBlock(id,myname,target,condition,action,errorMsg,myScope);
 	}
 
 	private void checkForNull(String...pars) {
