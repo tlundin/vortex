@@ -40,16 +40,7 @@ public class GisLayer {
 	}
 
 
-	public GisLayer copy() {
-		GisLayer copy = new GisLayer(name,label,isVisible,hasWidget,showLabels);
-		//shallow copy of filters
-		copy.myFilters = this.myFilters;
-		copy.hasDynamic= this.hasDynamic;
-		//copy.myObjects = this.myObjects;
-		//copy.myFilters = this.myFilters;
-		return copy;
-		
-	}
+
 	
 	public void addObjectBag(String key, Set<GisObject> myGisObjects, boolean dynamic) {
 		if (myObjects==null) {
@@ -139,6 +130,8 @@ public class GisLayer {
 	}
 
 	public void clearCaches() {
+		if (myObjects==null)
+			return;
 		for (String key:myObjects.keySet()) {
 			Set<GisObject> bag = myObjects.get(key);
 			for (GisObject go:bag) {

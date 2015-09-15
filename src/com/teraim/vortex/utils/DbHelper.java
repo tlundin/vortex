@@ -1623,6 +1623,13 @@ public class DbHelper extends SQLiteOpenHelper {
 	public void insertGisObject(GisObject go) {
 		Variable gpsCoord = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(go.getKeyHash(), GisConstants.Location);
 		Variable geoType = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(go.getKeyHash(), GisConstants.Geo_Type);
+		if (gpsCoord == null || geoType == null) {
+			LoggerI o = GlobalState.getInstance().getLogger();
+			o.addRow("");
+			o.addRedText("Insert failed for GisObject "+go.getLabel()+" since one or both of the required variables "+GisConstants.Location+" and "+GisConstants.Geo_Type+" is missing from Variables.csv. Please add these and check spelling");
+			Log.e("vortex","Insert failed for GisObject "+go.getLabel()+" since one or both of the required variables "+GisConstants.Location+" and "+GisConstants.Geo_Type+" is missing from Variables.csv. Please add these and check spelling");
+			return;
+		}
 		insertVariable(gpsCoord,go.coordsToString(),true);
 		insertVariable(geoType,go.getGisPolyType().name(),true);		
 		if (gpsCoord == null || geoType == null){

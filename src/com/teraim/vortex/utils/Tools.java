@@ -343,15 +343,17 @@ public class Tools {
 	 * File Data Parsers.
 	 */
 
-	public static Map<String,String> createKeyMapCopy(Map<String,String> orig) {
-		Map<String,String> ret = new HashMap<String,String>();
-		for (String k:orig.keySet()) {
-			String v = orig.get(k);
-			if (k != null && v!=null && ! v.equals("null"))
-				ret.put(k,v);
+
+	
+	public static Map<String,String> copyKeyHash(Map<String,String> orig) {
+		if (orig==null)
+			return null;
+		Map<String,String> res = new HashMap<String,String>();
+		for (String key:orig.keySet()) {
+			res.put(key, orig.get(key));		
 		}
-		return ret;
-	};
+		return res;
+	}
 	
 	
 	public static Map<String,String> createKeyMap(String ...parameters) {
@@ -666,15 +668,7 @@ public class Tools {
 		return res;
 	}
 
-	public static Map<String,String> copyKeyHash(Map<String,String> orig) {
-		if (orig==null)
-			return null;
-		Map<String,String> res = new HashMap<String,String>();
-		for (String key:orig.keySet()) {
-			res.put(key, orig.get(key));		
-		}
-		return res;
-	}
+
 	
 	public static boolean isURL(String source) {
 		if (source==null)

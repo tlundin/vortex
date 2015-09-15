@@ -95,9 +95,9 @@ public class DynamicGisPoint extends GisPointObject {
 	}
 	
 	//Dynamic points are always recalculated from geo location. So always return null for translated location!
-	@Override
-	public int[] getTranslatedLocation() {
-		return null;
-	}
+	//@Override
+	//public int[] getTranslatedLocation() {
+	//	return xy;
+	//}
 	
 }

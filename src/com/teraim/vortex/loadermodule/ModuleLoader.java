@@ -143,7 +143,7 @@ public class ModuleLoader implements FileLoadedCb{
 					module.setLoaded(false);
 					Log.d("vortex","Now retry load of modules");
 					o.addRow("");
-					o.addRedText("Reload required for dependant "+res.errorMessage);
+					o.addGreenText("Reload required for dependant "+res.errorMessage);
 				}
 				break;
 			default:

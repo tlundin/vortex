@@ -96,7 +96,7 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 	private List<FullGisObjectConfiguration> myGisObjectTypes;
 	private Button createBackB;
 	private Button createOkB;
-	private TextView selectedT,circumT,lengthT,areaT;
+	private TextView selectedT,selectedT2,circumT,lengthT,areaT;
 	private final static String squareM = "\u33A1";
 	private List<GisLayer> myLayers = new ArrayList<GisLayer>();
 	
@@ -281,6 +281,7 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 		}
 
 		selectedT = (TextView)avstRL.findViewById(R.id.selectedT);
+		selectedT2 = (TextView)avstRL.findViewById(R.id.selectedT2);
 		circumT = (TextView)avstRL.findViewById(R.id.circumT);
 		lengthT = (TextView)createMenuL.findViewById(R.id.lengthT);
 		areaT = (TextView)avstRL.findViewById(R.id.areaT);
@@ -435,7 +436,7 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 			@Override
 			public void onClick(View v) {
 				if (gisImageView.goBack())
-					setVisibleCreate(false);
+					setVisibleCreate(false,"");
 			}
 		});
 
@@ -446,7 +447,7 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 
 			@Override
 			public void onClick(View v) {
-				setVisibleCreate(false);
+				setVisibleCreate(false,"");
 				//Will open the distance dialog, select the new object and close polygons.
 				gisImageView.createOk();
 			}
@@ -545,11 +546,21 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 		}
 	}
 
-	public void setVisibleCreate(boolean isVisible) {
+	public void setVisibleCreate(boolean isVisible, String label) {
+
 		if (isVisible)
 			createMenuL.setVisibility(View.VISIBLE);
 		else
 			createMenuL.setVisibility(View.GONE);
+
+		if (selectedT2==null) {
+			selectedT2 = (TextView)createMenuL.findViewById(R.id.selectedT2);
+		}
+		if (selectedT2!=null)
+			selectedT2.setText(label);
+		else
+			Log.e("vortex","Java sucks");
+
 	}
 
 	public void showCenterButton(boolean isVisible) {
@@ -656,7 +667,10 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 
 
 	public void showLength(double lengthOfPath) {
-		lengthT.setText(ctx.getString(R.string.length_) + new DecimalFormat("##.##").format(lengthOfPath));
+		if (lengthOfPath==0)
+			lengthT.setText("");
+		else
+			lengthT.setText(ctx.getString(R.string.length_) + new DecimalFormat("##.##").format(lengthOfPath));
 	}
 
 /*
@@ -678,7 +692,7 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 */	
 	public void addLayer(GisLayer layer) {
 		if(layer!=null) {
-			Log.d("vortex","Succesfully added layer");
+			Log.d("vortex","Succesfully added layer "+layer.getLabel());
 			myLayers.add(layer);
 
 			
