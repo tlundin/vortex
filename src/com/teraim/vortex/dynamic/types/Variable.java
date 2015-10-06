@@ -184,12 +184,24 @@ public class Variable implements Serializable {
 		insertVariable(value,isSynchronized);
 		//If rules attached, reevaluate.
 
-		refreshRuleState();
+		//refreshRuleState();
 		timeStamp = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
 		unknown=false;
 		//In the case the variable was previously displaying a default value different from the DB value.
 		usingDefault = false;
 		return true;
+	}
+	
+	public void setOnlyCached(String value) {
+		unknown=false;
+		value = Tools.removeStartingZeroes(value);		
+		myValue=value;
+		
+	}
+	//Force fetch from db next get.
+	public void revert() {
+		unknown=true;
+		myValue=null;
 	}
 
 	protected void insertVariable(String value,
@@ -475,6 +487,10 @@ public class Variable implements Serializable {
 	public CombinedRangeAndListFilter getLimitFilter() {
 		return myFilter;
 	}
+
+
+
+	
 
 	
 

@@ -328,6 +328,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				hasWidget = readText("has_widget",parser).equalsIgnoreCase("true");
 			}
 			else {
+				
 				Log.e("vortex","Skipped "+name);
 				skip(name,parser);
 			}
@@ -406,6 +407,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			else {
 				Log.e("vortex","Skipped "+name);
 				skip(name,parser);
+
 			}
 		}
 		

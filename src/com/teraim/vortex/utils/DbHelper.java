@@ -375,7 +375,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
 	public void printAllVariables() {
 		String fileName = Constants.VORTEX_ROOT_DIR+
-				globalPh.get(PersistenceHelper.BUNDLE_NAME)+"/config/dbdump.txt";
+				globalPh.get(PersistenceHelper.BUNDLE_NAME)+"/dbdump.txt";
 		File file = new File(fileName);
 		Log.d("vortex","file created at: "+fileName);		
 		PrintWriter writer=null;
@@ -440,7 +440,8 @@ public class DbHelper extends SQLiteOpenHelper {
 		}
 
 
-		writer.close();
+		if ( writer != null ) 
+			writer.close();
 	}
 
 

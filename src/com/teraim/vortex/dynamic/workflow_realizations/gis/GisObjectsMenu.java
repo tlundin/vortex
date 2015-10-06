@@ -1,8 +1,8 @@
 package com.teraim.vortex.dynamic.workflow_realizations.gis;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -12,7 +12,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
-import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -70,7 +69,7 @@ public class GisObjectsMenu extends View {
 
 	private void init() {
 		
-		menuGroupsM = new HashMap<GisObjectType,Set<FullGisObjectConfiguration>>(); 
+		menuGroupsM = new LinkedHashMap<GisObjectType,Set<FullGisObjectConfiguration>>(); 
 
 		
 		headerTextP = new Paint();

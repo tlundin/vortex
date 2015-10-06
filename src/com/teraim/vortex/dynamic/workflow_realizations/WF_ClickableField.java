@@ -658,8 +658,118 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 		Iterator<Map.Entry<Variable,View>> it = myVars.entrySet().iterator();
 		String invalidateKeys=null;
 		Context ctx = myContext.getContext();
+
+		while (it.hasNext()) {
+			Map.Entry<Variable,View> pairs = (Map.Entry<Variable,View>)it.next();
+			Variable variable = pairs.getKey();
+			existingValue = variable.getValue();
+			oldValue.put(variable, existingValue);
+			DataType type = variable.getType();
+			View view = pairs.getValue();
+			Log.d("nils","Existing value: "+existingValue);
+			if (type == DataType.bool) {
+				//Get the yes radiobutton.				
+				RadioGroup rbg = (RadioGroup)view.findViewById(R.id.radioG);
+				//If checked set value to True.
+				int id = rbg.getCheckedRadioButtonId();
+
+				if (id == R.id.nej) {
+					newValue = "0";
+				} else if (id == R.id.ja) {
+					newValue = "1";
+				} else
+					newValue = null;
+			} else 
+				if (type == DataType.numeric||
+				type == DataType.text || type == DataType.decimal){
+					EditText etview = (EditText)view.findViewById(R.id.edit);
+					String txt = etview.getText().toString();
+					if (txt.trim().length()>0)
+						newValue = txt;
+					else
+						newValue = null;
+				} else				
+					if (type == DataType.list) {
+						LinearLayout sl = (LinearLayout)view;
+						Spinner sp = (Spinner)sl.findViewById(R.id.spinner);
+						int s = sp.getSelectedItemPosition();
+						String v[] = values.get(variable);
+						if (v!=null) {
+							if (s>=0&&s<v.length) 						
+								newValue = v[s];
+							else
+								newValue = null;
+							Log.d("nils","VALUE FOR SPINNER A "+newValue);
+						}
+						else {
+							newValue = (String)sp.getSelectedItem();
+							Log.d("nils","VALUE FOR SPINNER B "+newValue);
+						}
+					} else
+						if (type == DataType.auto_increment) {
+							/*EditText etview = (EditText)view.findViewById(R.id.edit);
+							String s = etview.getText().toString();
+							if (s!=null && s.length()>0) {
+								int val = Integer.parseInt(etview.getText().toString());
+								val++;
+								newValue = val+"";
+							}
+							 */
+							newValue = existingValue;
+						}
+
+			if (newValue == null || !newValue.equals(existingValue)||variable.isUsingDefault()) {
+				Log.d("nils","New value: "+newValue);
+				saveEvent=true;
+
+				if (newValue==null) {
+					Log.e("vortex","Calling delete on "+variable.getId()+"Obj:"+variable+" with keychain\n"+variable.getKeyChain().toString());
+					variable.deleteValue();
+					Log.e("vortex","Getvalue now returns: "+variable.getValue());
+				}
+				else {					
+					//Re-evaluate rules.
+					if (variable.hasValueOutOfRange() ) {
+						saveEvent=false;
+						String earlierValue = variable.getValue();
+						if (earlierValue==null)
+							earlierValue="";
+						Vibrator myVibrator = (Vibrator) ctx.getSystemService(Context.VIBRATOR_SERVICE);
+						myVibrator.vibrate(250);
+						new AlertDialog.Builder(ctx)
+						.setTitle("Incorrect value")
+						.setMessage("The value you entered is outside the allowed range. Earlier value will be used: ["+earlierValue+"]") 
+						.setIcon(android.R.drawable.ic_dialog_alert)
+						.setCancelable(false)
+						.setNeutralButton("Ok",new Dialog.OnClickListener() {				
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+								// TODO Auto-generated method stub
+
+							}
+						} )
+						.show();
+					} else {
+						//check rules if value is in range.
+						variable.setOnlyCached(newValue);
+
+						//This is a keychain variable. 
+						if (variable.getPartOfKeyChain()!=null) {
+							invalidateKeys=variable.getPartOfKeyChain();
+						}
+					}
+
+
+
+				}
+
+			}
+		}
+
 		Rule r = checkRules();
 		if (r != null) {
+			revertChanges();
+			saveEvent=false;
 			Vibrator myVibrator = (Vibrator) ctx.getSystemService(Context.VIBRATOR_SERVICE);
 			myVibrator.vibrate(250);
 			new AlertDialog.Builder(ctx)
@@ -675,128 +785,37 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 				}
 			} )
 			.show();
-		} else {
-			while (it.hasNext()) {
-				Map.Entry<Variable,View> pairs = (Map.Entry<Variable,View>)it.next();
-				Variable variable = pairs.getKey();
-				existingValue = variable.getValue();
-				oldValue.put(variable, existingValue);
-				DataType type = variable.getType();
-				View view = pairs.getValue();
-				Log.d("nils","Existing value: "+existingValue);
-				if (type == DataType.bool) {
-					//Get the yes radiobutton.				
-					RadioGroup rbg = (RadioGroup)view.findViewById(R.id.radioG);
-					//If checked set value to True.
-					int id = rbg.getCheckedRadioButtonId();
-
-					if (id == R.id.nej) {
-						newValue = "0";
-					} else if (id == R.id.ja) {
-						newValue = "1";
-					} else
-						newValue = null;
-				} else 
-					if (type == DataType.numeric||
-					type == DataType.text || type == DataType.decimal){
-						EditText etview = (EditText)view.findViewById(R.id.edit);
-						String txt = etview.getText().toString();
-						if (txt.trim().length()>0)
-							newValue = txt;
-						else
-							newValue = null;
-					} else				
-						if (type == DataType.list) {
-							LinearLayout sl = (LinearLayout)view;
-							Spinner sp = (Spinner)sl.findViewById(R.id.spinner);
-							int s = sp.getSelectedItemPosition();
-							String v[] = values.get(variable);
-							if (v!=null) {
-								if (s>=0&&s<v.length) 						
-									newValue = v[s];
-								else
-									newValue = null;
-								Log.d("nils","VALUE FOR SPINNER A "+newValue);
-							}
-							else {
-								newValue = (String)sp.getSelectedItem();
-								Log.d("nils","VALUE FOR SPINNER B "+newValue);
-							}
-						} else
-							if (type == DataType.auto_increment) {
-								/*EditText etview = (EditText)view.findViewById(R.id.edit);
-							String s = etview.getText().toString();
-							if (s!=null && s.length()>0) {
-								int val = Integer.parseInt(etview.getText().toString());
-								val++;
-								newValue = val+"";
-							}
-								 */
-								newValue = existingValue;
-							}
-
-				if (newValue == null || !newValue.equals(existingValue)||variable.isUsingDefault()) {
-					Log.d("nils","New value: "+newValue);
-					saveEvent=true;
-
-					if (newValue==null) {
-						Log.e("vortex","Calling delete on "+variable.getId()+"Obj:"+variable+" with keychain\n"+variable.getKeyChain().toString());
-						variable.deleteValue();
-						Log.e("vortex","Getvalue now returns: "+variable.getValue());
-					}
-					else {					
-						//Re-evaluate rules.
-						if (variable.hasValueOutOfRange() ) {
-							saveEvent=false;
-							String earlierValue = variable.getValue();
-							if (earlierValue==null)
-								earlierValue="";
-							Vibrator myVibrator = (Vibrator) ctx.getSystemService(Context.VIBRATOR_SERVICE);
-							myVibrator.vibrate(250);
-							new AlertDialog.Builder(ctx)
-							.setTitle("Incorrect value")
-							.setMessage("The value you entered is outside the allowed range. Earlier value will be used: ["+earlierValue+"]") 
-							.setIcon(android.R.drawable.ic_dialog_alert)
-							.setCancelable(false)
-							.setNeutralButton("Ok",new Dialog.OnClickListener() {				
-								@Override
-								public void onClick(DialogInterface dialog, int which) {
-									// TODO Auto-generated method stub
-
-								}
-							} )
-							.show();
-						} else {
-							//check rules if value is in range.
-							variable.setValue(newValue);
-							//This is a keychain variable. 
-							if (variable.getPartOfKeyChain()!=null) {
-								invalidateKeys=variable.getPartOfKeyChain();
-							}
-						}
-
-
-
-					}
-
-				}
+		}
+		if (saveEvent) {
+			//Commit cached value into db.
+			for (Variable v:myVars.keySet()) {
+				String value = v.getValue();
+				v.setOnlyCached(null);
+				v.setValue(value);
 			}
-
-
-			if (saveEvent) {
-				//for (Variable v:myVars.keySet())
-				//	ruleExecutor.propagateRuleToDependants(v.getId());
-				if (invalidateKeys!=null) {
-					Log.d("nils","Keychain variable changed. Invalidating cache");
-					al.invalidateCacheKeys(invalidateKeys);
-				}
-				Log.d("nils","IN SAVE() SENDING EVENT");
-				gs.sendEvent(MenuActivity.REDRAW);
-				myContext.registerEvent(new WF_Event_OnSave(this.getId(),oldValue));
+			if (invalidateKeys!=null) {
+				Log.d("nils","Keychain variable changed. Invalidating cache");
+				al.invalidateCacheKeys(invalidateKeys);
 			}
+			Log.d("nils","IN SAVE() SENDING EVENT");
+			gs.sendEvent(MenuActivity.REDRAW);
+			myContext.registerEvent(new WF_Event_OnSave(this.getId(),oldValue));
+		}
 
+
+	}
+
+	/**
+	 * If a rule is broken, revert value changes.
+	 */
+	private void revertChanges() {
+		for (Variable v:myVars.keySet()) {
+			v.revert();
 		}
 	}
+
+
+
 
 	private Rule checkRules() {
 

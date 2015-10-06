@@ -28,9 +28,14 @@ public abstract class XMLConfigurationModule extends ConfigurationModule {
 			throw new IllegalStateException();
 
 		}
-		if (o!=null) { 
-		o.addRow("");
-		o.addYellowText("Skipped TAG: ["+name+"]");
+		if (o!=null) {
+			o.addRow("");
+			if ("workflow".equals(name)) {
+				o.addRedText("Closing tag for workflow missing. Aborting");
+				throw new XmlPullParserException("Workflow closing tag missing");
+			} else {		
+			o.addYellowText("Skipped TAG: ["+name+"]");
+			}
 		}
 		int depth = 1;
 		while (depth != 0) {

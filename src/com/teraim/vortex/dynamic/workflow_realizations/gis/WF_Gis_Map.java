@@ -234,7 +234,7 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 						gisObjectsPopUp.startAnimation(popupShow);
 						mapView.invalidate();
 
-						gisImageView.centerOnUser();
+						//gisImageView.centerOnUser();
 					}
 
 				}
