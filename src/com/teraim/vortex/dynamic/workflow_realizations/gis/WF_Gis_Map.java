@@ -435,8 +435,7 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 
 			@Override
 			public void onClick(View v) {
-				if (gisImageView.goBack())
-					setVisibleCreate(false,"");
+				gisImageView.goBack();
 			}
 		});
 
@@ -560,6 +559,14 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 			selectedT2.setText(label);
 		else
 			Log.e("vortex","Java sucks");
+
+	}
+	
+	public void setVisibleCreateOk(boolean isVisible) {
+		if (isVisible)
+			createOkB.setVisibility(View.VISIBLE);
+		else
+			createOkB.setVisibility(View.GONE);
 
 	}
 

@@ -21,6 +21,7 @@ public class GeoJSONExporter extends Exporter {
 
 	private StringWriter sw;
 	private JsonWriter writer;
+	private String author ="";
 
 	protected GeoJSONExporter(Context ctx) {
 		super(ctx);
@@ -100,6 +101,7 @@ public class GeoJSONExporter extends Exporter {
 						//Hack for multiple SPY1 variables.
 						if (cp.getVariable()!=null) {
 							String name = cp.getVariable().name;
+							author  = cp.getVariable().creator;
 							if (name!=null) {
 								gisObjM.put(name, cp.getVariable().value);
 								varC++;
@@ -159,11 +161,14 @@ public class GeoJSONExporter extends Exporter {
 							for (int i =0;i<coords.length;i++) {
 								Log.d("vortex","cord length: "+coords.length);
 								Log.d("vortex","coord ["+i+"] :"+coords[i]);
-								if (coords[i]==null) {
+								if (coords[i]==null || "null".equalsIgnoreCase(coords[i])) {
 									Log.e("vortex","coordinate was null in db. ");
 									writer.nullValue();
-								} else
+								} else {
+									try {
 									writer.value(Float.parseFloat(coords[i]));
+									} catch (NumberFormatException e) { writer.nullValue();};
+								}
 							}
 							writer.endArray();
 							if (p)
@@ -177,6 +182,8 @@ public class GeoJSONExporter extends Exporter {
 						writer.beginObject();	
 						//Add the UUID
 						write("GlobalID",key);
+						write("author",author);
+						//write("author",cp.getKeyColumnValues().get("author"));
 						for (String mKey:gisObjM.keySet()) {
 							write(mKey,gisObjM.get(mKey));
 							Log.d("vortex","var, value: "+mKey+","+gisObjM.get(mKey));

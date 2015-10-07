@@ -1,5 +1,6 @@
 package com.teraim.vortex.dynamic.workflow_realizations.gis;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,11 +42,15 @@ public class GisPolygonObject extends GisPathObject {
 			return null;
 		String[] polys = polygons.split("\\|");
 		Map<String, List<Location>> ret = new HashMap<String, List<Location>>();
+		if (polys == null || polys.length==0)
+			ret.put("Poly 1", new ArrayList<Location>());
+		else {
 		for (String poly:polys) {
 			//Log.d("vortex","in poly with poly: ["+poly+"]");
 			ret.put("Poly "+i, GisObject.createListOfLocations(poly, coordType));
 			
 			i++;
+		}
 		}
 		
 		return ret;
@@ -55,14 +60,10 @@ public class GisPolygonObject extends GisPathObject {
 	@Override
 	public List<Location> getCoordinates() {
 		myCoordinates = polygons.get("Poly 1");
-		if (myCoordinates==null||myCoordinates.isEmpty()) {
-			if (myCoordinates==null)
+		
+		if (myCoordinates==null)
 				Log.e("Vortex","No poly 1 found");
-			else
-				Log.e("Vortex","poly 1 contains no points!!");
-			return null;
-		} else
-			return myCoordinates;
+		return myCoordinates;
 	}
 
 

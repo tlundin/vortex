@@ -35,7 +35,7 @@
         android:src="@drawable/vortex_small" />
 
     <TextView
-        android:id="@+id/versionTxt"
+        android:id="@+id/appTxt"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@+id/logger"
@@ -47,7 +47,7 @@
         android:textStyle="bold" />
 
         <TextView
-        android:id="@+id/appTxt"
+        android:id="@+id/versionTxt"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@+id/logger"

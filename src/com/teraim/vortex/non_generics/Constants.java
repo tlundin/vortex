@@ -41,7 +41,7 @@ import com.teraim.vortex.utils.PersistenceHelper;
 
 public class Constants {
 
-	public final static float VORTEX_VERSION = 2.21f;
+	public final static float VORTEX_VERSION = 2.23f;
 
 
 	//String constants
@@ -213,6 +213,9 @@ public class Constants {
 
 
 	public static final String BLUETOOTH_NAME = "vortex";
+
+
+	public static final String FIELD_PAD_VERSION = "1.0";
 
 
 

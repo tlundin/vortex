@@ -262,8 +262,6 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 				if (gisTypeToCreate!=null) {
 					//GisObject newP = StaticGisPoint(gisTypeToCreate, Map<String, String> keyChain,Location myLocation, Variable statusVar)
 
-					List<Location> myDots;
-
 					if (newGisObj ==null) {						
 						Set<GisObject> bag;
 						for (GisLayer l:myMap.getLayers()) { 
@@ -278,21 +276,11 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 						}
 					}
 					if (newGisObj !=null) {
-						myMap.showLength(0);
-						myDots=null;
-						if (gisTypeToCreate.getGisPolyType()==GisObjectType.Linestring) {
-							myDots = newGisObj.getCoordinates();
-							myDots.add(mapLocationForClick);
-						} else if (gisTypeToCreate.getGisPolyType()==GisObjectType.Polygon) {
-							//Todo: Change this. currently assumed poly is under 1.
-							myDots = ((GisPolygonObject)newGisObj).getPolygons().get("Poly 1");
-							myDots.add(mapLocationForClick);
-						}
-						//Show menu and length only after at least 2 points defined.
-						if (myDots!=null && myDots.size()>1) {
-							myMap.setVisibleCreate(true,newGisObj.getLabel());
-							myMap.showLength(Geomatte.lengthOfPath(myDots));
-						}
+						
+						//Add new point.
+						if (newGisObj instanceof GisPathObject) 
+							newGisObj.getCoordinates().add(mapLocationForClick);							
+
 					} else 
 						Log.e("vortex","New GisObj is null!");
 				} else
@@ -598,29 +586,26 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 	}
 
 	//returns true if there is no more backing up possible.
-	public boolean goBack() {
+	public void goBack() {
 		if (newGisObj!=null) {
 			if (newGisObj instanceof StaticGisPoint) {
-				currentCreateBag.remove(newGisObj);
-				newGisObj=null;
+				cancelGisObjectCreation();
 
 
-			} else if (newGisObj instanceof GisMultiPointObject ||
-					newGisObj instanceof GisPolygonObject) {
+			} else if (newGisObj instanceof GisPathObject) {
 				List<Location> myDots = newGisObj.getCoordinates();
-				if (myDots==null ||myDots.isEmpty()) {					
-					currentCreateBag.remove(newGisObj);
-					newGisObj=null;
-				}
-				else
-					myDots.remove(myDots.size()-1);				
+				if (myDots!=null && !myDots.isEmpty()) 
+					myDots.remove(myDots.size()-1);
+				
+				if (myDots==null ||myDots.isEmpty()) {
+					cancelGisObjectCreation();
+					Log.d("vortex","Go BACK: NewGisObj removed");
+				} else
+					//invalidate done inside cancelGisObjectCreation for other case.
+					invalidate();
 			}
-			this.invalidate();
-			return false;
-		} else {
-			gisTypeToCreate=null;
-			return true;
-		}
+			
+		} 
 	}
 
 	public void createOk() {
@@ -862,6 +847,25 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 				}
 			}
 		}
+
+		if (newGisObj!=null) {
+			double lengthOfPath = 0;
+			myMap.setVisibleCreate(true,newGisObj.getLabel());
+			//Show ok button only after at least 2 points defined.
+			boolean showOk = true;
+			if (newGisObj instanceof GisPathObject) {
+			List<Location> myDots = newGisObj.getCoordinates();
+			 showOk = (myDots!=null && myDots.size()>1);
+			 lengthOfPath = Geomatte.lengthOfPath(myDots);
+			 
+			}
+			myMap.setVisibleCreateOk(showOk);
+			myMap.showLength(lengthOfPath);				
+			
+		} else
+			myMap.setVisibleCreate(false,"");
+		
+		
 		canvas.restore();
 		//Reset any click done. 
 		mapLocationForClick=null;

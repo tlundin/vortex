@@ -229,6 +229,7 @@
                 android:layout_height="wrap_content"
                 android:animateLayoutChanges="true"
                 android:background="@drawable/object_menu_pop_bg"
+                android:minWidth="150dp"
                 android:orientation="vertical"
                 android:padding="5dp"
                 android:visibility="gone" >
