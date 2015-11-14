@@ -7,6 +7,7 @@ import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.VariableConfiguration;
+import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.DbHelper.DBColumnPicker;
 
 
@@ -41,6 +42,15 @@ public abstract class Exporter {
 	protected static Exporter instance; 
 	
 	public static Exporter getInstance(Context ctx, String type) {
+
+		//Check clock
+		if (Constants.FreeVersion) {
+		long takenIntoUseTime = GlobalState.getInstance().getGlobalPreferences().getL(PersistenceHelper.TIME_OF_FIRST_USE);
+		long currentTime = System.currentTimeMillis();
+		long diff = currentTime - takenIntoUseTime;
+		if (diff > Constants.MS_MONTH)
+			return null;
+		}
 		if (type==null||type.equalsIgnoreCase("csv"))
 			return new CSVExporter(ctx);
 		else

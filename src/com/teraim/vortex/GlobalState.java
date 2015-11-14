@@ -750,6 +750,11 @@ public class GlobalState  {
 	public ConnectionManager getConnectionManager() {
 		return myConnectionManager;
 	}
+
+	//Get a string resource and print it. convenience function.
+	public CharSequence getString(int identifier) {
+		return getContext().getResources().getString(identifier);
+	}
 	
 
 

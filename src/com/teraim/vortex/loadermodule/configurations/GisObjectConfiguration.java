@@ -55,11 +55,12 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 	}
 
 	private static String fixedLength(String fileName) {
-		if ((22-fileName.length())<=0)
+		if ((20-fileName.length())<=0)
 			return fileName;
-		String space22 = new String(new char[20-fileName.length()]).replace('\0', ' ');
+		
+		String space20 = new String(new char[20-fileName.length()]).replace('\0', ' ');
 
-		return ("[" + fileName + "]"+space22);
+		return ("[" + fileName + "]"+space20);
 	}
 
 	@Override

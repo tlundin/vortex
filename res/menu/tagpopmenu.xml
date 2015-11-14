@@ -5,16 +5,16 @@
         android:id="@+id/menu_goto"
         android:icon="@drawable/ic_menu_goto"
         android:showAsAction="ifRoom|withText"
-        android:title="Referens"/>
+        android:title="@string/reference"/>
     <item
         android:id="@+id/menu_info"
         android:icon="@android:drawable/ic_menu_info_details"
         android:showAsAction="always|withText"
-        android:title="Beskrivning"/>
+        android:title="@string/description"/>
     <item
         android:id="@+id/menu_delete"
         android:icon="@android:drawable/ic_menu_delete"
         android:showAsAction="ifRoom|withText"
-        android:title="Ta bort"/>
+        android:title="@string/delete"/>
 
 </menu>

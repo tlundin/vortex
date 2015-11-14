@@ -7,8 +7,10 @@ import java.util.Set;
 
 import android.util.Log;
 
+import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisFilter;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisObject;
+import com.teraim.vortex.utils.PersistenceHelper;
 /**
  * 
  * A Layer holds the GIS Objects drawn in GisImageView, created by block_add_gis_layer.
@@ -21,10 +23,11 @@ import com.teraim.vortex.dynamic.workflow_realizations.gis.GisObject;
 public class GisLayer {
 
 	private String name, label;
-	private boolean isVisible, hasWidget,hasDynamic=false;
+	private boolean hasWidget,hasDynamic=false;
 	private Map<String,Set<GisObject>> myObjects;
 	private boolean showLabels;
 	private Map<String, Set<GisFilter>> myFilters;
+	private boolean defaultVisible;
 	
 	
 	public GisLayer(String name, String label, boolean isVisible,
@@ -32,14 +35,13 @@ public class GisLayer {
 		super();
 		this.name = name;
 		this.label = label;
-		this.isVisible = isVisible;
 		this.hasWidget = hasWidget;
 		this.showLabels=showLabels;
-		
+		//If no user set value exist, use default.
+		//Else, set isvisible if stored value is 1.
+		defaultVisible = isVisible;
 		
 	}
-
-
 
 	
 	public void addObjectBag(String key, Set<GisObject> myGisObjects, boolean dynamic) {
@@ -85,7 +87,10 @@ public class GisLayer {
 	}
 
 	public void setVisible(boolean isVisible) {
-		this.isVisible=isVisible;
+	
+		Log.d("vortex","SetVisible called with "+isVisible+" on "+this.getId()+" Obj: "+this.toString());
+		GlobalState.getInstance().getPreferences().put(PersistenceHelper.LAYER_VISIBILITY+name, isVisible?1:0);
+		
 	}
 	
 	/** Search for GisObject in all bags. 
@@ -114,7 +119,13 @@ public class GisLayer {
 	}
 	
 	public boolean isVisible() {
-		return isVisible;
+		int v = GlobalState.getInstance().getPreferences().getI(PersistenceHelper.LAYER_VISIBILITY+name);
+		Log.d("vortex","Layer "+name+" has visibility set to "+v+" default is "+defaultVisible);
+		if (v==-1)
+			return defaultVisible;
+		else
+			return v==1;
+
 	}
 
 	public boolean showLabels() {
@@ -145,6 +156,11 @@ public class GisLayer {
 	public boolean hasWidget() {
 		return hasWidget;
 	}
+
+
+
+
+	
 
 
 

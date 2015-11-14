@@ -325,7 +325,7 @@ public class MenuActivity extends Activity   {
 				.setMessage("Receiving data..standby") 
 				.setIcon(android.R.drawable.ic_dialog_alert)
 				.setCancelable(false)
-				.setNegativeButton("CLOSE", new DialogInterface.OnClickListener() {
+				.setNegativeButton(R.string.close, new DialogInterface.OnClickListener() {
 
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
@@ -344,7 +344,7 @@ public class MenuActivity extends Activity   {
 				.setMessage("Receiving data..standby") 
 				.setIcon(android.R.drawable.ic_dialog_alert)
 				.setCancelable(false)
-				.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+				.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
 
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
@@ -352,7 +352,7 @@ public class MenuActivity extends Activity   {
 						onClose();				
 					}
 				})
-				.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+				.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
 
 					@Override
 					public void onClick(DialogInterface dialog, int which) {

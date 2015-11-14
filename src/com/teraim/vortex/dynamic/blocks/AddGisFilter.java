@@ -14,6 +14,7 @@ import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
 import com.teraim.vortex.dynamic.types.GisLayer;
 import com.teraim.vortex.dynamic.workflow_abstracts.Drawable;
@@ -111,7 +112,6 @@ public class AddGisFilter extends Block implements GisFilter {
 						@Override
 						public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {						
 							setActive(isChecked);
-							isActive = isChecked;
 							myGis.getGis().invalidate();
 						}
 
@@ -131,6 +131,7 @@ public class AddGisFilter extends Block implements GisFilter {
 
 	private void setActive(boolean isChecked) {
 		this.isActive=isChecked;
+		
 	}
 
 	@Override

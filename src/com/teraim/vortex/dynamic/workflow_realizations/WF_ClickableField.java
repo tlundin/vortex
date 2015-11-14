@@ -186,7 +186,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 			case R.id.menu_info:
 				if (row!=null) {
 					new AlertDialog.Builder(myContext.getContext())
-					.setTitle("Beskrivning")
+					.setTitle(gs.getString(R.string.description))
 					.setMessage(al.getVariableDescription(row))
 					.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int which) { 
@@ -279,7 +279,8 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 					alert.setMessage(descriptionT);
 					refreshInputFields();
 					iAmOpen = true;
-					alert.setPositiveButton("Save", new DialogInterface.OnClickListener() {
+					
+					alert.setPositiveButton(R.string.save, new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int whichButton) {
 							iAmOpen = false;
 							save();
@@ -290,7 +291,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 							v.setBackgroundDrawable(originalBackground);
 						}
 					});
-					alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+					alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int whichButton) {
 							iAmOpen = false;
 							ViewGroup x = ((ViewGroup)inputContainer.getParent());

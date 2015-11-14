@@ -101,7 +101,7 @@ public class OldPhotosFragment extends Fragment implements OnGesturePerformedLis
 						userInput.setText(currentComment);
 					alertDialogBuilder
 					.setCancelable(false)
-					.setPositiveButton("Spara",
+					.setPositiveButton(gs.getString(R.string.save),
 					  new DialogInterface.OnClickListener() {
 					    public void onClick(DialogInterface dialog,int id) {
 						Editable input = userInput.getText();
@@ -116,7 +116,7 @@ public class OldPhotosFragment extends Fragment implements OnGesturePerformedLis
 						
 					    }
 					  })
-					.setNegativeButton("Cancel",
+					.setNegativeButton(gs.getString(R.string.cancel),
 					  new DialogInterface.OnClickListener() {
 					    public void onClick(DialogInterface dialog,int id) {
 						dialog.cancel();

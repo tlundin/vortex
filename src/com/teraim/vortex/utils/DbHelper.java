@@ -288,11 +288,11 @@ public class DbHelper extends SQLiteOpenHelper {
 		if (exporter == null)
 			return new Report(ExportReport.EXPORTFORMAT_UNKNOWN);
 		Log.d("nils","Started export");
-		Log.d("vortex","context: "+context.toString());
 		Log.d("vortex","filename: "+exportFileName);
 		String selection = null;
 		List<String> selArgs = null;
 		if (context!=null) {
+			Log.d("vortex","context: "+context.toString());
 			selection = "";
 			int i=0;
 			String col = null;

@@ -41,8 +41,7 @@ import com.teraim.vortex.utils.PersistenceHelper;
 
 public class Constants {
 
-	public final static float VORTEX_VERSION = 2.23f;
-
+	public final static float VORTEX_VERSION = 2.26f;
 
 	//String constants
 	//The root folder for the SD card is in the global Environment.
@@ -86,7 +85,7 @@ public class Constants {
 	public static final String FALSE= "false";
 
 	//Static constants
-
+	public static final long MS_MONTH = 2629746000L;
 
 	public static final int KEY_LENGTH = 10;
 	public static final String SLU_URL = "https://arbetsplats.slu.se/sites/srh/Landskapsanalys/Faltportal/default.aspx";
@@ -216,6 +215,8 @@ public class Constants {
 
 
 	public static final String FIELD_PAD_VERSION = "1.0";
+
+	public static final boolean FreeVersion = false;
 
 
 

@@ -48,6 +48,8 @@ public class PersistenceHelper {
 	public static final String HIST_LOAD_COUNTER = "hist_counter";
 	public static final String AVSTAND_WARNING_SHOWN = "Avstand_warning_was_shown";
 	public static final String GLOBAL_AUTO_INC_COUNTER = "auto_increment_counter";
+	public static final String TIME_OF_FIRST_USE = "time_of_first_use";
+	public static final String LAYER_VISIBILITY = "Layer_Is_Visible_";
 
 	
 
@@ -77,7 +79,9 @@ public class PersistenceHelper {
 	public void put(String key, float value) {
 		sp.edit().putFloat(key,value).commit();
 	}
-
+	public void put(String key, long value) {
+		sp.edit().putLong(key,value).commit();
+	}
 	public boolean getB(String key) {
 		return sp.getBoolean(key, false);
 	}
@@ -89,7 +93,10 @@ public class PersistenceHelper {
 	public float getF(String key) {
 		return sp.getFloat(key, -1);
 	}
-
+	
+	public long getL(String key) {
+		return sp.getLong(key, -1);
+	}
 	/* Checks if external storage is available for read and write */
 	public boolean isExternalStorageWritable() {
 		String state = Environment.getExternalStorageState();
@@ -177,6 +184,8 @@ public class PersistenceHelper {
 		
 		
 	}
+
+
 
 
 	

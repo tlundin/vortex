@@ -59,7 +59,8 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 
 	private String myApplication;
 	private LoggerI o;
-	private String cacheFolder,myServer;
+	private String cacheFolder;
+	private String language="se";
 	
 	public WorkFlowBundleConfiguration(PersistenceHelper globalPh,PersistenceHelper ph,
 			String server, String bundle,LoggerI debugConsole) {
@@ -127,7 +128,12 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				continue;
 			}
 			String name = parser.getName();
-			if (name.equals("workflow")) {
+			if (parser.getName().equals("language")) {
+				o.addRow("");
+				o.addGreenText("Language set to: "+language);
+				language = readText("language",parser);
+			}
+			else if (name.equals("workflow")) {
 				//Add workflow to bundle, return a count.
 				bundle.add(readWorkflow(parser));
 				return null;

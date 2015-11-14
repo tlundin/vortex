@@ -56,6 +56,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 	private DbHelper myDb;
 	private TextView appTxt;
 	private String oldV = "";
+	
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -100,7 +101,6 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 
 		//Send a signal that init starts
 
-
 		//First time vortex runs? Then create global folders.
 		if (this.initIfFirstTime()) {
 			if (!Start.singleton.isNetworkAvailable()) {
@@ -124,6 +124,9 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 			folder = new File(Constants.VORTEX_ROOT_DIR+bundleName+"/config");
 			if(!folder.mkdirs())
 				Log.e("NILS","Failed to create config root folder");
+			folder = new File(Constants.VORTEX_ROOT_DIR+bundleName+"/cache");
+			if(!folder.mkdirs())
+				Log.e("NILS","Failed to create cache root folder");
 
 		} else 
 			Log.d("vortex","This application has been executed before.");
@@ -138,8 +141,22 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		myModules = new Configuration(Constants.getCurrentlyKnownModules(globalPh,ph,server(),bundleName,debugConsole));
 		myLoader = new ModuleLoader("moduleLoader",myModules,loginConsole,globalPh,debugConsole,this,this.getActivity());
 
+		if (Constants.FreeVersion && expired())
+			showErrorMsg("The license has expired. The App still works, but you will not be able to export any data.");;
 
 		return view;
+	}
+
+
+
+
+
+	private boolean expired() {
+		long takenIntoUseTime = globalPh.getL(PersistenceHelper.TIME_OF_FIRST_USE);
+		long currentTime = System.currentTimeMillis();
+		long diff = currentTime - takenIntoUseTime;
+		return (diff > Constants.MS_MONTH);
+		
 	}
 
 
@@ -247,7 +264,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 	 */
 	private boolean initIfFirstTime() {
 		//If testFile doesnt exist it will be created and found next time.
-		Log.d("Strand","Checking if this is first time use...");
+		Log.d("vortex","Checking if this is first time use of Vortex...");
 		boolean first = (globalPh.get(PersistenceHelper.FIRST_TIME_KEY).equals(PersistenceHelper.UNDEFINED));
 
 
@@ -279,7 +296,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		if (globalPh.get(PersistenceHelper.SERVER_URL).equals(PersistenceHelper.UNDEFINED))
 			globalPh.put(PersistenceHelper.SERVER_URL, "www.teraim.com");
 		if (globalPh.get(PersistenceHelper.BUNDLE_NAME).equals(PersistenceHelper.UNDEFINED))
-			globalPh.put(PersistenceHelper.BUNDLE_NAME, "Nils");
+			globalPh.put(PersistenceHelper.BUNDLE_NAME, "Vortex");
 		if (globalPh.get(PersistenceHelper.DEVELOPER_SWITCH).equals(PersistenceHelper.UNDEFINED))
 			globalPh.put(PersistenceHelper.DEVELOPER_SWITCH, false);
 		if (globalPh.get(PersistenceHelper.VERSION_CONTROL_SWITCH_OFF).equals(PersistenceHelper.UNDEFINED))
@@ -291,7 +308,9 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 			Log.e("NILS","Failed to create gis image folder");		
 
 		globalPh.put(PersistenceHelper.FIRST_TIME_KEY,"Initialized");
-
+		long millis = System.currentTimeMillis();
+		//date = Constants.getTimeStamp();
+		globalPh.put(PersistenceHelper.TIME_OF_FIRST_USE,millis);
 	}
 
 
@@ -304,8 +323,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		.setNeutralButton("Ok",new Dialog.OnClickListener() {				
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
-				// TODO Auto-generated method stub
-
+				
 			}
 		} )
 		.show();

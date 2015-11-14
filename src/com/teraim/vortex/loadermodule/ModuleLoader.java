@@ -161,8 +161,10 @@ public class ModuleLoader implements FileLoadedCb{
 		if (errCode==ErrorCode.IOError) {
 			if (ctx!=null && !Tools.isNetworkAvailable(ctx)) 
 				o.addRow("No network");
-			else
-				o.addRow("File not found");
+			else {
+				o.addRow(res.errorMessage);
+				//o.addRow("File not found");
+			}
 		} else if (errCode==ErrorCode.Unsupported) {
 			o.addRow("Remote file requires Vortex version ["+res.errorMessage+"]. Please upgrade.");
 		} else if (errCode==ErrorCode.ParseError) {

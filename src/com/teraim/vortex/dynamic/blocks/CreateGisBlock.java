@@ -54,7 +54,7 @@ public class CreateGisBlock extends Block {
 	String format;
 
 	private Cutout cutOut=null;
-	private boolean menuUp = false;
+	
 	private WF_Context myContext;
 	private LoggerI o;
 	private boolean hasSatNav;
@@ -203,8 +203,13 @@ public class CreateGisBlock extends Block {
 
 				@Override
 				public void onClick(View v) {
-					menuL.setVisibility(menuUp?View.INVISIBLE:View.VISIBLE);
-					menuUp = !menuUp;
+					int menuState = menuL.getVisibility();
+					if (menuState == View.VISIBLE) 
+						menuL.setVisibility(View.INVISIBLE);
+					else {
+						gis.initializeLayersMenu(gis.getLayers());
+						menuL.setVisibility(View.VISIBLE);
+					}
 				}
 			});
 		} else {

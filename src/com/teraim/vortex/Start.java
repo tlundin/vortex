@@ -274,7 +274,7 @@ public class Start extends MenuActivity {
 					if (!wf.isBackAllowed()) {
 						new AlertDialog.Builder(this).setTitle("Warning!")
 						.setMessage("This will exit the page.")
-						.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+						.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
 							public void onClick(DialogInterface dialog, int which) {
 
 								wfCtx.mapLayer--;
@@ -282,7 +282,7 @@ public class Start extends MenuActivity {
 								getFragmentManager().popBackStackImmediate();
 								GlobalState.getInstance().setCurrentContext(null);
 							}})
-							.setNegativeButton("Cancel",new DialogInterface.OnClickListener() {
+							.setNegativeButton(R.string.cancel,new DialogInterface.OnClickListener() {
 								public void onClick(DialogInterface dialog, int which) { 
 
 								}})
@@ -302,11 +302,11 @@ public class Start extends MenuActivity {
 				if (lp.isRunning()) {
 					new AlertDialog.Builder(this).setTitle("Linjemätning pågår!")
 					.setMessage("Vill du verkligen gå ut från sidan?")
-					.setPositiveButton("Ja", new DialogInterface.OnClickListener() {
+					.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int which) {
 							getFragmentManager().popBackStackImmediate();
 						}})
-						.setNegativeButton("Nej",new DialogInterface.OnClickListener() {
+						.setNegativeButton(R.string.no,new DialogInterface.OnClickListener() {
 							public void onClick(DialogInterface dialog, int which) { 
 
 							}})

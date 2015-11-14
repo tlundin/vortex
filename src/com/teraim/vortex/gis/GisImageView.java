@@ -369,7 +369,8 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 						go.markAsUseful();
 						gop.setTranslatedLocation(xy);
 					}
-					Log.d("vortex","Removed object outside map");
+					else 
+						Log.d("vortex","Removed object outside map");
 					continue;
 				} 
 				else if (go instanceof GisPathObject) {
@@ -653,7 +654,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 				//Log.d("vortex","drawing layer "+layerId);
 				//get all objects that should be drawn on this layer.
 				if (!layerO.isVisible()) {
-					Log.d("vortex","layer not visible...skipping "+layerId);
+					Log.d("vortex","layer not visible...skipping "+layerId+" Obj: "+layerO.toString());
 					continue;
 				}
 				//if (layerO.hasDynamic()) {

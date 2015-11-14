@@ -511,7 +511,7 @@ public class RuleExecutor {
 	}
 
 	private SubstiResult substVariables(String formula,String subst, List<TokenizedItem> myTokens, Boolean stringT) {
-		TokenType type;
+		
 		Variable st;
 		String var;
 		int max=-1;
@@ -540,7 +540,7 @@ public class RuleExecutor {
 			//Log.d("vortex","MAX: "+max);
 			item = lengthMap.remove(max);
 			if (item!=null) {
-				type = item.getType();
+				
 				var = item.get();
 				st = item.getVariable();		
 				String value = st.getValue();
@@ -572,9 +572,9 @@ public class RuleExecutor {
 		}
 
 		if (stringT) {
-			//Log.d("vortex","string type returned with values substituted");
-			o.addRow("After substitution: "+subst);
-			//Log.d("vortex","After substitution: "+subst);
+			Log.d("vortex","string type substitution");
+			o.addRow("String type substitution result: "+subst);
+			Log.d("vortex","After substitution: "+subst);
 			return new SubstiResult(subst,SubstiType.String);
 		}
 
@@ -595,7 +595,7 @@ public class RuleExecutor {
 		//Scan for foo = foo.
 		//Look for = or <> first.
 		boolean eq = false; boolean neq = false;
-		String comp="";
+
 		for (int i = index+variableName.length();i<expr.length();i++) {
 			char c = expr.charAt(i);  
 			if (Character.isWhitespace(c))

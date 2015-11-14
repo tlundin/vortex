@@ -191,12 +191,20 @@ public class WF_Table extends WF_List {
 				Log.e("vortex","No variableIds found for "+wft.getLabel());
 				return;
 			} else {
+				Log.d("vortex","varIds contains "+varIds.size()+" variables");
 				for (String varGr:varIds) {
+					Log.d("vortex","varGr: "+varGr);
 					if (varGr.endsWith(variableSuffix)) {
 						varGrId = varGr;
 						break;
 					}
 				}
+			}
+			if (varGrId==null) {
+				Log.e("vortex","found no variable with suffix: "+variableSuffix);
+				o.addRow("");
+				o.addRedText("Could not add variables with suffix: "+variableSuffix+". No instances found. Check spelling and case");
+				return;
 			}
 			//Construct variablename. 
 			//String varId = varNamePrefix+Constants.VariableSeparator+varGrId+Constants.VariableSeparator+variableSuffix;

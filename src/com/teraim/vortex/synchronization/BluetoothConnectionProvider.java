@@ -438,7 +438,7 @@ public class BluetoothConnectionProvider extends ConnectionProvider {
 			Log.d("Vortex","Connected!");
 			internalState = InternalState.open;
 			broadcastEvent(ConnectionEvent.connectionGained);
-			//OPEN!! YES!
+			
 
 		} else
 			Log.d("vortex","socket already received!");
