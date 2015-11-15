@@ -154,7 +154,6 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 
 	ActionMode mActionMode;
 
-	Bitmap bmp;
 	//final PhotoMeta photoMeta;
 	final Context ctx;
 
@@ -163,8 +162,8 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 
 
 
-	public WF_Gis_Map(CreateGisBlock createGisBlock,Rect rect, String id, final FrameLayout mapView, boolean isVisible, final String fullPicFileName,
-			final WF_Context myContext, final PhotoMeta photoMeta, View avstRL, View createMenuL,  List<GisLayer> daddyLayers) {
+	public WF_Gis_Map(CreateGisBlock createGisBlock,Rect rect, String id, final FrameLayout mapView, boolean isVisible, Bitmap bmp,
+			final WF_Context myContext, final PhotoMeta photoMeta, View avstRL, View createMenuL,  List<GisLayer> daddyLayers, final int realW, final int realH) {
 		super(id, mapView, isVisible, myContext);
 		GlobalState gs = GlobalState.getInstance();
 
@@ -187,8 +186,9 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 
 
 		gisImageView = (GisImageView)mapView.findViewById(R.id.GisV);		
-		bmp = Tools.getScaledImageRegion(ctx,fullPicFileName,rect);
+
 		gisImageView.setImageBitmap(bmp);
+
 		//Only allow zoom if this is *not* a zoom level. Only one level of zoom!
 
 
@@ -317,12 +317,7 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 			@Override
 			public void onClick(View v) {
 
-				final BitmapFactory.Options options = new BitmapFactory.Options();
-				options.inJustDecodeBounds=true;
-				Bitmap piece;
-				BitmapFactory.decodeFile(fullPicFileName,options);
-				int realW = options.outWidth;
-				int realH = options.outHeight;
+
 
 				//get cutout
 				Rect r = gisImageView.getCurrentViewSize(realW,realH);
@@ -716,18 +711,18 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 		LayoutInflater li = LayoutInflater.from(myContext.getContext());
 		View layersHeader = li.inflate(R.layout.layers_header, null);
 		layersL.addView(layersHeader);
-		Log.d("vortex","hmm5");
+		
 		for (final GisLayer layer:layers) {
 
 			if (layer.hasWidget()) {
-				Log.d("vortex","Layer "+layer.getLabel()+" has a widget");
+				//Log.d("vortex","Layer "+layer.getLabel()+" has a widget");
 				View layersRow = li.inflate(R.layout.layers_row, null);
 				TextView filterNameT = (TextView)layersRow.findViewById(R.id.filterName);
 				CheckBox lShow = (CheckBox)layersRow.findViewById(R.id.cbShow);
 				CheckBox lLabels = (CheckBox)layersRow.findViewById(R.id.cbLabels);
 				filterNameT.setText(layer.getLabel());
 				lShow.setChecked(layer.isVisible());
-				Log.d("vortex","SETCCHECKED: "+layer.isVisible());
+				//Log.d("vortex","SETCCHECKED: "+layer.isVisible());
 				lLabels.setChecked(layer.showLabels());
 				
 
@@ -735,7 +730,6 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 					@Override
 					public void onClick(View v) {
 
-						Log.d("vortex","clicked!");
 						layer.setVisible(((CheckBox)v).isChecked());
 						gisImageView.invalidate();
 						
@@ -793,9 +787,7 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 	public void initialize() {
 		//Inititalize map, and set the layers view.
 		gisImageView.initialize(this,photoMeta,!isZoomLevel);
-		Log.d("vortex","hmm4");
 		
-
 	}
 
 

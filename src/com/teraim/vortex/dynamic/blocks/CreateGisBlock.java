@@ -1,32 +1,33 @@
 package com.teraim.vortex.dynamic.blocks;
 
 import java.util.List;
+import java.util.Set;
 
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Rect;
+import android.os.Handler;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
-import android.widget.PopupWindow;
-import android.widget.TextView;
 
-import com.google.android.gms.drive.internal.l;
 import com.teraim.vortex.FileLoadedCb;
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
 import com.teraim.vortex.dynamic.AsyncResumeExecutorI;
+import com.teraim.vortex.dynamic.Executor;
 import com.teraim.vortex.dynamic.types.GisLayer;
 import com.teraim.vortex.dynamic.types.Location;
 import com.teraim.vortex.dynamic.types.PhotoMeta;
+import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.types.Workflow.Unit;
 import com.teraim.vortex.dynamic.workflow_abstracts.Container;
 import com.teraim.vortex.dynamic.workflow_abstracts.Event.EventType;
-import com.teraim.vortex.dynamic.workflow_realizations.WF_Container;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.WF_Gis_Map;
 import com.teraim.vortex.loadermodule.ConfigurationModule;
@@ -54,7 +55,7 @@ public class CreateGisBlock extends Block {
 	String format;
 
 	private Cutout cutOut=null;
-	
+
 	private WF_Context myContext;
 	private LoggerI o;
 	private boolean hasSatNav;
@@ -86,6 +87,8 @@ public class CreateGisBlock extends Block {
 
 	//Callback after image has loaded.
 	AsyncResumeExecutorI cb;
+	private int imageHeight;
+	private int imageWidth;
 
 
 
@@ -97,9 +100,9 @@ public class CreateGisBlock extends Block {
 	 */
 
 	public boolean create(WF_Context myContext,final AsyncResumeExecutorI cb) {
-		
-        
-        Context ctx = myContext.getContext();
+
+
+		Context ctx = myContext.getContext();
 		gs = GlobalState.getInstance();
 		o = gs.getLogger();
 		this.cb=cb;
@@ -110,16 +113,7 @@ public class CreateGisBlock extends Block {
 		final String serverFileRootDir = server(globalPh.get(PersistenceHelper.SERVER_URL))+globalPh.get(PersistenceHelper.BUNDLE_NAME).toLowerCase()+"/extras/";
 		final String cacheFolder = Constants.VORTEX_ROOT_DIR+globalPh.get(PersistenceHelper.BUNDLE_NAME)+"/cache/";
 
-		//Create pop dialog to display status.
-		//PopupWindow pop = new PopupWindow(ctx);
-		//LayoutInflater li = ((LayoutInflater)ctx.getSystemService(ctx.LAYOUT_INFLATER_SERVICE));
-		//View popInner = li.inflate(R.layout.status_pop, null);
-		//final TextView statusT = (TextView)popInner.findViewById(R.id.statusT);
-		//pop.setContentView(popInner);
-		//pop.showAtLocation(((WF_Container)myContext.getContainer("root")).getViewGroup(), Gravity.CENTER, 0, 0);
-		
-		
-		
+
 		if (source==null || source.length()==0) {
 			Log.e("vortex","Pic url null! GisImageView will not load");
 			o.addRow("");
@@ -157,23 +151,27 @@ public class CreateGisBlock extends Block {
 		return false;
 	}
 
-	public void createAfterLoad(PhotoMeta photoMetaData, String cachedImgFilePath) {
+	Rect r = null;
+	PhotoMeta photoMetaData;
+	
+	public void createAfterLoad(PhotoMeta photoMeta, final String cachedImgFilePath) {
+		this.photoMetaData=photoMeta;
+		final Container myContainer = myContext.getContainer(containerId);
 
-		Container myContainer = myContext.getContainer(containerId);
 		if (myContainer!=null && photoMetaData!=null) {
 			LayoutInflater li = LayoutInflater.from(myContext.getContext());
-			FrameLayout mapView = (FrameLayout)li.inflate(R.layout.image_gis_layout, null);
+			final FrameLayout mapView = (FrameLayout)li.inflate(R.layout.image_gis_layout, null);
 			final View avstRL = mapView.findViewById(R.id.avstRL);
 			final View createMenuL = mapView.findViewById(R.id.createMenuL);
 
-			Rect r=null;
+			r=null;
 
 			if (cutOut==null) {
 				BitmapFactory.Options options = new BitmapFactory.Options();
 				options.inJustDecodeBounds = true;
 				BitmapFactory.decodeFile(cachedImgFilePath, options);
-				int imageHeight = options.outHeight;
-				int imageWidth = options.outWidth;
+				imageHeight = options.outHeight;
+				imageWidth = options.outWidth;
 				Log.d("vortex","image rect h w is "+imageHeight+","+imageWidth);
 
 				r = new Rect(0,0,imageWidth,imageHeight);
@@ -186,38 +184,52 @@ public class CreateGisBlock extends Block {
 				photoMetaData = new PhotoMeta(topC.getY(),botC.getX(),botC.getY(),topC.getX());
 				cutOut=null;
 			}
-			gis = new WF_Gis_Map(this,r,blockId, mapView, isVisible, cachedImgFilePath,myContext,photoMetaData,avstRL,createMenuL,myLayers);
-			//need to throw away the reference to myLayers.
-			myLayers=null;
-			myContainer.add(gis);
-			myContext.addGis(gis.getId(),gis);
-			myContext.addEventListener(gis, EventType.onSave);
-			myContext.addDrawable(name,gis);
-			final View menuL = mapView.findViewById(R.id.menuL);
+			
+			new Handler().postDelayed(new Runnable() {
+				public void run() {
+					Bitmap bmp = Tools.getScaledImageRegion(myContext.getContext(),cachedImgFilePath,r);
+					if (bmp!=null) {
 
-			menuL.setVisibility(View.INVISIBLE);
-			avstRL.setVisibility(View.INVISIBLE);
-			final ImageButton menuB = (ImageButton)mapView.findViewById(R.id.menuB);
+						gis = new WF_Gis_Map(CreateGisBlock.this,r,blockId, mapView, isVisible, bmp,myContext,photoMetaData,avstRL,createMenuL,myLayers,imageWidth,imageHeight);
+						//need to throw away the reference to myLayers.
+						myLayers=null;
+						myContainer.add(gis);
+						myContext.addGis(gis.getId(),gis);
+						myContext.addEventListener(gis, EventType.onSave);
+						myContext.addDrawable(name,gis);
+						final View menuL = mapView.findViewById(R.id.menuL);
 
-			menuB.setOnClickListener(new OnClickListener() {
-
-				@Override
-				public void onClick(View v) {
-					int menuState = menuL.getVisibility();
-					if (menuState == View.VISIBLE) 
 						menuL.setVisibility(View.INVISIBLE);
-					else {
-						gis.initializeLayersMenu(gis.getLayers());
-						menuL.setVisibility(View.VISIBLE);
-					}
+						avstRL.setVisibility(View.INVISIBLE);
+						final ImageButton menuB = (ImageButton)mapView.findViewById(R.id.menuB);
+
+						menuB.setOnClickListener(new OnClickListener() {
+
+							@Override
+							public void onClick(View v) {
+								int menuState = menuL.getVisibility();
+								if (menuState == View.VISIBLE) 
+									menuL.setVisibility(View.INVISIBLE);
+								else {
+									gis.initializeLayersMenu(gis.getLayers());
+									menuL.setVisibility(View.VISIBLE);
+								}
+							}
+						});
+						cb.continueExecution();
+					} else {
+						Log.e("vortex","Failed to create map image. Will exit");
+						cb.abortExecution("Failed to create GisImageView. The map file ["+cachedImgFilePath+"] could not be parsed" );
+					} 
 				}
-			});
+			}, 0);
+			
 		} else {
 			o.addRow("");
 			if (photoMetaData ==null) {
 				Log.e("vortex","Photemetadata null! Cannot add GisImageView!");
 				o.addRedText("Adding GisImageView to "+containerId+" failed. Photometadata missing (the boundaries of the image on the map)");
-
+				cb.abortExecution("Adding GisImageView to "+containerId+" failed. Photometadata missing (the boundaries of the image on the map)");
 			}
 			else {
 				Log.e("vortex","Container null! Cannot add GisImageView!");
@@ -225,7 +237,8 @@ public class CreateGisBlock extends Block {
 				cb.abortExecution("Missing container for GisImageView: "+containerId);
 			}
 		}
-		cb.continueExecution();
+
+
 	}
 
 
@@ -269,7 +282,7 @@ public class CreateGisBlock extends Block {
 							o.addRow("");
 							o.addRedText("Could not find GIS image "+metaFileName);
 							Log.e("vortex","Failed to parse image meta. Errorcode "+res.errCode.name());
-							cb.abortExecution("Could not load GIS image meta file ["+metaFileName+"]. Probably the file is missing under the 'extras' folder");
+							cb.abortExecution("Could not load GIS image meta file ["+metaFileName+"]. Likely reason: File missing under 'extras' folder or no connection");
 						}
 					}
 					@Override

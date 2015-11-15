@@ -162,7 +162,7 @@ public class MenuActivity extends Activity   {
 			return;
 		}
 		globalPh = gs.getGlobalPreferences();
-		Log.d("vortex","Global prefs: "+gs.getGlobalPreferences()+" isdev "+globalPh.getB(PersistenceHelper.DEVELOPER_SWITCH));
+		//Log.d("vortex","Global prefs: "+gs.getGlobalPreferences()+" isdev "+globalPh.getB(PersistenceHelper.DEVELOPER_SWITCH));
 		if (!syncIsRunning)
 			mnu[0].setTitle("Osynkat: "+gs.getDb().getNumberOfUnsyncedEntries());
 		else 

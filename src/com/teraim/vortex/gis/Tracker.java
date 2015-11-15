@@ -147,9 +147,9 @@ public class Tracker extends Service implements LocationListener {
 	@Override
 	public void onLocationChanged(Location location) {
 		try {
-		Log.d("vortex","got new coords: "+location.getLatitude()+","+location.getLongitude());
+		//Log.d("vortex","got new coords: "+location.getLatitude()+","+location.getLongitude());
 		if (myX!=null) {
-			Log.d("vortex","setting sweref location");
+			//Log.d("vortex","setting sweref location");
 			SweLocation myL = Geomatte.convertToSweRef(location.getLatitude(),location.getLongitude());
 			/*
 			String oldX = myX.getValue();

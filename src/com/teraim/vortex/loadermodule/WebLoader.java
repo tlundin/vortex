@@ -1,6 +1,7 @@
 package com.teraim.vortex.loadermodule;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -75,6 +76,9 @@ public class WebLoader extends Loader {
 		} catch (IOException e) {
 			if (e instanceof MalformedJsonException)
 				return new LoadResult(module,ErrorCode.ParseError);
+			else if (e instanceof FileNotFoundException) {
+				return new LoadResult(module,ErrorCode.notFound);
+			}
 			else {
 				StringWriter sw = new StringWriter();
 				PrintWriter pw = new PrintWriter(sw);

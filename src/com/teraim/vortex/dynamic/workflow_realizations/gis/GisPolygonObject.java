@@ -17,6 +17,8 @@ public class GisPolygonObject extends GisPathObject {
 
 	Map<String, List<Location>> polygons;
 	private FullGisObjectConfiguration conf;
+	//String representation of polygon.
+	private String polyString;
 	
 
 	//Called when XML has defined the object with a full configuration
@@ -24,7 +26,8 @@ public class GisPolygonObject extends GisPathObject {
 			String polygons,String coordType,Variable statusVar) {
 		//TODO: Add statusvariable
 		super(conf,keyChain,null,statusVar);
-		this.polygons=buildMap(polygons,coordType);	
+		this.polygons=null;
+		polyString = polygons;
 		this.conf=conf;
 	}
 
@@ -59,6 +62,13 @@ public class GisPolygonObject extends GisPathObject {
 	//returns the first main polygon. The others are apparaently only holes.
 	@Override
 	public List<Location> getCoordinates() {
+		//If string representation, parse it now and cache
+		if (polygons==null && polyString!=null)
+			polygons = buildMap(polyString,GisConstants.SWEREF);
+		//still null?
+		if (polygons==null)
+			return null;
+		
 		myCoordinates = polygons.get("Poly 1");
 		
 		if (myCoordinates==null)
@@ -100,6 +110,9 @@ public class GisPolygonObject extends GisPathObject {
 	}
 
 	public Map<String, List<Location>> getPolygons() {
+		//If string representation, parse it now.
+		if (polygons==null && polyString!=null)
+			polygons = buildMap(polyString,GisConstants.SWEREF);
 		return polygons;
 	}
 

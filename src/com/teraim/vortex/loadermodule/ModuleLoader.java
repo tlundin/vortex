@@ -112,17 +112,16 @@ public class ModuleLoader implements FileLoadedCb{
 			case BadURL:
 			case ParseError:
 			case Aborted:
+			case notFound:
 			case noData:
+				
 				if (module.isRequired()&&!module.frozenFileExists()) {
 					o.addRedText(" !");o.addText(res.errCode.name());o.addRedText("!");
 					o.addRow("Upstart aborted..Unable to load mandatory file.");
 					printError(res);
 					o.draw();
 					return;
-				} else {
-					if (res.errCode!=ErrorCode.IOError)
-						o.addYellowText(" "+res.errCode.name());
-				}
+				} 
 				printError(res);
 				if (module.frozenFileExists()) {
 					if (thawModule(module)) {
@@ -170,7 +169,8 @@ public class ModuleLoader implements FileLoadedCb{
 		} else if (errCode==ErrorCode.ParseError) {
 			o.addRow("");
 			o.addRedText("The file contains an error. Please check log for details");
-		}
+		} else
+			o.addYellowText(res.errCode.name());
 
 		
 	}

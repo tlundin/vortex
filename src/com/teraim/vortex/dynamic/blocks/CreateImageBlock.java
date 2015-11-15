@@ -109,7 +109,10 @@ public class CreateImageBlock extends Block implements EventListener {
 			options.inSampleSize = Tools.calculateInSampleSize(options, (int)tWidth, tHeight);
 			options.inJustDecodeBounds = false;
 			bip = BitmapFactory.decodeFile(Constants.PIC_ROOT_DIR+dynImgName,options);
-			img.setImageBitmap(bip);
+			if (bip!=null)
+				img.setImageBitmap(bip);
+			else
+				Log.d("nils","Could not decode image "+dynImgName);
 		}
 		else {
 			Log.d("nils","Did not find picture "+dynImgName);
@@ -139,7 +142,8 @@ public class CreateImageBlock extends Block implements EventListener {
 		}
 
 		protected void onPostExecute(Bitmap result) {
-			bmImage.setImageBitmap(result);
+			if (result!=null)
+				bmImage.setImageBitmap(result);
 		}
 	}
 

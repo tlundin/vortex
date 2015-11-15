@@ -369,8 +369,8 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 						go.markAsUseful();
 						gop.setTranslatedLocation(xy);
 					}
-					else 
-						Log.d("vortex","Removed object outside map");
+					//else 
+					//	Log.d("vortex","Removed object outside map");
 					continue;
 				} 
 				else if (go instanceof GisPathObject) {
@@ -654,7 +654,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 				//Log.d("vortex","drawing layer "+layerId);
 				//get all objects that should be drawn on this layer.
 				if (!layerO.isVisible()) {
-					Log.d("vortex","layer not visible...skipping "+layerId+" Obj: "+layerO.toString());
+					//Log.d("vortex","layer not visible...skipping "+layerId+" Obj: "+layerO.toString());
 					continue;
 				}
 				//if (layerO.hasDynamic()) {
@@ -1109,7 +1109,6 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 			return;
 		}
 		if (touchedGop==null) {
-			Log.d("vortex","terminated display dist");
 			handler=null;
 			return;
 		}
@@ -1341,7 +1340,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 	long mostRecentGPSValueTimeStamp=-1;
 	@Override
 	public void gpsStateChanged(GPS_State newState) {
-		Log.d("vortex","Got GPS STATECHANGE");
+		//Log.d("vortex","Got GPS STATECHANGE");
 		if (newState==GPS_State.newValueReceived)
 			mostRecentGPSValueTimeStamp = System.currentTimeMillis();
 

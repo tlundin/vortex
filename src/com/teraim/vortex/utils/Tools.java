@@ -1,6 +1,7 @@
 package com.teraim.vortex.utils;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -149,9 +150,9 @@ public class Tools {
 		ObjectInputStream objectIn = null;
 		Object object = null;
 		try {
-		FileInputStream fileIn = new FileInputStream(filename);
-		objectIn = new ObjectInputStream(fileIn);
-		object = objectIn.readObject();
+			FileInputStream fileIn = new FileInputStream(filename);
+			objectIn = new ObjectInputStream(fileIn);
+			object = objectIn.readObject();
 
 		}
 		finally {
@@ -214,34 +215,35 @@ public class Tools {
 
 
 		try { 
-			
+
 			decoder = BitmapRegionDecoder.newInstance(fileName, true); 
 		} catch (IOException ex) {
 			ex.printStackTrace();
+			return null;
 		}  
-			Log.d("vortex","w h "+decoder.getWidth()+","+decoder.getHeight());
-			final BitmapFactory.Options options = new BitmapFactory.Options();
-			options.inJustDecodeBounds=true;
-			Bitmap piece;
-			decoder.decodeRegion(r,options);
-			int realW = options.outWidth;
-			int realH = options.outHeight;
-			Log.d("vortex","Wp Wh: "+realW+","+realH);
-			DisplayMetrics metrics = ctx.getResources().getDisplayMetrics();
-			int sWidth = metrics.widthPixels;
-			double tWidth = sWidth;
-			//height is then the ratio times this..
-			int tHeight = (int) (tWidth*.66f);
-			//use target values to calculate the correct inSampleSize
-			options.inSampleSize = Tools.calculateInSampleSize(options, (int)tWidth, tHeight);
-			Log.d("nils"," Calculated insamplesize "+options.inSampleSize);
-			//now create real bitmap using insampleSize
-			options.inJustDecodeBounds = false;
-			Log.d("vortex","stime: "+System.currentTimeMillis()/1000);
-			piece = decoder.decodeRegion(r,options);			
-			Log.d("vortex","ptime: "+System.currentTimeMillis()/1000);
-			Log.d("vortex","piece w: b: "+piece.getWidth()+","+piece.getRowBytes());
-			return piece;
+		Log.d("vortex","w h "+decoder.getWidth()+","+decoder.getHeight());
+		final BitmapFactory.Options options = new BitmapFactory.Options();
+		options.inJustDecodeBounds=true;
+		Bitmap piece;
+		decoder.decodeRegion(r,options);
+		int realW = options.outWidth;
+		int realH = options.outHeight;
+		Log.d("vortex","Wp Wh: "+realW+","+realH);
+		DisplayMetrics metrics = ctx.getResources().getDisplayMetrics();
+		int sWidth = metrics.widthPixels;
+		double tWidth = sWidth;
+		//height is then the ratio times this..
+		int tHeight = (int) (tWidth*.66f);
+		//use target values to calculate the correct inSampleSize
+		options.inSampleSize = Tools.calculateInSampleSize(options, (int)tWidth, tHeight);
+		Log.d("nils"," Calculated insamplesize "+options.inSampleSize);
+		//now create real bitmap using insampleSize
+		options.inJustDecodeBounds = false;
+		Log.d("vortex","stime: "+System.currentTimeMillis()/1000);
+		piece = decoder.decodeRegion(r,options);			
+		Log.d("vortex","ptime: "+System.currentTimeMillis()/1000);
+		Log.d("vortex","piece w: b: "+piece.getWidth()+","+piece.getRowBytes());
+		return piece;
 	}
 	public static Bitmap getScaledImage(Context ctx,String fileName) {
 		//Try to load pic from disk, if any.
@@ -295,7 +297,7 @@ public class Tools {
 			return null;
 		}
 	}
-	
+
 	public static Bitmap decodeSampledBitmapFromResource(Resources res, int resId,
 			int reqWidth, int reqHeight) {
 
@@ -344,7 +346,7 @@ public class Tools {
 	 */
 
 
-	
+
 	public static Map<String,String> copyKeyHash(Map<String,String> orig) {
 		if (orig==null)
 			return null;
@@ -354,8 +356,8 @@ public class Tools {
 		}
 		return res;
 	}
-	
-	
+
+
 	public static Map<String,String> createKeyMap(String ...parameters) {
 
 		if ((parameters.length & 1) != 0 ) {
@@ -389,14 +391,14 @@ public class Tools {
 		File f = new File(folder,fileName);
 		return (f.exists() && !f.isDirectory());
 	}
-	
+
 	public static boolean isNetworkAvailable(Context ctx) {
 		ConnectivityManager connectivityManager 
 		= (ConnectivityManager) ctx.getSystemService(Context.CONNECTIVITY_SERVICE);
 		NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
 		return activeNetworkInfo != null && activeNetworkInfo.isConnectedOrConnecting();
 	}
-	
+
 
 	public static boolean isNumeric(String str)
 	{	
@@ -413,8 +415,8 @@ public class Tools {
 		}
 		return true;
 	}
-	
-	
+
+
 
 	public static boolean isVersionNumber(String str)
 	{	
@@ -510,7 +512,7 @@ public class Tools {
 						for (int i = 0; i<values.size();i++) {
 							S = values.get(i)[0];
 							if (Tools.isNumeric(S))
-									ss.add(S);
+								ss.add(S);
 							else
 								Log.e("vortex","NonNumeric value found: ["+S+"]");
 						}
@@ -610,13 +612,13 @@ public class Tools {
 			return value;
 		return removeStartingZeroes(value.substring(1));
 	}		
-	
-	
+
+
 	public static void restart(Activity context) {
 		Log.d("vortex","restarting...");			
 		android.app.FragmentManager fm = context.getFragmentManager();
 		for(int i = 0; i < fm.getBackStackEntryCount(); ++i) {    
-		    fm.popBackStack();
+			fm.popBackStack();
 		}
 		Intent intent = new Intent(context, Start.class);
 		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -632,7 +634,7 @@ public class Tools {
 		//	Log.d("vortex","Longer: "+longer.toString());
 		//	Log.d("vortex","shorter: "+shorter.toString());
 		//}
-		
+
 		if (k1!=null &&!k1.isEmpty()) {
 			//If k2 is null, the diff is everything.
 			if (k2==null||k2.isEmpty())
@@ -669,7 +671,7 @@ public class Tools {
 	}
 
 
-	
+
 	public static boolean isURL(String source) {
 		if (source==null)
 			return false;
@@ -677,11 +679,11 @@ public class Tools {
 			return false;
 		return true;
 	}
-	
+
 	public static String parseString(String varString) {
 		return parseString(varString, GlobalState.getInstance().getCurrentKeyHash());
 	}
-	
+
 	public static String parseString(String varString, Map<String,String> keyHash) {
 
 		if (varString == null||varString.isEmpty())
@@ -734,30 +736,30 @@ public class Tools {
 
 	}
 	public static void preCacheImage(String serverFileRootDir, final String fileName, final String cacheFolder, final LoggerI logger) {
-		
+
 		onLoadCacheImage (serverFileRootDir,fileName,cacheFolder,new WebLoaderCb(){
-		@Override
-		public void loaded(Boolean result) {
-			if (logger!=null) {
-				Log.d("vortex","Cached "+fileName);
-				if (result) 
-					logger.addRow("Succesfully cached "+fileName);
-				else {
-					logger.addRow("");
-					logger.addRedText("Failed to cache "+fileName);
+			@Override
+			public void loaded(Boolean result) {
+				if (logger!=null) {
+					Log.d("vortex","Cached "+fileName);
+					if (result) 
+						logger.addRow("Succesfully cached "+fileName);
+					else {
+						logger.addRow("");
+						logger.addRedText("Failed to cache "+fileName);
+					}
 				}
 			}
-		}
-		@Override
-		public void progress(int bytesRead) {
-			
-		}
+			@Override
+			public void progress(int bytesRead) {
+
+			}
 		});
 
-		
-		
+
+
 	}
-	
+
 	public interface WebLoaderCb {
 
 		//called when done.
@@ -765,8 +767,8 @@ public class Tools {
 		//called every time 1kb has been read.
 		public void progress(int bytesRead);
 	}
-	
-	
+
+
 	private static class DownloadTask extends AsyncTask<String, Void, Boolean> {
 		WebLoaderCb cb;
 
@@ -792,77 +794,106 @@ public class Tools {
 				Log.e("vortex","Illegal filename, cannot cache: "+fileName);
 				return false;
 			}
-				
+
 			fileName = fileName.replace("/", "|");
 			fileName = folder+fileName;
 			File file = new File(fileName);
-			
+
 			//File already cached
 			if(file.exists()) {
 				Log.d("vortex","NO cache - file exists");
 				return true;
 			}
-				
+
 			Tools.createFoldersIfMissing(new File(fileName));
-			
-				
+			boolean success = false;
+			BufferedInputStream in = null;
+			BufferedOutputStream fout = null;
+
 			try {
-				saveUrl(fileName,url,cb);
+				Log.d("vortex","urlString: "+url);
+				in = new BufferedInputStream(new URL(url).openStream());
+				fout = new BufferedOutputStream(new FileOutputStream(fileName));
+
+				final byte data[] = new byte[1024];
+				int count;
+				while ((count = in.read(data, 0, 1024)) != -1) {
+					fout.write(data, 0, count);
+
+					cb.progress(count);
+				}
+				success = true;
 			} catch (MalformedURLException e) {
 				e.printStackTrace();
 				return false;
 			} catch (IOException e) {
 				e.printStackTrace();
 				return false;
+			} finally {
+				
+				if (in != null && fout != null) {
+					try {
+						in.close();
+						fout.close();
+						if (!success) {
+							Log.d("vortex","caching failed...deleting temp file");
+							file.delete();
+						}
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					
+				}
 			}
 			return true;
 		}
-		
-		 protected void onProgressUpdate(Integer... progress) {
-		        //This method runs on the UI thread, it receives progress updates
-		        //from the background thread and publishes them to the status bar
-		        cb.progress(progress[0]);
-		    }
+
+		protected void onProgressUpdate(Integer... progress) {
+			//This method runs on the UI thread, it receives progress updates
+			//from the background thread and publishes them to the status bar
+			cb.progress(progress[0]);
+		}
 
 		protected void onPostExecute(Boolean result) {
-			
+
 			cb.loaded(result);
 		}
 	}
 
-	
-	public static void saveUrl(final String filename, final String urlString, WebLoaderCb cb)
-	        throws MalformedURLException, IOException {
-	    BufferedInputStream in = null;
-	    FileOutputStream fout = null;
-	    try {
-	    	Log.d("vortex","urlString: "+urlString);
-	        in = new BufferedInputStream(new URL(urlString).openStream());
-	        fout = new FileOutputStream(filename);
 
-	        final byte data[] = new byte[1024];
-	        int count;
-	        while ((count = in.read(data, 0, 1024)) != -1) {
-	            fout.write(data, 0, count);
-	            cb.progress(count);
-	        }
-	    } finally {
-	        if (in != null) {
-	            in.close();
-	        }
-	        if (fout != null) {
-	            fout.close();
-	        }
-	    }
+	public static void saveUrl(final String filename, final String urlString, WebLoaderCb cb)
+			throws MalformedURLException, IOException {
+		BufferedInputStream in = null;
+		FileOutputStream fout = null;
+		try {
+			Log.d("vortex","urlString: "+urlString);
+			in = new BufferedInputStream(new URL(urlString).openStream());
+			fout = new FileOutputStream(filename);
+
+			final byte data[] = new byte[1024];
+			int count;
+			while ((count = in.read(data, 0, 1024)) != -1) {
+				fout.write(data, 0, count);
+
+				cb.progress(count);
+			}
+		} finally {
+			if (in != null) {
+				in.close();
+			}
+			if (fout != null) {
+				fout.close();
+			}
+		}
 	}
-	
+
 	public static File getCachedFile(String fileName, String folder) {
-		
+
 		fileName = folder+fileName;
 		File f = new File(fileName);
 		Log.d("vortex", "getCached: "+fileName);
 		if (f.exists()) {
-			
+
 			return f;
 		}
 		else 

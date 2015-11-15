@@ -574,7 +574,7 @@ public class DbHelper extends SQLiteOpenHelper {
 	private void insertAuditEntry(Variable v,Map<String,String> valueSet,String action) {
 		String changes = "";
 		//First the keys.
-		Log.d("vortex","Inserting Audit entry!");
+		//Log.d("vortex","Inserting Audit entry!");
 		Map<String, String> keyChain = v.getKeyChain();
 		Iterator<Entry<String,String>> it;
 		if (keyChain!=null) {
@@ -602,8 +602,8 @@ public class DbHelper extends SQLiteOpenHelper {
 				break;	
 
 		}
-		Log.d("nils","Variable name: "+v.getId());
-		Log.d("nils","Audit entry: "+changes);
+		//Log.d("nils","Variable name: "+v.getId());
+		//Log.d("nils","Audit entry: "+changes);
 		storeAuditEntry(action,changes,v.getId());
 	}
 
@@ -916,7 +916,7 @@ public class DbHelper extends SQLiteOpenHelper {
 	//This in effect creates an array of values for different timestamps. 
 	public void insertVariableSnap(ArrayVariable var, String newValue,
 			boolean syncMePlease) {
-		Log.d("vortex","I am in snap insert for variable "+var.getId());
+		//Log.d("vortex","I am in snap insert for variable "+var.getId());
 		String timeStamp = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())+"";
 		ContentValues values = new ContentValues();
 		createValueMap(var,newValue,values,timeStamp);
@@ -997,7 +997,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		String timestamp = ph.get(PersistenceHelper.TIME_OF_LAST_SYNC);
 		if (timestamp==null||timestamp.equals(PersistenceHelper.UNDEFINED))
 			timestamp = "0";
-		Log.d("nils","Time of last sync is "+timestamp+" in getChanges (dbHelper)");
+		//Log.d("nils","Time of last sync is "+timestamp+" in getChanges (dbHelper)");
 		Cursor c = db.query(TABLE_AUDIT,null,
 				"timestamp > ?",new String[] {timestamp},null,null,"timestamp asc",null);
 		if (c != null && c.getCount()>0 && c.moveToFirst()) {
@@ -1435,7 +1435,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		String timestamp = ph.get(PersistenceHelper.TIME_OF_LAST_SYNC);
 		if (timestamp==null||timestamp.equals(PersistenceHelper.UNDEFINED))
 			timestamp = "0";
-		Log.d("nils","Time of last sync is "+timestamp+" in getNumberOfUnsyncedEntries (dbHelper)");
+		//Log.d("nils","Time of last sync is "+timestamp+" in getNumberOfUnsyncedEntries (dbHelper)");
 		Cursor c = db.query(TABLE_AUDIT,null,
 				"timestamp > ?",new String[] {timestamp},null,null,"timestamp asc",null);
 		if (c != null && c.getCount()>0) 

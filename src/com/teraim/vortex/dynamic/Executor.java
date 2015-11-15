@@ -11,6 +11,7 @@ import java.util.Set;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.Fragment;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -121,6 +122,8 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 	private List<Block> blocks;
 
 	private List<Integer> executedBlocks;
+	//Create pop dialog to display status.
+	private ProgressDialog pDialog; 
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -597,6 +600,8 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 					
 				}
 				else if (b instanceof CreateGisBlock) {
+					pDialog = ProgressDialog.show(myContext.getContext(), "", 
+				            "Loading. Please wait...", true);
 					savedBlockPointer = blockP+1;
 					//Will callback to this object after image is loaded.
 					CreateGisBlock bl = ((CreateGisBlock) b);
@@ -633,6 +638,8 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 
 
 			}
+			//Remove loading popup if displayed.
+			removeLoadDialog();
 			Container root = myContext.getContainer("root");
 			if (root==null && myContext.hasContainers()) {
 				o.addRow("");
@@ -679,12 +686,19 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 			}
 
 		} catch (Exception e) {
+			removeLoadDialog();
 			Tools.printErrorToLog(o,e);
 		}
 	}
 
 
 
+	private void removeLoadDialog() {
+		if (pDialog!=null) {
+			pDialog.dismiss();
+			pDialog=null;
+		}
+	}
 	private int indexOf(String jNext, List<Block> blocks) {
 
 		for(int i=0;i<blocks.size();i++) {
@@ -719,6 +733,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 	@Override
 	public void abortExecution(String reason) {
 		Log.e("vortex","Execution aborted.");
+		removeLoadDialog();
 		new AlertDialog.Builder(myContext.getContext())
 		.setTitle("Execution aborted")
 		.setMessage(reason) 

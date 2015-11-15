@@ -21,7 +21,7 @@ public class GisObject {
 	
 	protected static final double ClickThresholdInMeters = 50;
 	protected double distanceToClick=-1;
-	private String label;
+	private String label=null;
 	private Variable statusVar=null;
 	
 	
@@ -48,7 +48,7 @@ public class GisObject {
 		this.foc = conf;
 		this.myCoordinates=myCoordinates;
 		this.statusVar=statusVar;
-		this.label = Tools.parseString(foc.getLabel(),keyChain);
+		
 	}
 	
 	
@@ -85,18 +85,21 @@ public class GisObject {
 	}
 	
 	public String getLabel() {
-		if (label==null)
-			return "";
+		if (label!=null)
+			return label;
+		label = foc.getLabel();
 		//@notation for id
-		if (label.startsWith("@")) {
+		if (label!=null && label.startsWith("@")) {
 			String key = label.substring(1, label.length());
-			if (key.length()>0) {
-				String ret = keyChain.get(key);
-				if (ret!=null)
-					return ret;
-			}
-		}
-		return Tools.parseString(label);
+			if (key.length()>0) 
+				label = keyChain.get(key);
+			
+		} else 
+			label = Tools.parseString(label,keyChain);
+		if (label==null)
+			label = "";
+		
+		return label;
 	}
 	
 	public String getId() {

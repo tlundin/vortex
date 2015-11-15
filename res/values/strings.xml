@@ -17,6 +17,7 @@
 	<string name="u2">u2</string>	
 	<string name="yes">Yes</string>
 	<string name="no">No</string>		
+	<string name="delete">Delete</string>	
 	<string name="description">Description</string>		
 	<string name="reference">Reference</string>	
 	<string name="close">Close</string>	

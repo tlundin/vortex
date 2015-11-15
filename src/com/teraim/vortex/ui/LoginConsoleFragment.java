@@ -455,7 +455,8 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		}
 
 		protected void onPostExecute(Bitmap result) {
-			bmImage.setImageBitmap(result);
+			if (result!=null)
+				bmImage.setImageBitmap(result);
 		}
 	}
 

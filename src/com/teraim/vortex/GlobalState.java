@@ -77,11 +77,7 @@ public class GlobalState  {
 	
 	
 	public static GlobalState getInstance() {
-		if (singleton == null) {			
-			//singleton = new GlobalState(c.getApplicationContext());
-			Log.e("vortex","Global state was lost...ajabaja");
 
-		}
 		return singleton;
 	}
 
