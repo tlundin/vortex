@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 
 import com.teraim.vortex.R;
 import com.teraim.vortex.dynamic.Executor;
@@ -53,6 +54,13 @@ public class PageWithAggregationTemplate extends Executor {
 		if (wf!=null) {
 			run();
 		}		
+		
 		return v;
 	}
+	
+
+	
+	
+	
+	
 }

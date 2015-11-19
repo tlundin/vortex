@@ -2,7 +2,9 @@ package com.teraim.vortex.loadermodule;
 
 import java.util.List;
 
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.os.Handler;
 import android.util.Log;
 
 import com.teraim.vortex.FileLoadedCb;
@@ -18,15 +20,18 @@ public class ModuleLoader implements FileLoadedCb{
 	private ModuleLoaderListener caller;
 	private String loaderId;
 	private Context ctx;
+	private boolean allFrozen;
 
+	
 	public interface ModuleLoaderListener {
 		
-		void loadSuccess(String loaderId);
+		void loadSuccess(String loaderId, boolean majorVersionChange);
+		void loadFail(String loaderId);
 	}
 	
 	
 	
-	public ModuleLoader(String loaderId, Configuration currentlyKnownModules, LoggerI o, PersistenceHelper glPh, LoggerI debugConsole,ModuleLoaderListener caller,Context ctx) {
+	public ModuleLoader(String loaderId, Configuration currentlyKnownModules, LoggerI o, PersistenceHelper glPh, boolean allFrozen, LoggerI debugConsole,ModuleLoaderListener caller,Context ctx) {
 		myModules = currentlyKnownModules;
 		this.o=o;
 		this.debug=debugConsole;
@@ -34,19 +39,37 @@ public class ModuleLoader implements FileLoadedCb{
 		this.caller = caller;
 		this.loaderId=loaderId;
 		this.ctx=ctx;
+		//boolean that tells if all files already exist frozen.
+		this.allFrozen = allFrozen;
 	}
 
-	public void loadModules() {
-
-		ConfigurationModule module;
+	
+	ConfigurationModule module;
+	
+	private boolean majorVersionChange = true; 
+		
+	public void loadModules(boolean majorVersionChange) {
+		
+		this.majorVersionChange=majorVersionChange;
+		//If all frozen, simply load from memory and check version later on. 
+		
 		//check if any module needs to load.
 			module = myModules.next();
 		if (module!=null) {
 			o.addRow(module.getLabel()+" :");
 			Log.d("vortex",module.getLabel()+" :");
-			module.load(this);
+			if (majorVersionChange )
+				module.load(this);
+			else {
+				//Load files in parallel from disk 
+				new Handler().postDelayed(new Runnable() {
+					public void run() {
+				onFileLoaded(new LoadResult(module,ErrorCode.sameold));
+					}
+				},0);
+			}
 		} else 
-			caller.loadSuccess(loaderId);
+			caller.loadSuccess(loaderId,majorVersionChange);
 			
 	}
 
@@ -64,6 +87,7 @@ public class ModuleLoader implements FileLoadedCb{
 
 	@Override
 	public void onFileLoaded(LoadResult res) {
+		
 		o.removeTicky();
 		ConfigurationModule module = res.module;
 		if (module != null) { 
@@ -72,6 +96,16 @@ public class ModuleLoader implements FileLoadedCb{
 			
 
 			switch (res.errCode) {
+			//If version of App not updated, and default Version handling, and all config files exist frozen, then turn on justLoadCurrent
+			case majorVersionNotUpdated:
+				if (allFrozen) {
+						Log.d("vortex","Major control!!");
+						majorVersionChange = false;
+						o.removeLine();
+						o.addRow("Use existing configuration");
+				} 
+				
+			break;
 			case existingVersionIsMoreCurrent:
 			case sameold:
 				if (thawModule(module)) {
@@ -82,14 +116,16 @@ public class ModuleLoader implements FileLoadedCb{
 						o.addRedText(res.errorMessage);
 						o.addText("]");
 					}
-					else 
-						o.addText(" No update");
 					o.addRow("");
-					o.addYellowText("Current version will be used: "+module.getFrozenVersion());
+					float frozenModuleVersion = module.getFrozenVersion();
+					String frozenModuleVersionS = frozenModuleVersion+"";
+					if (frozenModuleVersion==-1)
+						frozenModuleVersionS="missing";
+					o.addYellowText("Version used: "+frozenModuleVersionS);
 				} else { 
 					Log.d("vortex","Retrying.");
 					o.addYellowText(" fail..retrying..");
-					module.setFrozenVersion(null);
+					module.setFrozenVersion(-1);
 					module.load(this);
 					o.draw();
 					return;
@@ -101,8 +137,8 @@ public class ModuleLoader implements FileLoadedCb{
 				module.setLoaded(true);
 				o.addGreenText(" New!");
 				o.addText(" [");
-				if (module.version!=null)
-					o.addText(module.version);
+				if (module.newVersion!=-1)
+					o.addText(module.newVersion+"");
 				else
 					o.addText("?");
 				o.addText("]");
@@ -118,8 +154,10 @@ public class ModuleLoader implements FileLoadedCb{
 				if (module.isRequired()&&!module.frozenFileExists()) {
 					o.addRedText(" !");o.addText(res.errCode.name());o.addRedText("!");
 					o.addRow("Upstart aborted..Unable to load mandatory file.");
-					printError(res);
+					//printError(res);
 					o.draw();
+					//Need to enable the settings menu. 
+					caller.loadFail(loaderId);
 					return;
 				} 
 				printError(res);
@@ -137,12 +175,17 @@ public class ModuleLoader implements FileLoadedCb{
 				ConfigurationModule reloadModule = myModules.getModule(res.errorMessage);
 				if (reloadModule!=null) {
 					reloadModule.setLoaded(false);
-					reloadModule.setFrozenVersion(null);
-					module.setFrozenVersion(null);
-					module.setLoaded(false);
+					reloadModule.setFrozenVersion(-1);
+					
+					//module.setFrozenVersion(-1);
+					//module.setLoaded(false);
 					Log.d("vortex","Now retry load of modules");
 					o.addRow("");
 					o.addGreenText("Reload required for dependant "+res.errorMessage);
+					//majorVersionChange=true;
+					reloadModule.load(this);
+					o.draw();
+					return;
 				}
 				break;
 			default:
@@ -150,10 +193,14 @@ public class ModuleLoader implements FileLoadedCb{
 				break;
 			}				
 			o.draw();
-			loadModules();
+			loadModules(majorVersionChange);
 		}
 
 	}
+
+
+
+
 
 	private void printError(LoadResult res) {
 		ErrorCode errCode = res.errCode;
@@ -161,8 +208,10 @@ public class ModuleLoader implements FileLoadedCb{
 			if (ctx!=null && !Tools.isNetworkAvailable(ctx)) 
 				o.addRow("No network");
 			else {
-				o.addRow(res.errorMessage);
-				//o.addRow("File not found");
+				if (res.errorMessage !=null)
+					o.addRow(res.errorMessage);
+				else
+					o.addRow("No data (Network error)");
 			}
 		} else if (errCode==ErrorCode.Unsupported) {
 			o.addRow("Remote file requires Vortex version ["+res.errorMessage+"]. Please upgrade.");
@@ -170,7 +219,7 @@ public class ModuleLoader implements FileLoadedCb{
 			o.addRow("");
 			o.addRedText("The file contains an error. Please check log for details");
 		} else
-			o.addYellowText(res.errCode.name());
+			o.addYellowText(" "+res.errCode.name());
 
 		
 	}
@@ -181,6 +230,7 @@ public class ModuleLoader implements FileLoadedCb{
 			debug.addRow("");
 			debug.addRedText("Failed to thaw module "+module.fileName+" due to "+res.errCode.name());
 			Log.e("vortex","Failed to thaw module "+module.fileName+" due to "+res.errCode.name());
+			
 			//Remove the corrupt file and remove version.
 			if (module.deleteFrozen())
 				debug.addYellowText("Corrupt file has been deleted");
@@ -191,8 +241,8 @@ public class ModuleLoader implements FileLoadedCb{
 		return true;
 	}
 
-	//TODO: REMOVE
-	public void onFileLoaded(ErrorCode errCode, String version) {}
+	//TODO:REMOVE
+	public void onFileLoaded(ErrorCode errCode, String version) {};
 
 	public void stop() {
 		Log.e("vortex","In stop for "+loaderId);

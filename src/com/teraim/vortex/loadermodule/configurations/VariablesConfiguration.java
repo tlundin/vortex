@@ -49,16 +49,16 @@ public class VariablesConfiguration extends CSVConfigurationModule {
 	
 
 	@Override
-	public String getFrozenVersion() {
+	public float getFrozenVersion() {
 		//Force reload of this file if Groups has been loaded.
 		if (GroupsConfiguration.getSingleton()!=null) {
-			return null;
+			return -1;
 		}
-		return (ph.get(PersistenceHelper.CURRENT_VERSION_OF_VARPATTERN_FILE));
+		return (ph.getF(PersistenceHelper.CURRENT_VERSION_OF_VARPATTERN_FILE));
 	}
 
 	@Override
-	protected void setFrozenVersion(String version) {
+	protected void setFrozenVersion(float version) {
 		ph.put(PersistenceHelper.CURRENT_VERSION_OF_VARPATTERN_FILE,version);
 
 	}

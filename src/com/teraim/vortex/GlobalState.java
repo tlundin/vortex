@@ -13,8 +13,6 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
-import com.teraim.vortex.bluetooth.ConnectionManager;
-import com.teraim.vortex.bluetooth.SyncMessage;
 import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.types.CHash;
 import com.teraim.vortex.dynamic.types.SpinnerDefinition;
@@ -30,7 +28,10 @@ import com.teraim.vortex.loadermodule.Configuration;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.non_generics.StatusHandler;
+import com.teraim.vortex.synchronization.ConnectionManager;
+import com.teraim.vortex.synchronization.SyncMessage;
 import com.teraim.vortex.ui.DrawerMenu;
+import com.teraim.vortex.utils.BackupManager;
 import com.teraim.vortex.utils.DbHelper;
 import com.teraim.vortex.utils.PersistenceHelper;
 import com.teraim.vortex.utils.RuleExecutor;
@@ -74,6 +75,7 @@ public class GlobalState  {
 	private PersistenceHelper globalPh=null;
 	private Tracker myTracker;
 	private ConnectionManager myConnectionManager; 
+	private BackupManager myBackupManager;
 	
 	
 	public static GlobalState getInstance() {
@@ -123,7 +125,9 @@ public class GlobalState  {
 
 		myConnectionManager = new ConnectionManager(this);
 	
-
+		myBackupManager = new BackupManager(this);
+		
+		myBackupManager.startBackupIfTimeAndNeed();
 	}
 
 
@@ -200,7 +204,9 @@ public class GlobalState  {
 		return artLista;
 	}
 
-
+	public BackupManager getBackupManager() {
+		return myBackupManager;
+	}
 
 
 
@@ -484,9 +490,12 @@ public class GlobalState  {
 
 	
 	public void sendSyncEvent(Intent intent) {
+		if (mHandler!=null) {
 		Message m = Message.obtain(mHandler);
 		m.obj=intent;
 		m.sendToTarget();
+		} else
+			Log.e("vortex","NO MESSAGE NO HANDLER!!");
 	}
 
 	public void sendEvent(String action) {

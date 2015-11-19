@@ -497,23 +497,27 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 	int noA=10,noR=10;
 
 	public void setAvstTxt(String text) {
-		String ct = ((TextView)avstTS.getCurrentView()).getText().toString();
-		if (noA-->0)
+		//String ct = ((TextView)avstTS.getCurrentView()).getText().toString();
+		avstTS.setText(text);
+		/*if (noA-->0)
 			return;
 		else {
 			noA=10;
 			avstTS.setText(text);
 		}
+		*/
 	}
 	public void setRiktTxt(String text) {
-		String ct = ((TextView)riktTS.getCurrentView()).getText().toString();
+		riktTS.setText(text);
+	}
+		/*String ct = ((TextView)riktTS.getCurrentView()).getText().toString();
 		if (ct.equals(text)&&noR-->0)
 			return;
 		else {
 			noR=10;
 			riktTS.setText(text);
 		}
-	}
+	}*/
 
 	public void setSelectedObjectText(String txt) {
 		selectedT.setText(txt);

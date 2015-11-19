@@ -116,12 +116,12 @@ public class GroupsConfiguration extends CSVConfigurationModule {
 	}
 
 	@Override
-	public String getFrozenVersion() {
-		return (ph.get(PersistenceHelper.CURRENT_VERSION_OF_CONFIG_FILE));
+	public float getFrozenVersion() {
+		return (ph.getF(PersistenceHelper.CURRENT_VERSION_OF_CONFIG_FILE));
 	}
 
 	@Override
-	protected void setFrozenVersion(String version) {
+	protected void setFrozenVersion(float version) {
 		ph.put(PersistenceHelper.CURRENT_VERSION_OF_CONFIG_FILE,version);
 	}
 

@@ -87,15 +87,15 @@ public class AirPhotoMetaData extends XMLConfigurationModule {
 	}
 
 	@Override
-	public String getFrozenVersion() {
+	public float getFrozenVersion() {
 		// TODO Auto-generated method stub
-		return null;
+		return -1;
 	}
 
 	@Override
-	protected void setFrozenVersion(String version) {
+	protected void setFrozenVersion(float version) {
 		// TODO Auto-generated method stub
-
+		
 	}
 
 	@Override

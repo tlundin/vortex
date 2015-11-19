@@ -31,9 +31,11 @@ public abstract class ConfigurationModule {
 	}
 	public Source source;
 	public Type type;
-	public String rawData,version,fileName,fullPath,printedLabel,frozenPath;
+	public String rawData,fileName,fullPath,printedLabel,frozenPath;
+	protected float newVersion;
 	protected PersistenceHelper globalPh,ph;
-	protected boolean IamLoaded=false,versionControl;
+	protected boolean IamLoaded=false;
+	protected String versionControl;
 
 	private Integer linesOfRawData;
 	protected Object essence;
@@ -56,7 +58,7 @@ public abstract class ConfigurationModule {
 		fullPath = urlOrPath+fileName+"."+type.name();
 		frozenPath = Constants.VORTEX_ROOT_DIR+gPh.get(PersistenceHelper.BUNDLE_NAME)+"/cache/"+fileName;
 		Log.d("vortex","full path "+fullPath);
-		this.versionControl=!globalPh.getB(PersistenceHelper.VERSION_CONTROL_SWITCH_OFF);
+		this.versionControl = globalPh.get(PersistenceHelper.VERSION_CONTROL);
 	}
 
 
@@ -64,12 +66,12 @@ public abstract class ConfigurationModule {
 		return new File(frozenPath).isFile();
 	}
 
-	public abstract String getFrozenVersion();
+	public abstract float getFrozenVersion();
 
 
 	//Stores version number. Can be different from frozen version during load.
-	public void setVersion(String version) {
-		this.version=version;
+	public void setNewVersion(float version) {
+		this.newVersion=version;
 	}
 
 	//Freeze version number when load succesful
@@ -81,7 +83,7 @@ public abstract class ConfigurationModule {
 		notFound=true;
 	}
 
-	protected abstract void setFrozenVersion(String version);
+	protected abstract void setFrozenVersion(float version);
 
 	public abstract boolean isRequired();
 

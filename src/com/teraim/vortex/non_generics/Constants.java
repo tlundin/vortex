@@ -41,7 +41,7 @@ import com.teraim.vortex.utils.PersistenceHelper;
 
 public class Constants {
 
-	public final static float VORTEX_VERSION = 2.27f;
+	public final static float VORTEX_VERSION = 2.33f;
 
 	//String constants
 	//The root folder for the SD card is in the global Environment.
@@ -218,6 +218,11 @@ public class Constants {
 
 	public static final boolean FreeVersion = false;
 
+	public static final String BACKUP_FILE_NAME = "backup";
+
+	//Backup if data older than 24h
+	public static final long BACKUP_FREQUENCY = 86400000;
+
 
 
 
@@ -225,8 +230,8 @@ public class Constants {
 		List<ConfigurationModule> ret = new ArrayList<ConfigurationModule>();
 		//Workflow xml. Named same as bundle.
 
-		ret.add(new SpinnerConfiguration(globalPh,ph,server,bundle,debugConsole));
 		ret.add(new WorkFlowBundleConfiguration(globalPh,ph,server,bundle,debugConsole));
+		ret.add(new SpinnerConfiguration(globalPh,ph,server,bundle,debugConsole));
 		ret.add(new GroupsConfiguration(globalPh,ph,server,bundle,debugConsole));		
 		//VariableConfiguration depends on the Groups Configuration.
 		ret.add(new VariablesConfiguration(globalPh,ph,server,bundle,debugConsole));

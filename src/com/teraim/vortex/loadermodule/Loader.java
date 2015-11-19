@@ -34,25 +34,26 @@ public abstract class Loader extends AsyncTask<ConfigurationModule ,Integer,Load
 	LoggerI myLog;
 	String vNo ="";
 	LoadResult loadR=null;
+	//Values defined in @arrays file, 
 	boolean versionControl;
 
-	public Loader(ProgressBar pb, TextView tv,FileLoadedCb cb, boolean versionControl) {
+	public Loader(ProgressBar pb, TextView tv,FileLoadedCb cb, String versionControlS) {
 		this.pb=pb;
 		this.tv=tv;
 		this.cb=cb;
-		this.versionControl=versionControl;
+		this.versionControl=(versionControlS==null || !versionControlS.equals("No control"));
 	}
 
 
-	public static String getVersion(String h1,String h2) {
+	public static float getVersion(String h1,String h2) {
 
-		
+
 		String[] header = h1.split(",");
 
 		if (header!=null&&header.length>=2) {
 			String potVer = header[1].trim(); 
 			if (Tools.isVersionNumber(potVer))
-				return potVer;
+				return Float.parseFloat(potVer);
 		}
 		if (h2!=null) {
 			int p = h2.indexOf("version");
@@ -60,13 +61,13 @@ public abstract class Loader extends AsyncTask<ConfigurationModule ,Integer,Load
 				String vNo = h2.substring(p+9, h2.indexOf('\"', p+9));
 				Log.d("vortex","Version line: "+vNo);
 				if (Tools.isVersionNumber(vNo))
-						return vNo;
+					return Float.parseFloat(vNo);
 			}
 		}
 		Log.d("vortex","No version found for simple lookup.");
 		Log.d("vortex","Header row1: "+h1);
 		Log.d("vortex","Header row2: "+h2);
-		return null;
+		return -1;
 
 	}
 
@@ -85,24 +86,22 @@ public abstract class Loader extends AsyncTask<ConfigurationModule ,Integer,Load
 	}
 
 	int rowC = 1;
-	protected LoadResult read(ConfigurationModule m, String newVersion, BufferedReader reader,StringBuilder sb) throws IOException {
+	protected LoadResult read(ConfigurationModule m, float newVersion, BufferedReader reader,StringBuilder sb) throws IOException {
 		String line = null;
-		if (newVersion != null) {
-			m.setVersion(newVersion);
+		if (newVersion != -1) {
+			m.setNewVersion(newVersion);
 			if (versionControl) {
-				String version = m.getFrozenVersion();
-				if (version!=null) {
-					if (version.equals(newVersion)) 
+				Log.d("vortex","newversion equals: "+newVersion);
+				float frozenVersion = m.getFrozenVersion();
+				if (frozenVersion!=-1) {
+					if (frozenVersion==newVersion) {
 						//We can set the version number safely.
+						Log.d("vortex","frozenversion equals new: "+frozenVersion);
 						return new LoadResult(m,ErrorCode.sameold);
-					try {
-						float newV = Float.parseFloat(newVersion); 
-						float oldV = Float.parseFloat(version);
-						if (oldV >= newV)
-							return new LoadResult(m,ErrorCode.existingVersionIsMoreCurrent,newVersion);
-					} catch (NumberFormatException e) {
-						Log.e("vortex","Version is not a float");
-					}
+					} else
+					if (frozenVersion > newVersion)
+						return new LoadResult(m,ErrorCode.existingVersionIsMoreCurrent,newVersion+"");
+
 				}
 			}
 		}
@@ -151,7 +150,7 @@ public abstract class Loader extends AsyncTask<ConfigurationModule ,Integer,Load
 			}
 			if ((rowC++%20)==0) 
 				this.publishProgress(rowC,noOfRows);
-			
+
 		}
 		if (res==null)
 			res = new LoadResult(m,ErrorCode.parsed);
@@ -175,8 +174,8 @@ public abstract class Loader extends AsyncTask<ConfigurationModule ,Integer,Load
 		}
 		return lr;
 	}
-	
-	
+
+
 	protected LoadResult parseJSON(JSONConfigurationModule m) throws IOException, JSONException {
 		JsonReader parser = new JsonReader(new StringReader(m.rawData));
 		LoadResult lr = m.prepare(parser);
@@ -187,43 +186,43 @@ public abstract class Loader extends AsyncTask<ConfigurationModule ,Integer,Load
 		while((lr=m.parse(parser))==null) {
 			if ((rowC++%20)==0) 
 				this.publishProgress(rowC);				
-			
+
 		}
 
 		return lr;
-		
+
 	}
-	
-	
-	
+
+
+
 	protected LoadResult freeze(ConfigurationModule m) throws IOException {
 
 		//Multiple steps or only one to freeze?
 		if (m.freezeSteps>0) {
 			rowC=0;
 			while (rowC<m.freezeSteps) {
-			m.freeze(rowC);
-			if ((rowC++%100)==0)
-				this.publishProgress(rowC,m.freezeSteps);
+				m.freeze(rowC);
+				if ((rowC++%100)==0)
+					this.publishProgress(rowC,m.freezeSteps);
 
 			}
 		} else 
 			m.freeze(-1);
-			
-		
-		if (m.version!=null) {
-			m.setFrozenVersion(m.version);
-			Log.d("vortex","Frozen version set to "+m.version);
+
+
+		if (m.newVersion!=-1) {
+			m.setFrozenVersion(m.newVersion);
+			Log.d("vortex","Frozen version set to "+m.newVersion);
 		} else
-			Log.d("vortex","Version number was null in setfrozenversion");
-		
+			Log.d("vortex","NewVersion number was -1 in setfrozenversion");
+
 		if (m.getEssence()!=null||m.isDatabaseModule)
 			return new LoadResult(m,ErrorCode.frozen);
 		else {
 			//Log.d("vortex","in freez: Essence is "+m.getEssence());
 			return new LoadResult(m,ErrorCode.noData);
 		}
-			
+
 	}
 
 }

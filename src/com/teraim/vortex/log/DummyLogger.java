@@ -78,6 +78,12 @@ public class DummyLogger implements LoggerI {
 		
 	}
 
+	@Override
+	public void removeLine() {
+		// TODO Auto-generated method stub
+		
+	}
+
 
 
 }

@@ -7,6 +7,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import android.util.Log;
@@ -33,12 +36,18 @@ import com.teraim.vortex.utils.DbHelper.StoredVariableData;
  */
 
 public class Variable implements Serializable {
-
-
-
-
+	
 	private static final long serialVersionUID = 6239650487891494128L;
-
+	
+    private static int NUMBER_OF_CORES =
+            Runtime.getRuntime().availableProcessors();
+    private static final int KEEP_ALIVE_TIME = 1;
+    // Sets the Time Unit to seconds
+    private static final TimeUnit KEEP_ALIVE_TIME_UNIT = TimeUnit.SECONDS;
+    // A queue of Runnables
+    private static final BlockingQueue<Runnable> mDecodeWorkQueue = new LinkedBlockingQueue<Runnable>();
+	private static final ThreadPoolExecutor threadPool = new ThreadPoolExecutor(NUMBER_OF_CORES,NUMBER_OF_CORES,KEEP_ALIVE_TIME,KEEP_ALIVE_TIME_UNIT,mDecodeWorkQueue);
+	
 	Map<String, String> keyChain = new HashMap <String,String>();
 	Map<String,String> histKeyChain=null;
 	//String value=null;
@@ -204,9 +213,15 @@ public class Variable implements Serializable {
 		myValue=null;
 	}
 
-	protected void insertVariable(String value,
-			boolean isSynchronized) {
-		myDb.insertVariable(this,value,isSynchronized);
+	protected void insertVariable(final String value,
+			final boolean isSynchronized) {
+		long mil = System.currentTimeMillis();
+		threadPool.execute( new Thread(new Runnable() {
+	        public void run() {
+	        	myDb.insertVariable(Variable.this,value,isSynchronized);
+	        }
+	    }));
+		Log.d("vortex","Timex used "+(System.currentTimeMillis()-mil)+"");
 	}
 
 	public void setValueNoSync(String value) {

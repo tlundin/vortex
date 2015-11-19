@@ -31,12 +31,12 @@ public class SpinnerConfiguration extends CSVConfigurationModule {
 	}
 
 	@Override
-	public String getFrozenVersion() {
-		return (ph.get(PersistenceHelper.CURRENT_VERSION_OF_SPINNERS));
+	public float getFrozenVersion() {
+		return (ph.getF(PersistenceHelper.CURRENT_VERSION_OF_SPINNERS));
 	}
 
 	@Override
-	protected void setFrozenVersion(String version) {
+	protected void setFrozenVersion(float version) {
 		ph.put(PersistenceHelper.CURRENT_VERSION_OF_SPINNERS,version);
 		
 	}

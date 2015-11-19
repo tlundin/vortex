@@ -1,6 +1,13 @@
 package com.teraim.vortex.utils;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,12 +25,10 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Environment;
 import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
-import com.teraim.vortex.bluetooth.SyncEntry;
-import com.teraim.vortex.bluetooth.SyncEntryHeader;
-import com.teraim.vortex.bluetooth.VariableRowEntry;
 import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.types.ArrayVariable;
 import com.teraim.vortex.dynamic.types.Table;
@@ -35,6 +40,12 @@ import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.non_generics.DelyteManager;
 import com.teraim.vortex.non_generics.NamedVariables;
+import com.teraim.vortex.synchronization.DataSyncSessionManager;
+import com.teraim.vortex.synchronization.SyncEntry;
+import com.teraim.vortex.synchronization.SyncEntryHeader;
+import com.teraim.vortex.synchronization.SyncReport;
+import com.teraim.vortex.synchronization.SyncStatus;
+import com.teraim.vortex.synchronization.VariableRowEntry;
 import com.teraim.vortex.ui.MenuActivity.UIProvider;
 import com.teraim.vortex.utils.Exporter.ExportReport;
 import com.teraim.vortex.utils.Exporter.Report;
@@ -43,9 +54,6 @@ public class DbHelper extends SQLiteOpenHelper {
 
 	// Database Version
 	private static final int DATABASE_VERSION = 6;
-	// Database Name
-	public static final String DATABASE_NAME = "Nils";
-
 	// Books table name
 	private static final String TABLE_VARIABLES = "variabler";
 	private static final String TABLE_AUDIT = "audit";
@@ -123,6 +131,8 @@ public class DbHelper extends SQLiteOpenHelper {
 		super(context, bundleName, null, DATABASE_VERSION);  
 		Log.d("vortex","Bundle name: "+bundleName);
 		ctx = context;
+		if (db!=null && db.isOpen())
+			db.close();
 		db = this.getWritableDatabase();
 		this.globalPh=globalPh;
 		this.ph = appPh;
@@ -341,7 +351,7 @@ public class DbHelper extends SQLiteOpenHelper {
 					GlobalState.getInstance().getLogger().addRow("EXPORT FILENAME: ["+Constants.EXPORT_FILES_DIR+exportFileName+"."+exporter.getType()+"]");
 					res = new Report(ExportReport.FILE_WRITE_ERROR);
 				}
-				globalPh.backup(exportFileName+"."+exporter.getType(),r.result);
+				GlobalState.getInstance().getBackupManager().backupExportData(exportFileName+"."+exporter.getType(),r.result);
 				return res;
 			} else 
 				c.close();
@@ -826,11 +836,15 @@ public class DbHelper extends SQLiteOpenHelper {
 
 
 	//Insert or Update existing value. Synchronize tells if var should be synched over blutooth.
-
+	//This is done in own thread.
 
 	public void insertVariable(Variable var,String newValue,boolean syncMePlease){
+
+
 		boolean isReplace = false;
-		String timeStamp = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())+"";
+		long milliStamp = System.currentTimeMillis();
+		String timeStamp = TimeUnit.MILLISECONDS.toSeconds(milliStamp)+"";
+
 		//for logging
 		//Log.d("nils", "INSERT VALUE ["+var.getId()+": "+var.getValue()+"] Local: "+isLocal+ "NEW Value: "+newValue); 
 
@@ -883,6 +897,7 @@ public class DbHelper extends SQLiteOpenHelper {
 			//else
 			//	Log.d("nils","Variable "+var.getId()+" not inserted in Audit: local");
 		}
+		Log.d("vortex","time used: "+(System.currentTimeMillis()-milliStamp)+"");
 	}
 
 
@@ -956,7 +971,7 @@ public class DbHelper extends SQLiteOpenHelper {
 					); 	
 			counter++;
 			if (ui!=null)
-				ui.setCounter(counter+"/"+total);
+				ui.setInfo(counter+"/"+total);
 		}
 
 	}
@@ -984,7 +999,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
 				cn++;
 				if (ui!= null)
-					ui.setCounter(cn+"/"+c.getCount());
+					ui.setInfo(cn+"/"+c.getCount());
 			} while (c.moveToNext());
 		}
 		c.close();
@@ -1017,7 +1032,7 @@ public class DbHelper extends SQLiteOpenHelper {
 				sa[cn] = new SyncEntry(action,changes,entryStamp,target);
 				//Log.d("nils","Added sync entry : "+action+" changes: "+changes+" index: "+cn);
 				if (ui!= null)
-					ui.setCounter(cn+"/"+c.getCount());
+					ui.setInfo(cn+"/"+c.getCount());
 				cn++;				
 			} while(c.moveToNext());
 			SyncEntryHeader seh = new SyncEntryHeader(maxStamp);
@@ -1157,23 +1172,14 @@ public class DbHelper extends SQLiteOpenHelper {
 	int synC=0;
 
 
-	public class SyncReport {
-		public int deletes = 0;
-		public int inserts = 0;
-		public int faults = 0;
-		public int refused = 0;
-		public int updates=0;
-		public boolean hasChanges() {
-			return (deletes+inserts+updates) > 0 ;
-		}
-		
-	}
-	
-	public SyncReport synchronise(SyncEntry[] ses, UIProvider ui, LoggerI o) {
+
+
+	public SyncReport synchronise(SyncEntry[] ses, UIProvider ui, LoggerI o, DataSyncSessionManager dataSyncSessionManager) {
 		if (ses == null) {
 			Log.d("sync","ses är tom! i synchronize");
 			return null;
 		}
+		Set<String> touchedVariables = new HashSet<String>();
 		SyncReport changes = new SyncReport();
 		GlobalState gs = GlobalState.getInstance();
 		VarCache vc = gs.getVariableCache();
@@ -1195,9 +1201,11 @@ public class DbHelper extends SQLiteOpenHelper {
 		Map<String, String> keySet= new HashMap<String,String>();
 		for (SyncEntry s:ses) {
 			synC++;
-			if (synC%10==0) 
-				ui.setCounter(synC+"/"+size);
-				
+			if (synC%10==0) {
+				String syncStatus = synC+"/"+size;
+				ui.setInfo(synC+"/"+size);
+				dataSyncSessionManager.send(new SyncStatus(synC+"/"+size));
+			}
 			if (s.isInsert()||s.isInsertArray()) {				
 				keySet.clear();
 				cv.clear();
@@ -1289,14 +1297,16 @@ public class DbHelper extends SQLiteOpenHelper {
 							changes.refused++;
 							o.addRow("");
 							o.addYellowText("DB_INSERT REFUSED: "+name+" Timestamp incoming: "+s.getTimeStamp()+" Time existing: "+ti.time);
+							Log.d("vortex","DB_INSERT REFUSED: "+name+" Timestamp incoming: "+s.getTimeStamp()+" Time existing: "+ti.time);
 						}
 					} else
 						Log.e("sync","A timestamp was null!!");
 				}
-				if (rId==-1) 
-					Log.e("sync","Did not insert row "+cv.toString());
-				else
-					vc.invalidateOnName(name);
+				if (rId!=-1)
+					touchedVariables.add(name);
+				//					Log.e("sync","Did not insert row "+cv.toString());
+
+
 				//else
 				//	Log.d("nils","Insert row: "+cv.toString());
 
@@ -1379,7 +1389,7 @@ public class DbHelper extends SQLiteOpenHelper {
 						vc.invalidateOnKey(Tools.createKeyMap("ruta",idA[0],"provyta",idA[1]));
 						o.addRow("");
 						o.addGreenText("DB_DELETE All values for Delyta "+idA[0]+" and Provyta "+idA[1]+" was deleted.");
-						
+
 					} else {
 						o.addRow("");
 						o.addRedText("DB_DELETE Delete Delytor Failed. Message corrupt");
@@ -1407,8 +1417,12 @@ public class DbHelper extends SQLiteOpenHelper {
 			}
 
 		}
+		//Invalidate all variables touched.
+		for (String varName:touchedVariables) 
+			vc.invalidateOnName(varName); 
+		Log.d("vortex", "Touched variables: "+touchedVariables.toString());
 		if (ui!=null)
-			ui.setCounter(synC+"/"+size);
+			ui.setInfo(synC+"/"+size);
 		Log.d("sync","UNLOCK!");
 		endTransactionSuccess();
 		return changes;
@@ -1778,7 +1792,20 @@ public class DbHelper extends SQLiteOpenHelper {
 		db.setTransactionSuccessful();
 		db.endTransaction();
 	}
+	
+	
+	
+	/* Checks if external storage is available for read and write */
+	public boolean isExternalStorageWritable() {
+		String state = Environment.getExternalStorageState();
+		if (Environment.MEDIA_MOUNTED.equals(state)) {
+			return true;
+		}
+		return false;
+	}
 
+
+	
 
 
 

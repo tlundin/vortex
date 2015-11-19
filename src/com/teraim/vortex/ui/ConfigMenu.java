@@ -88,6 +88,9 @@ public class ConfigMenu extends PreferenceActivity {
 
 			ListPreference color = (ListPreference)findPreference(PersistenceHelper.DEVICE_COLOR_KEY);
 			color.setSummary(color.getValue());
+			
+			ListPreference versionControl = (ListPreference)findPreference(PersistenceHelper.VERSION_CONTROL);
+			versionControl.setSummary(versionControl.getValue());
 
 			epref = (EditTextPreference) findPreference(PersistenceHelper.USER_ID_KEY);
 			epref.setSummary(epref.getText());
@@ -102,12 +105,9 @@ public class ConfigMenu extends PreferenceActivity {
 			epref.getEditText().setFilters(new InputFilter[] {filter});
 			
 			epref = (EditTextPreference) findPreference(PersistenceHelper.BACKUP_LOCATION);
-			if (epref.getText()==null||epref.getText().isEmpty()) {
-				Log.e("vortex","gets here");
+			if (epref.getText()==null) {
 				epref.setText(Constants.DEFAULT_EXT_BACKUP_DIR);
-				Log.d("vortex","TEXT: "+epref.getText());
 			}
-			Log.d("vortex","backup epref txt: "+epref.getText()+" le: "+epref.getText().length());
 			epref.setSummary(epref.getText());
 
 			final Preference button = (Preference)findPreference(getString(R.string.resetSyncButton));

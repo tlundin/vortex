@@ -292,7 +292,7 @@ public class CreateGisBlock extends Block {
 					@Override
 					public void onUpdate(Integer... args) {
 					}},
-					false).execute(meta);
+					"No control").execute(meta);
 			} else {
 				Log.d("vortex","Found frozen metadata. Will use it");
 				PhotoMeta pm = (PhotoMeta)meta.getEssence();

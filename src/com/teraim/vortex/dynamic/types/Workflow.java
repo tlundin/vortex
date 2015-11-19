@@ -17,7 +17,7 @@ public class Workflow implements Serializable {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -8806673639097744371L;
+	private static final long serialVersionUID = -8806673639097744372L;
 	//TODO: List of blocks needs to be a map.
 	
 	private List<Block> blocks;
@@ -52,8 +52,7 @@ public class Workflow implements Serializable {
 		
 	}
 	
-	public Workflow(String bundleVersion, String bundleName) {
-		this.applicationVersion=bundleVersion;
+	public Workflow(String bundleName) {
 		this.applicationName=bundleName;
 	}
 	
@@ -129,9 +128,6 @@ public String getApplication() {
 	return applicationName;
 }
 
-public String getApplicationVersion() {
-	return applicationVersion;
-}
 
 public String getContext() {
 	if (blocks!=null && blocks.size()>0) {

@@ -64,13 +64,13 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 	}
 
 	@Override
-	public String getFrozenVersion() {
-		return (ph.get(PersistenceHelper.CURRENT_VERSION_OF_GIS_OBJECT_BLOCKS+fileName));
+	public float getFrozenVersion() {
+		return (ph.getF(PersistenceHelper.CURRENT_VERSION_OF_GIS_OBJECT_BLOCKS+fileName));
 
 	}
 
 	@Override
-	protected void setFrozenVersion(String version) {
+	protected void setFrozenVersion(float version) {
 		ph.put(PersistenceHelper.CURRENT_VERSION_OF_GIS_OBJECT_BLOCKS+fileName,version);
 
 	}

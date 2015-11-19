@@ -48,7 +48,7 @@ public class BluetoothConnectionProvider extends ConnectionProvider {
 
 	//Threads
 	private ClientConnectThread mClient=null;
-	private AcceptThread mServer=null;
+	private ServerThread mServer=null;
 	private ConnectedThread mConnected_T = null;
 
 	//Adapter.
@@ -112,7 +112,7 @@ public class BluetoothConnectionProvider extends ConnectionProvider {
 			}};
 
 
-			Log.d("NILS","Bluetooth on create");
+			Log.d("vortex","Bluetooth on create");
 			o.addRow("BlueTooth starting ");
 
 	}
@@ -156,29 +156,30 @@ public class BluetoothConnectionProvider extends ConnectionProvider {
 						o.addRow("");
 						o.addRedText("Bluetooth Connection failed: Partner named "+partner+" not found");
 						broadcastEvent(ConnectionEvent.connectionFailedNamedPartnerMissing);
-					}
+					} else
+						mServer = startServer();
 				} catch (BluetoothDevicesNotPaired e) {
 					broadcastEvent(ConnectionEvent.connectionFailedNoPartner);
 					o.addRow("");
 					o.addRedText("Bluetooth Connection failed: No paired device");
 					e.printStackTrace();
 				}
-				mServer = startServer();
+
 			}
 		}
 	}
 
 
 
-	
+
 
 	@Override
 	public void closeConnection() {
 		//Stop multiple calls..it will cause exception
 		if (internalState  != InternalState.closed) {
 
-		if(BluetoothAdapter.getDefaultAdapter().isEnabled())
-			BluetoothAdapter.getDefaultAdapter().disable();
+			if(BluetoothAdapter.getDefaultAdapter().isEnabled())
+				BluetoothAdapter.getDefaultAdapter().disable();
 			//drop reference to this object.
 			Log.d("vortex","Bluetooth: Close Connection");
 			if (mClient!=null)
@@ -193,8 +194,8 @@ public class BluetoothConnectionProvider extends ConnectionProvider {
 			} catch (IllegalArgumentException e) {
 				Log.d("nils","unregisterReceiver - dropping exception");
 			}
-		internalState  = InternalState.closed;
-		broadcastEvent(ConnectionEvent.connectionClosedGracefully);
+			internalState  = InternalState.closed;
+			broadcastEvent(ConnectionEvent.connectionClosedGracefully);
 
 		}
 	}
@@ -271,10 +272,10 @@ public class BluetoothConnectionProvider extends ConnectionProvider {
 
 
 	//Create server thread
-	private AcceptThread startServer() {
+	private ServerThread startServer() {
 
 		Log.d("NILS","Trying to start server.");
-		AcceptThread server = new AcceptThread();
+		ServerThread server = new ServerThread();
 		server.start();
 
 		return server;
@@ -282,17 +283,20 @@ public class BluetoothConnectionProvider extends ConnectionProvider {
 	}
 
 
-	private class AcceptThread extends Thread {
+	private class ServerThread extends Thread {
 		private final BluetoothServerSocket mmServerSocket;
 
-		public AcceptThread() {
+		public ServerThread() {
 			// Use a temporary object that is later assigned to mmServerSocket,
 			// because mmServerSocket is final
 			BluetoothServerSocket tmp = null;
 			try {
 				// MY_UUID is the app's UUID string, also used by the client code
 				tmp = mBluetoothAdapter.listenUsingRfcommWithServiceRecord("NILS", Constants.getmyUUID());
-			} catch (IOException e) { }
+			} catch (IOException e) {
+				Log.e("vortex","exception in server thread startup");
+				broadcastEvent(ConnectionEvent.connectionFailed);
+			}
 			mmServerSocket = tmp;
 
 		}
@@ -307,7 +311,7 @@ public class BluetoothConnectionProvider extends ConnectionProvider {
 					Log.d("NILS","SERVER got a SOCKET");
 
 				} catch (IOException e) {
-					Log.e("NILS","Exception in AcceptThread");
+					Log.e("NILS","Exception in ServerThread");
 					e.printStackTrace();
 					break;
 				}
@@ -320,7 +324,7 @@ public class BluetoothConnectionProvider extends ConnectionProvider {
 						mmServerSocket.close();
 					} catch (IOException e) {
 						e.printStackTrace();
-						broadcastEvent(ConnectionEvent.connectionFailed);
+
 					}
 					break;
 				}
@@ -350,6 +354,7 @@ public class BluetoothConnectionProvider extends ConnectionProvider {
 		private static final long CONNECTION_ATTEMPT_DELAY = 5000;
 		private final BluetoothSocket mmSocket;
 		int 	attempts = 		AttemptsBeforeGivingUp;
+		boolean success	 =		false;
 
 		public ClientConnectThread(BluetoothDevice device) {
 			// Use a temporary object that is later assigned to mmSocket,
@@ -377,7 +382,6 @@ public class BluetoothConnectionProvider extends ConnectionProvider {
 			// Cancel discovery because it will slow down the connection
 			mBluetoothAdapter.cancelDiscovery();
 
-			boolean success	 =		false;
 
 			while (attempts>0 &&!success && mConnected_T==null ) {
 
@@ -392,16 +396,19 @@ public class BluetoothConnectionProvider extends ConnectionProvider {
 				} catch (IOException connectException) {
 					// Unable to connect; close the socket and get out
 					Log.d("Vortex","Failed to connect");
-					connectException.printStackTrace();
+					Log.d("Vortex","Msg: "+connectException.getMessage());
 					//Tell the world.
-					success=false;
-					broadcastEvent(ConnectionEvent.connectionAttemptFailed);
-					try {
-						Thread.sleep(CONNECTION_ATTEMPT_DELAY);
-					} catch (InterruptedException e) {
-						Log.d("vortex","Interrupted!");
-						attempts=0;
-					}
+
+					if (mConnected_T==null) {
+						success=false;
+						broadcastEvent(ConnectionEvent.connectionAttemptFailed);		
+						try {
+							Thread.sleep(CONNECTION_ATTEMPT_DELAY);
+						} catch (InterruptedException e) {
+							Log.e("vortex","Interrupted sleep in clientconnectthread!");
+							attempts=0;
+						}
+					} 
 				}
 
 			}
@@ -412,8 +419,7 @@ public class BluetoothConnectionProvider extends ConnectionProvider {
 					// Do work to manage the connection (in a separate thread)
 					startConnectedThread(mmSocket);
 				} else {
-
-					broadcastEvent(ConnectionEvent.connectionFailed);
+					cancel();
 					o.addRow("");
 					Log.d("vortex","Gave up, no more attempts");
 					o.addRedText("Bluetooth connection failed. Make sure that both devices have turned on Bluetooth and that they are within reach of eachother!");
@@ -426,6 +432,10 @@ public class BluetoothConnectionProvider extends ConnectionProvider {
 		/** Will cancel an in-progress connection, and close the socket */
 		public void cancel() {
 			attempts=0;
+			try {
+				mmSocket.close();
+			} catch (IOException e) {Log.e("vortex","upzzz");}
+			broadcastEvent(ConnectionEvent.connectionFailed);
 		}
 
 	}	
@@ -438,7 +448,7 @@ public class BluetoothConnectionProvider extends ConnectionProvider {
 			Log.d("Vortex","Connected!");
 			internalState = InternalState.open;
 			broadcastEvent(ConnectionEvent.connectionGained);
-			
+
 
 		} else
 			Log.d("vortex","socket already received!");
@@ -502,10 +512,13 @@ public class BluetoothConnectionProvider extends ConnectionProvider {
 						broadcastEvent(ConnectionEvent.restartRequired);
 						o.addRow("");
 						o.addRedText("Bluetooth: Stream corrupted. It is recommended that you restart your devices before attempting a new connection.");
+					} else if (e instanceof IOException) {
+						broadcastEvent(ConnectionEvent.connectionBroken);
 					}
-					else
+					else {
 						e.printStackTrace();
-					broadcastEvent(ConnectionEvent.connectionError);
+						broadcastEvent(ConnectionEvent.connectionBroken);
+					}
 					break;
 				}
 			}

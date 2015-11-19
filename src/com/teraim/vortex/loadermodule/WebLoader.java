@@ -31,8 +31,8 @@ public class WebLoader extends Loader {
 
 	private InputStream in;
 
-	public WebLoader(ProgressBar pb, TextView tv, FileLoadedCb cb, boolean versionControl) {
-		super(pb, tv, cb,versionControl);
+	public WebLoader(ProgressBar pb, TextView tv, FileLoadedCb cb, String versionControlS) {
+		super(pb, tv, cb,versionControlS);
 	}
 
 	@Override

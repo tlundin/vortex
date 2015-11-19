@@ -50,16 +50,13 @@ xmlns:android="http://schemas.android.com/apk/res/android" >
     		android:key="dev_switch"
     		android:title="Developer functions"
     		android:summary="Advanced logging etc"
-    		android:dialogTitle="Utvecklarfunktion"
-    		android:dialogMessage="Slå på eller av utvecklarfunktionen"
     		android:defaultValue="false" />
-<CheckBoxPreference
-    		android:key="no_version_control"
-    		android:title="Ignore Versions"
-    		android:summary="Always load the configuration files"
-    		android:dialogTitle=""
-    		android:dialogMessage=""
-    		android:defaultValue="false" />
+<ListPreference
+    		android:key="version_control"
+    		android:title="Version Control"
+    		android:defaultValue="Major"
+            android:entries="@array/versionArray"
+            android:entryValues="@array/versionValues" />
 <CheckBoxPreference
     		android:key="sync_feature"
     		android:title="Sync"
@@ -78,14 +75,22 @@ xmlns:android="http://schemas.android.com/apk/res/android" >
 <EditTextPreference
             android:key="backup_location"
             android:title="Backup folder" 
-            android:summary="The client will save export files to this folder on the SD card"
+            android:summary=""
             android:dialogTitle="Backup folder"
-            android:dialogMessage="Backup folder path. Do not change this if you are not absolutely sure you know what you are doing."    
+            android:dialogMessage="Export and backup files are saved to this folder. If you leave the field empty, the files will be stored under 'backup' in your project folder." 
             android:defaultValue="" />
+
+<CheckBoxPreference
+    		android:key="auto_backup"
+    		android:title="Automatic backup"
+    		android:summary="Automatically backup database at regular intervals"
+    		android:dialogTitle=""
+    		android:dialogMessage=""
+    		android:defaultValue="true" />
 
 <Preference android:title="Reset sync"
                 android:key="@string/resetSyncButton"
-                android:summary="Use when you need to realign to another sync partner."/>
+                android:summary="Testfunction. Do not use."/>
 </PreferenceCategory>
 
 

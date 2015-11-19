@@ -451,6 +451,17 @@ public  class ButtonBlock extends Block {
 								((Activity) ctx).startActivityForResult(intent, Constants.TAKE_PICTURE);
 
 								
+							} else if (onClick.equals("backup")) {
+								boolean success = GlobalState.getInstance().getBackupManager().backupDatabase();
+								new AlertDialog.Builder(ctx)
+								.setTitle("Backup "+(success?"succesful":"failed"))
+								.setMessage(success?"A file named 'backup' has been created in your backup folder.":"Failed. Please check if the backup folder you specified under the config menu exists.")
+								.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+									public void onClick(DialogInterface dialog, int which) { 								
+									}
+								})			    
+								.setIcon(android.R.drawable.ic_dialog_alert)
+								.show();
 							}
 							else {
 								o.addRow("");

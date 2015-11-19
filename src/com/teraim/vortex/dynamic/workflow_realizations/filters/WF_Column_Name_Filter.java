@@ -22,6 +22,13 @@ public class WF_Column_Name_Filter extends WF_Filter {
 		prefix
 	}
 
+	public WF_Column_Name_Filter(String id,String filterCh,String columnToMatch,FilterType type) {
+		super(id);
+		myPrefix = filterCh;
+		this.columnToMatch=columnToMatch;
+		filterType = type;
+	}
+	
 	@Override
 	public List<? extends Listable> filter(List<? extends Listable> list) {
 		String key;
@@ -81,12 +88,7 @@ public class WF_Column_Name_Filter extends WF_Filter {
 	}
 
 
-	public WF_Column_Name_Filter(String id,String filterCh,String columnToMatch,FilterType type) {
-		super(id);
-		myPrefix = filterCh;
-		this.columnToMatch=columnToMatch;
-		filterType = type;
-	}
+	
 
 
 }

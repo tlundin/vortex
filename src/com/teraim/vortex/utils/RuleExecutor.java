@@ -454,7 +454,7 @@ public class RuleExecutor {
 					myFormulaTokens.add(new TokenizedItem(function.name(),function,args.toArray(new String[args.size()])));
 				}
 			} else
-				Log.e("vortex","Potvars empty");
+				Log.d("vortex","Potvars empty [rule executor]");
 		} else 
 			Log.e("vortex","formula was null!!");
 		if (myFormulaTokens != null) 

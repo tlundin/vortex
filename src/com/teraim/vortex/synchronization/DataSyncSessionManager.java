@@ -1,4 +1,4 @@
-package com.teraim.vortex.bluetooth;
+package com.teraim.vortex.synchronization;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,21 +6,23 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import android.content.Context;
-import android.content.Intent;
 import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.Executor;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
-import com.teraim.vortex.synchronization.ConnectionListener;
-import com.teraim.vortex.synchronization.ConnectionProvider;
 import com.teraim.vortex.ui.ConfirmCallBack;
 import com.teraim.vortex.ui.MenuActivity;
 import com.teraim.vortex.ui.MenuActivity.UIProvider;
-import com.teraim.vortex.utils.DbHelper.SyncReport;
 import com.teraim.vortex.utils.PersistenceHelper;
 
+/**
+ * 
+ * @author Terje
+ *
+ * Class that keeps track of a connection.
+ */
 public class DataSyncSessionManager implements ConnectionListener {
 
 	enum State {
@@ -44,11 +46,19 @@ public class DataSyncSessionManager implements ConnectionListener {
 
 		this.ui = ui;
 
+		//Lock the ui while connection is established.
+
 		ui.lock();
+
+
 		ui.alert("Trying to establish connection");
+
+		//Ask for a connection from the connection manager.
 
 		mConnection = GlobalState.getInstance().getConnectionManager().requestConnection(ctx);
 		mConnection.registerConnectionListener(this);
+
+		//Open connection to named partner.
 		mConnection.openConnection(Constants.BLUETOOTH_NAME);
 
 
@@ -58,7 +68,7 @@ public class DataSyncSessionManager implements ConnectionListener {
 
 	@Override
 	public void handleMessage(Object obj) {
-		Log.d("vortex","Message arrived. .");
+		Log.d("vortex","Message arrived.");
 		//ui.update("Message arrived!");
 		if (!lock) {
 			handle(obj);
@@ -79,7 +89,7 @@ public class DataSyncSessionManager implements ConnectionListener {
 			break;
 		case connectionGained:
 
-			if (mState==State.initial && pingAttempts>0) {
+			/*if (mState==State.initial && pingAttempts>0) {
 				mState = State.sending_ping;
 				//If no reply within 3 seconds, we should retry.
 
@@ -88,14 +98,14 @@ public class DataSyncSessionManager implements ConnectionListener {
 					public void run() { 
 
 						if (mState == State.sending_ping) {
-							mState = State.initial;
-							ui.alert("No reply. Pinging again. ("+pingAttempts--+")");
+							mState = State.initial;							
 							handleEvent(ConnectionEvent.connectionGained);
 						} 
 					}},5000);
+			*/
 				ping();
-			} else
-				Log.d("vortex","discarded duplicate message");
+			//} else
+			//	Log.d("vortex","discarded duplicate message");
 			break;
 		case connectionBroken:
 			ui.alert("Connection to other device broken.");
@@ -126,21 +136,22 @@ public class DataSyncSessionManager implements ConnectionListener {
 
 
 	boolean pSyncDone,mSyncDone;
-	SyncReport changesDone = null;
+	SyncReport syncReport = null;
+	private SyncReport partnerSyncReport;
 
 	private void handle(Object message) {
 		GlobalState gs = GlobalState.getInstance();
 
 		if (message instanceof SyncEntry[]) {
 			SyncEntry[] ses = (SyncEntry[])message;
-			ui.alert("Writing into Database");
+			ui.alert("Inserting data");
 			o.addRow("");
 			o.addGreenText("[BT MESSAGE -->Received SYNCENTRIES: "+ses.length+"]");
-			changesDone = gs.getDb().synchronise(ses, ui,o);	
+			syncReport = gs.getDb().synchronise(ses, ui,o,this);	
 			o.addRow("");
 			o.addGreenText("[BT MESSAGE -->Sending SyncSuccesful");
-			send(new SyncSuccesful(((SyncEntryHeader)ses[0]).timeStampOfLastEntry));
-			
+			send(new SyncSuccesful(((SyncEntryHeader)ses[0]).timeStampOfLastEntry,syncReport));
+
 			pSyncDone=true;
 
 		} else if (message instanceof SyncSuccesful) {
@@ -150,10 +161,15 @@ public class DataSyncSessionManager implements ConnectionListener {
 				GlobalState.getInstance().getDb().syncDone(ssf.getLastEntrySent());
 				o.addRow("");
 				o.addGreenText("[BT MESSAGE -->Received SyncSuccesful message!]");
-				GlobalState.getInstance().sendSyncEvent(new Intent(MenuActivity.REDRAW));
+				gs.sendEvent(MenuActivity.REDRAW);
+				partnerSyncReport=ssf.getChangesDone();
 				mSyncDone=true;
 			} else 
 				ui.alert("Sync failed on checksum");
+		} else if (message instanceof SyncStatus) {
+			SyncStatus ss = (SyncStatus)message;
+			Log.d("vortex","Received sync status!");
+			ui.alert("Transferred :"+ss.getStatus());
 		} else if (message instanceof NothingToSync) {
 			Log.d("vortex","[BT MESSAGE -->Received Nothing to SYNC message]");
 			pSyncDone=true;
@@ -165,51 +181,77 @@ public class DataSyncSessionManager implements ConnectionListener {
 				ui.alert("Both devices configured as Client. Please change under Configuration.");
 			else {
 				PingMessage sp = (PingMessage)message;
-				String myBundleVersion = gs.getPreferences().get(PersistenceHelper.CURRENT_VERSION_OF_WF_BUNDLE);
-				String mySoftwareVersion = Float.toString(gs.getGlobalPreferences().getF(PersistenceHelper.CURRENT_VERSION_OF_PROGRAM));
-				Log.d("vortex","myBundleV "+myBundleVersion+" msgVer "+sp.getbundleVersion()+" swVer: "+mySoftwareVersion+" msgVer: "+sp.getSoftwareVersion());
-				String versionText = "My vortex version: "+mySoftwareVersion+
-						"\nOthers vortex version: "+sp.getSoftwareVersion()+
-						"\nMy bundle version: "+myBundleVersion+
-						"\nOthers bundle version: "+sp.getbundleVersion();
-				gs.setMyPartner(sp.getPartner());
-				if (!myBundleVersion.equals(sp.getbundleVersion()) ||
-						!mySoftwareVersion.equals(sp.getSoftwareVersion())) {
-					versionText = "Version mismatch:\n"+versionText+"\n\n Please confirm that you wish to proceed";
+				String myAppName = gs.getGlobalPreferences().get(PersistenceHelper.BUNDLE_NAME);
 
-					o.addRow("");
-					o.addRedText("[BT MESSAGE -->PING. VERSION MISMATCH!");
-					o.addRow(versionText);
-				} else {
-					versionText = versionText+"\n\nPlease confirm that you wish to proceed";				
-					o.addRow("");
-					o.addGreenText("[BT MESSAGE -->PING. VERSIONS OK");
+				String partnerAppName = sp.getPartnerAppName();
 
+				if (partnerAppName == null || !partnerAppName.equals(myAppName))
+					ui.alert("Different applications running"+
+							"\nYour app: "+myAppName+
+							"\nPartner app: "+partnerAppName+
+							"\nSynchronization requires that both use same");
+				else {
+					//Here we know it is ok.
+					mState = State.waiting_for_confirmation;
+					lock=true;
+					
+					float myAppVersion = gs.getPreferences().getF(PersistenceHelper.CURRENT_VERSION_OF_APP);
+					float mySoftwareVersion = gs.getGlobalPreferences().getF(PersistenceHelper.CURRENT_VERSION_OF_PROGRAM);
+
+					Log.d("vortex","myBundleV "+myAppVersion+" msgVer "+sp.getAppVersion()+" swVer: "+mySoftwareVersion+" msgVer: "+sp.getSoftwareVersion());
+					String versionText = "My vortex version: "+mySoftwareVersion+
+							"\nOthers vortex version: "+sp.getSoftwareVersion()+
+							"\nMy App version: "+myAppVersion+
+							"\nOthers App version: "+sp.getAppVersion();
+					gs.setMyPartner(sp.getPartner());
+					if (myAppVersion!=sp.getAppVersion() ||
+							mySoftwareVersion!=sp.getSoftwareVersion()) {
+						versionText = "Version mismatch:\n"+versionText+"\n\n Please confirm that you wish to proceed";
+
+						o.addRow("");
+						o.addRedText("[BT MESSAGE -->PING. VERSION MISMATCH!");
+						o.addRow(versionText);
+					} else {
+						versionText = versionText+"\n\nAll Ok!\nConfirm to start sync";				
+						o.addRow("");
+						o.addGreenText("[BT MESSAGE -->PING. VERSIONS OK");
+
+					}
+					//Confirm!
+					ui.confirm(versionText,new ConfirmCallBack() {
+
+						@Override
+						public void confirm() {
+							startDataTransfer();
+						}});
+					
 				}
-				//Confirm!
-				ui.confirm(versionText,new ConfirmCallBack() {
-
-					@Override
-					public void confirm() {
-						startDataTransfer();
-					}});
-				mState = State.waiting_for_confirmation;
-				lock=true;
 			}
 		}
 		if (pSyncDone && mSyncDone) {
-			if (changesDone!=null) {
+			if (syncReport!=null) {
 				ui.alert("Synchronization succesful. Report: ");
-				ui.setCounter(
-						"Deletes    : "+changesDone.deletes+
-						"\nFaults     : "+changesDone.faults+
-						"\nInserts    : "+changesDone.inserts+
-						"\nRejected   : "+changesDone.refused);
+				 
+				ui.setInfo(
+						"Deletes    : "+syncReport.deletes+
+						"\nFaults     : "+syncReport.faults+
+						"\nInserts    : "+syncReport.inserts+
+						"\nRejected   : "+syncReport.refused+
+						(partnerSyncReport!=null?(
+						"\nPartner Deletes    : "+partnerSyncReport.deletes+
+						"\nPartner Faults     : "+partnerSyncReport.faults+
+						"\nPartner Inserts    : "+partnerSyncReport.inserts+
+						"\nPartner Rejected   : "+partnerSyncReport.refused
+						):
+							"\nNo changes in partner device")
+						
+						);
 			}
-			else
-				ui.alert("Synchronization failed. Could not insert the data.");
+			else 
+					ui.alert("Synchronization done. No changes.");
+				
 		}
-			
+
 	}
 
 	private void startDataTransfer() {
@@ -223,11 +265,14 @@ public class DataSyncSessionManager implements ConnectionListener {
 				if (entries!=null) {
 					o.addRow("");
 					o.addGreenText("[BT MESSAGE -->SENDING "+entries.length+" ENTRIES");
+					ui.alert("Sending "+entries.length+" entries (this can take a long time and the operation locks the ui on some devices. Please be patient and wait)");
 					send(entries);
+					ui.alert("Entries sent. Waiting for data.");
 				}
 				else {
 					o.addRow("");
 					o.addGreenText("[BT MESSAGE -->SENDING NOTHING TO SYNC");
+					ui.alert("Nothing to sync. Waiting for data.");
 					send(new NothingToSync());
 					mSyncDone=true;
 				}
@@ -256,18 +301,16 @@ public class DataSyncSessionManager implements ConnectionListener {
 
 
 
-	private void send(Object entries) {
+	public void send(Object entries) {
 		Log.d("vortex", "in send entries");
 		if (mConnection!=null && mConnection.isOpen()) {
-			ui.alert("Sending to partner device..");
 			mConnection.write(entries);
 			o.addRow("");
 			o.addGreenText("[BT MESSAGE -->Send succesful!");
-			ui.alert("Waiting for reply..");
 		} else {
 			o.addRow("");
 			o.addRedText("[BT MESSAGE -->Send not possible! Connection was closed!");
-			ui.alert("Cannot send data, since the connection is not open");
+			ui.alert("Error: Cannot send data, connection is closed");
 		}
 	}
 
@@ -288,8 +331,8 @@ public class DataSyncSessionManager implements ConnectionListener {
 	 */
 	public void destroy() {
 		//Update the world if changes occured.
-		if (changesDone!=null&&changesDone.hasChanges())
-			GlobalState.getInstance().sendSyncEvent(new Intent(Executor.REDRAW_PAGE));
+		if (syncReport!=null&&syncReport.hasChanges())
+			GlobalState.getInstance().sendEvent(Executor.REDRAW_PAGE);
 		GlobalState.getInstance().getConnectionManager().releaseConnection(mConnection);
 		mConnection.closeConnection();
 
@@ -299,18 +342,19 @@ public class DataSyncSessionManager implements ConnectionListener {
 		GlobalState gs = GlobalState.getInstance();
 		//Send a ping to see if we can connect straight away.
 		Log.d("NILS","Sending ping");
-		String myName, myLag;
-		String bundleVersion,softwareVersion;
+		String myName, myTeam, myApp;
+		float appVersion,softwareVersion;
 		myName = gs.getGlobalPreferences().get(PersistenceHelper.USER_ID_KEY);
-		myLag = gs.getGlobalPreferences().get(PersistenceHelper.LAG_ID_KEY);
-		bundleVersion = gs.getPreferences().get(PersistenceHelper.CURRENT_VERSION_OF_WF_BUNDLE);
-		softwareVersion = Float.toString(gs.getGlobalPreferences().getF(PersistenceHelper.CURRENT_VERSION_OF_PROGRAM));
+		myTeam = gs.getGlobalPreferences().get(PersistenceHelper.LAG_ID_KEY);
+		myApp = gs.getGlobalPreferences().get(PersistenceHelper.BUNDLE_NAME);
+		appVersion = gs.getPreferences().getF(PersistenceHelper.CURRENT_VERSION_OF_APP);
+		softwareVersion = gs.getGlobalPreferences().getF(PersistenceHelper.CURRENT_VERSION_OF_PROGRAM);
 		boolean requestAll = gs.getPreferences().get(PersistenceHelper.TIME_OF_LAST_SYNC).equals(PersistenceHelper.UNDEFINED);
 
 		//send(new PingMessage(myName,myLag,bundleVersion,softwareVersion,requestAll));
 		o.addRow("");
 		o.addGreenText("[BT MESSAGE -->SENDING PING");
-		send(gs.isMaster()?new MasterPing(myName,myLag,bundleVersion,softwareVersion,requestAll):new SlavePing(myName,myLag,bundleVersion,softwareVersion,requestAll));
+		send(gs.isMaster()?new MasterPing(myName,myApp,myTeam,appVersion,softwareVersion,requestAll):new SlavePing(myName,myApp,myTeam,appVersion,softwareVersion,requestAll));
 
 	}
 

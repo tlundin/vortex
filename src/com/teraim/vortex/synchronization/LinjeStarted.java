@@ -1,4 +1,5 @@
-package com.teraim.vortex.bluetooth;
+package com.teraim.vortex.synchronization;
+
 
 public class LinjeStarted extends SyncMessage {
 

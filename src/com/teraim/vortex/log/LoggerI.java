@@ -16,5 +16,6 @@ public interface LoggerI {
 	 public void addPurpleText(String string);
 	 public void writeTicky(String tickyText);
 	 public void removeTicky();
+	 public void removeLine();
 
 }

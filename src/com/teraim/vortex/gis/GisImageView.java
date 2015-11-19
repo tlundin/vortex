@@ -27,6 +27,7 @@ import android.graphics.Paint.Style;
 import android.graphics.Path;
 import android.graphics.Path.FillType;
 import android.graphics.Rect;
+import android.location.LocationManager;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -116,6 +117,8 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 		}
 	});
 
+	private LocationManager locationManager;
+
 
 
 	public GisImageView(Context context) {
@@ -136,7 +139,8 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 	private void init(Context ctx) {
 
 
-
+		locationManager = (LocationManager) ctx
+				.getSystemService(Context.LOCATION_SERVICE);
 		YearKeyHash.clear();
 		YearKeyHash.put("år", Constants.getYear());
 		this.ctx=ctx;
@@ -1077,22 +1081,25 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 
 	//save the position where the user pressed start. 
 	private int[] riktLinjeStart,riktLinjeEnd;
-	final static int TimeOut = 30;
+
+	private Integer currentDistance=null;
+	final static int TimeOut = 5;
 
 	private void displayDistanceAndDirection() {
-		final int interval = 250; 
+		final int interval = TimeOut*1000; 
 
 		if (handler==null) {
 			handler = new Handler();
 			Runnable runnable = new Runnable(){
 				public void run() {
 					displayDistanceAndDirectionL();
+					Log.d("vortex","displaydistcalled from disp timer");
 					if (handler!=null)
 						handler.postDelayed(this, interval);
 				}
 			};
 
-			handler.postDelayed(runnable, interval);
+			handler.postDelayed(runnable, 0);
 
 		}
 
@@ -1110,47 +1117,57 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 		}
 		if (touchedGop==null) {
 			handler=null;
+			Log.e("vortex","Touched GOP null in dispDistAndDir. Will exit");
 			return;
 		}
 
 		if (!GlobalState.getInstance().getTracker().isGPSEnabled) {
 			myMap.setAvstTxt("GPS OFF");
+			myMap.setRiktTxt("");
+			return;
 			//myMap.setRiktTxt(spinAnim());
 		}
 		//Start a redrawtimer if not already started that redraws this window independent of the redraw cycle of the gops.
 
 		//Check  timediff. Returns null in case no value exists.
 
-		//long timeDiff;
-		//long ct;
+		long timeDiff;
+		long ct;
 		if (mostRecentGPSValueTimeStamp!=-1) {
-			//ct = System.currentTimeMillis();
-			//timeDiff = (ct-mostRecentGPSValueTimeStamp)/1000;			
+			ct = System.currentTimeMillis();
+			timeDiff = (ct-mostRecentGPSValueTimeStamp)/1000;
+		
 		} else {
-			myMap.setAvstTxt("No Value");
-			//myMap.setRiktTxt(spinAnim());
+			
+			myMap.setAvstTxt("GPS");
+			myMap.setRiktTxt("searching");
 			return;
 		}
-		//boolean old = timeDiff>TimeOut; 
-		/*if (old) {
+		
+		boolean old = timeDiff>TimeOut; 
+		if (old) {
 			Log.d("vortex","Time of insert: "+mostRecentGPSValueTimeStamp);
 			Log.d("vortex","Current time: "+ct);
 			Log.d("vortex","TimeDiff: "+timeDiff);
+			myMap.setAvstTxt("Lost signal");
+			myMap.setRiktTxt(timeDiff+" s");
+			
 		}
-		 */
+		
 		double mX = Double.parseDouble(myX.getValue());
 		double mY = Double.parseDouble(myY.getValue());
 		double gX = touchedGop.getLocation().getX();
 		double gY = touchedGop.getLocation().getY();
-		int dist = (int)Geomatte.sweDist(mY,mX,gY,gX);
+		currentDistance = (int)Geomatte.sweDist(mY,mX,gY,gX);
 		int rikt = (int)(Geomatte.getRikt2(mY, mX, gY, gX)*57.2957795);
-		myMap.setAvstTxt(dist>9999?(dist/1000+"km"):(dist+"m"));
+		myMap.setAvstTxt(currentDistance>9999?(currentDistance/1000+"km"):(currentDistance+"m"));
 		myMap.setRiktTxt(rikt+Deg);
 
 
 
 
 	}
+	
 
 
 
@@ -1341,30 +1358,17 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 	@Override
 	public void gpsStateChanged(GPS_State newState) {
 		//Log.d("vortex","Got GPS STATECHANGE");
-		if (newState==GPS_State.newValueReceived)
+		if (newState==GPS_State.newValueReceived||newState==GPS_State.ping) {
 			mostRecentGPSValueTimeStamp = System.currentTimeMillis();
-
+			if (currentDistance!=null && currentDistance<10)
+				displayDistanceAndDirectionL();
+		}
 		this.postInvalidate();
 
 
 	}
 
-	//Starts a redraw every 3rd second if at least one object is dynamic.
-	private void startDynamicRedraw() {
-		if (!isStarted) {
-			final int interval = 1000; // 1 Second
-			handler = new Handler();
-			Runnable runnable = new Runnable(){
-				public void run() {
-					gpsStateChanged(GPS_State.ping);
-					handler.postDelayed(this, interval);
-				}
-			};
 
-			handler.postDelayed(runnable, interval);
-			isStarted=true;
-		}
-	}
 
 	public List<Location> getRectGeoCoordinates(Rect r) {
 

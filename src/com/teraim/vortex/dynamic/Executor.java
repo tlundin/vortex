@@ -44,6 +44,7 @@ import com.teraim.vortex.dynamic.blocks.ContainerDefineBlock;
 import com.teraim.vortex.dynamic.blocks.CreateEntryFieldBlock;
 import com.teraim.vortex.dynamic.blocks.CreateGisBlock;
 import com.teraim.vortex.dynamic.blocks.CreateImageBlock;
+import com.teraim.vortex.dynamic.blocks.CreateListFilter;
 import com.teraim.vortex.dynamic.blocks.CreateSortWidgetBlock;
 import com.teraim.vortex.dynamic.blocks.DisplayValueBlock;
 import com.teraim.vortex.dynamic.blocks.JumpBlock;
@@ -624,6 +625,10 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 				
 				else if (b instanceof AddGisFilter) {
 					((AddGisFilter) b).create(myContext);
+				}
+				
+				else if (b instanceof CreateListFilter) {
+					((CreateListFilter) b).create(myContext);
 				}
 				
 				String cId = b.getBlockId();

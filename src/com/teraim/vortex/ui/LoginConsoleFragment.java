@@ -55,8 +55,8 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 	private Configuration myModules;
 	private DbHelper myDb;
 	private TextView appTxt;
-	private String oldV = "";
-	
+	private float oldV = -1;
+
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -86,7 +86,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 			bundleName = "Vortex";
 
 		ph	 = new PersistenceHelper(this.getActivity().getSharedPreferences(globalPh.get(PersistenceHelper.BUNDLE_NAME), Context.MODE_PRIVATE));
-		oldV= ph.get(PersistenceHelper.CURRENT_VERSION_OF_WF_BUNDLE);
+		oldV= ph.getF(PersistenceHelper.CURRENT_VERSION_OF_APP);
 		//appTxt.setText("Running application "+bundleName+" ["+oldV+"]");
 
 		Log.d("imgul",  server()+bundleName+"logo.png");
@@ -117,19 +117,19 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		if (!new File(Constants.VORTEX_ROOT_DIR+bundleName).isDirectory()) {
 			Log.d("vortex","First time execution!");
 			debugConsole.addPurpleText("First time execution of App "+bundleName);
-
-			File folder = new File(Constants.VORTEX_ROOT_DIR+bundleName);
-			if(!folder.mkdirs())
-				Log.e("NILS","Failed to create App root folder");
-			folder = new File(Constants.VORTEX_ROOT_DIR+bundleName+"/config");
-			if(!folder.mkdirs())
-				Log.e("NILS","Failed to create config root folder");
-			folder = new File(Constants.VORTEX_ROOT_DIR+bundleName+"/cache");
-			if(!folder.mkdirs())
-				Log.e("NILS","Failed to create cache root folder");
-
-		} else 
+		}else 
 			Log.d("vortex","This application has been executed before.");
+
+		//TODO: Move this code into above in next release.
+		File folder = new File(Constants.VORTEX_ROOT_DIR+bundleName);
+		if(!folder.mkdirs())
+			Log.e("NILS","Failed to create App root folder");
+		folder = new File(Constants.VORTEX_ROOT_DIR+bundleName+"/config");
+		if(!folder.mkdirs())
+			Log.e("NILS","Failed to create config folder");
+		folder = new File(Constants.VORTEX_ROOT_DIR+bundleName+"/cache");
+		if(!folder.mkdirs())
+			Log.e("NILS","Failed to create cache folder");
 
 
 
@@ -139,12 +139,14 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		//create module descriptors for all known configuration files.
 		Log.d("vortex","Creating Configuration and ModuleLoader");
 		myModules = new Configuration(Constants.getCurrentlyKnownModules(globalPh,ph,server(),bundleName,debugConsole));
-		myLoader = new ModuleLoader("moduleLoader",myModules,loginConsole,globalPh,debugConsole,this,this.getActivity());
+		String loaderId = "moduleLoader";
+		boolean allFrozen = ph.getB(PersistenceHelper.ALL_MODULES_FROZEN+loaderId);
+		myLoader = new ModuleLoader(loaderId,myModules,loginConsole,globalPh,allFrozen,debugConsole,this,this.getActivity());
 
 		if (Constants.FreeVersion && expired())
 			showErrorMsg("The license has expired. The App still works, but you will not be able to export any data.");;
 
-		return view;
+			return view;
 	}
 
 
@@ -156,7 +158,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		long currentTime = System.currentTimeMillis();
 		long diff = currentTime - takenIntoUseTime;
 		return (diff > Constants.MS_MONTH);
-		
+
 	}
 
 
@@ -166,49 +168,28 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 	@Override
 	public void onResume() {
 		super.onResume();
-		if (!globalPh.get(PersistenceHelper.BUNDLE_NAME).equals(bundleName)) {
-			Fragment frg = null;
-			frg = getFragmentManager().findFragmentById(R.id.content_frame);
-			final FragmentTransaction ft = getFragmentManager().beginTransaction();
-			ft.detach(frg);
-			ft.attach(frg);
-			ft.commit();
-		} else {
+		if (GlobalState.getInstance() == null) {
+			if (!globalPh.get(PersistenceHelper.BUNDLE_NAME).equals(bundleName)) {
+				Fragment frg = null;
+				frg = getFragmentManager().findFragmentById(R.id.content_frame);
+				final FragmentTransaction ft = getFragmentManager().beginTransaction();
+				ft.detach(frg);
+				ft.attach(frg);
+				ft.commit();
+			} else {
 
-			Intent intent = new Intent();
-			intent.setAction("INITSTARTS");
-			this.getActivity().sendBroadcast(intent);
-			loginConsole.addRow("Loading In Memory Modules");
-			Log.d("vortex","Loading In Memory Modules");
-			myLoader.loadModules();
-			loginConsole.draw();
-			Log.d("vortex","loginConsole object "+loginConsole);
+				Intent intent = new Intent();
+				intent.setAction("INITSTARTS");
+				this.getActivity().sendBroadcast(intent);
+				loginConsole.addRow("Loading In Memory Modules");
+				loginConsole.addRow("Version control: "+globalPh.get(PersistenceHelper.VERSION_CONTROL));
+				Log.d("vortex","Loading In Memory Modules");
+				myLoader.loadModules(true);
+				loginConsole.draw();
+				Log.d("vortex","loginConsole object "+loginConsole);
+			}
 		}
 	}
-
-
-
-
-
-	@Override
-	public void onStart() {
-		/*
-			if (Start.singleton.isNetworkAvailable()) {
-
-				loginConsole.addRow("Loading configuration. Patience is a virtue.");
-				loginConsole.addRow("Server URL: "+ph.get(PersistenceHelper.SERVER_URL));
-				load();
-				;
-			} else {
-				loginConsole.addRow("No network. Will use existing configuration. Please standby.");
-				validate();
-			}
-		 */
-
-		super.onStart();
-	}
-
-
 
 
 
@@ -299,8 +280,8 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 			globalPh.put(PersistenceHelper.BUNDLE_NAME, "Vortex");
 		if (globalPh.get(PersistenceHelper.DEVELOPER_SWITCH).equals(PersistenceHelper.UNDEFINED))
 			globalPh.put(PersistenceHelper.DEVELOPER_SWITCH, false);
-		if (globalPh.get(PersistenceHelper.VERSION_CONTROL_SWITCH_OFF).equals(PersistenceHelper.UNDEFINED))
-			globalPh.put(PersistenceHelper.VERSION_CONTROL_SWITCH_OFF, false);
+		if (globalPh.get(PersistenceHelper.VERSION_CONTROL).equals(PersistenceHelper.UNDEFINED))
+			globalPh.put(PersistenceHelper.VERSION_CONTROL, "Major");
 
 
 		folder = new File(Constants.VORTEX_ROOT_DIR+globalPh.get(PersistenceHelper.BUNDLE_NAME)+"/"+Constants.CACHE_ROOT_DIR);
@@ -323,7 +304,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		.setNeutralButton("Ok",new Dialog.OnClickListener() {				
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
-				
+
 			}
 		} )
 		.show();
@@ -343,8 +324,9 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 
 
 	@Override
-	public void loadSuccess(String loaderId) {
+	public void loadSuccess(String loaderId, final boolean majorVersionChange) {
 		Log.d("vortex","Arrives to loadsucc with ID: "+loaderId);
+		ph.put(PersistenceHelper.ALL_MODULES_FROZEN+loaderId,true);
 		if (this.getActivity()==null) {
 			Log.e("vortex","No activity!");
 		}
@@ -366,9 +348,11 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 					public void onLoadSuccesful(List<ConfigurationModule> modules) {
 						Configuration dbModules = new Configuration(modules);
 						if (modules!=null) {
-							myDBLoader = new ModuleLoader("dbloader",dbModules,loginConsole,globalPh,debugConsole,LoginConsoleFragment.this,LoginConsoleFragment.this.getActivity());
+							String loaderId = "dbLoader";
+							boolean allFrozen = ph.getB(PersistenceHelper.ALL_MODULES_FROZEN+loaderId);
+							myDBLoader = new ModuleLoader(loaderId,dbModules,loginConsole,globalPh,allFrozen,debugConsole,LoginConsoleFragment.this,LoginConsoleFragment.this.getActivity());
 							loginConsole.addRow("Defaults & GIS modules");			
-							myDBLoader.loadModules();
+							myDBLoader.loadModules(majorVersionChange);
 						} else 
 							Log.e("vortex","null returned from getDBImportModules");
 					}
@@ -392,6 +376,12 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 				GlobalState gs = 
 						GlobalState.createInstance(this.getActivity().getApplicationContext(),globalPh,ph,debugConsole,myDb, workflows, t,sd);
 				Start.alive=true;
+				//Update app version if new
+				if (majorVersionChange) {
+					float loadedAppVersion = ph.getF(PersistenceHelper.NEW_APP_VERSION);
+					Log.d("vortex","updating App version to "+loadedAppVersion);
+					ph.put(PersistenceHelper.CURRENT_VERSION_OF_APP,loadedAppVersion);
+				}
 				//drawermenu
 				gs.setDrawerMenu(Start.singleton.getDrawerMenu());
 
@@ -409,11 +399,15 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 					Start.singleton.getDrawerMenu().closeDrawer();
 					Start.singleton.getDrawerMenu().clear();
 					gs.sendEvent(MenuActivity.INITDONE);
-					String newV = ph.get(PersistenceHelper.CURRENT_VERSION_OF_WF_BUNDLE);
-					if (!newV.equals(oldV))
-						appTxt.setText("Running application "+bundleName+" --New Version! ["+newV+"]");
-					else
-						appTxt.setText("Running application "+bundleName+" ["+newV+"]");
+					float newV = ph.getF(PersistenceHelper.CURRENT_VERSION_OF_APP);
+					if (newV==-1)
+						appTxt.setText("Running application "+bundleName+" [no version]"); 
+					else {
+						if (newV>oldV)
+							appTxt.setText("Running application "+bundleName+" --New Version! ["+newV+"]");
+						else
+							appTxt.setText("Running application "+bundleName+" ["+newV+"]");
+					}
 					Start.singleton.changePage(wf,null);
 					Log.d("vortex","executing workflow main!");
 					gs.setModules(myModules);
@@ -458,6 +452,14 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 			if (result!=null)
 				bmImage.setImageBitmap(result);
 		}
+	}
+
+
+
+	@Override
+	public void loadFail(String loaderId) {
+		Log.d("vortex","sending broadcast");
+		getActivity().sendBroadcast(new Intent(MenuActivity.INITFAILED));
 	}
 
 

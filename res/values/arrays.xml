@@ -9,5 +9,17 @@
     <item>Description</item>
     <item>On the Web</item>
     <item>Delete</item>
-</string-array>    
+</string-array>   
+
+    <string-array name="versionArray">
+        <item>Update only when the version of your App changes (default)</item>
+        <item>Check version for each configuration file individually</item>
+        <item>Always load (slow!)</item>
+    </string-array>
+
+    <string-array name="versionValues">
+        <item>Major</item>
+        <item>Detailed</item>
+        <item>No control</item>
+    </string-array>
 </resources>

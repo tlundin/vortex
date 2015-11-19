@@ -14,10 +14,10 @@ import android.location.GpsStatus;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.types.SweLocation;
@@ -78,6 +78,7 @@ public class Tracker extends Service implements LocationListener {
 
 	public ErrorCode startScan(Context ctx) {
 		//do we have variables?	
+		
 				if(myX==null||myY==null)
 					return ErrorCode.GPS_VARS_MISSING;
 				//does Globalstate exist?
@@ -198,21 +199,30 @@ public class Tracker extends Service implements LocationListener {
 		return null;
 	}
 
+
+	
 	@Override
 	public void onStatusChanged(String provider, int status, Bundle extras) {
+
 		switch(status) 
         {
-            case GpsStatus.GPS_EVENT_STARTED:
-                //System.out.println("TAG - GPS searching: ");                        
+			case LocationProvider.OUT_OF_SERVICE:
+                System.out.println("GPS out of service");                        
                 break;
-            case GpsStatus.GPS_EVENT_STOPPED:    
-               // System.out.println("TAG - GPS Stopped");
+            case LocationProvider.AVAILABLE:    
+            	sendMessage(GPS_State.ping);
+                System.out.println("GPS Available");
                 break;
-            case GpsStatus.GPS_EVENT_FIRST_FIX:
-            	 System.out.println("FIX!");
+            case LocationProvider.TEMPORARILY_UNAVAILABLE:
+            	 System.out.println("Temp unavailable!!");
+            	 break;
+            default:
+            	System.out.println("GPS __??? "+status);
+            	break;
+        }
                 /*
                  * GPS_EVENT_FIRST_FIX Event is called when GPS is locked            
-                 */
+                 
                     Location gpslocation = locationManager
                             .getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
@@ -220,17 +230,19 @@ public class Tracker extends Service implements LocationListener {
                     {       
                     System.out.println("GPS Info:"+gpslocation.getLatitude()+":"+gpslocation.getLongitude());
 
-                    /*
+                    
                      * Removing the GPS status listener once GPS is locked  
-                     */
+                     
                         //locationManager.removeGpsStatusListener(mGPSStatusListener);                
                     }               
 
                 break;
             case GpsStatus.GPS_EVENT_SATELLITE_STATUS:
- //                 System.out.println("TAG - GPS_EVENT_SATELLITE_STATUS");
-                break;                  
+            	System.out.println("TAG - GPS_EVENT_SATELLITE_STATUS");
+                break; 
+                
        }
+       */
 	}
 
 	@Override

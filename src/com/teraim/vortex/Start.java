@@ -33,6 +33,10 @@ import com.teraim.vortex.ui.MenuActivity;
 
 
 
+/**
+ * @author Terje
+ *
+ */
 public class Start extends MenuActivity {
 
 	public static boolean alive = false;
@@ -51,6 +55,10 @@ public class Start extends MenuActivity {
 	private boolean loading = false;
 
 
+	/**
+	 * Program entry point
+	 * 
+	 */
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 
@@ -64,6 +72,7 @@ public class Start extends MenuActivity {
 		mDrawerToggle = mDrawerMenu.getDrawerToggle();
 		getActionBar().setDisplayHomeAsUpEnabled(true);
 		getActionBar().setHomeButtonEnabled(true);
+		//Determine if program should start or first reload its configuration.
 		if (!loading)
 			checkStatics();
 		super.onCreate(savedInstanceState);
@@ -81,8 +90,10 @@ public class Start extends MenuActivity {
 
 	}
 
-
 	
+	/**
+	 * 
+	 */
 	private void checkStatics() {
 		if (GlobalState.getInstance()==null) {
 			loading = true;
@@ -231,7 +242,6 @@ public class Start extends MenuActivity {
 	 */
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		Log.d("nils","GETZZZZ");
 		GlobalState.getInstance().getCurrentContext().registerEvent(new WF_Event_OnActivityResult("Start",EventType.onActivityResult));
 		// TODO Auto-generated method stub
 		super.onActivityResult(requestCode, resultCode, data);
@@ -247,7 +257,9 @@ public class Start extends MenuActivity {
 			histT.cancel(true);
 		}
 		if (GlobalState.getInstance()!=null) {
+			
 			GlobalState.getInstance().getDb().closeDatabaseBeforeExit();
+			
 			GlobalState.destroy();
 		}
 
@@ -357,12 +369,7 @@ public class Start extends MenuActivity {
 		return debugLogger;
 	}
 
-	
-	public void restartMe() {
-		Intent intent = new Intent(this, Start.class);
-		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		startActivity(intent);
-	}
+
 
 
 }

@@ -1,4 +1,4 @@
-package com.teraim.vortex.bluetooth;
+package com.teraim.vortex.synchronization;
 
 import android.util.Log;
 

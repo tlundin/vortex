@@ -28,8 +28,8 @@ import android.widget.TextView;
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
 import com.teraim.vortex.Start;
-import com.teraim.vortex.bluetooth.DataSyncSessionManager;
 import com.teraim.vortex.log.LoggerI;
+import com.teraim.vortex.synchronization.DataSyncSessionManager;
 import com.teraim.vortex.utils.PersistenceHelper;
 
 /**
@@ -43,6 +43,7 @@ public class MenuActivity extends Activity   {
 	private BroadcastReceiver brr;
 	private GlobalState gs;
 	private PersistenceHelper globalPh;
+	private boolean initdone=false,initfailed=false;
 
 	private boolean syncIsRunning=false;
 	private MenuActivity me;
@@ -50,6 +51,7 @@ public class MenuActivity extends Activity   {
 	public final static String REDRAW = "com.teraim.vortex.menu_redraw";
 	public static final String INITDONE = "com.teraim.vortex.init_done";
 	public static final String INITSTARTS = "com.teraim.vortex.init_done";
+	public static final String INITFAILED = "com.teraim.vortex.init_done_but_failed";	
 	public static final String SYNC_REQUIRED = "com.teraim.vortex.sync_required";
 
 	@Override
@@ -69,8 +71,13 @@ public class MenuActivity extends Activity   {
 
 				if (intent.getAction().equals(INITDONE))
 					initdone=true;
-				else if (intent.getAction().equals(INITSTARTS))
+				else if (intent.getAction().equals(INITSTARTS)) {
 					initdone=false;
+					initfailed=false;
+				}
+				else if (intent.getAction().equals(INITFAILED)) {
+					initfailed=true;
+				}
 				else if (intent.getAction().equals(SYNC_REQUIRED))
 					startSyncIfNotRunning();
 				
@@ -84,6 +91,7 @@ public class MenuActivity extends Activity   {
 		filter.addAction(INITDONE);		
 		filter.addAction(INITSTARTS);	
 		filter.addAction(REDRAW);
+		filter.addAction(INITFAILED);
 
 		this.registerReceiver(brr, filter);
 		//Listen for Service started/stopped event.
@@ -132,7 +140,7 @@ public class MenuActivity extends Activity   {
 	private final static int NO_OF_MENU_ITEMS = 5;
 
 	MenuItem mnu[] = new MenuItem[NO_OF_MENU_ITEMS];
-	private boolean initdone=false;
+	
 	private void CreateMenu(Menu menu)
 	{
 
@@ -146,7 +154,7 @@ public class MenuActivity extends Activity   {
 		mnu[mnu.length-1]=menu.add(0,mnu.length-1,mnu.length-1,"");
 		mnu[mnu.length-1].setIcon(android.R.drawable.ic_menu_preferences);
 		mnu[mnu.length-1].setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-
+		mnu[mnu.length-1].setVisible(false);
 		//mnu5.setIcon(android.R.drawable.ic_menu_preferences);
 		//mnu5.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
 		//refreshStatusRow();
@@ -157,29 +165,25 @@ public class MenuActivity extends Activity   {
 		mnu[2].setTitle("LOG");
 		mnu[2].setVisible(true);
 		gs = GlobalState.getInstance();
-		if (gs==null || !initdone) {
-			Log.d("nils","no status before init is done");
+		if (initfailed) {
+			mnu[mnu.length-1].setVisible(true);
 			return;
 		}
+		if (gs==null || !initdone) 
+			return;
+		
 		globalPh = gs.getGlobalPreferences();
 		//Log.d("vortex","Global prefs: "+gs.getGlobalPreferences()+" isdev "+globalPh.getB(PersistenceHelper.DEVELOPER_SWITCH));
 		if (!syncIsRunning)
 			mnu[0].setTitle("Osynkat: "+gs.getDb().getNumberOfUnsyncedEntries());
 		else 
 			mnu[0].setTitle("Synkar..");
-		String mContextH = "Context: []";
-		Map<String, String> hash = gs.getCurrentKeyHash();
-		if (hash!=null)
-			mContextH = hash.toString();
-		mnu[1].setTitle(mContextH);
-		//mnu[c++].setTitle("Användare: "+gs.getPersistence().get(PersistenceHelper.USER_ID_KEY));
-		//mnu[c++].setTitle("Typ: "+gs.getDeviceType());
-		boolean hasSynk = globalPh.getB(PersistenceHelper.SYNC_FEATURE)&&!gs.isSolo();
-		mnu[0].setVisible(hasSynk);	
-		//If (title is empty, don't show r-p-d-l status
+		mnu[1].setTitle("Context");
+
+		mnu[0].setVisible(globalPh.getB(PersistenceHelper.SYNC_FEATURE)&&!gs.isSolo());	
 		mnu[1].setVisible(globalPh.getB(PersistenceHelper.SHOW_CONTEXT));		
 		mnu[2].setVisible(globalPh.getB(PersistenceHelper.DEVELOPER_SWITCH));	
-
+		mnu[mnu.length-1].setVisible(true);
 	}
 
 	DataSyncSessionManager syncMgr=null;
@@ -253,7 +257,7 @@ public class MenuActivity extends Activity   {
 			print.setOnClickListener(new OnClickListener() {
 				@Override
 				public void onClick(View v) {
-					gs.getDb().printAllVariables();
+					gs.getBackupManager().backupDatabase("dump");
 				}
 			});
 
@@ -293,11 +297,11 @@ public class MenuActivity extends Activity   {
 	protected void onCloseSync() {
 		Log.d("vortex","IN on close SYNC!!");
 		if (syncMgr!=null) {
-			Log.d("vortex","syncmgr not null!");
 			syncMgr.destroy();
 			syncMgr=null;
 			refreshStatusRow();
-		}
+		} else
+			Log.e("vortex","SyncManager was null in onCloseSync");
 	}
 
 
@@ -441,7 +445,7 @@ public class MenuActivity extends Activity   {
 			mHandler.obtainMessage(UNLOCK).sendToTarget();
 		}
 
-		public void setCounter(String msg) {
+		public void setInfo(String msg) {
 			mHandler.obtainMessage(UPDATE_SUB,msg).sendToTarget();
 
 		}

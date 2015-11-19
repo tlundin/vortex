@@ -1,4 +1,4 @@
-package com.teraim.vortex.bluetooth;
+package com.teraim.vortex.synchronization;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,8 +6,6 @@ import java.util.List;
 import android.content.Context;
 
 import com.teraim.vortex.GlobalState;
-import com.teraim.vortex.synchronization.BluetoothConnectionProvider;
-import com.teraim.vortex.synchronization.ConnectionProvider;
 
 /**
  * 

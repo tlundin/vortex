@@ -11,7 +11,7 @@ public interface ConnectionListener {
 		connectionAttemptFailed, 
 		restartRequired, 
 		connectionFailedNoPartner, 
-		connectionFailedNamedPartnerMissing, connectionError
+		connectionFailedNamedPartnerMissing
 	}
 	
 	public void handleMessage(Object o);

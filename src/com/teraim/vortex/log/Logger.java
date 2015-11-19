@@ -14,6 +14,7 @@ public class Logger implements LoggerI {
 
 	//CharSequence myTxt = new SpannableString("");
 	SpannableStringBuilder myTxt = new SpannableStringBuilder();
+	SpannableString s;
 	TextView log = null;
 	Context myContext;
 	String loggerId;
@@ -29,29 +30,30 @@ public class Logger implements LoggerI {
 	}
 
 	public void addRow(String text) {
-		myTxt.append("\n"+text);
-
+		s = new SpannableString("\n"+text);
+		myTxt.append(s);
 	}
 	public void addRedText(String text) {
 
-		SpannableString s = new SpannableString(text);
+		s = new SpannableString(text);
 		s.setSpan(new TextAppearanceSpan(myContext, R.style.RedStyle),0,s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 		myTxt.append(s);	 
 		//if (log!=null) log.setText(myTxt);
 	}	 
 	public void addGreenText(String text) {
-		SpannableString s = new SpannableString(text);
+		s = new SpannableString(text);
 		s.setSpan(new TextAppearanceSpan(myContext, R.style.GreenStyle),0,s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 		myTxt.append(s);	
 		//if (log!=null) log.setText(myTxt);
 	}
 	public void addYellowText(String text) {
-		SpannableString s = new SpannableString(text);
+		s = new SpannableString(text);
 		s.setSpan(new TextAppearanceSpan(myContext, R.style.YellowStyle),0,s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 		myTxt.append(s);	
 		//if (log!=null) log.setText(myTxt);
 	}
 	public void addText(String text) {
+		s = new SpannableString(text);
 		myTxt.append(text);
 		//if (log!=null) log.setText(myTxt);
 	}
@@ -80,7 +82,7 @@ public class Logger implements LoggerI {
 
 	@Override
 	public void addPurpleText(String text) {
-		SpannableString s = new SpannableString(text);
+		s = new SpannableString(text);
 		s.setSpan(new TextAppearanceSpan(myContext, R.style.PurpleStyle),0,s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 		myTxt.append(s);
 	}
@@ -108,6 +110,12 @@ public class Logger implements LoggerI {
 			myTxt=myTxt.delete(myTxt.length()-tickyIs.length(), myTxt.length());
 			tickyIs=null;
 		}
+	}
+
+	@Override
+	public void removeLine() {
+		if (s!=null)
+			myTxt = myTxt.delete(myTxt.length()-s.length(),myTxt.length());
 	}
 
 

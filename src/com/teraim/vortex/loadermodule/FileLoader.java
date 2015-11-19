@@ -18,8 +18,8 @@ import com.teraim.vortex.loadermodule.configurations.Dependant_Configuration_Mis
 public class FileLoader extends Loader {
 
 	public FileLoader(ProgressBar pb, TextView tv, FileLoadedCb cb,
-			boolean versionControl) {
-		super(pb, tv, cb, versionControl);
+			String versionControlS) {
+		super(pb, tv, cb, versionControlS);
 	}
 
 	@Override
@@ -30,11 +30,11 @@ public class FileLoader extends Loader {
 		BufferedReader reader=null;
 		try {
 			reader = new BufferedReader(new FileReader(module.fullPath));
-		String version=null;
+		float version=-1;
 		StringBuilder sb = new StringBuilder();		
 		if (module.hasSimpleVersion) {
 			String header = reader.readLine();
-			version = versionControl?getVersion(header,null):null;
+			version = versionControl?getVersion(header,null):-1;
 		}
  
 		LoadResult lr = read(module,version,reader,sb);

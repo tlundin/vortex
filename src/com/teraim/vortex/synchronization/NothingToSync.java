@@ -1,4 +1,5 @@
-package com.teraim.vortex.bluetooth;
+package com.teraim.vortex.synchronization;
+
 
 /**Message sent if no data exists to sync
  * 
