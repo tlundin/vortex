@@ -1083,7 +1083,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 	private int[] riktLinjeStart,riktLinjeEnd;
 
 	private Integer currentDistance=null;
-	final static int TimeOut = 5;
+	final static int TimeOut = 3;
 
 	private void displayDistanceAndDirection() {
 		final int interval = TimeOut*1000; 
@@ -1360,7 +1360,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 		//Log.d("vortex","Got GPS STATECHANGE");
 		if (newState==GPS_State.newValueReceived||newState==GPS_State.ping) {
 			mostRecentGPSValueTimeStamp = System.currentTimeMillis();
-			if (currentDistance!=null && currentDistance<10)
+			if (currentDistance!=null && currentDistance<20)
 				displayDistanceAndDirectionL();
 		}
 		this.postInvalidate();
