@@ -95,7 +95,7 @@ public class GeoJSONExporter extends Exporter {
 						if (gisObjM==null) { 
 							gisObjM = new HashMap<String,String>();
 							gisObjects.put(uid, gisObjM);
-							gisObjM.put("gistyp", currentHash.get(GisConstants.TYPE_COLUMN));
+							gisObjM.put("Gistyp", currentHash.get(GisConstants.TYPE_COLUMN));
 							Log.d("vortex","keyhash: "+currentHash.toString());
 						}
 						//Hack for multiple SPY1 variables.

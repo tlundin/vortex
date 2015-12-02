@@ -1,5 +1,10 @@
 package com.teraim.vortex.dynamic.blocks;
 
+import java.util.List;
+
+import com.teraim.vortex.utils.Expressor;
+import com.teraim.vortex.utils.Expressor.Token;
+
 /**
  * Startblock.
  * @author Terje
@@ -13,12 +18,14 @@ public  class StartBlock extends Block {
 	final private String workflowName;
 	final private String[] args;
 	private String context;
+	private Expr contextE;
 
 	public StartBlock(String id,String[] args,String wfn, String context) {
 		workflowName = wfn;
 		this.args = args;
 		this.context = context;
 		this.blockId=id;
+		contextE = Expressor.analyze(context);
 	}
 
 	public String getName() {
@@ -30,6 +37,9 @@ public  class StartBlock extends Block {
 	}
 	
 	public String getWorkFlowContext() {
-		return context;
+		if (tokens==null || tokens.size()==1)
+			return context;
+		else 
+			return Expressor.
 	}
 }

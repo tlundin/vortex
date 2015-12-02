@@ -1607,7 +1607,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			} 
 			else if (name.equals("context")) {
 				context = readText("context",parser);
-
+				
 			}
 			else
 				skip(name,parser,o);

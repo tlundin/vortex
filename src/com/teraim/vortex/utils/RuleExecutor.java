@@ -1,5 +1,7 @@
 package com.teraim.vortex.utils;
 
+import java.io.File;
+import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,7 +11,6 @@ import java.util.Map;
 import java.util.Set;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.TextUtils;
@@ -19,7 +20,6 @@ import android.util.Log;
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
 import com.teraim.vortex.dynamic.VariableConfiguration;
-import com.teraim.vortex.dynamic.types.Delyta;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.types.Variable.DataType;
 import com.teraim.vortex.expr.Expr;
@@ -42,7 +42,7 @@ import com.teraim.vortex.non_generics.DelyteManager;
 public class RuleExecutor {
 
 	GlobalState gs;
-	
+
 	public RuleExecutor(GlobalState gs) {
 		this.gs = gs;
 	}
@@ -90,7 +90,7 @@ public class RuleExecutor {
 			this.var = v;
 			this.original=v.getId();			
 		}
-		
+
 		public TokenizedItem(String s) {
 			this.myType=TokenType.literal;
 			this.original=s;			
@@ -137,6 +137,7 @@ public class RuleExecutor {
 		getCurrentMinute(function,0),
 		getCurrentSecond(function,0),
 		getCurrentWeekNumber(function,0),
+		photoExists(function,1),
 		getSweDate(function,0),
 		sum(function,-1),
 		getDelytaArea(function,1),
@@ -191,7 +192,7 @@ public class RuleExecutor {
 		public TokenType[] getChildren() {
 			return children.toArray(new TokenType[children.size()]);
 		}
-		
+
 		public TokenType getParent() {
 			return parent;
 		}
@@ -264,9 +265,9 @@ public class RuleExecutor {
 		}
 		return findTokens(formula,mainVar,gs.getCurrentKeyHash());
 	}
-	
+
 	public List<TokenizedItem>findTokens(String formula,String mainVar, Map<String,String> keyHash) {	
-		
+
 		//Log.d("vortex","In findTokens for formula "+formula);
 		//Log.d("vortex","No cached formula. parsing ["+formula+"]");
 		List<Token> potVars = new ArrayList<Token>();
@@ -504,14 +505,14 @@ public class RuleExecutor {
 			return new SubstiResult(formula,stringT?SubstiType.String:null);
 		String subst = formula.toLowerCase();
 		subst = substFormulas(subst, myTokens);
-		
+
 		return substVariables(formula,subst,myTokens,stringT);
 
 
 	}
 
 	private SubstiResult substVariables(String formula,String subst, List<TokenizedItem> myTokens, Boolean stringT) {
-		
+
 		Variable st;
 		String var;
 		int max=-1;
@@ -540,7 +541,7 @@ public class RuleExecutor {
 			//Log.d("vortex","MAX: "+max);
 			item = lengthMap.remove(max);
 			if (item!=null) {
-				
+
 				var = item.get();
 				st = item.getVariable();		
 				String value = st.getValue();
@@ -560,7 +561,7 @@ public class RuleExecutor {
 					if (!Tools.isNumeric(value)) {
 						//Log.d("vortex","Non numeric value!");
 						subst = replaceIfStringCompare(st.getId().toLowerCase(),subst,value);
-												
+
 					} else {
 						Log.d("nils","Substituting Variable: ["+st.getId()+"] with value "+st.getValue());
 						subst = subst.replace(st.getId().toLowerCase(), value);
@@ -628,8 +629,8 @@ public class RuleExecutor {
 					spc=true;
 					break;
 				} else {
-				before = false;
-				exprValue+=c;
+					before = false;
+					exprValue+=c;
 				}
 			}
 			//Index is either = last char or first space -1.
@@ -637,25 +638,25 @@ public class RuleExecutor {
 				index = expr.length();
 			//Log.d("vortex","Found value to string compare: "+exprValue);
 			if (!exprValue.isEmpty()) { 
-			boolean found = false;
-			if (eq) {
-				if (exprValue.equalsIgnoreCase(value)) {
-					//Log.d("vortex","equals!");
-					found=true;
+				boolean found = false;
+				if (eq) {
+					if (exprValue.equalsIgnoreCase(value)) {
+						//Log.d("vortex","equals!");
+						found=true;
+					}
+				} else if (neq) {
+					if (!exprValue.equalsIgnoreCase(value)) {
+						//Log.d("vortex","n_equals!");
+						found=true;
+					}
 				}
-			} else if (neq) {
-				if (!exprValue.equalsIgnoreCase(value)) {
-					//Log.d("vortex","n_equals!");
-					found=true;
+				if (found) {
+					expr = expr.replace(expr.substring(startIndex, index), found?"1":"0");
 				}
-			}
-			if (found) {
-				expr = expr.replace(expr.substring(startIndex, index), found?"1":"0");
-			}
 			} else {
 				Log.d("vortex","empty string!!");
 			}
-			
+
 		}
 		Log.d("vortex","Returning: "+expr);
 		return expr;
@@ -767,6 +768,21 @@ public class RuleExecutor {
 					return kh.get(args[0]);
 				}
 			}
+		}
+		else if (item.getType()==TokenType.photoExists) {
+			if (args!=null && args.length!=0) {
+				File dir = new File("some/path/to/dir");
+				final String prefix = args[0]; // needs to be final so the anonymous class can use it
+				File[] matchingFiles = dir.listFiles(new FileFilter() {
+					public boolean accept(File pathname) {
+						return pathname.getName().startsWith(prefix);
+					}
+				});
+				if(matchingFiles!=null&&matchingFiles.length!=0)
+					return "1";
+				
+			}
+			return "0";
 		}
 
 		else if (item.getType()==TokenType.sum) {
