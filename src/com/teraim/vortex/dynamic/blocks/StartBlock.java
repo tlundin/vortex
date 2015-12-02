@@ -2,6 +2,7 @@ package com.teraim.vortex.dynamic.blocks;
 
 import java.util.List;
 
+import com.teraim.vortex.expr.Expr;
 import com.teraim.vortex.utils.Expressor;
 import com.teraim.vortex.utils.Expressor.Token;
 
@@ -25,7 +26,7 @@ public  class StartBlock extends Block {
 		this.args = args;
 		this.context = context;
 		this.blockId=id;
-		contextE = Expressor.analyze(context);
+		//contextE = Expressor.analyze(context);
 	}
 
 	public String getName() {
@@ -37,9 +38,6 @@ public  class StartBlock extends Block {
 	}
 	
 	public String getWorkFlowContext() {
-		if (tokens==null || tokens.size()==1)
-			return context;
-		else 
-			return Expressor.
+		return context;
 	}
 }

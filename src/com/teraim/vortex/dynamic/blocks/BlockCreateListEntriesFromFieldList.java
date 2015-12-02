@@ -7,7 +7,6 @@ import java.util.Map;
 import android.util.Log;
 import android.view.LayoutInflater.Filter;
 
-import com.google.android.gms.drive.query.Filters;
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.workflow_abstracts.Container;
