@@ -311,7 +311,7 @@ public  class ButtonBlock extends Block {
 											ok = r.execute();								
 										} catch (SyntaxException e) {
 											o.addRow("");
-											o.addRedText("Rule "+r.id+" has syntax errors in condition: "+r.condition);										
+											o.addRedText("Rule "+r.id+" has syntax errors in condition: "+r.getCondition());										
 										}
 										Rule.Type type = r.getType();
 										int indicatorId=0;

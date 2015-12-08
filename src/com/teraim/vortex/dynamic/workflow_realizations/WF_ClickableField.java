@@ -824,7 +824,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 			return null;
 		Log.d("vortex","In checkRules. I have "+myRules.size()+" rules");
 		for (Rule r:myRules) {
-			Log.d("vortex"," Rule: "+r.condition);
+			Log.d("vortex"," Rule: "+r.getCondition());
 			try {
 				if (!r.execute())
 					return r;

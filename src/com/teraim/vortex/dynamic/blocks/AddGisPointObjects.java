@@ -15,7 +15,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.os.AsyncTask;
-import android.os.Handler;
 import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
@@ -40,6 +39,7 @@ import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.DbHelper.DBColumnPicker;
 import com.teraim.vortex.utils.DbHelper.Selection;
 import com.teraim.vortex.utils.DbHelper.StoredVariableData;
+import com.teraim.vortex.utils.Expressor;
 import com.teraim.vortex.utils.PersistenceHelper;
 import com.teraim.vortex.utils.Tools;
 
@@ -48,9 +48,8 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 
 	private static final long serialVersionUID = 7979886099817953005L;
 	private String nName, label,
-	target, coordType,  locationVariables,
-	objContext,  imgSource,
-	refreshRate;
+	target, coordType,locationVariables,imgSource,refreshRate;
+	private List<Expressor.EvalExpr> objContext;
 	private Bitmap icon=null;
 	private boolean isVisible;
 	private GisObjectType myType;
@@ -81,7 +80,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 		this.target = target;
 		this.coordType = coordType;
 		this.locationVariables = locationVars;
-		this.objContext = objContext;
+		this.objContext = Expressor.preCompileExpression(objContext);
 		this.imgSource = imgSource;
 		this.isVisible = isVisible;
 		this.refreshRate=refreshRate;
@@ -174,7 +173,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 
 		//Need the key hash for the database.
 		objKeyHash = 
-				GlobalState.getInstance().evaluateContext(this.objContext);
+				GlobalState.getInstance().evaluateContext(this.getObjectContext());
 		Log.d("vortex","OBJ KEYHASH "+objKeyHash.keyHash.toString());
 		//Use current year for statusvar.
 		Map<String, String> currYearH = Tools.copyKeyHash(objKeyHash.keyHash);
@@ -416,6 +415,11 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 		}
 		loadDone=true;
 
+	}
+
+	
+	public String getObjectContext() {
+			return Expressor.analyze(objContext);		
 	}
 
 	private void setDefaultBitmaps(WF_Context myContext) {

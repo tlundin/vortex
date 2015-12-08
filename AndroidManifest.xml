@@ -57,13 +57,6 @@
             </intent-filter>
         </activity>
 
-        <service
-            android:name="com.teraim.vortex.bluetooth.BluetoothConnectionService"
-            android:label="BluetoothRemoteDevice" >
-            <intent-filter>
-                <action android:name="com.teraim.vortex.StartService" />
-            </intent-filter>
-        </service>
 
 
     </application>

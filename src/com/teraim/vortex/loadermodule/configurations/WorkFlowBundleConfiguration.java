@@ -62,13 +62,15 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 	private LoggerI o;
 	private String cacheFolder;
 	private String language="se";
+	public static LoggerI debugConsole;
 
 	public WorkFlowBundleConfiguration(PersistenceHelper globalPh,PersistenceHelper ph,
 			String server, String bundle,LoggerI debugConsole) {
 		super(globalPh,ph, Source.internet, server+bundle.toLowerCase()+"/", bundle,"Workflow bundle       ");
 		this.o=debugConsole;
 		cacheFolder = Constants.VORTEX_ROOT_DIR+globalPh.get(PersistenceHelper.BUNDLE_NAME)+"/cache/";
-
+		//make debugConsole globally available, so we dont have to pass it to each subclass.
+		WorkFlowBundleConfiguration.debugConsole = debugConsole;
 
 	}
 
@@ -595,8 +597,6 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			String name= parser.getName();
 			if (name.equals("block_ID")) {
 				id = readText("block_ID",parser);
-			} else if (name.equals("name")) {
-				nName = readText("name",parser);
 			} else if (name.equals("name")) {
 				nName = readText("name",parser);
 			} else if (name.equals("container_name")) {
@@ -1764,7 +1764,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 	}
 
 	private void checkForNull(String...pars) {
-		boolean nulls=false;
+		
 		boolean lbl = false;
 		String lab=null;
 		for (String par:pars) {
@@ -1775,13 +1775,9 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			} else if (par==null) {
 				o.addRow("");
 				o.addYellowText("Parameter "+lab+" was NULL");
-				nulls=true;
+				
 			}
-		}/*
-			if (!nulls) {
-				o.addRow("");
-				o.addGreenText("[OK]");
-			}*/
+		}
 	}
 
 

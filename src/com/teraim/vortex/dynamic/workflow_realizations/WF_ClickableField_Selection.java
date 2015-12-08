@@ -35,7 +35,7 @@ public class WF_ClickableField_Selection extends WF_ClickableField {
 		if (myRules == null)
 			myRules = new ArrayList<Rule>();
 		myRules.add(r);
-		Log.d("vortex","Added rule "+r.condition);
+		Log.d("vortex","Added rule "+r.getCondition());
 	}
 
 

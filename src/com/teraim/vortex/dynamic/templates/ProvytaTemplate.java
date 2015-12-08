@@ -30,7 +30,6 @@ import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -38,7 +37,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.teraim.vortex.ParameterSafe;
 import com.teraim.vortex.R;
 import com.teraim.vortex.Start;
 import com.teraim.vortex.dynamic.Executor;
@@ -54,7 +52,6 @@ import com.teraim.vortex.non_generics.NamedVariables;
 import com.teraim.vortex.non_generics.StatusHandler;
 import com.teraim.vortex.non_generics.StatusHandler.Kvot;
 import com.teraim.vortex.ui.MenuActivity;
-import com.teraim.vortex.utils.PersistenceHelper;
 import com.teraim.vortex.utils.Tools;
 
 

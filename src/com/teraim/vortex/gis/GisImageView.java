@@ -1111,7 +1111,8 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 		//Check preconditions for GPS to work
 
 		if (myX==null||myY==null||GlobalState.getInstance()==null) {
-			myMap.setAvstTxt("C_Error");
+			myMap.setAvstTxt("Config");
+			myMap.setRiktTxt("fault!");
 			handler=null;
 			return;
 		}

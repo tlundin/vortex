@@ -2,9 +2,11 @@ package com.teraim.vortex.dynamic.blocks;
 
 import java.util.List;
 
-import com.teraim.vortex.expr.Expr;
 import com.teraim.vortex.utils.Expressor;
+import com.teraim.vortex.utils.Expressor.EvalExpr;
 import com.teraim.vortex.utils.Expressor.Token;
+
+import static com.teraim.vortex.utils.Expressor.*;
 
 /**
  * Startblock.
@@ -15,18 +17,21 @@ public  class StartBlock extends Block {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -6860379561108690650L;
+	private static final long serialVersionUID = -6860379561128690656L;
 	final private String workflowName;
 	final private String[] args;
 	private String context;
-	private Expr contextE;
+	private List<EvalExpr> contextE=null;
 
 	public StartBlock(String id,String[] args,String wfn, String context) {
 		workflowName = wfn;
 		this.args = args;
 		this.context = context;
 		this.blockId=id;
-		//contextE = Expressor.analyze(context);
+		if (context !=null)
+			contextE = preCompileExpression(context);
+		System.err.println("Bananas: "+((contextE == null)?"null":contextE.toString()));
+
 	}
 
 	public String getName() {
@@ -38,6 +43,9 @@ public  class StartBlock extends Block {
 	}
 	
 	public String getWorkFlowContext() {
+		if (contextE!=null)
+			return analyze(contextE);
+	System.err.println("Bananas !! "+context);
 		return context;
 	}
 }
