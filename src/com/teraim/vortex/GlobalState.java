@@ -1,7 +1,6 @@
 package com.teraim.vortex;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -18,7 +17,6 @@ import com.teraim.vortex.dynamic.types.CHash;
 import com.teraim.vortex.dynamic.types.SpinnerDefinition;
 import com.teraim.vortex.dynamic.types.Table;
 import com.teraim.vortex.dynamic.types.VarCache;
-import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.types.Workflow;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
 import com.teraim.vortex.expr.Aritmetic;
@@ -34,10 +32,6 @@ import com.teraim.vortex.ui.DrawerMenu;
 import com.teraim.vortex.utils.BackupManager;
 import com.teraim.vortex.utils.DbHelper;
 import com.teraim.vortex.utils.PersistenceHelper;
-import com.teraim.vortex.utils.RuleExecutor;
-import com.teraim.vortex.utils.RuleExecutor.SubstiResult;
-import com.teraim.vortex.utils.RuleExecutor.TokenType;
-import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 import com.teraim.vortex.utils.Tools;
 
 
@@ -107,7 +101,7 @@ public class GlobalState  {
 		parser = new Parser(this);
 		//Artlista
 		myVarCache = new VarCache(this);
-		artLista = new VariableConfiguration(this,myVarCache,t);			
+		artLista = new VariableConfiguration(this,t);			
 		myWfs = mapWorkflowsToNames(workflows);		
 		//Event Handler on the Bluetooth interface.
 		//myHandler = getHandler();
@@ -121,7 +115,7 @@ public class GlobalState  {
 		//GPS listener service
 		myTracker = new Tracker();
 
-		myExecutor = new RuleExecutor(this);
+		//myExecutor = new RuleExecutor(this);
 
 		myConnectionManager = new ConnectionManager(this);
 	
@@ -196,9 +190,9 @@ public class GlobalState  {
 		return myC;
 	}
 
-	public RuleExecutor getRuleExecutor() {
-		return myExecutor;
-	}
+	//public RuleExecutor getRuleExecutor() {
+	//	return myExecutor;
+	//}
 
 	public VariableConfiguration getVariableConfiguration() {
 		return artLista;
@@ -355,50 +349,30 @@ public class GlobalState  {
 
 	int logID=1;
 
-	private Map<String,String> myKeyHash;
+	private CHash myKeyHash;
 
+	//private RuleExecutor myExecutor;
 
-	private Map<String, Variable> myRawHash;
-
-
-	private RuleExecutor myExecutor;
-
-
-	public Map<String,String> getCurrentKeyHash() {
+	public CHash getCurrentKeyHash() {
+		if (myKeyHash == null)
+			return new CHash(null,null);
+		else 
+			return myKeyHash;
+	}
+	public Map<String,String> getCurrentKeyMap() {
 
 		//Log.d("vortex",this.toString()+" getCurrentKeyHash returned "+myKeyHash);
-		return myKeyHash==null?null:myKeyHash;
+		if (myKeyHash == null)
+			return null;
+		else
+			return myKeyHash.getContext();
 	}
 
 
-	public void  setKeyHash(Map<String,String> h) { 	
-		//artLista.destroyCache();
-		myExecutor.destroyCache();
-		myKeyHash=h;
-		Log.d("vortex","SetKeyHash was called with "+h+" on this "+this.toString());
+	public void  setKeyHash(CHash context) { 	
+		myKeyHash=context;
+		Log.d("vortex","SetKeyHash was called with "+context+" on this "+this.toString());
 	}
-
-	public void setRawHash(Map<String,Variable> h) {
-		myRawHash = h;
-	}
-
-	//TODO:This is not working since keyhash is changed separately from rawhash.
-	public Map<String, String> refreshKeyHash() {
-		if (myRawHash == null) {
-			Log.d("nils","Failed to renew hash - no raw hash available");
-
-		} else {
-			for (String s:myRawHash.keySet()) {
-				Variable v= myRawHash.get(s);
-				Log.d("vortex"," RH Var "+v.getLabel()+" value "+v.getValue());
-				String value = v.getValue();
-				myKeyHash.put(s, value);
-			}
-		}
-		Log.d("nils","Keyhash refreshed");
-		return getCurrentKeyHash();
-	}
-
 
 
 	public boolean isMaster() {
@@ -578,160 +552,7 @@ public class GlobalState  {
 	//If no context can be built (missing variable values), return error. Otherwise, return null.
 
 
-	public CHash evaluateContext(String cContext) {
-		boolean contextError=false;
-		String err = null;
-		Map<String, String> keyHash = null;
-		Map<String, Variable> rawHash = null;
-		LoggerI o = getLogger();
-		Log.d("noob","In evaluate Context!!");
-		if (cContext==null||cContext.isEmpty()) {
-			Log.d("nils","No context!!");
-			keyHash = this.getCurrentKeyHash();
-			rawHash = this.myRawHash;
-		} else {
-			keyHash = new HashMap<String, String>();
-			rawHash = new HashMap<String, Variable>();
-			Log.d("nils","Found context!!");
-			String[] pairs = cContext.split(",");
-			if (pairs==null||pairs.length==0) {
-				o.addRow("Could not split context on comma (,)");
-				err = "Could not split context on comma (,). ";
-				contextError = true;			
-			} else {
-
-				for (String pair:pairs) {
-					Log.d("nils","found pair: "+pair);
-					if (pair!=null&&!pair.isEmpty()) {
-						String[] kv = pair.split("=");
-						if (kv==null||kv.length<2) {
-							o.addRow("");
-							o.addRedText("Could not split context on equal sign (=).");
-							contextError=true;
-							err = "Could not split context on equal sign (=).";
-						} else {
-							//Calculate value of context variables, if any.
-							//is it a variable or a value?
-							String arg = kv[0].trim();
-							String val = kv[1].trim();
-							Log.d("nils","Keypair: "+arg+","+val);
-
-							if (val.isEmpty()||arg.isEmpty()) {
-								o.addRow("");
-								o.addRedText("Empty variable or argument in definition");
-								err = "Empty variable or argument in definition";
-								contextError=true;
-								break;
-							} else {
-
-								if (Character.isDigit(val.charAt(0))) {
-									//constant
-									keyHash.put(arg, val);
-									Log.d("nils","Added "+arg+","+val+" to current context");
-								} 
-								else {
-									//TODO: Get rid of historical token...
-									if (val.equals(VariableConfiguration.HISTORICAL_MARKER)) {
-										Log.d("vortex","Historical!");
-										keyHash.put(arg,val);
-									} else if (val.equals("*")) {
-										Log.d("vortex","WILDCARD!!");
-										keyHash.put(arg,val);
-									}
-									else {
-										//Variable or function. need to evaluate first..
-										Variable v=null;// = getVariableConfiguration().getVariableInstance(val);
-										String varVal=null;
-										//if (v==null) {
-										//Parse value..either constant, function or variable.
-
-										List<TokenizedItem> tokens = myExecutor.findTokens(val, null);
-										if (tokens!=null && !tokens.isEmpty()) {										
-											TokenizedItem firstToken = tokens.get(0);
-											if (firstToken.getType()==TokenType.variable) {
-												Log.d("vortex","Found variable!");
-												v = firstToken.getVariable();
-												varVal = v.getValue();
-												if (varVal==null) {
-													o.addRow("");
-													o.addRedText("One of the variables used in current context("+v.getId()+") has no value in database");
-													Log.e("nils","var was null or empty: "+v.getId());
-													err = "One of the variables used in current context("+v.getId()+") has no value in database";
-													contextError=true;
-												}
-											} else if (firstToken.getType().getParent()==TokenType.function) {
-												Log.d("vortex","Found function!");
-												SubstiResult subsRes = myExecutor.substituteForValue(tokens, val, false);
-												if (subsRes!=null) {
-													varVal = subsRes.result;
-												} else {
-													Log.e("vortex","subsresult was null for function"+val+" in evalContext");
-													contextError=true;
-													err = "subsresult was null for function"+val+" in evalContext";
-												}
-											} else if (firstToken.getType()==TokenType.literal) {
-												Log.d("vortex","Found literal!");
-												varVal = val;
-											} else {
-												Log.e("vortex","Could not find "+firstToken.getType().name());
-												contextError=true;
-												err = "Could not find "+firstToken.getType().name();
-											}
-
-										} else {
-											o.addRow("");
-											o.addRedText("Could not evaluate expression "+val+" in context");
-											Log.e("vortex","Could not evaluate expression "+val+" in context");
-											contextError=true;
-											err="Could not evaluate expression "+val+" in context";
-										}
-
-
-										/*
-											contextError=true;
-											o.addRow("");
-											o.addRedText("One of the variables missing: "+val);
-											err = "Context missing (at least) variable: "+val;
-											Log.d("nils","Couldn't find variable "+val);
-											break;
-										 */
-
-										//} else 
-										//	varVal = v.getValue();
-
-										if(!contextError) {
-											keyHash.put(arg, varVal);
-											rawHash.put(arg,v);
-											Log.d("nils","Added "+arg+","+varVal+" to current context");
-											if (v!=null)
-												v.setKeyChainVariable(arg);
-											//update status menu
-
-										}
-
-									}
-								}
-							}
-						}
-					} else {
-						Log.d("nils","Found empty or null pair");
-						contextError=true;
-						err="Found empty or null pair";
-					}
-
-				} 
-
-			}
-		}
-		if (keyHash!=null && !contextError && !keyHash.isEmpty()) {
-			o.addRow("");
-			o.addYellowText("Context now: "+keyHash.toString());
-			return new CHash(keyHash,rawHash);
-		}
-		else
-			return new CHash(err);
-
-	}
+	
 
 	public void setModules(Configuration myModules) {
 		this.myModules = myModules;

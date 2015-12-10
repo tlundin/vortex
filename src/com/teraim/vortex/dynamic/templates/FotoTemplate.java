@@ -35,8 +35,9 @@ import android.widget.TextView;
 
 import com.teraim.vortex.R;
 import com.teraim.vortex.dynamic.Executor;
-import com.teraim.vortex.dynamic.VariableConfiguration;
+import com.teraim.vortex.dynamic.types.CHash;
 import com.teraim.vortex.dynamic.types.SweLocation;
+import com.teraim.vortex.dynamic.types.VarCache;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Container;
 import com.teraim.vortex.non_generics.Constants;
@@ -258,10 +259,10 @@ public class FotoTemplate extends Executor {
 			}
 		});
 		
-		gs.setKeyHash(al.createProvytaKeyMap());
-
-		n = al.getVariableInstance(NamedVariables.CentrumGPSNS);
-		e = al.getVariableInstance(NamedVariables.CentrumGPSEW);
+		gs.setKeyHash(new CHash(null,al.createProvytaKeyMap()));
+		VarCache varCache = gs.getVariableCache();
+		n = varCache.getVariable(NamedVariables.CentrumGPSNS);
+		e = varCache.getVariable(NamedVariables.CentrumGPSEW);
 		/*
 		if (e.getValue()!=null &&n.getValue()!=null) {
 			GPS_X.setText(e.getValue()+"");
@@ -280,9 +281,9 @@ public class FotoTemplate extends Executor {
 			avstandB.setChecked(true);
 		}
 		
-		VariableConfiguration al = gs.getVariableConfiguration();
 		
-		myStatusVariable = al.getVariableUsingKey(al.createProvytaKeyMap(),NamedVariables.STATUS_FOTO);
+		
+		myStatusVariable = varCache.getVariableUsingKey(al.createProvytaKeyMap(),NamedVariables.STATUS_FOTO);
 		
 		return v;
 		

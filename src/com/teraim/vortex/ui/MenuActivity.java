@@ -195,7 +195,7 @@ public class MenuActivity extends Activity   {
 			startSyncIfNotRunning();
 			break;
 		case 1:
-			Map<String, String> hash = gs.getCurrentKeyHash();
+			Map<String, String> hash = gs.getCurrentKeyMap();
 			String dialogText="";
 			if (hash!=null)
 				dialogText = hash.toString();

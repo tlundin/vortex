@@ -46,7 +46,7 @@ public class WF_Instance_List extends WF_Static_List implements EventListener,Ev
 	public WF_Instance_List(String id, WF_Context ctx,List<List<String>> rows,String variatorColumn,boolean isVisible) {
 		super(id, ctx,rows,isVisible);
 		this.namePrefix = al.getFunctionalGroup(rows.get(0));
-		myKeyHash = new HashMap<String,String>(gs.getCurrentKeyHash());
+		myKeyHash = new HashMap<String,String>(gs.getCurrentKeyMap());
 		myKeyHash.remove(variatorColumn);
 		ctx.addEventListener(this, EventType.onSave);
 		o = GlobalState.getInstance().getLogger();
@@ -106,7 +106,7 @@ public class WF_Instance_List extends WF_Static_List implements EventListener,Ev
 					for (String index:indexes) {
 						String value = indexToValue.get(index);					
 						myKeyHash.put(variatorColumn, index);				
-						Variable var = gs.getVariableConfiguration().getFixedVariableInstance(myKeyHash, varId,value);
+						Variable var = varCache.getFixedVariableInstance(myKeyHash, varId,value);
 						if (var!=null) {
 							String entryInstanceLabel = al.getEntryLabel(var.getBackingDataSet())+" ["+index+"]";
 							WF_ClickableField_Selection ef = entryFields.get(entryInstanceLabel);

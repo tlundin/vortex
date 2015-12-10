@@ -1,6 +1,7 @@
 package com.teraim.vortex.dynamic.blocks;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -32,6 +33,7 @@ import com.teraim.vortex.Start;
 import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.types.CHash;
 import com.teraim.vortex.dynamic.types.Rule;
+import com.teraim.vortex.dynamic.types.VarCache;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.types.Workflow;
 import com.teraim.vortex.dynamic.workflow_abstracts.Container;
@@ -45,6 +47,8 @@ import com.teraim.vortex.ui.MenuActivity;
 import com.teraim.vortex.utils.Exporter;
 import com.teraim.vortex.utils.Exporter.ExportReport;
 import com.teraim.vortex.utils.Exporter.Report;
+import com.teraim.vortex.utils.Expressor;
+import com.teraim.vortex.utils.Expressor.EvalExpr;
 import com.teraim.vortex.utils.PersistenceHelper;
 import com.teraim.vortex.utils.Tools;
 
@@ -62,27 +66,28 @@ public  class ButtonBlock extends Block {
 	 * 
 	 */
 	private static final long serialVersionUID = 6454431627090793559L;
-	String text,onClick,name,containerId,target;
+	String onClick,name,containerId;
 	private Boolean validationResult = true;
 	Type type;
 	Variable statusVariable=null;
 	private android.graphics.drawable.Drawable originalBackground;
 	private Button button;
+	private List<EvalExpr>textE,targetE,buttonContextE,exportContextE;
 
 	WF_Context myContext;
 	private boolean isVisible;
 	private String statusVar=null;
 	private OnclickExtra extraActionOnClick=null;
 	private GlobalState gs;
-	private Map<String, String> buttonContext=null;
 	private PopupWindow mpopup=null;
-	private String exportContextS;
+	
 	private String exportFormat;
 	private String exportFileName = null;
 	private boolean enabled;
-	private String buttonContextS;
-	private Map<String, String> buttonContextOld=null;
+	
+	private CHash buttonContextOld=null,buttonContext=null;
 	private boolean syncRequired;
+	private VarCache varCache;
 
 
 	enum Type {
@@ -99,7 +104,7 @@ public  class ButtonBlock extends Block {
 	//TODO: REMOVE THIS Constructor!!
 	//Function used with buttons that need to attach customized actions after click
 	public ButtonBlock(String id,String lbl,String action, String name,String container,String target, String type, String statusVariable,boolean isVisible,
-			OnclickExtra onclickExtra,Map<String,String> buttonContext, int dummy) {		
+			OnclickExtra onclickExtra,CHash buttonContext, int dummy) {		
 		this(id,lbl,action,name,container,target,type,statusVariable,isVisible,null,null,true,null,false);
 		extraActionOnClick = onclickExtra;
 		this.buttonContextOld = buttonContext;
@@ -108,11 +113,11 @@ public  class ButtonBlock extends Block {
 	public ButtonBlock(String id,String lbl,String action, String name,String container,String target, String type, String statusVariable,boolean isVisible,String exportContextS, String exportFormat,boolean enabled, String buttonContextS, boolean requestSync) {
 		Log.d("NILS","BUTTONBLOCK type Action. Action is set to "+action);
 		this.blockId=id;
-		this.text = lbl;
+		this.textE = Expressor.preCompileExpression(lbl);
 		this.onClick=action;
 		this.name=name;
 		this.containerId = container;
-		this.target=target;
+		this.targetE=Expressor.preCompileExpression(target);
 		this.type=type.equals("toggle")?Type.toggle:Type.action;
 		this.isVisible = isVisible;
 		this.statusVar = statusVariable;		
@@ -120,16 +125,16 @@ public  class ButtonBlock extends Block {
 		//Set null
 		if (statusVar!=null&&statusVar.length()==0)
 			this.statusVar=null;
-		this.exportContextS = exportContextS;
+		this.exportContextE = Expressor.preCompileExpression(exportContextS);
 		this.exportFormat = exportFormat;
-		this.buttonContextS=buttonContextS;
+		this.buttonContextE=Expressor.preCompileExpression(buttonContextS);
 		this.syncRequired = requestSync;
 		Log.d("vortex","syncRequired is "+syncRequired);
 	}
 
 
 	public String getText() {
-		return Tools.parseString(text);
+		return Expressor.analyze(textE);
 	}
 
 
@@ -137,12 +142,13 @@ public  class ButtonBlock extends Block {
 		return name;
 	}
 	public String getTarget() {
-		return Tools.parseString(target);
+		return Expressor.analyze(targetE);
 	}
 
 
 	public WF_Widget create(final WF_Context myContext) {
 		gs = GlobalState.getInstance();
+		varCache = gs.getVariableCache();
 		o=gs.getLogger();
 		Log.d("nils","In CREATE for BUTTON "+getText());
 		Container myContainer = myContext.getContainer(containerId);
@@ -150,13 +156,13 @@ public  class ButtonBlock extends Block {
 			if (buttonContextOld!=null)
 				buttonContext=buttonContextOld;
 			else {
-				Log.d("vortex","ButtonContextS: "+buttonContextS);
-				buttonContext = myContext.getKeyHash();
-				if (buttonContextS!=null&&!buttonContextS.isEmpty())
-					buttonContext = gs.evaluateContext(buttonContextS).keyHash;
+				Log.d("vortex","ButtonContextS: "+buttonContextE);
+				buttonContext = myContext.getHash();
+				if (buttonContextE!=null&&!buttonContextE.isEmpty())
+					buttonContext = CHash.evaluate(buttonContextE);
 			}
-			String bx = buttonContext==null?null:buttonContext.toString();
-			Log.d("nils","Buttoncontext set to: "+bx+" for button: "+getText());
+
+			Log.d("nils","Buttoncontext set to: "+buttonContext+" for button: "+getText());
 				
 			final Context ctx = myContext.getContext();
 			
@@ -170,7 +176,8 @@ public  class ButtonBlock extends Block {
 
 				if (statusVar != null) {
 					VariableConfiguration al = gs.getVariableConfiguration();
-					Variable statusVariable = al.getVariableUsingKey(buttonContext,statusVar);
+					VarCache varCache = gs.getVariableCache();
+					Variable statusVariable = varCache.getVariableUsingKey(buttonContext.getContext(),statusVar);
 					if (statusVariable!=null) {
 						Log.d("nils","STATUSVAR: "+statusVariable.getId()+" key: "+statusVariable.getKeyChain()+ "Value: "+statusVariable.getValue());
 						String valS = statusVariable.getValue();
@@ -233,7 +240,7 @@ public  class ButtonBlock extends Block {
 						}
 
 						if (onClick.startsWith("template"))
-							myContext.getTemplate().execute(onClick,target);
+							myContext.getTemplate().execute(onClick,getTarget());
 						else {
 
 
@@ -241,10 +248,9 @@ public  class ButtonBlock extends Block {
 
 								String statusVar = myContext.getStatusVariable();
 								if (statusVar != null) {
-
-									VariableConfiguration al = gs.getVariableConfiguration();
-									Log.d("nils","My button context is: "+buttonContext.toString());
-									statusVariable = al.getVariableUsingKey(buttonContext,statusVar);
+									
+									Log.d("nils","My button context is: "+buttonContext);
+									statusVariable = varCache.getVariableUsingKey(buttonContext.getContext(),statusVar);
 								} else
 									statusVariable = null;
 								Set<Rule> myRules = myContext.getRulesThatApply();
@@ -369,10 +375,10 @@ public  class ButtonBlock extends Block {
 								}
 							}
 							else if (onClick.equals("Start_Workflow")) {
-
+								String target = getTarget();
 								Workflow wf = gs.getWorkflow(target);
 								if (wf == null) {
-									Log.e("NILS","Cannot find wf ["+target+"] referenced by button "+getName());
+									Log.e("NILS","Cannot find workflow ["+target+"] referenced by button "+getName());
 
 								} else {
 									o.addRow("");
@@ -380,7 +386,7 @@ public  class ButtonBlock extends Block {
 									//save all changes
 									if (statusVar!=null) {
 										VariableConfiguration al = gs.getVariableConfiguration();
-										statusVariable = al.getVariableUsingKey(buttonContext,statusVar);
+										statusVariable = varCache.getVariableUsingKey(buttonContext.getContext(),statusVar);
 										if (statusVariable == null) {
 											o.addRow("");
 											o.addRedText("Statusvariabel "+statusVar+" saknas på knapp "+name);
@@ -402,41 +408,41 @@ public  class ButtonBlock extends Block {
 
 							} else if (onClick.equals("export")) {
 								Log.d("vortex","Export button clicked!");
-								CHash r = gs.evaluateContext(exportContextS);
+								CHash r = CHash.evaluate(exportContextE);
 								//Context ok?
-								String msg, btnText;
-								if (r.err==null) {
+								String msg;
+								if (r.isOk()) {
 									/*
 									exportFileName = gs.getGlobalPreferences().get(PersistenceHelper.BUNDLE_NAME)+"_";
 									if (target!=null)
 										exportFileName += getTarget()+"_";
 									exportFileName+=Constants.getTimeStamp();
 									*/
-									exportFileName = Tools.parseString(getTarget());
+									exportFileName = getTarget();
 									if (exportFormat  == null) 
 										exportFormat = "csv";
 									exportFormat = exportFormat.toLowerCase();
-									Report jRep = gs.getDb().export(r.keyHash, Exporter.getInstance(ctx, exportFormat), exportFileName);
+									Report jRep = gs.getDb().export(r.getContext(), Exporter.getInstance(ctx, exportFormat), exportFileName);
 									if (jRep.er == ExportReport.OK) {
 										msg = jRep.noOfVars+" variables exported to file: "+exportFileName+"."+exportFormat+"\n";
 										msg+= "You can find this file under "+Constants.EXPORT_FILES_DIR+" on your device";
-										btnText = "Ok";
+										
 									} else {
 										if (jRep.er==ExportReport.NO_DATA)
 											msg = "Nothing to export! Have you entered any values? Have you marked your export variables as 'global'? (Local variables are not exported)";
 										else
 											msg = "Export failed. Reason: "+jRep.er.name();
-										btnText = "Ok";
+										
 									}
 									//Context was broken
 								}  else {
-									msg = "Export failed. export_context contain errors. Error: "+r.err;
-									btnText= "Ok";
+									msg = "Export failed. Reason: "+r;
+									
 								}
 								new AlertDialog.Builder(ctx)
 								.setTitle("Export done")
 								.setMessage(msg)
-								.setPositiveButton(btnText, new DialogInterface.OnClickListener() {
+								.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
 									public void onClick(DialogInterface dialog, int which) { 								
 									}
 								})			    
@@ -444,7 +450,7 @@ public  class ButtonBlock extends Block {
 								.show();
 							} else if (onClick.equals("Start_Camera")) {
 								Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-								File file = new File(Constants.PIC_ROOT_DIR, Tools.parseString(target));
+								File file = new File(Constants.PIC_ROOT_DIR,getTarget());
 								Uri outputFileUri = Uri.fromFile(file);
 								intent.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri);
 								//				intent.putExtra(Strand.KEY_PIC_NAME, name);
@@ -483,9 +489,11 @@ public  class ButtonBlock extends Block {
 					}
 
 				});
-				misu = new WF_Widget(text,button,isVisible,myContext);
+				
+				misu = new WF_Widget(getText(),button,isVisible,myContext);
 				myContainer.add(misu);
 			} else if (type == Type.toggle) {
+				final String text =this.getText();
 				o.addRow("Creating Toggle Button with text: "+text);
 				ToggleButton toggleB = (ToggleButton)LayoutInflater.from(ctx).inflate(R.layout.toggle_button,null);
 				//ToggleButton toggleB = new ToggleButton(ctx);
@@ -509,6 +517,7 @@ public  class ButtonBlock extends Block {
 						} else {
 
 							o.addRow("Togglebutton "+text+" pressed. Executing function "+onClick);
+							String target = getTarget();
 							if (onClick.startsWith("template")) 
 								myContext.getTemplate().execute(onClick,target);	
 							else if (onClick.equals("toggle_visible")) {

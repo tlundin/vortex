@@ -37,6 +37,7 @@ import com.teraim.vortex.R;
 import com.teraim.vortex.Start;
 import com.teraim.vortex.dynamic.Executor;
 import com.teraim.vortex.dynamic.blocks.CreateEntryFieldBlock;
+import com.teraim.vortex.dynamic.types.CHash;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Container;
 import com.teraim.vortex.non_generics.Constants;
@@ -113,7 +114,7 @@ public class SimpleRutaTemplate extends Executor implements OnGesturePerformedLi
 
 			@Override
 			public void onClick(View v) {
-				final String currentRuta = gs.getVariableConfiguration().getVariableInstance(NamedVariables.CURRENT_RUTA).getValue();
+				final String currentRuta = gs.getVariableCache().getVariable(NamedVariables.CURRENT_RUTA).getValue();
 				final String lagID = gs.getGlobalPreferences().get(PersistenceHelper.LAG_ID_KEY);
 				if (currentRuta == null) {
 					new AlertDialog.Builder(getActivity())
@@ -146,10 +147,10 @@ public class SimpleRutaTemplate extends Executor implements OnGesturePerformedLi
 							"Vill du klarmarkera? ":"VARNING!! DU HAR "+noOfSyncE+" OSYNKADE INMATNINGAR!! Vill du verkligen klarmarkera?")
 					.setPositiveButton("Ja - den är klar!", new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int which) { 							
-							rutaKlar = al.getVariableUsingKey(al.createRutaKeyMap(), NamedVariables.RUTA_KLAR_ANVÄNDARE);
+							rutaKlar = varCache.getVariableUsingKey(al.createRutaKeyMap(), NamedVariables.RUTA_KLAR_ANVÄNDARE);
 							rutaKlar.setValue("1");
 							export(true,currentRuta);
-							al.getVariableInstance(NamedVariables.CURRENT_RUTA).setValue(null);
+							varCache.getVariable(NamedVariables.CURRENT_RUTA).setValue(null);
 						}			
 					})
 					.setNeutralButton("Nej - men exportera ändå", new DialogInterface.OnClickListener() {
@@ -217,11 +218,11 @@ public class SimpleRutaTemplate extends Executor implements OnGesturePerformedLi
 					long arg3) {
 
 				
-				final Variable currentRuta = gs.getVariableConfiguration().getVariableInstance(NamedVariables.CURRENT_RUTA);
+				final Variable currentRuta = varCache.getVariable(NamedVariables.CURRENT_RUTA);
 				final Integer rl = rutor.get(position);
 				final String pi = rl.toString();
 				final Map<String,String>rKeyChain = Tools.createKeyMap("år",Constants.getYear(),"ruta",pi);
-				rutaKlar = al.getVariableUsingKey(rKeyChain, NamedVariables.RUTA_KLAR_ANVÄNDARE);
+				rutaKlar = varCache.getVariableUsingKey(rKeyChain, NamedVariables.RUTA_KLAR_ANVÄNDARE);
 				String rutaKS = rutaKlar.getValue();
 				final boolean rutaK = rutaKS!=null&&rutaKS.equals("1");
 				String msg = null;
@@ -242,15 +243,15 @@ public class SimpleRutaTemplate extends Executor implements OnGesturePerformedLi
 							rutaKlar.setValue("0");
 						currentRuta.setValue(pi);	
 						//Nullify currentprovyta and currentlinje
-						gs.getVariableConfiguration().getVariableUsingKey(null, NamedVariables.CURRENT_PROVYTA).deleteValue();
-						gs.getVariableConfiguration().getVariableUsingKey(null, NamedVariables.CURRENT_LINJE).deleteValue();
-						gs.getVariableConfiguration().getVariableUsingKey(null, NamedVariables.CURRENT_DELYTA).deleteValue();
-						gs.getVariableConfiguration().getVariableUsingKey(null, NamedVariables.CURRENT_SMAPROVYTA).deleteValue();
+						varCache.getVariableUsingKey(null, NamedVariables.CURRENT_PROVYTA).deleteValue();
+						varCache.getVariableUsingKey(null, NamedVariables.CURRENT_LINJE).deleteValue();
+						varCache.getVariableUsingKey(null, NamedVariables.CURRENT_DELYTA).deleteValue();
+						varCache.getVariableUsingKey(null, NamedVariables.CURRENT_SMAPROVYTA).deleteValue();
 					
 						//kill the current variable cache.
 						gs.getVariableCache().invalidateAll();
-						Variable stratum = gs.getVariableConfiguration().getVariableUsingKey(rKeyChain,NamedVariables.STRATUM);
-						Variable hStratum = gs.getVariableConfiguration().getVariableUsingKey(rKeyChain,NamedVariables.STRATUM_HISTORICAL);
+						Variable stratum = varCache.getVariableUsingKey(rKeyChain,NamedVariables.STRATUM);
+						Variable hStratum = varCache.getVariableUsingKey(rKeyChain,NamedVariables.STRATUM_HISTORICAL);
 						String strH = stratum.getHistoricalValue();
 						if (strH==null) {
 							o.addRow("");
@@ -262,8 +263,8 @@ public class SimpleRutaTemplate extends Executor implements OnGesturePerformedLi
 						//copy
 						prevRutor.add(0,rl);
 						selectedListA.notifyDataSetChanged();
-						gs.setKeyHash(al.createRutaKeyMap());
-						Log.d("vortex","in simpleruta, after refreshkey, before menu redraw. PI: "+pi+" CurrentR_: "+currentRuta.getValue()+"\nkeyhash: "+gs.getCurrentKeyHash().toString());
+						gs.setKeyHash(new CHash(null,al.createRutaKeyMap()));
+						Log.d("vortex","in simpleruta, after refreshkey, before menu redraw. PI: "+pi+" CurrentR_: "+currentRuta.getValue()+"\nkeyhash: "+gs.getCurrentKeyMap().toString());
 						gs.sendEvent(MenuActivity.REDRAW);
 						Log.d("vortex","in simpleruta, after refreshkey, after menu redraw!!");
 						Start.singleton.changePage(new ProvytaTemplate(), "Provyta");					
@@ -292,11 +293,11 @@ public class SimpleRutaTemplate extends Executor implements OnGesturePerformedLi
 
 
 	private void createInvTypSelection() {
-		if (al.createRutaKeyMap()!=null) {
-		gs.setKeyHash(al.createRutaKeyMap());
+
+		gs.setKeyHash(new CHash(null,al.createRutaKeyMap()));
 		CreateEntryFieldBlock x = new CreateEntryFieldBlock("typSpinner","RutaSorteringsTyp", "Aggregation_panel_3",true,"DDD",false,Constants.NO_DEFAULT_VALUE,null,true);
 		x.create(myContext);
-		}
+		
 	}
 
 
@@ -357,7 +358,7 @@ public class SimpleRutaTemplate extends Executor implements OnGesturePerformedLi
 	
 	//Export current Ruta
 	private void export(boolean isKlar, String currentRuta) {
-		String rutaSorteringsTyp = al.getVariableValue(al.createRutaKeyMap(), "RutaSorteringsTyp");
+		String rutaSorteringsTyp = varCache.getVariableValue(al.createRutaKeyMap(), "RutaSorteringsTyp");
 		
 		//Build up filename
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HH_mm");

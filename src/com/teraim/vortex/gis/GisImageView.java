@@ -35,6 +35,7 @@ import android.view.View;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.Start;
+import com.teraim.vortex.dynamic.types.CHash;
 import com.teraim.vortex.dynamic.types.GisLayer;
 import com.teraim.vortex.dynamic.types.Location;
 import com.teraim.vortex.dynamic.types.PhotoMeta;
@@ -58,11 +59,8 @@ import com.teraim.vortex.dynamic.workflow_realizations.gis.WF_Gis_Map;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.non_generics.NamedVariables;
+import com.teraim.vortex.utils.Expressor;
 import com.teraim.vortex.utils.Geomatte;
-import com.teraim.vortex.utils.RuleExecutor;
-import com.teraim.vortex.utils.RuleExecutor.SubstiResult;
-import com.teraim.vortex.utils.RuleExecutor.TokenType;
-import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 import com.teraim.vortex.utils.Tools;
 
 public class GisImageView extends GestureImageView implements TrackerListener {
@@ -247,8 +245,8 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 
 		imgHReal = pm.N-pm.S;
 		imgWReal = pm.E-pm.W;
-		myX = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(YearKeyHash, NamedVariables.MY_GPS_LAT);
-		myY = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(YearKeyHash, NamedVariables.MY_GPS_LONG);
+		myX = GlobalState.getInstance().getVariableCache().getVariableUsingKey(YearKeyHash, NamedVariables.MY_GPS_LAT);
+		myY = GlobalState.getInstance().getVariableCache().getVariableUsingKey(YearKeyHash, NamedVariables.MY_GPS_LONG);
 		this.allowZoom = allowZoom;
 
 
@@ -548,7 +546,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 	private GisObject createNewGisObject(
 			FullGisObjectConfiguration gisTypeToCreate, Set<GisObject> bag) {
 		//create object or part of object.
-		Map<String, String> keyHash = Tools.copyKeyHash(gisTypeToCreate.getObjectKeyHash().keyHash);
+		Map<String, String> keyHash = Tools.copyKeyHash(gisTypeToCreate.getObjectKeyHash().getContext());
 		GisObject ret=null;
 
 		//break if no keyhash.
@@ -724,25 +722,14 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 								if (filters!=null&&!filters.isEmpty()) {
 
 									//Log.d("vortex","has filter!");
-									RuleExecutor ruleExecutor = GlobalState.getInstance().getRuleExecutor();
+									
 									for (GisFilter filter:filters) {	
 										if (filter.isActive()) {
 											//Log.d("vortex","Filter active!");
-											if (!filter.hasCachedFilterResult()) 
-												filter.setTokens(ruleExecutor.findTokens(filter.getExpression(),null, gop.getKeyHash()));
-											Log.d("vortex","EXpr: "+filter.getExpression()+" tokens null? "+filter.getTokens());
+											
 											if (!gop.hasCachedFilterResult(filter)) {
-												List<TokenizedItem> myTokens = filter.getTokens();
-												for (TokenizedItem t:myTokens) {
-													if (t.getType()==TokenType.variable)
-														t.setVariable(GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(gop.getKeyHash(), t.getVariable().getId()));
-												}
-												SubstiResult substR = ruleExecutor.substituteForValue(myTokens, filter.getExpression(),false);
-												String result = ruleExecutor.parseExpression(filter.getExpression(),substR.result);
-												if (result!=null&&Integer.parseInt(result)==0) 
-													gop.setCachedFilterResult(filter,true);
-												else
-													gop.setCachedFilterResult(filter,false);
+												Boolean result = Expressor.analyzeBooleanExpression(filter.getExpression(),gop.getKeyHash());
+													gop.setCachedFilterResult(filter,result);
 											}
 											if ( gop.getCachedFilterResult(filter)) {
 												Log.d("vortex","FILTER MATCH FOR FILTER: "+filter.getLabel());
@@ -1216,7 +1203,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 		unSelectGop();
 	}
 	public void runSelectedWf(GisObject gop) {
-		GlobalState.getInstance().setKeyHash(gop.getKeyHash());
+		GlobalState.getInstance().setKeyHash(new CHash(null,gop.getKeyHash()));
 
 		Log.d("vortex","Setting current keyhash to "+gop.getKeyHash());
 		String target = gop.getWorkflow();

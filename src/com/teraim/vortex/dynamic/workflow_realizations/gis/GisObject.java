@@ -14,6 +14,7 @@ import com.teraim.vortex.dynamic.types.SweLocation;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.FullGisObjectConfiguration.GisObjectType;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.FullGisObjectConfiguration.PolyType;
+import com.teraim.vortex.utils.Expressor;
 import com.teraim.vortex.utils.Tools;
 
 public class GisObject {
@@ -55,7 +56,7 @@ public class GisObject {
 
 	protected CoordinateType coordinateType = CoordinateType.sweref;
 	protected List<Location> myCoordinates = new ArrayList<Location>();
-	protected Map<String, String> keyChain = new HashMap<String,String>();
+	protected final Map<String, String> keyChain;
 	protected Map<String, String> attributes;
 	private boolean isUseful;
 	
@@ -87,15 +88,14 @@ public class GisObject {
 	public String getLabel() {
 		if (label!=null)
 			return label;
-		label = foc.getLabel();
+		label = Expressor.analyze(foc.getLabelExpression(),keyChain);
 		//@notation for id
 		if (label!=null && label.startsWith("@")) {
 			String key = label.substring(1, label.length());
 			if (key.length()>0) 
 				label = keyChain.get(key);
 			
-		} else 
-			label = Tools.parseString(label,keyChain);
+		} 
 		if (label==null)
 			label = "";
 		

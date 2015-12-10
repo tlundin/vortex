@@ -20,9 +20,9 @@ import com.teraim.vortex.dynamic.blocks.AddSumOrCountBlock;
 import com.teraim.vortex.dynamic.blocks.AddVariableToEntryFieldBlock;
 import com.teraim.vortex.dynamic.blocks.AddVariableToEveryListEntryBlock;
 import com.teraim.vortex.dynamic.blocks.AddVariableToListEntry;
-import com.teraim.vortex.dynamic.blocks.BlockAddVariableToTable;
 import com.teraim.vortex.dynamic.blocks.Block;
 import com.teraim.vortex.dynamic.blocks.BlockAddColumnsToTable;
+import com.teraim.vortex.dynamic.blocks.BlockAddVariableToTable;
 import com.teraim.vortex.dynamic.blocks.BlockCreateListEntriesFromFieldList;
 import com.teraim.vortex.dynamic.blocks.BlockCreateTableEntriesFromFieldList;
 import com.teraim.vortex.dynamic.blocks.ButtonBlock;
@@ -45,7 +45,6 @@ import com.teraim.vortex.dynamic.blocks.StartBlock;
 import com.teraim.vortex.dynamic.blocks.TextFieldBlock;
 import com.teraim.vortex.dynamic.blocks.VarValueSourceBlock;
 import com.teraim.vortex.dynamic.types.Workflow;
-import com.teraim.vortex.dynamic.types.Workflow.Unit;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Not_ClickableField_SumAndCountOfVariables;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.FullGisObjectConfiguration.GisObjectType;
 import com.teraim.vortex.loadermodule.LoadResult;
@@ -55,6 +54,7 @@ import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.PersistenceHelper;
 import com.teraim.vortex.utils.Tools;
+import com.teraim.vortex.utils.Tools.Unit;
 
 public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 

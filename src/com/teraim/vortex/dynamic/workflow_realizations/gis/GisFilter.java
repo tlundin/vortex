@@ -6,11 +6,11 @@ import android.graphics.Bitmap;
 import android.graphics.Paint.Style;
 
 import com.teraim.vortex.dynamic.workflow_realizations.gis.FullGisObjectConfiguration.PolyType;
-import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
+import com.teraim.vortex.utils.Expressor.EvalExpr;
 
 public interface GisFilter {
 
-	String getExpression();
+	EvalExpr getExpression();
 
 	String getLabel();
 
@@ -26,10 +26,6 @@ public interface GisFilter {
 	
 	boolean isActive();
 
-	boolean hasCachedFilterResult();
-
-	void setTokens(List<TokenizedItem> myTokens);
-
-	List<TokenizedItem> getTokens();
+	
 
 }

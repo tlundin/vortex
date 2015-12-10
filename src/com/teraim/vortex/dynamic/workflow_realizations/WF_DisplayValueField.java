@@ -3,7 +3,6 @@ package com.teraim.vortex.dynamic.workflow_realizations;
 import java.util.List;
 
 import android.graphics.Color;
-import android.text.TextUtils.StringSplitter;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.widget.LinearLayout;
@@ -11,24 +10,21 @@ import android.widget.TextView;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
-import com.teraim.vortex.dynamic.types.Workflow.Unit;
 import com.teraim.vortex.dynamic.workflow_abstracts.Event;
 import com.teraim.vortex.dynamic.workflow_abstracts.Event.EventType;
 import com.teraim.vortex.dynamic.workflow_abstracts.EventListener;
-import com.teraim.vortex.utils.RuleExecutor;
-import com.teraim.vortex.utils.RuleExecutor.SubstiResult;
-import com.teraim.vortex.utils.RuleExecutor.TokenType;
-import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
+import com.teraim.vortex.utils.Expressor;
+import com.teraim.vortex.utils.Expressor.EvalExpr;
 import com.teraim.vortex.utils.Tools;
+import com.teraim.vortex.utils.Tools.Unit;
 
 public class WF_DisplayValueField extends WF_Widget implements EventListener {
 
 	private String formula,label;
 	protected GlobalState gs;
 	protected Unit unit;
-	private List<TokenizedItem> myTokens;
-	RuleExecutor ruleExecutor;
 	private String format;
+	private List<EvalExpr> formulaE;
 
 	public WF_DisplayValueField(String id, String formula,WF_Context ctx, Unit unit, 
 			String label, boolean isVisible,String format,String bgColor, String textColor) {
@@ -42,14 +38,13 @@ public class WF_DisplayValueField extends WF_Widget implements EventListener {
 		if (textColor!=null)
 			header.setTextColor(Color.parseColor(textColor));
 		gs = GlobalState.getInstance();
-		ruleExecutor = gs.getRuleExecutor();
 		o = gs.getLogger();
 		this.formula = formula;
 		Log.d("nils","In WF_DisplayValueField Create");	
 		ctx.addEventListener(this, EventType.onSave);	
 		this.unit=unit;
-		myTokens = ruleExecutor.findTokens(formula,null);
-		if (myTokens==null)
+		formulaE = Expressor.preCompileExpression(formula);
+		if (formulaE==null)
 		{
 			o.addRow("");
 			o.addRedText("Parsing of formula for DisplayValueBlock failed. Formula: "+formula);
@@ -63,38 +58,24 @@ public class WF_DisplayValueField extends WF_Widget implements EventListener {
 	@Override
 	public void onEvent(Event e) {
 
-		String strRes="";
-		String subst;
-		SubstiResult sr;
-		Log.d("nils","Got event in WF_DisplayValueField");	
-		sr = ruleExecutor.substituteForValue(myTokens,formula,false);
+		String result = Expressor.analyze(formulaE);
 		//Do not evaluate if the expression is evaluated to be a literal or defined as literal.
-		boolean isLiteral = (format!=null && format.equalsIgnoreCase("S"))||sr.iAmAString(); 
-		if (!isLiteral) {
-			subst = sr.result;
-			if (Tools.isNumeric(subst)) {
-				//check if all tokens are boolean.	
-				strRes = subst;
-			}
-			else {
-				strRes = ruleExecutor.parseExpression(formula,subst);
-				if (strRes==null) {
-					o.addRow("");
-					o.addText("Formula "+formula+" returned null");	
-					((TextView)this.getWidget().findViewById(R.id.outputValueField)).setText("");
-					((TextView)this.getWidget().findViewById(R.id.outputUnitField)).setText("");
-					return;
-				}
-			}
-		} else
-			strRes = sr.result;
+		if (result==null) {
+				o.addRow("");
+				o.addText("Formula "+formula+" returned null");	
+				((TextView)this.getWidget().findViewById(R.id.outputValueField)).setText("");
+				((TextView)this.getWidget().findViewById(R.id.outputUnitField)).setText("");
+				return;
+		} 
+		String strRes=result;
 		if (format!=null && format.equalsIgnoreCase("B")) {
-			if (strRes.equals("1"))
+			if (result.equals("true"))
 					strRes = GlobalState.getInstance().getContext().getString(R.string.yes);
-			else if (strRes.equals("0"))
+			else if (result.equals("false"))
 				strRes = GlobalState.getInstance().getContext().getString(R.string.no);
-		} else 
-			strRes = WF_Not_ClickableField.getFormattedText(strRes,format);
+		} 
+		else if (Tools.isNumeric(result))
+			strRes = WF_Not_ClickableField.getFormattedText(result,format);
 
 		
 			

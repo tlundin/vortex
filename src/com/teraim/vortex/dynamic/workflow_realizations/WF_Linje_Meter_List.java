@@ -8,7 +8,9 @@ import java.util.Set;
 
 import android.util.Log;
 
+import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.VariableConfiguration;
+import com.teraim.vortex.dynamic.types.CHash;
 import com.teraim.vortex.dynamic.types.ColumnDescriptor;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.types.Variable.DataType;
@@ -102,7 +104,7 @@ public class WF_Linje_Meter_List extends WF_List implements EventListener {
 
 
 						//keys
-						gs.setKeyHash(v.getKeyChain());
+						gs.setKeyHash(new CHash(null,v.getKeyChain()));
 						List<List<String>>rows =gs.getVariableConfiguration().getTable().getRowsStartingWith(VariableConfiguration.Col_Functional_Group, name);
 						if (rows!=null) {
 							Log.d("nils","Got "+rows.size()+" results");
@@ -112,13 +114,13 @@ public class WF_Linje_Meter_List extends WF_List implements EventListener {
 								Log.d("nils","reinserting variables with new key.");
 								v.getKeyChain().put("meter", v.getValue());
 								Log.d("nils","meter set to "+v.getValue());
-								gs.setKeyHash(v.getKeyChain());
+								//gs.setKeyHash(v.getKeyChain());
 								//Delete any existing values on same meter.
 								deleteAllDependants(rows);
 								Set<Entry<String, String>> es = deletedVariables.entrySet();
 								Variable var;
 								for (Entry<String, String> en:es) {
-									var = al.getVariableInstance(en.getKey());
+									var = varCache.getVariable(en.getKey());
 									if (var!=null) {
 										if (var.getValue()!=null) 
 											Log.e("nils","This variable already has a value...should not happen!");
@@ -147,7 +149,7 @@ public class WF_Linje_Meter_List extends WF_List implements EventListener {
 		Variable v;
 		for (List<String>row:rows) {
 
-			v = al.getVariableInstance(al.getVarName(row));
+			v = varCache.getVariable(al.getVarName(row));
 			if (v!=null && v.getValue()!=null) {
 				Log.d("nils","Deleting: "+v.getId()+"with value "+v.getValue());
 				if (ret==null)
@@ -167,7 +169,6 @@ public class WF_Linje_Meter_List extends WF_List implements EventListener {
 	private void refreshList() {
 		Log.d("nils","In refereshlist..");
 		list.clear();
-		al.destroyCache();
 		linjeV.removeAllMarkers();
 		List<String[]> rows = gs.getDb().getValues(columnNames,s);
 		if (rows!=null) {
@@ -185,19 +186,20 @@ public class WF_Linje_Meter_List extends WF_List implements EventListener {
 					String header = colVals[myHeaderCol];
 					WF_ClickableField_Selection entryF = new WF_ClickableField_Selection(header,"",myContext,this.getId()+rowC,true);										
 					if (colVals[myHeaderCol]!=null && colVals[myHeaderCol].equals("Avgränsning")) {
-						Log.d("vortex","In refreshlist for avgränsning");
+						Log.d("vortex","In refreshlist for avgränsning");						
+						//(String name,String label,List<String> row,Map<String,String>keyChain, GlobalState gs,String valueColumn, String defaultOrExistingValue, Boolean valueIsPersisted)
 						Variable v = new Variable(varId,"Start",al.getCompleteVariableDefinition(varId),bonnlapp,gs,"meter",null,null);
 						v.setType(DataType.numeric);
-						al.addToCache(v);
+						varCache.put(v);
 						String start = v.getValue();
 						entryF.addVariable(v, true, null, true,false);
 						Map<String,String> slutKey = new HashMap<String,String>(listElemSelector);
 						slutKey.put("meter", start);
-						gs.setKeyHash(slutKey);
-						v = al.getVariableInstance(NamedVariables.AVGRANSSLUT);						
+						gs.setKeyHash(new CHash(null,slutKey));
+						v = varCache.getVariable(NamedVariables.AVGRANSSLUT);						
 						entryF.addVariable(v, true, null, true,false);
 						String slut = v.getValue();
-						v = al.getVariableInstance(NamedVariables.AVGRTYP);
+						v = varCache.getVariable(NamedVariables.AVGRTYP);
 						entryF.addVariable(v, false, null, true,false);
 						if (slut!=null)
 							linjeV.addMarker(start, slut, getCorrectLabel(v.getValue()));
@@ -205,6 +207,7 @@ public class WF_Linje_Meter_List extends WF_List implements EventListener {
 							Log.d("vortex","slut null!");
 					} else {
 						Variable v = new Variable(varId,"Avstånd",al.getCompleteVariableDefinition(varId),bonnlapp,gs,"meter",null,null);
+						varCache.put(v);
 						v.setType(DataType.numeric);						
 						String start = v.getValue();
 						entryF.addVariable(v, true, null, true,false);

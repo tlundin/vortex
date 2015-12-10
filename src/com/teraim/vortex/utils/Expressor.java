@@ -3,17 +3,6 @@
  */
 package com.teraim.vortex.utils;
 
-import android.util.Log;
-
-import com.teraim.vortex.GlobalState;
-import com.teraim.vortex.dynamic.VariableConfiguration;
-import com.teraim.vortex.dynamic.types.Variable;
-import com.teraim.vortex.expr.Literal;
-import com.teraim.vortex.loadermodule.configurations.WorkFlowBundleConfiguration;
-import com.teraim.vortex.log.LoggerI;
-import com.teraim.vortex.non_generics.Constants;
-import com.teraim.vortex.non_generics.DelyteManager;
-
 import java.io.File;
 import java.io.FileFilter;
 import java.io.Serializable;
@@ -23,6 +12,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+
+import android.util.Log;
+
+import com.teraim.vortex.GlobalState;
+import com.teraim.vortex.dynamic.VariableConfiguration;
+import com.teraim.vortex.dynamic.types.Table;
+import com.teraim.vortex.dynamic.types.VarCache;
+import com.teraim.vortex.dynamic.types.Variable;
+import com.teraim.vortex.loadermodule.configurations.WorkFlowBundleConfiguration;
+import com.teraim.vortex.log.LoggerI;
+import com.teraim.vortex.non_generics.Constants;
+import com.teraim.vortex.non_generics.DelyteManager;
 
 
 
@@ -100,12 +101,10 @@ public class Expressor {
 		list(variable,0),
 		existence(variable,0),
 		auto_increment(variable,0),
-
 		none(null,-1),
-		literal(null,-1),
+		literal(null,-1),		
 		number(null,-1),
-		operand(null,0),
-
+		operand(null,0), 
 		and(operand,5),
 		or(operand,4),
 		add(operand,8),
@@ -186,6 +185,8 @@ public class Expressor {
 		}
 
 	}
+	
+	
 	//Operands are transformed into functions. Below a name mapping.
 	final static String[] Operands = new String[]	     {"=",">","<","+","-","*","/",">=","<=","<>","=>","=<"};
 	final static String[] OperandFunctions= new String[]	 {"eq","gt","lt","add","subtract","multiply","divide","gte","lte","neq","gte","lte"};
@@ -232,11 +233,13 @@ public class Expressor {
 
 
 	public static List<EvalExpr> preCompileExpression(String expression) {
+		if (expression==null)
+			return null;
 		o = WorkFlowBundleConfiguration.debugConsole;
 		List<Token> result = tokenize(expression);
+        List<EvalExpr> endResult = new ArrayList<EvalExpr>();
 		if (result!=null && testTokens(result)) {
             StreamAnalyzer streamAnalyzer = new StreamAnalyzer(result);
-            List<EvalExpr> endResult = new ArrayList<EvalExpr>();
             while (streamAnalyzer.hasNext()) {
 
                 EvalExpr rez=null;
@@ -250,7 +253,7 @@ public class Expressor {
                     endResult.add(rez);
                 } else {
                 	o.addRow("");
-                	o.addRedText("Failed to Precompile "+expression);
+                	o.addRedText("Failed to Precompile "+result.toString());
                     System.err.println("Tokenstream evaluated to null for: "+streamAnalyzer.getFaultyTokens());
                 }
             }
@@ -265,14 +268,16 @@ public class Expressor {
             }
 
 		}
-
+		
 		Log.e("vortex","failed to precompile: "+expression);
+		Log.e("vortex","End Result: "+endResult);
+		printTokens(result);
 
 		return null;
 	}
 
     public static String analyze(List<EvalExpr> expressions) {
-       return analyze(expressions,GlobalState.getInstance().getCurrentKeyHash());
+       return analyze(expressions,GlobalState.getInstance().getCurrentKeyMap());
     }
 
 	public static String analyze(List<EvalExpr> expressions, Map<String,String> evalContext) {
@@ -284,6 +289,7 @@ public class Expressor {
          StringBuilder endResult = new StringBuilder();
         for (EvalExpr expr:expressions) {
             Object rez=null;
+            System.out.println("EvalClass "+expr.getClass().getCanonicalName());
             rez = expr.eval();
             if (rez!=null) {
                 endResult.append(rez);
@@ -291,15 +297,17 @@ public class Expressor {
                 System.err.println("Err in analyze..null EvalExpr");
 
         }
-
+        System.out.println("Result "+endResult.toString());
 		return endResult.toString();
 	}
 
 	public static Boolean analyzeBooleanExpression(EvalExpr expr) {
-        return analyzeBooleanExpression(expr,GlobalState.getInstance().getCurrentKeyHash());
+        return analyzeBooleanExpression(expr,GlobalState.getInstance().getCurrentKeyMap());
  	}
 
     public static Boolean analyzeBooleanExpression(EvalExpr expr, Map<String,String> evalContext) {
+    	if (expr==null)
+    		return null;
         gs = GlobalState.getInstance();
         o = gs.getLogger();
         currentKeyChain = evalContext;
@@ -507,6 +515,7 @@ public class Expressor {
 			}
 			else if (c=='{') {
 				//all characters now treated as being literal.
+				add(currToken,t,result);
 				t=TokenType.literal;
 				chompAnyCharacter=true;
 			}
@@ -528,13 +537,11 @@ public class Expressor {
 			return null;
 		}
 		//system.out.println("Reached end of tokenizer. CurrentToken is "+currToken+" and t is "+t.name());
+		
 		if (t != TokenType.none)
 			add(currToken,t,result);
-		if (testTokens(result))
-			return result;
-		else {
-			return null;
-		}
+		
+		return result;
 	}
 
 
@@ -633,7 +640,7 @@ public class Expressor {
 						prev.str=OperandFunctions[i];
 						//System.out.println("Replaced "+Operands[i]+" with corresponding operand function: "+prev.str);
 						found =true;
-					}
+					} 
 
 				}
 				if (!found) {
@@ -716,18 +723,31 @@ public class Expressor {
 	//marker class
 	public abstract static class Expr implements Serializable {
         private static final long serialVersionUID = -1968204853256767316L;
-		TokenType type=null;
+		final TokenType type;
+		
+		public Expr(TokenType t) {
+			type = t;
+		}
 	}
 
 	public abstract static class EvalExpr extends Expr {
+		public EvalExpr(TokenType t) {
+			super(t);
+		}
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
 		abstract Object eval();
 	}
 
-	private static class Atom extends EvalExpr {
+	public static class Atom extends EvalExpr {
 		final Token myToken;
 		public Atom(Token t) {
+			super (t.type);
 			myToken = t;
-			type = t.type;
 		}
 		@Override
 		public String toString() {
@@ -736,11 +756,15 @@ public class Expressor {
 			else
 				return null;
 		}
+		
+		public boolean isVariable() {
+			return (type==TokenType.variable);
+		}
 
 		public Object eval() {
 			switch(type) {
 				case variable:
-					String value = gs.getVariableConfiguration().getVariableValue(currentKeyChain,myToken.str);
+					String value = gs.getVariableCache().getVariableValue(currentKeyChain,myToken.str);
 					if (value == null)
                         System.out.println("Variable '"+this.toString()+"' does not have a value");
 					return value;
@@ -771,8 +795,9 @@ public class Expressor {
 	private static class Operand extends Expr {
 		final Token myToken;
 		public Operand(Token t) {
+			super(t.type);
 			myToken = t;
-			type = t.type;
+
 		}
 		@Override
 		public String toString() {
@@ -789,7 +814,7 @@ public class Expressor {
 
 
 		public Convoluted(EvalExpr existingArg, EvalExpr newArg,Operand operator) {
-
+			super(null);
 			this.arg2=newArg;
 			this.arg1=existingArg;
 			this.operator=operator;
@@ -925,12 +950,22 @@ public class Expressor {
 
 
 	private static class Push extends Expr {
+
+		public Push() {
+			super(null);
+		}
+		private static final long serialVersionUID = 4443625476068076080L;
 	}
 	private static class Pop extends Expr {
+		public Pop() {
+			super(null);
+		}
+		private static final long serialVersionUID = 2499591806981280542L;
 	}
 	public static class Text extends EvalExpr {
 		private String str;
 		public Text(Token t) {
+			super(TokenType.text);
 			this.str=t.str;
 		}
 		@Override
@@ -955,9 +990,8 @@ public class Expressor {
 		private List<EvalExpr> args = new ArrayList<EvalExpr>();
 
 		public Function(TokenType type, Iterator<Token> it) {
+			super(type);
 			//iterator reaches end?
-
-			this.type = type;
 			int depth=0;
 			Token e;
 			final List<List<Token>> argsAsTokens = new ArrayList<List<Token>>();
@@ -1042,13 +1076,15 @@ public class Expressor {
 
 			Object argEval=null,result=null;
 			List<Object> evalArgs = new ArrayList<Object>();
+			VariableConfiguration al = gs.getVariableConfiguration();
+			VarCache varCache = gs.getVariableCache();
 			for (EvalExpr arg:args) {
 				argEval= arg.eval();
 				evalArgs.add(argEval);
 			}
 			Log.d("vortex","evaluating function "+type);
 
-            VariableConfiguration al = gs.getVariableConfiguration();
+            
 			//Now all arguments are evaluated. Execute function!
 			switch (type) {
 				case max:
@@ -1166,8 +1202,10 @@ public class Expressor {
 					return Constants.getSweDate();
 				case getColumnValue:
 					if (checkPreconditions(evalArgs,1,No_Null_Literal)) {
-						if (currentKeyChain==null)
+						if (currentKeyChain==null) {
+							Log.e("vortex","Currentkeychain is missing in Expressor!");
 							return null;
+						}
 						else {
 							Log.d("vortex","keyhash "+currentKeyChain.toString());
 							Log.d("votex","value for column is "+currentKeyChain.get(evalArgs.get(0)));
@@ -1234,10 +1272,11 @@ public class Expressor {
 						//hasValue(pattern,op,constant)
 						String pattern = (String) evalArgs.get(0);
 						//Get all variables in Functional Group x.
+						Table table = al.getTable();
 						if (type == TokenType.hasSame)
-							rows = al.getTable().getRowsContaining(VariableConfiguration.Col_Functional_Group, pattern);
+							rows = table.getRowsContaining(VariableConfiguration.Col_Functional_Group, pattern);
 						else
-							rows = al.getTable().getRowsContaining(VariableConfiguration.Col_Variable_Name, pattern);
+							rows = table.getRowsContaining(VariableConfiguration.Col_Variable_Name, pattern);
 						if (rows == null || rows.size() == 0) {
 							Log.e("vortex", "no variables found for filter " + pattern);
 							return null;
@@ -1258,13 +1297,15 @@ public class Expressor {
 
 
 								String formula = "$" + al.getVarName(row) + op + constant;
-								Variable myVar = al.getVariableInstance(al.getVarName(row));
+								Variable myVar = varCache.getVariable(al.getVarName(row));
 								Boolean res=null;
 								if (myVar != null && myVar.getValue() != null) {
 									allNull = false;
                                     if (!prep) {
                                         try {
-                                            fifo = Expressor.analyzeExpression(Expressor.tokenize(formula));
+                                        	List<Token> resulto = Expressor.tokenize(formula);
+                                        	Expressor.testTokens(resulto);
+                                            fifo = Expressor.analyzeExpression(resulto);
                                         } catch (ExprEvaluationException e) {
                                             System.err.println("failed to analyze formula " + formula + " in hasValue/allHaveValue");
                                         }
@@ -1316,7 +1357,7 @@ public class Expressor {
 										Log.d("vortex", "name: " + name + " art: " + art + " group: " + group + " args[" + i + "]: " + evalArgs.get(i));
 										if (name.equalsIgnoreCase((String) evalArgs.get(i))) {
 											Log.d("vortex", "found varname. Adding " + art);
-											Variable v = al.getVariableInstance(al.getVarName(row));
+											Variable v = varCache.getVariable(al.getVarName(row));
 											String varde = null;
 											if (v == null) {
 												Log.d("vortex", "var was null!");
@@ -1400,7 +1441,7 @@ public class Expressor {
                         float rowC = rows.size();
 
                         for (List<String> row : rows) {
-                            String value = gs.getVariableConfiguration().getVariableValue(currentKeyChain, al.getVarName(row));
+                            String value = varCache.getVariableValue(currentKeyChain, al.getVarName(row));
                             if (value == null) {
                                 if (type == TokenType.hasAll) {
                                     o.addRow("");
@@ -1450,11 +1491,14 @@ public class Expressor {
 					&& evaluatedArgumentsList.contains(null)) {
 				o.addRow("");
 				o.addRedText("Argument in function '"+type.toString()+"' is null");
+				Log.e("Vortex","Argument in function '"+type.toString()+"' is null");
+
 				return false;
 			}
 			if (cardinality!=-1 && cardinality!=evaluatedArgumentsList.size()) {
 				o.addRow("");
 				o.addRedText("Too many or too few arguments for function '"+type.toString()+"'. Should be "+cardinality+" argument(s), not "+evaluatedArgumentsList.size()+"!");
+				Log.e("Vortex","Too many or too few arguments for function '"+type.toString()+"'. Should be "+cardinality+" argument(s), not "+evaluatedArgumentsList.size()+"!");
 				return false;
 			}
 			if (flags== No_Null_Numeric) {
@@ -1462,6 +1506,7 @@ public class Expressor {
 					if (!(obj instanceof Double)) {
 						o.addRow("");
 						o.addRedText("Type error. Non numeric argument for function '"+type.toString()+"'.");
+						Log.e("Vortex","Type error. Non numeric argument for function '"+type.toString()+"'.");
 						return false;
 					}
 				}
@@ -1472,6 +1517,7 @@ public class Expressor {
 					if (!(obj instanceof String)) {
 						o.addRow("");
 						o.addRedText("Type error. Non literal argument for function '" + type.toString() + "'.");
+						Log.e("Vortex","Type error. Non literal argument for function '"+type.toString()+"'.");
 						return false;
 					}
 				}
@@ -1530,7 +1576,7 @@ public class Expressor {
 				continue;
 			}
 			else if (e instanceof Operand) {
-				System.out.println("Op: "+e.type.toString()+" Pres: "+TokenType.valueOf(e.toString()).prescedence());
+				System.out.println("Op: "+e.type.toString()+" Pres: "+TokenType.valueOfIgnoreCase(e.toString()).prescedence());
 				precedence[depth] = TokenType.valueOfIgnoreCase(e.toString()).prescedence();
 				//as long as operator is binding stronger, keep pushing.
 				if (precedence[depth] >= maxPrecedence[depth]) {

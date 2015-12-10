@@ -38,7 +38,7 @@ public class WF_Simple_Cell_Widget extends WF_Widget implements WF_Cell {
 
 	@Override
 	public void addVariable(final String varId, boolean displayOut,String format,boolean isVisible,boolean showHistorical, String prefetchValue) {	
-		myVariable = GlobalState.getInstance().getVariableConfiguration().getCheckedVariable(myHash, varId, prefetchValue, prefetchValue!=null);
+		myVariable = GlobalState.getInstance().getVariableCache().getCheckedVariable(myHash, varId, prefetchValue, prefetchValue!=null);
 		if (myVariable!=null) {
 			String val = myVariable.getValue();
 			myCheckBox.setChecked(val!=null && Integer.parseInt(val)==1);

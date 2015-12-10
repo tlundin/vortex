@@ -33,6 +33,7 @@ public interface FullGisObjectConfiguration extends GisObjectBaseAttributes {
 	public String getStatusVariable();
 	public boolean isUser();
 	public String getName();
+	public String getRawLabel();
 	
 	
 }

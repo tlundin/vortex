@@ -58,7 +58,6 @@ import com.teraim.vortex.expr.SyntaxException;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.ui.MenuActivity;
 import com.teraim.vortex.utils.CombinedRangeAndListFilter;
-import com.teraim.vortex.utils.RuleExecutor;
 import com.teraim.vortex.utils.Tools;
 
 public abstract class WF_ClickableField extends WF_Not_ClickableField implements  EventGenerator {
@@ -657,7 +656,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 		//for now only delytevariabler. 
 		Map<Variable,String>oldValue = new HashMap<Variable,String>();
 		Iterator<Map.Entry<Variable,View>> it = myVars.entrySet().iterator();
-		String invalidateKeys=null;
+		//String invalidateKeys=null;
 		Context ctx = myContext.getContext();
 
 		while (it.hasNext()) {
@@ -754,10 +753,6 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 						//check rules if value is in range.
 						variable.setOnlyCached(newValue);
 
-						//This is a keychain variable. 
-						if (variable.getPartOfKeyChain()!=null) {
-							invalidateKeys=variable.getPartOfKeyChain();
-						}
 					}
 
 
@@ -794,10 +789,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 				v.setOnlyCached(null);
 				v.setValue(value);
 			}
-			if (invalidateKeys!=null) {
-				Log.d("nils","Keychain variable changed. Invalidating cache");
-				al.invalidateCacheKeys(invalidateKeys);
-			}
+
 			Log.d("nils","IN SAVE() SENDING EVENT");
 			gs.sendEvent(MenuActivity.REDRAW);
 			myContext.registerEvent(new WF_Event_OnSave(this.getId(),oldValue));
@@ -935,7 +927,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 
 						else if (tag!=null && tag.equals("dynamic")) {
 							//Get the list values
-							opt = Tools.generateList(gs, variable);
+							opt = Tools.generateList(variable);
 
 							//Add dropdown.
 							if (opt==null)

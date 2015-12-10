@@ -187,6 +187,9 @@ public abstract class ConfigurationModule {
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 			return new LoadResult(this,ErrorCode.ClassNotFound,"Failed to load frozen object");
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new LoadResult(this,ErrorCode.IOError,"Frozen object corrupt!");
 		}
 		return new LoadResult(this,ErrorCode.thawed);
 

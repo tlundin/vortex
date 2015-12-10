@@ -53,12 +53,11 @@ public class VariableConfiguration implements Serializable {
 
 	Table myTable;
 	GlobalState gs;
-	private VarCache myCache;
 
-	public VariableConfiguration(GlobalState gs,VarCache vc,Table t) {
+
+	public VariableConfiguration(GlobalState gs,Table t) {
 		this.gs = gs;
 		myTable = t;
-		myCache=vc;
 		//TODO: Call this from parser.
 		validateAndInit();
 	}
@@ -263,36 +262,9 @@ public class VariableConfiguration implements Serializable {
 
 	//Map<String,Variable>varCache = new ConcurrentHashMap<String,Variable>();
 
-	public String getVariableValue(Map<String, String> keyChain, String varId) {
-		Variable v = getVariableUsingKey(keyChain,varId);
-		if (v == null) {
-			Log.e("nils","Varcache returned null!!");
-			return null;
-		}
-		return v.getValue();
-	}
 
-	public Variable getVariableUsingKey(Map<String, String> keyChain, String varId) {
-		return myCache.getVariable(keyChain, varId, null,null);
-		//return new Variable(varId,null,null,keyChain,gs,"value",null);
-	}
+
 	
-	//A variable type that will not allow its keychain to be changed.
-	public Variable getFixedVariableInstance(Map<String, String> keyChain, String varId,String defaultValue) {
-		List<String> row = this.getCompleteVariableDefinition(varId);
-		return new FixedVariable(varId,getEntryLabel(row),row,keyChain,gs,defaultValue,true);
-	}	
-	
-	
-	//A variable that is given a value at start.	
-		public Variable getCheckedVariable(Map<String, String> keyChain,String varId, String value, Boolean wasInDatabase) {
-			return myCache.getVariable(keyChain,varId,value,wasInDatabase);
-		}
-		//A variable that is given a value at start.	
-		
-		public Variable getCheckedVariable(String varId, String value, Boolean wasInDatabase) {
-			return myCache.getVariable(gs.getCurrentKeyHash(),varId,value,wasInDatabase);
-		}
 	/*
 		Variable v = varCache.get(varId);
 		if (v!=null) {
@@ -311,13 +283,7 @@ public class VariableConfiguration implements Serializable {
 	
 	private final static String vCol = "value";
 	
-	public Variable getVariableInstance(String varId) {
-		return myCache.getVariable(varId);
-	}
-	//A variable that has a defaultvalue.	
-	public Variable getVariableInstance(String varId,String defaultValue) {
-		return myCache.getVariable(varId,defaultValue);
-	}
+
 	
 
 	/*
@@ -375,40 +341,46 @@ public class VariableConfiguration implements Serializable {
 		return vMap;
 	}
 
+	private String getGlobalVariable(String varId) {
+	
+		return gs.getVariableCache().getVariableValue(null, varId);
+	}
 
 
 	public Map<String, String> createRutaKeyMap() {
-		String currentYear = getVariableValue(null,NamedVariables.CURRENT_YEAR);
-		String currentRuta = getVariableValue(null,NamedVariables.CURRENT_RUTA);
+		String currentYear = getGlobalVariable(NamedVariables.CURRENT_YEAR);
+		String currentRuta = getGlobalVariable(NamedVariables.CURRENT_RUTA);
 		if (currentRuta == null)
 			return null;
 		return Tools.createKeyMap(KEY_YEAR,currentYear,"ruta",currentRuta);
 	}
 	
+
+
 	public Map<String,String> createProvytaKeyMap() {
-		String currentYear = getVariableValue(null,NamedVariables.CURRENT_YEAR);
-		String currentRuta = getVariableValue(null,NamedVariables.CURRENT_RUTA);
-		String currentProvyta = getVariableValue(null,NamedVariables.CURRENT_PROVYTA);		
+		String currentYear = getGlobalVariable(NamedVariables.CURRENT_YEAR);
+		String currentRuta = getGlobalVariable(NamedVariables.CURRENT_RUTA);
+		String currentProvyta = getGlobalVariable(NamedVariables.CURRENT_PROVYTA);		
 		if (currentRuta == null||currentProvyta==null)
 			return null;
 		return Tools.createKeyMap(KEY_YEAR,currentYear,"ruta",currentRuta,"provyta",currentProvyta);
 	}
 	
 	public Map<String, String> createSmaprovytaKeyMap() {
-		String currentYear = getVariableValue(null,NamedVariables.CURRENT_YEAR);
-		String currentRuta = getVariableValue(null,NamedVariables.CURRENT_RUTA);
-		String currentProvyta = getVariableValue(null,NamedVariables.CURRENT_PROVYTA);		
-		String currentSmayta = getVariableValue(null,NamedVariables.CURRENT_SMAPROVYTA);		
+		String currentYear = getGlobalVariable(NamedVariables.CURRENT_YEAR);
+		String currentRuta = getGlobalVariable(NamedVariables.CURRENT_RUTA);
+		String currentProvyta = getGlobalVariable(NamedVariables.CURRENT_PROVYTA);		
+		String currentSmayta = getGlobalVariable(NamedVariables.CURRENT_SMAPROVYTA);		
 		if (currentYear == null || currentRuta == null||currentProvyta==null||currentSmayta==null)
 			return null;
 		return Tools.createKeyMap(KEY_YEAR,currentYear,"ruta",currentRuta,"provyta",currentProvyta,"smaprovyta",currentSmayta);
 	}
 	
 	public Map<String, String> createDelytaKeyMap() {
-		String currentYear = getVariableValue(null,NamedVariables.CURRENT_YEAR);
-		String currentRuta = getVariableValue(null,NamedVariables.CURRENT_RUTA);
-		String currentProvyta = getVariableValue(null,NamedVariables.CURRENT_PROVYTA);		
-		String currentDelyta = getVariableValue(null,NamedVariables.CURRENT_DELYTA);		
+		String currentYear = getGlobalVariable(NamedVariables.CURRENT_YEAR);
+		String currentRuta = getGlobalVariable(NamedVariables.CURRENT_RUTA);
+		String currentProvyta = getGlobalVariable(NamedVariables.CURRENT_PROVYTA);		
+		String currentDelyta = getGlobalVariable(NamedVariables.CURRENT_DELYTA);		
 		if (currentYear == null || currentRuta == null||currentProvyta==null||currentDelyta==null) {
 			Log.e("nils","CreateDelytaKeyMap failed. Missing value");
 			return null;
@@ -418,9 +390,9 @@ public class VariableConfiguration implements Serializable {
 	
 	//note that provyta is the key for current linje.
 	public Map<String, String> createLinjeKeyMap() {
-		String currentYear = getVariableValue(null,NamedVariables.CURRENT_YEAR);
-		String currentRuta = getVariableValue(null,NamedVariables.CURRENT_RUTA);		
-		String currentLinje = getVariableValue(null,NamedVariables.CURRENT_LINJE);		
+		String currentYear = getGlobalVariable(NamedVariables.CURRENT_YEAR);
+		String currentRuta = getGlobalVariable(NamedVariables.CURRENT_RUTA);		
+		String currentLinje = getGlobalVariable(NamedVariables.CURRENT_LINJE);		
 		if (currentYear == null || currentRuta == null||currentLinje==null) {
 			Log.e("nils","CreateLinjeKeyMap failed. Missing value");
 			return null;
@@ -430,15 +402,15 @@ public class VariableConfiguration implements Serializable {
 	}
 
 	public String getCurrentRuta() {
-		return getVariableValue(null,NamedVariables.CURRENT_RUTA);
+		return getGlobalVariable(NamedVariables.CURRENT_RUTA);
 	}
 
 	public String getCurrentProvyta() {
-		return getVariableValue(null,NamedVariables.CURRENT_PROVYTA);
+		return getGlobalVariable(NamedVariables.CURRENT_PROVYTA);
 	}
 
 
-
+/*
 	public void invalidateCacheKeys(String key) {
 		gs.refreshKeyHash();
 		for (List<Variable> vl:myCache.getVariables()) {
@@ -450,16 +422,8 @@ public class VariableConfiguration implements Serializable {
 					}
 		}
 	}
-	
-	public void destroyCache() {
-		Log.d("nils","In destroy cache...will destroy");
-		myCache.invalidateAll();
-	}
+	*/
 
-	public void addToCache(Variable v) {
-		Log.d("nils","In add to cache...will not be needed");
-		myCache.put(v.getId(), v);
-	}
 
 
 

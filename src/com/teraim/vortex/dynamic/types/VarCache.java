@@ -28,9 +28,11 @@ public class VarCache {
 
 	private GlobalState gs;
 	private LoggerI o;
+	private VariableConfiguration al;
 
 	public VarCache(GlobalState gs) {
 		this.gs = gs;
+		al = gs.getVariableConfiguration();
 		this.o = gs.getLogger();
 
 	}
@@ -41,13 +43,28 @@ public class VarCache {
 
 	}
 
+	public void put(Variable v) {
+		List<Variable> ret = cache.get(v.getId().toLowerCase());
+		if (ret== null) {
+			ret = new ArrayList<Variable>();
+			cache.put(v.getId().toLowerCase(), ret);
+			ret.add(v);
+			return;
+		}
+		//check that it doesnt exist already.
+		if (find(ret,v.getKeyChain())==null)
+				ret.add(v);
+		return;
+				
+		
+	}
 
 	public Variable getVariable(String varId) {
-		return getVariable(gs.getCurrentKeyHash(),varId,null,null);
+		return getVariable(gs.getCurrentKeyMap(),varId,null,null);
 	}
 
 	public Variable getVariable(String varId,String defaultValue) {
-		return getVariable(gs.getCurrentKeyHash(),varId,defaultValue,null);
+		return getVariable(gs.getCurrentKeyMap(),varId,defaultValue,null);
 	}
 
 	//fetch using current default keymap.
@@ -55,7 +72,7 @@ public class VarCache {
 	public Variable getVariable(Map<String,String> context, String varId,String defaultValue, Boolean hasValueInDB) {
 		//Log.d("nils","in CACHE GetVariable for "+varId);
 		List<Variable> ret = cache.get(varId.toLowerCase());
-		
+
 		boolean newA = false;
 		if (ret==null) {
 			//Log.d("nils","Creating new CacheList entry for "+varId);			
@@ -81,7 +98,7 @@ public class VarCache {
 			return null;
 		}
 
-		
+
 		//Find the variable with specified key from cache.
 		Map<String, String> instKey;
 		try {
@@ -108,7 +125,7 @@ public class VarCache {
 			//add to cache.		
 			ret.add(v);
 		}
-//		Log.d("nils","Cache now has "+cache.size()+" rows");
+		//		Log.d("nils","Cache now has "+cache.size()+" rows");
 		return v;
 	}
 
@@ -125,22 +142,22 @@ public class VarCache {
 
 	//Check if two maps are equal
 	private boolean eq(Map<String,String> chainToFind, Map<String,String> varChain) {
-//		Log.d("nils","in Varcache EQ");
+		//		Log.d("nils","in Varcache EQ");
 		if (chainToFind==null && varChain==null)
 			return true;
 		if (chainToFind==null||varChain==null||chainToFind.size()<varChain.size()) {
-//			Log.d("nils","eq returns false. Trying to match: "+(chainToFind==null?"null":chainToFind.toString())+" with: "+(varChain==null?"null":varChain.toString()));
+			//			Log.d("nils","eq returns false. Trying to match: "+(chainToFind==null?"null":chainToFind.toString())+" with: "+(varChain==null?"null":varChain.toString()));
 			return false;
 		}
-//		Log.d("nils","ChainToFind: "+chainToFind.toString());
-//		Log.d("nils","VarChain: "+varChain.toString());
+		//		Log.d("nils","ChainToFind: "+chainToFind.toString());
+		//		Log.d("nils","VarChain: "+varChain.toString());
 		for (String key:varChain.keySet()) {
 			if (chainToFind.get(key)==null) {
-//				Log.d("nils","eq returns false. Key "+key+" is not in Chaintofind: "+chainToFind.toString());
+				//				Log.d("nils","eq returns false. Key "+key+" is not in Chaintofind: "+chainToFind.toString());
 				return false;
 			}
 			if (!chainToFind.get(key).equals(varChain.get(key))) {
-//				Log.d("nils","eq returns false. Key "+key+" has different value than varchain with same key: "+chainToFind.get(key)+","+varChain.get(key));
+				//				Log.d("nils","eq returns false. Key "+key+" has different value than varchain with same key: "+chainToFind.get(key)+","+varChain.get(key));
 				return false;
 			}
 
@@ -149,27 +166,14 @@ public class VarCache {
 	}
 
 
-
-
-
-
-
-
-
 	private Map<String, String> buildDbKey(String keyChain,
 			Map<String, String> cMap) throws KeyException {
 		boolean throwE =  false;
-//		Log.d("nils","Building DB key for var with keyChain "+keyChain);
+		//		Log.d("nils","Building DB key for var with keyChain "+keyChain);
 		if (keyChain==null||keyChain.isEmpty()) {
-//			Log.d("nils","Keychain null or empty. returning from buildDBKey");
+			//			Log.d("nils","Keychain null or empty. returning from buildDBKey");
 			return null;
 		}
-		//if (cMap!=null){
-		//	Log.d("nils","Current context: "+cMap.toString());
-		//	Log.d("nils","Key values:"+cMap.entrySet().toString());
-		//}
-		//Log.d("nils","Keys in chain:"+keyChain);
-
 		String[] keys = keyChain.split("\\|");
 		Map<String, String> vMap = new HashMap<String,String>();
 		for (String key:keys) {	
@@ -196,16 +200,16 @@ public class VarCache {
 	public void invalidateOnName(String varId) {
 		Log.d("nils","invalidating variable named "+varId);
 		List<Variable> vl = cache.get(varId.toLowerCase());
-		
+
 		if (vl!=null) {
 			Log.d("nils","Found "+vl.size()+" instances. Invalidating..");
 			for (Variable v:vl)
 				v.invalidate();
 		} else {
 			Log.d("nils","Could not find variable "+varId);
-//			Log.d("nils","Current key SET: ");
-//			for (String s: cache.keySet())
-//				Log.d("nils"," KEY: "+s);
+			//			Log.d("nils","Current key SET: ");
+			//			for (String s: cache.keySet())
+			//				Log.d("nils"," KEY: "+s);
 		}
 
 	}
@@ -230,7 +234,7 @@ public class VarCache {
 
 		}
 	}
-	
+
 	public void invalidateAll() {
 		cache.clear();
 	}
@@ -239,20 +243,45 @@ public class VarCache {
 		return cache.values();
 	}
 
-	public void put(String varId, Variable v) {
-		List<Variable> ret = cache.get(varId.toLowerCase());
-		
-		boolean newA = false;
-		if (ret==null) {
-//			Log.d("nils","Creating new CacheList entry for "+varId);			
-			ret = new ArrayList<Variable>();
-			cache.put(varId.toLowerCase(), ret);
-			newA=true;
-			//Log.d("nils","Cache now contains: ");
-			//for(String s:cache.keySet())
-			//	Log.d("nils",s);
-		}
+	
+	
+
+
+	public Variable getVariableUsingKey(Map<String, String> keyChain, String varId) {
+		return getVariable(keyChain, varId, null,null);
+		//return new Variable(varId,null,null,keyChain,gs,"value",null);
 	}
+
+	//A variable type that will not allow its keychain to be changed.
+	public Variable getFixedVariableInstance(Map<String, String> keyChain, String varId,String defaultValue) {
+		List<String> row = al.getCompleteVariableDefinition(varId);
+		return new FixedVariable(varId,al.getEntryLabel(row),row,keyChain,gs,defaultValue,true);
+	}	
+
+
+	//A variable that is given a value at start.	
+	public Variable getCheckedVariable(Map<String, String> keyChain,String varId, String value, Boolean wasInDatabase) {
+		return getVariable(keyChain,varId,value,wasInDatabase);
+	}
+	//A variable that is given a value at start.	
+
+	public Variable getCheckedVariable(String varId, String value, Boolean wasInDatabase) {
+		return getVariable(gs.getCurrentKeyMap(),varId,value,wasInDatabase);
+	}
+
+	public String getVariableValue(Map<String, String> keyChain, String varId) {
+		Variable v = getVariableUsingKey(keyChain,varId);
+		if (v == null) {
+			Log.e("nils","Varcache returned null!!");
+			return null;
+		}
+		return v.getValue();
+	}
+
+	public void destroy() {
+		
+	}
+
 
 
 }

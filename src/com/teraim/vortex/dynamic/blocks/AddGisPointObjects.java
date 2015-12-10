@@ -40,6 +40,7 @@ import com.teraim.vortex.utils.DbHelper.DBColumnPicker;
 import com.teraim.vortex.utils.DbHelper.Selection;
 import com.teraim.vortex.utils.DbHelper.StoredVariableData;
 import com.teraim.vortex.utils.Expressor;
+import com.teraim.vortex.utils.Expressor.EvalExpr;
 import com.teraim.vortex.utils.PersistenceHelper;
 import com.teraim.vortex.utils.Tools;
 
@@ -47,9 +48,9 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 
 
 	private static final long serialVersionUID = 7979886099817953005L;
-	private String nName, label,
+	private String nName,
 	target, coordType,locationVariables,imgSource,refreshRate;
-	private List<Expressor.EvalExpr> objContext;
+
 	private Bitmap icon=null;
 	private boolean isVisible;
 	private GisObjectType myType;
@@ -61,26 +62,26 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 	private PolyType polyType;
 	private String onClick;
 	private String statusVariable;
-	private CHash objKeyHash;
+	private CHash objectKeyHash;
 	private boolean isUser;
 	private boolean createAllowed;
 	private GisLayer myLayer;
 	private boolean dynamic;
-
+	private final List<EvalExpr>labelE;
+	private final List<Expressor.EvalExpr> objContextE;
+	private String unevaluatedLabel;
 
 	public AddGisPointObjects(String id, String nName, String label,
-			String target, String objContext,String coordType, String locationVars, 
+			String target, String objectContext,String coordType, String locationVars, 
 			String imgSource, String refreshRate, String radius, boolean isVisible, 
 			GisObjectType type, String color, String polyType, String fillType, 
 			String onClick, String statusVariable, boolean isUser, boolean createAllowed, LoggerI o) {
 		super();
 		this.blockId = id;
 		this.nName = nName;
-		this.label = label;
 		this.target = target;
 		this.coordType = coordType;
 		this.locationVariables = locationVars;
-		this.objContext = Expressor.preCompileExpression(objContext);
 		this.imgSource = imgSource;
 		this.isVisible = isVisible;
 		this.refreshRate=refreshRate;
@@ -124,7 +125,10 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 			this.radius=Float.parseFloat(radius);
 
 		}
-
+		
+		labelE = Expressor.preCompileExpression(label);
+		this.unevaluatedLabel=label;
+		objContextE = Expressor.preCompileExpression(objectContext);
 		//Set default icons for different kind of objects.
 	}
 
@@ -171,16 +175,15 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 
 
 
-		//Need the key hash for the database.
-		objKeyHash = 
-				GlobalState.getInstance().evaluateContext(this.getObjectContext());
-		Log.d("vortex","OBJ KEYHASH "+objKeyHash.keyHash.toString());
+		//Generate the context for this object.
+		objectKeyHash = CHash.evaluate(objContextE);
+		Log.d("vortex","OBJ KEYHASH "+objectKeyHash.toString());
 		//Use current year for statusvar.
-		Map<String, String> currYearH = Tools.copyKeyHash(objKeyHash.keyHash);
+		Map<String, String> currYearH = Tools.copyKeyHash(objectKeyHash.getContext());
 		currYearH.put("år",Constants.getYear());
 		Log.d("vortex","Curryear HASH "+currYearH.toString());
 
-		if (objKeyHash==null) {
+		if (objectKeyHash==null) {
 			Log.e("vortex","keychain  null!!");
 			o.addRow("");
 			o.addYellowText("Missing object context in AddGisPointObjects. Potential error if variables have keychain");
@@ -191,10 +194,8 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 			o.addRedText("Missing GPS Location variable(s). Cannot continue..aborting");
 			return;
 		}
-		String kc="null";
-		if (objKeyHash.keyHash!= null)
-			kc = objKeyHash.keyHash.toString();
-		Log.d("vortex","In onCreate for AddGisP for ["+nName+"], Obj_type: "+myType+" with keychain: "+kc);
+
+		Log.d("vortex","In onCreate for AddGisP for ["+nName+"], Obj_type: "+myType+" with keychain: "+objectKeyHash);
 		//Call to the database to get the objects.
 
 		//Either one or two location variables. 
@@ -234,7 +235,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 		}
 
 
-		coordVar1S = GlobalState.getInstance().getDb().createSelection(objKeyHash.keyHash, locationVar1);
+		coordVar1S = GlobalState.getInstance().getDb().createSelection(objectKeyHash.getContext(), locationVar1);
 		Log.d("vortex","selection: "+coordVar1S.selection);
 		Log.d("vortex","sel args: "+print(coordVar1S.selectionArgs));
 		List<String> row = al.getCompleteVariableDefinition(locationVar1);
@@ -255,7 +256,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 		if (twoVars) {
 
 			DataType t2 = al.getnumType(al.getCompleteVariableDefinition(locationVar2));
-			coordVar2S = GlobalState.getInstance().getDb().createSelection(objKeyHash.keyHash, locationVar2);
+			coordVar2S = GlobalState.getInstance().getDb().createSelection(objectKeyHash.getContext(), locationVar2);
 			Log.d("vortex","selection: "+coordVar2S.selection);
 			Log.d("vortex","sel args: "+print(coordVar2S.selectionArgs));
 			if (t2==DataType.array)
@@ -282,7 +283,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 			//No values! A dynamic variable can create new ones, so create object anyway.
 			if ((!hasValues&&dynamic) || (hasValues&&dynamic&&twoVars&&!pickerLocation2.moveToFirst())) {
 				Log.e("vortex","no X,Y instances found for keychain..creating empty");
-				Variable v1 = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(objKeyHash.keyHash, locationVar1);
+				Variable v1 = GlobalState.getInstance().getVariableCache().getVariableUsingKey(objectKeyHash.getContext(), locationVar1);
 				if (v1==null){
 					Log.e("vortex", locationVar1+" does not exist. Check your configuration!");
 					o.addRow("");
@@ -290,16 +291,16 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 					return;
 				}
 				if (twoVars) {
-					Variable v2 = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(objKeyHash.keyHash, locationVar2);
+					Variable v2 = GlobalState.getInstance().getVariableCache().getVariableUsingKey(objectKeyHash.getContext(), locationVar2);
 					if (v2==null){
 						Log.e("vortex", locationVar2+" does not exist. Check your configuration!");
 						o.addRow("");
 						o.addRedText("Cannot find variable "+locationVar2);
 						return;
 					}
-					myGisObjects.add(new DynamicGisPoint(this,objKeyHash.keyHash, v1,v2,null));
+					myGisObjects.add(new DynamicGisPoint(this,objectKeyHash.getContext(), v1,v2,null));
 				} else
-					myGisObjects.add(new DynamicGisPoint(this,objKeyHash.keyHash, v1,null));
+					myGisObjects.add(new DynamicGisPoint(this,objectKeyHash.getContext(), v1,null));
 			} else {
 
 
@@ -322,7 +323,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 
 					while (foundStatusVar) {
 						String value  = pickerStatusVars.getVariable().value;
-						Variable statusVar = GlobalState.getInstance().getVariableConfiguration().getCheckedVariable(pickerStatusVars.getKeyColumnValues(),pickerStatusVars.getVariable().name,value,true);
+						Variable statusVar = GlobalState.getInstance().getVariableCache().getCheckedVariable(pickerStatusVars.getKeyColumnValues(),pickerStatusVars.getVariable().name,value,true);
 						if (statusVarM == null) 
 							statusVarM = new HashMap<String,Variable>();
 						statusVarM.put(statusVar.getKeyChain().get("uid"), statusVar);
@@ -346,11 +347,11 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 						//if there is a statusvariable defined, but no value found, create a new empty variable.
 						if (statusVariable !=null && statusVar == null) {
 							currYearH.put("uid",map1.get("uid"));
-							statusVar = GlobalState.getInstance().getVariableConfiguration().getCheckedVariable(currYearH,statusVariable,"0",true);
+							statusVar = GlobalState.getInstance().getVariableCache().getCheckedVariable(currYearH,statusVariable,"0",true);
 						}
 						if (dynamic) {
 							String value = pickerLocation1.getVariable().value;
-							v1 = GlobalState.getInstance().getVariableConfiguration().getCheckedVariable(pickerLocation1.getKeyColumnValues(),storedVar1.name,value,true);
+							v1 = GlobalState.getInstance().getVariableCache().getCheckedVariable(pickerLocation1.getKeyColumnValues(),storedVar1.name,value,true);
 						}
 						if (twoVars) {
 							storedVar2 = pickerLocation2.getVariable();
@@ -365,7 +366,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 								}
 								else {
 									String value = pickerLocation2.getVariable().value;
-									v2 = GlobalState.getInstance().getVariableConfiguration().getCheckedVariable(pickerLocation1.getKeyColumnValues(),storedVar2.name,value,true);
+									v2 = GlobalState.getInstance().getVariableCache().getCheckedVariable(pickerLocation1.getKeyColumnValues(),storedVar2.name,value,true);
 									if (v1!=null && v2!=null) 
 										myGisObjects.add(new DynamicGisPoint(this,map1, v1,v2,statusVar));
 									else {
@@ -418,9 +419,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 	}
 
 	
-	public String getObjectContext() {
-			return Expressor.analyze(objContext);		
-	}
+	
 
 	private void setDefaultBitmaps(WF_Context myContext) {
 		if (icon==null) {
@@ -477,8 +476,8 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 
 
 
-	public String getLabel() {
-		return label;
+	public  List<EvalExpr> getLabelExpression() {
+		return labelE;
 
 	}
 
@@ -537,10 +536,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 		return onClick;
 	}
 
-	@Override
-	public CHash getObjectKeyHash() {
-		return objKeyHash;
-	}
+
 
 	public String getStatusVariable() {
 		return statusVariable;
@@ -553,6 +549,20 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 	@Override
 	public String getName() {
 		return nName;
+	}
+
+	@Override
+	public CHash getObjectKeyHash() {
+		return objectKeyHash;
+	}
+
+	/**
+	 * getLabel() returns the label before any processing.
+	 */
+	@Override
+	public String getRawLabel() {
+		
+		return unevaluatedLabel;
 	}
 
 

@@ -21,7 +21,7 @@ public class WF_SimpleCounter extends WF_Not_ClickableField {
 				LayoutInflater.from(myContext.getContext()).inflate(R.layout.selection_field_normal,null), isVisible);
 
 		gs = GlobalState.getInstance();
-		myTarget = gs.getVariableConfiguration().getVariableInstance(targetId);
+		myTarget = gs.getVariableCache().getVariable(targetId);
 		if (myTarget == null) {
 			o.addRow("");
 			o.addRedText("Missing target variable "+targetId+" in SimpleCounter");
@@ -30,7 +30,7 @@ public class WF_SimpleCounter extends WF_Not_ClickableField {
 			int count=0;
 			if (listElems != null)
 				count = listElems.size();
-			Variable noOfAvslutade = gs.getVariableConfiguration().getVariableInstance(NamedVariables.NO_OF_AVSLUTADE);
+			Variable noOfAvslutade = gs.getVariableCache().getVariable(NamedVariables.NO_OF_AVSLUTADE);
 			noOfAvslutade.setValue(count+"");
 			this.addVariable(noOfAvslutade, true, null, true);
 			this.refresh();

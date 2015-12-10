@@ -1,9 +1,7 @@
 package com.teraim.vortex.dynamic.blocks;
 
 import java.util.List;
-import java.util.Set;
 
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -20,12 +18,9 @@ import com.teraim.vortex.FileLoadedCb;
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
 import com.teraim.vortex.dynamic.AsyncResumeExecutorI;
-import com.teraim.vortex.dynamic.Executor;
 import com.teraim.vortex.dynamic.types.GisLayer;
 import com.teraim.vortex.dynamic.types.Location;
 import com.teraim.vortex.dynamic.types.PhotoMeta;
-import com.teraim.vortex.dynamic.types.Variable;
-import com.teraim.vortex.dynamic.types.Workflow.Unit;
 import com.teraim.vortex.dynamic.workflow_abstracts.Container;
 import com.teraim.vortex.dynamic.workflow_abstracts.Event.EventType;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
@@ -38,8 +33,11 @@ import com.teraim.vortex.loadermodule.WebLoader;
 import com.teraim.vortex.loadermodule.configurations.AirPhotoMetaData;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
+import com.teraim.vortex.utils.Expressor;
+import com.teraim.vortex.utils.Expressor.EvalExpr;
 import com.teraim.vortex.utils.PersistenceHelper;
 import com.teraim.vortex.utils.Tools;
+import com.teraim.vortex.utils.Tools.Unit;
 import com.teraim.vortex.utils.Tools.WebLoaderCb;
 
 public class CreateGisBlock extends Block {
@@ -48,7 +46,7 @@ public class CreateGisBlock extends Block {
 	 * 
 	 */
 	private static final long serialVersionUID = 2013870148670474254L;
-	private final String name,containerId,source,N,E,S,W;
+	private final String name,source,containerId,N,E,S,W;
 	Unit unit;
 	GlobalState gs;
 	boolean isVisible = false,showHistorical;
@@ -60,6 +58,7 @@ public class CreateGisBlock extends Block {
 	private LoggerI o;
 	private boolean hasSatNav;
 	private WF_Gis_Map gis=null;
+	private List<EvalExpr> sourceE;
 
 	public boolean hasCarNavigation() {
 		return hasSatNav;
@@ -73,6 +72,7 @@ public class CreateGisBlock extends Block {
 		this.containerId=containerId;
 		this.isVisible=isVisible;
 		this.blockId=id;
+		this.sourceE=Expressor.preCompileExpression(source);
 		this.source=source;
 		this.N=N;
 		this.E=E;
@@ -114,15 +114,15 @@ public class CreateGisBlock extends Block {
 		final String cacheFolder = Constants.VORTEX_ROOT_DIR+globalPh.get(PersistenceHelper.BUNDLE_NAME)+"/cache/";
 
 
-		if (source==null || source.length()==0) {
-			Log.e("vortex","Pic url null! GisImageView will not load");
+		if (sourceE==null ) {
+			Log.e("vortex","Image url evaluates to null! GisImageView will not load");
 			o.addRow("");
-			o.addRedText("GisImageView failed to load. No picture defined");
+			o.addRedText("GisImageView failed to load. No picture defined or failure to parse: "+source);
 			//continue execution immediately.
 			return true;
 		}
 
-		final String picName = Tools.parseString(source);
+		final String picName = Expressor.analyze(sourceE);
 		Log.d("vortex","ParseString result: "+picName);
 		//Load asynchronously. Put up a loadbar.
 

@@ -2,18 +2,14 @@ package com.teraim.vortex.utils;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
-import java.io.Serializable;
 import java.io.StreamCorruptedException;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
@@ -50,18 +46,37 @@ import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.Start;
 import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.types.Numerable.Type;
+import com.teraim.vortex.dynamic.types.VarCache;
 import com.teraim.vortex.dynamic.types.Variable;
-import com.teraim.vortex.dynamic.types.Workflow.Unit;
 import com.teraim.vortex.log.LoggerI;
-import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.DbHelper.Selection;
-import com.teraim.vortex.utils.RuleExecutor.SubstiResult;
-import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 
 public class Tools {
 
 
+	public enum Unit {
+		percentage,
+		dm,
+		m,
+		cm,
+		meter,
+		cl,
+		ml,
+		m2,
+		dl2,
+		cl2,
+		m3,
+		dm3,
+		deg,
+		mm,
+		st,
+		m2_ha,
+		antal,
+		antal_ha,
+		år,
+		nd
 
+	};
 
 
 	public static boolean writeToFile(String filename,String text) {
@@ -410,11 +425,14 @@ public class Tools {
 		return bitmap;
 	}
 
-	public static String[] generateList(GlobalState gs, Variable variable) {
+	public static String[] generateList(Variable variable) {
 		String[] opt=null;
+		GlobalState gs = GlobalState.getInstance();
 		VariableConfiguration al = gs.getVariableConfiguration();
+		VarCache vc = gs.getVariableCache();
+		
 		LoggerI o = gs.getLogger();
-		List<String >listValues = al.getListElements(variable.getBackingDataSet());
+		List<String>listValues = al.getListElements(variable.getBackingDataSet());
 		Log.d("nils","Found dynamic list definition for variable "+variable.getId());
 
 		if (listValues!=null&&listValues.size()>0) {
@@ -445,7 +463,7 @@ public class Tools {
 						for (int i=1;i<listValues.size();i++) {
 							keyPair = listValues.get(i).split("=");
 							if (keyPair!=null && keyPair.length==2) {
-								String valx=al.getVariableValue(null,keyPair[1]);
+								String valx=vc.getVariableValue(null,keyPair[1]);
 								if (valx!=null) 										
 									keySet.put(keyPair[0], valx);
 								else {
@@ -644,10 +662,13 @@ public class Tools {
 		return true;
 	}
 
+	/*
 	public static String parseString(String varString) {
 		return parseString(varString, GlobalState.getInstance().getCurrentKeyHash());
 	}
+	*/
 
+	/*
 	public static String parseString(String varString, Map<String,String> keyHash) {
 
 		if (varString == null||varString.isEmpty())
@@ -680,6 +701,8 @@ public class Tools {
 		Log.d("vortex","Parse String returns "+res+postS);
 		return res+postS;
 	}
+	*/
+	/*
 	private static String interpret(String varString, Map<String,String> keyHash) {
 		final RuleExecutor re = GlobalState.getInstance().getRuleExecutor();
 		List<TokenizedItem> tokenized = re.findTokens(varString, null, keyHash);
@@ -693,6 +716,7 @@ public class Tools {
 		else
 			return varString;
 	}
+	*/
 
 	public static void onLoadCacheImage(String serverFileRootDir, final String fileName, final String cacheFolder, WebLoaderCb cb) {
 		final String fullPicURL = serverFileRootDir+fileName;

@@ -1,6 +1,6 @@
 package com.teraim.vortex.dynamic.types;
 
-import com.teraim.vortex.dynamic.types.Workflow.Unit;
+import com.teraim.vortex.utils.Tools.Unit;
 
 /**
  * XML_Variable

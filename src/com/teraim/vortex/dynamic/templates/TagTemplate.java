@@ -184,8 +184,8 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 			@Override
 			public void onClick(View v) {
 
-				final String rutaId = al.getVariableValue(null, "Current_Ruta");
-				final String provytaId = al.getVariableValue(null, "Current_Provyta");
+				final String rutaId = varCache.getVariableValue(null, "Current_Ruta");
+				final String provytaId = varCache.getVariableValue(null, "Current_Provyta");
 				new AlertDialog.Builder(TagTemplate.this.getActivity())
 				.setTitle("Nyutlägg - Varning")
 				.setMessage("Nytt utlägg av provyta görs om tillståndet på provytan har förändrats så att en ny provytedelning måste göras, eller om man inte hittar provytecentrum.\nAlla delytor under ruta/provyta ["+rutaId+":"+provytaId+"] kommer suddas. Är du säker?")
@@ -196,7 +196,7 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 
 
 						//Mark as nyutlägg.
-						Variable nyUtlagg = gs.getVariableConfiguration().getVariableUsingKey(gs.getVariableConfiguration().createProvytaKeyMap(), NamedVariables.NYUTLAGG);
+						Variable nyUtlagg = varCache.getVariableUsingKey(gs.getVariableConfiguration().createProvytaKeyMap(), NamedVariables.NYUTLAGG);
 						nyUtlagg.setValue("1");
 						//init.
 						dym.clear();

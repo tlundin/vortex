@@ -5,19 +5,20 @@ import java.util.List;
 import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
-import com.teraim.vortex.utils.RuleExecutor;
-import com.teraim.vortex.utils.RuleExecutor.SubstiResult;
-import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
+import com.teraim.vortex.utils.Expressor;
+import com.teraim.vortex.utils.Expressor.EvalExpr;
 
 public class ConditionalContinuationBlock extends Block {
 
 	String elseID,expr;
 	List<String>variables;
+	List<EvalExpr>exprE;
 	public ConditionalContinuationBlock(String id, List<String> varL,
 			String expr, String elseBlockId) {
 		this.blockId=id;
 		this.variables=varL;
 		this.expr=expr;
+		this.exprE = Expressor.preCompileExpression(expr);
 		this.elseID=elseBlockId;
 	}
 
@@ -34,29 +35,27 @@ public class ConditionalContinuationBlock extends Block {
     public final static int STOP = 1,JUMP=2,NEXT = 3;
     
     Integer lastEval = null;
-    RuleExecutor re;
-	public boolean evaluate(GlobalState gs,String formula,
-				List<TokenizedItem> tokens) {
+    
+    public boolean isExpressionOk() {
+    	return exprE!=null;
+    }
+    
+	public boolean evaluate() {
 			//assume fail
-			re = gs.getRuleExecutor();
 			int eval=STOP;
-			SubstiResult sr = re.substituteForValue(tokens,formula,false);
-			
-			if (sr.result!=null && !sr.iAmAString()) {
-				String strRes = re.parseExpression(formula,sr.result);
-				if (strRes != null) {
-					if (Double.parseDouble(strRes)==1) {
+			if (exprE!=null && exprE.size()==1) {
+				Boolean result = Expressor.analyzeBooleanExpression(exprE.get(0));
+			if (result!=null) { 
+				if (result==true) {
 						Log.d("nils","Evaluates to true");
 						eval=NEXT;
-					} else {
+				} else {
 						eval=JUMP;
 						Log.d("nils","Evaluates to false");
 					}
-				} else {
-					eval=STOP;
 				}
 			} else {
-				Log.e("nils","Substitution failed for formula ["+formula+"]. Text type to blame? ["+sr.iAmAString()+"]");
+				Log.e("vortex","Stopped on block "+this.getBlockId()+" due to null eval");
 				eval=STOP;
 			}
 			

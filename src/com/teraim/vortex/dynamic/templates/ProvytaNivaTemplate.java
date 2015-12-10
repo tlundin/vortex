@@ -34,6 +34,7 @@ import com.teraim.vortex.Start;
 import com.teraim.vortex.dynamic.Executor;
 import com.teraim.vortex.dynamic.blocks.ButtonBlock;
 import com.teraim.vortex.dynamic.blocks.OnclickExtra;
+import com.teraim.vortex.dynamic.types.CHash;
 import com.teraim.vortex.dynamic.types.Delyta;
 import com.teraim.vortex.dynamic.types.Marker;
 import com.teraim.vortex.dynamic.types.Variable;
@@ -173,14 +174,15 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 
 		for (int i=0; i<DelyteManager.MAX_DELYTEID;i++) {
 			final int I = i;
-			Map<String,String> buttonContext = al.createProvytaKeyMap();
-			buttonContext.put("delyta", I+"");
+			Map<String,String> buttonHash = al.createProvytaKeyMap();
+			buttonHash.put("delyta", I+"");
+			CHash buttonContext = new CHash(null,buttonHash);
 			delyteKnappar[i]=new ButtonBlock("DelBl"+i,"Delyta "+i,"Start_Workflow", "Delyta "+i,"Field_List_panel_1",
 					(isAbo?NamedVariables.WF_DELYTE_INMATNING_ABO:NamedVariables.WF_DELYTE_INMATNING),"action","status_delyta",true,
 					new OnclickExtra() {						
 				@Override
 				public void onClick() {
-					al.getVariableInstance(NamedVariables.CURRENT_DELYTA).setValue(I+"");
+					varCache.getVariable(NamedVariables.CURRENT_DELYTA).setValue(I+"");
 					Delyta dy = dym.getDelyta(I);
 					dym.setSelected(I);
 					Log.d("nils","Selected delyta set to "+dy.getId()+"");						
@@ -191,10 +193,11 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 		for (int i=0; i<(isAbo?9:3);i++) {
 			int j=i+1;
 			final String I = j+"";
-			Map<String,String> buttonContext = al.createProvytaKeyMap();
+			Map<String,String> buttonHash = al.createProvytaKeyMap();
 			String label ="";
 			String wf="";
-			buttonContext.put("smaprovyta", I);
+			buttonHash.put("smaprovyta", I);
+			CHash buttonContext = new CHash(null,buttonHash);
 			if (isAbo) {
 				if (i>=3) {
 					label = "Äbo småprov yttre ";
@@ -215,13 +218,13 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 				@Override
 				public void onClick() {
 					Log.d("nils","Setting current småprov to "+I);
-					al.getVariableInstance(NamedVariables.CURRENT_SMAPROVYTA).setValue(I);
+					varCache.getVariable(NamedVariables.CURRENT_SMAPROVYTA).setValue(I);
 				} },buttonContext,-1);
 		}
 
 
 		//Varna om provytecentrum flyttat eller saknas.
-		Variable pyMarkTypV = al.getVariableUsingKey(al.createProvytaKeyMap(),"ProvytacentrumMarkeringstyp");
+		Variable pyMarkTypV = varCache.getVariableUsingKey(al.createProvytaKeyMap(),"ProvytacentrumMarkeringstyp");
 		String pyMarkTyp = pyMarkTypV.getHistoricalValue();
 		Log.d("nils","ProvytacentrumMarkeringstyp: "+pyMarkTyp);
 		//Log.d("nils","FlyttatCentrumVarning"+currRuta+"_"+currPy+" equals "+gs.getPreferences().get("FlyttatCentrumVarning"+currRuta+"_"+currPy));
@@ -311,7 +314,7 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 		for (Integer id:dys) {	
 			map = al.createProvytaKeyMap();
 			map.put("delyta", id+"");
-			gs.setKeyHash(map);
+			gs.setKeyHash(new CHash(null,map));
 			delyteKnappar[id].create(myContext);	
 			dys.add(id);			
 		}
@@ -319,11 +322,11 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 		for (int i=0;i<(isAbo?9:3);i++) {
 			map = al.createProvytaKeyMap();
 			map.put("smaprovyta", i+"");
-			gs.setKeyHash(map);
+			gs.setKeyHash(new CHash(null,map));
 			smayteKnappar[i].create(myContext);
 		}
 
-		gs.setKeyHash(al.createProvytaKeyMap());		
+		gs.setKeyHash(new CHash(null,al.createProvytaKeyMap()));		
 		
 		myContext.drawRecursively(myC);
 

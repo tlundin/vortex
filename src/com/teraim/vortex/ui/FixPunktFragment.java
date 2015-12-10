@@ -29,6 +29,7 @@ import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
 import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.types.Marker;
+import com.teraim.vortex.dynamic.types.VarCache;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.non_generics.NamedVariables;
 
@@ -54,6 +55,7 @@ public class FixPunktFragment extends Fragment implements OnGesturePerformedList
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 		gs = GlobalState.getInstance();
+		VarCache varCache = gs.getVariableCache();
 		VariableConfiguration al = gs.getVariableConfiguration();
 		Log.d("nils","in onCreateView of fixpunkt_fragment");
 		View v = inflater.inflate(R.layout.template_fixpunkt_right, container, false);	
@@ -86,8 +88,8 @@ public class FixPunktFragment extends Fragment implements OnGesturePerformedList
 			String avstKey,riktKey;
 			avstKey = NamedVariables.FIXPUNKT_VARS[i*2];
 			riktKey = NamedVariables.FIXPUNKT_VARS[i*2+1];
-			avst = al.getVariableInstance(avstKey);
-			rikt = al.getVariableInstance(riktKey);
+			avst = varCache.getVariable(avstKey);
+			rikt = varCache.getVariable(riktKey);
 			if (avst!=null && rikt !=null) 
 				fixPunkter.add(new FixPunkt(avst,rikt));			
 			
@@ -95,10 +97,10 @@ public class FixPunktFragment extends Fragment implements OnGesturePerformedList
 		
 		//Add profil if it exists.
 		Variable tmp;
-		tmp = al.getVariableInstance(NamedVariables.ProfilAvst);
+		tmp = varCache.getVariable(NamedVariables.ProfilAvst);
 		String avst;
 		if ((avst = tmp.getHistoricalValue())!=null) {
-			tmp = al.getVariableInstance(NamedVariables.ProfilRikt);
+			tmp = varCache.getVariable(NamedVariables.ProfilRikt);
 			String rikt;
 			if ((rikt = tmp.getHistoricalValue())!=null) {
 				bm = BitmapFactory.decodeResource(getResources(), R.drawable.profil);

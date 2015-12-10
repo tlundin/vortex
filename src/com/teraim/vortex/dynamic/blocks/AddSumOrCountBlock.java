@@ -47,7 +47,7 @@ public  class AddSumOrCountBlock extends Block {
 
 	public void create(WF_Context myContext) {
 		o = GlobalState.getInstance().getLogger();
-		al = GlobalState.getInstance().getVariableConfiguration();
+		
 
 		Container myContainer = myContext.getContainer(containerId);
 		if (myContainer!=null) {
@@ -61,7 +61,7 @@ public  class AddSumOrCountBlock extends Block {
 				o.addRow("");
 				o.addRedText("Error in XML: block_add_sum_of_selected_variables_display is missing a result parameter for:"+label);
 			} else {
-				Variable v = al.getVariableInstance(result);
+				Variable v = GlobalState.getInstance().getVariableCache().getVariable(result);
 				if (v==null) {
 					o.addRow("");
 					o.addRedText("Error in block_add_sum_of_selected_variables_display: missing variable for result parameter: "+result);

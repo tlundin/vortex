@@ -3,7 +3,6 @@ package com.teraim.vortex.dynamic.types;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -16,16 +15,14 @@ import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.VariableConfiguration;
-import com.teraim.vortex.dynamic.types.Workflow.Unit;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.utils.CombinedRangeAndListFilter;
 import com.teraim.vortex.utils.DbHelper;
+import com.teraim.vortex.utils.DbHelper.Selection;
 import com.teraim.vortex.utils.FilterFactory;
 import com.teraim.vortex.utils.PersistenceHelper;
-import com.teraim.vortex.utils.RuleExecutor;
 import com.teraim.vortex.utils.Tools;
-import com.teraim.vortex.utils.DbHelper.Selection;
-import com.teraim.vortex.utils.DbHelper.StoredVariableData;
+import com.teraim.vortex.utils.Tools.Unit;
 
 /**
  * 
@@ -316,24 +313,7 @@ public class Variable implements Serializable {
 		}
 	}
 
-	/*
-	private static boolean isHistorical(Map<String, String> kc) {
-		if (kc==null) {
-			Log.d("nils","No keychain - cannot be historical");
-			return false;
-		}
-		String year = kc.get(VariableConfiguration.KEY_YEAR);
-		if (year == null||year.length()==0) {
-			Log.e("nils","year key missing in variable. Will assume current year");
-			return false;
-		}
-		if (!year.equals(Integer.toString(Calendar.getInstance().get(Calendar.YEAR)))) {
-			Log.d("nils","Historical value!");
-			return true;
-		}
-		return false;
-	}
-	 */
+	
 
 	private String printKeyChain(Map<String, String> kc) {
 		if (kc==null)
@@ -384,7 +364,7 @@ public class Variable implements Serializable {
 		//Log.d("vortex","My keychain is: "+this.getKeyChain().toString());
 
 	}
-
+/*
 	public void invalidateKey() {
 		if (keyChain==null)
 			return;
@@ -396,7 +376,7 @@ public class Variable implements Serializable {
 		
 
 	}
-
+*/
 	public boolean isKeyVariable() {
 		return isKeyVariable;
 	}
@@ -481,7 +461,7 @@ public class Variable implements Serializable {
 			return null;
 		
 	}
-
+/*
 	public void setKeyChainVariable(String key) {
 		Log.d("nils","SetKeyChain called for "+this.getId());
 		iAmPartOfKeyChain = key;
@@ -490,7 +470,7 @@ public class Variable implements Serializable {
 	public String getPartOfKeyChain() {
 		return iAmPartOfKeyChain;
 	}
-	
+*/	
 	public boolean isInvalidated() {
 		return unknown;
 	}

@@ -61,8 +61,8 @@ public class Tracker extends Service implements LocationListener {
 	
 	public Tracker() {
 		YearKeyHash.put("år", Constants.getYear());
-		myX = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(YearKeyHash, NamedVariables.MY_GPS_LAT);
-		myY = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(YearKeyHash, NamedVariables.MY_GPS_LONG);
+		myX = GlobalState.getInstance().getVariableCache().getVariableUsingKey(YearKeyHash, NamedVariables.MY_GPS_LAT);
+		myY = GlobalState.getInstance().getVariableCache().getVariableUsingKey(YearKeyHash, NamedVariables.MY_GPS_LONG);
 
 	}
 	

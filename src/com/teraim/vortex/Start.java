@@ -167,17 +167,16 @@ public class Start extends MenuActivity {
 		GlobalState gs = GlobalState.getInstance();
 		String label = wf.getLabel();
 		String template = wf.getTemplate();
-		String context = wf.getContext();
+		
 		//Set context.
 		Log.e("vortex","change page called with wf "+wf.getName());
-		Log.d("noob","Context ["+context+"]");
-		debugLogger.addRow("Context ["+context+"]");
-		CHash cHash = gs.evaluateContext(context);
+		CHash cHash = CHash.evaluate(wf.getContext());
 		//if Ok err is null.
-		if (cHash.err==null) {
-			debugLogger.addRow("Context [");
-			debugLogger.addGreenText("OK");
+		if (cHash.isOk()) {
+			debugLogger.addRow("Context now [");
+			debugLogger.addGreenText(cHash.toString());
 			debugLogger.addText("]");
+			debugLogger.addText("wf context: "+wf.getContext());
 
 			//gs.setRawHash(r.rawHash);
 			//gs.setKeyHash(r.keyHash);
@@ -206,7 +205,7 @@ public class Start extends MenuActivity {
 			}
 			//show error message.
 		} else 
-			showErrorMsg(cHash.err, wf);
+			showErrorMsg(cHash);
 	}
 	public void changePage(Fragment newPage, String label) {
 		FragmentManager fragmentManager = getFragmentManager();
@@ -334,9 +333,9 @@ public class Start extends MenuActivity {
 		return super.onKeyDown(keyCode, event);
 	}
 
-	private void showErrorMsg(String error, Workflow wf) {
-		if (wf!=null) {
-			String dialogText = "Faulty or incomplete context prevents execution of "+wf.getName()+".\n Context: "+wf.getContext()+"\nError: "+error;
+	private void showErrorMsg(CHash context) {
+
+			String dialogText = "Faulty or incomplete context\nError: "+context.toString();
 			new AlertDialog.Builder(this)
 			.setTitle("Context problem")
 			.setMessage(dialogText) 
@@ -345,12 +344,12 @@ public class Start extends MenuActivity {
 			.setNeutralButton("Ok",new Dialog.OnClickListener() {				
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
-					// TODO Auto-generated method stub
+					
 
 				}
 			} )
 			.show();
-		}
+		
 	}
 
 

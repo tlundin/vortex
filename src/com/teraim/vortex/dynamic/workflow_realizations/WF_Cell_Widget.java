@@ -34,7 +34,7 @@ public class WF_Cell_Widget extends WF_ClickableField implements WF_Cell {
 	}
 	int i=0;
 	public void addVariable(final String varId, boolean displayOut,String format,boolean isVisible,boolean showHistorical, String prefetchValue) {	
-		Variable var = GlobalState.getInstance().getVariableConfiguration().getCheckedVariable(myHash, varId, prefetchValue, prefetchValue!=null);
+		Variable var = GlobalState.getInstance().getVariableCache().getCheckedVariable(myHash, varId, prefetchValue, prefetchValue!=null);
 		super.addVariable(var, displayOut, format, isVisible,showHistorical);
 	}
 	

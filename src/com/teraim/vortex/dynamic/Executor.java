@@ -56,7 +56,9 @@ import com.teraim.vortex.dynamic.blocks.SetValueBlock;
 import com.teraim.vortex.dynamic.blocks.SetValueBlock.ExecutionBehavior;
 import com.teraim.vortex.dynamic.blocks.TextFieldBlock;
 import com.teraim.vortex.dynamic.blocks.VarValueSourceBlock;
+import com.teraim.vortex.dynamic.types.CHash;
 import com.teraim.vortex.dynamic.types.Rule;
+import com.teraim.vortex.dynamic.types.VarCache;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.types.Variable.DataType;
 import com.teraim.vortex.dynamic.types.Workflow;
@@ -74,7 +76,6 @@ import com.teraim.vortex.gis.Tracker;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.ui.MenuActivity;
-import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 import com.teraim.vortex.utils.Tools;
 
 /**
@@ -117,6 +118,8 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 	private Set<Variable> visiVars;
 
 	protected VariableConfiguration al;
+	
+	protected VarCache varCache;
 
 	private int savedBlockPointer=-1;
 
@@ -142,12 +145,13 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 			Log.e("vortex","globalstate null, exit");
 			return;
 		}
+		
 		myContext = new WF_Context((Context)this.getActivity(),this,R.id.content_frame);
 		o = gs.getLogger();
 		wf = getFlow();
 		myContext.setWorkflow(wf);
 		al = gs.getVariableConfiguration();
-
+		varCache=gs.getVariableCache();
 		ifi = new IntentFilter();
 		ifi.addAction(REDRAW_PAGE);
 		//ifi.addAction(BluetoothConnectionService.BLUETOOTH_MESSAGE_RECEIVED);
@@ -234,21 +238,17 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 	protected void run() {
 			o.addRow("");
 			o.addRow("");
-			o.addRow("*******EXECUTING: "+wf.getLabel());
-			String wfContext = wf.getContext();
-			myContext.setHash(gs.evaluateContext(wfContext));
+			o.addRow("*******EXECUTING: "+wf.getLabel());			
+			CHash wfHash = CHash.evaluate(wf.getContext());
+			myContext.setHash(wfHash);
+			gs.setKeyHash(wfHash);
 			gs.setCurrentContext(myContext);		
-			gs.setKeyHash(myContext.getKeyHash());
-			gs.setRawHash(myContext.getRawHash());
 			gs.sendEvent(MenuActivity.REDRAW);
 			visiVars = new HashSet<Variable>();
 			//LinearLayout my_root = (LinearLayout) findViewById(R.id.myRoot);		
 			blocks = wf.getCopyOfBlocks();
 			Log.d("vortex","*******EXECUTING: "+wf.getLabel());
-			String mh=null;
-			if (myContext.getKeyHash()!=null)
-				mh = myContext.getKeyHash().toString();
-			Log.d("vortex","myHash: "+mh);
+			Log.d("vortex","myHash: "+wfHash);
 			execute(0);
 	}
 	private void execute(int blockP) {
@@ -419,20 +419,17 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 				}
 				else if (b instanceof SetValueBlock) {
 					final SetValueBlock bl = (SetValueBlock)b;
-					o.addRow("");
-					o.addYellowText("SetValueBlock "+b.getBlockId()+" ["+bl.getMyVariable()+"]");
-					o.addRow("Formula: "+bl.getFormula());
-					final List<TokenizedItem> tokens = gs.getRuleExecutor().findTokens(bl.getFormula(),null);
+					//final List<TokenizedItem> tokens = gs.getRuleExecutor().findTokens(bl.getFormula(),null);
 					if (bl.getBehavior()!=ExecutionBehavior.constant) {
 						EventListener tiva = new EventListener() {
 							@Override
 							public void onEvent(Event e) {
 								if (!e.getProvider().equals(bl.getBlockId())) {
-									Variable v = al.getVariableInstance(bl.getMyVariable());
-
+									Variable v = varCache.getVariable(bl.getMyVariable());
 									if (v!=null) {
-										String	eval = bl.evaluate(gs,bl.getFormula(),tokens,v.getType()== DataType.text);
+										//String	eval = bl.evaluate(gs,bl.getFormula(),tokens,v.getType()== DataType.text);
 										String val = v.getValue();
+										String eval = bl.getEvaluation();
 										o.addRow("Variable: "+v.getId()+" Current val: "+val+" New val: "+eval);
 										if (!(eval == null && val == null)) {
 											if (eval == null && val != null || val == null && eval != null || !val.equals(eval)) {
@@ -482,12 +479,16 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 						myContext.addEventListener(tiva, EventType.onSave);	
 					}
 					//Evaluate
-					Variable v = al.getVariableInstance(bl.getMyVariable());
+					Variable v = varCache.getVariable(bl.getMyVariable());
 					if (v!=null) {
-						String eval = bl.evaluate(gs,bl.getFormula(),tokens,v.getType()==DataType.text);
+						String eval = bl.getEvaluation();
+						o.addRow("");
+						o.addYellowText("SetValueBlock "+b.getBlockId()+" ["+bl.getMyVariable()+"]");
+						o.addRow("Evaluation: "+eval);
+
 						if (eval==null) {
 							o.addRow("");
-							o.addRow("Execution stopped on SetValueBlock "+bl.getBlockId()+". Expression "+bl.getFormula()+"evaluates to null");
+							o.addRow("Execution stopped on SetValueBlock "+bl.getBlockId()+". Expression "+bl.getExpression()+"evaluates to null");
 							//jump.put(bl.getBlockId(), Executor.STOP_ID);
 							notDone = false;
 						} 				
@@ -499,7 +500,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 						}
 						else {	
 							v.setValue(eval);
-							o.addRow(bl.getFormula()+" Eval: ["+eval+"]");
+							o.addRow(bl.getExpression()+" Eval: ["+eval+"]");
 							//Take care of any side effects before triggering redraw.
 							myContext.registerEvent(new WF_Event_OnSave(bl.getBlockId()));
 							o.addRow("Continues after onSave Event in block "+bl.getBlockId());
@@ -520,13 +521,13 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 					o.addYellowText("ConditionalContinuationBlock found");
 					final ConditionalContinuationBlock bl = (ConditionalContinuationBlock)b;
 					final String formula = bl.getFormula();
-					final List<TokenizedItem> vars = gs.getRuleExecutor().findTokens(formula,null);
-					if (vars!=null) {
+					//final List<TokenizedItem> vars = gs.getRuleExecutor().findTokens(formula,null);
+					if (bl.isExpressionOk()) {
 						EventListener tiva = new EventListener() {
 							@Override
 							public void onEvent(Event e) {
 								//If evaluation different than earlier, re-render workflow.
-								if(bl.evaluate(gs,formula,vars)) {
+								if(bl.evaluate()) {
 									//myContext.onResume();
 									new Handler().postDelayed(new Runnable() {
 										public void run() {
@@ -558,7 +559,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 						Log.d("nils","Adding eventlistener for the conditional block");
 						myContext.addEventListener(tiva, EventType.onSave);	
 						//trigger event.
-						bl.evaluate(gs,formula,vars);
+						bl.evaluate();
 
 						switch (bl.getCurrentEval()) {
 						case ConditionalContinuationBlock.STOP:

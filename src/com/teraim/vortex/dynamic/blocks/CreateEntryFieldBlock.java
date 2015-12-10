@@ -1,18 +1,16 @@
 package com.teraim.vortex.dynamic.blocks;
 
-import java.util.Set;
-
 import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.types.Rule;
 import com.teraim.vortex.dynamic.types.Variable;
-import com.teraim.vortex.dynamic.types.Workflow.Unit;
 import com.teraim.vortex.dynamic.workflow_abstracts.Container;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_ClickableField_Selection;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_ClickableField_Selection_OnSave;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
+import com.teraim.vortex.utils.Tools.Unit;
 
 public class CreateEntryFieldBlock extends Block {
 
@@ -71,13 +69,13 @@ public class CreateEntryFieldBlock extends Block {
 		if(myContainer !=null) {
 			VariableConfiguration al = gs.getVariableConfiguration();
 			Log.d("nils","NAME: "+name);
-			Variable v = al.getVariableInstance(name,initialValue);
+			Variable v = gs.getVariableCache().getVariable(name,initialValue);
 			if (v == null) {
 				o.addRow("");
 				o.addRedText("Variable "+name+" referenced in block_create_entry_field not found.");
 				Log.d("nils","Variable "+name+" referenced in block_create_entry_field not found.");
 
-				o.addRedText("Current keyChain: ["+gs.getCurrentKeyHash()+"]");
+				o.addRedText("Current keyChain: ["+gs.getCurrentKeyMap()+"]");
 			} else	{	
 				myField = new WF_ClickableField_Selection_OnSave(label==null||label.equals("")?v.getLabel():label,
 						al.getDescription(v.getBackingDataSet()),myContext,name,isVisible,autoOpenSpinner);

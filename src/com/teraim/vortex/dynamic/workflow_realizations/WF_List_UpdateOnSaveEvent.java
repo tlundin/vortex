@@ -41,7 +41,7 @@ public class WF_List_UpdateOnSaveEvent extends WF_Static_List implements EventLi
 		super(id, ctx,rows,isVisible);
 		String namePrefix = al.getFunctionalGroup(rows.get(0));
 		Log.d("nils","SkarmGrupp: "+namePrefix);
-		varValueMap = gs.getDb().preFetchValuesForAllMatchingKey(gs.getCurrentKeyHash(), namePrefix);
+		varValueMap = gs.getDb().preFetchValuesForAllMatchingKey(gs.getCurrentKeyMap(), namePrefix);
 		ctx.addEventListener(this, EventType.onSave);
 		o = GlobalState.getInstance().getLogger();
 
@@ -93,13 +93,13 @@ public class WF_List_UpdateOnSaveEvent extends WF_Static_List implements EventLi
 			}
 			if (!success) {
 				//This variable is either wrong or global.
-				Variable v= al.getVariableInstance(varSuffix,initialValue);
+				Variable v= varCache.getVariable(varSuffix,initialValue);
 				if (v!=null)
 					ef.cfs.addVariable(v, displayOut,format,isVisible,showHistorical);	
 				else {
 					o.addRow("");
 					o.addRedText("Variable with suffix "+varSuffix+" was not found when creating list "+this.getId());
-					o.addRow("context: ["+gs.getCurrentKeyHash().toString()+"]");
+					o.addRow("context: ["+gs.getCurrentKeyMap().toString()+"]");
 					String namePrefix = al.getFunctionalGroup(myRows.get(0));
 					o.addRow("Group: "+namePrefix);
 				}
@@ -131,10 +131,10 @@ public class WF_List_UpdateOnSaveEvent extends WF_Static_List implements EventLi
 
 			//If variabel has value in db, use it.
 			if (varValueMap!=null && varValueMap.containsKey(vs)) 
-				v = al.getCheckedVariable(vs, varValueMap.get(vs),true);	
+				v = varCache.getCheckedVariable(vs, varValueMap.get(vs),true);	
 			else
 				//Otherwise use default. 
-				v = al.getCheckedVariable(vs, initialValue,false);
+				v = varCache.getCheckedVariable(vs, initialValue,false);
 
 
 			//Defaultvalue is either the historical value, null or the current value. 
@@ -175,12 +175,12 @@ public class WF_List_UpdateOnSaveEvent extends WF_Static_List implements EventLi
 		}
 
 		String vName = targetField+Constants.VariableSeparator+varNameSuffix;
-		Variable v = al.getVariableInstance(vName,initialValue);
+		Variable v = varCache.getVariable(vName,initialValue);
 
 		if (v==null) {
 			//try with simple name.
 			o.addRow("Will retry with variable name: "+varNameSuffix);
-			v = al.getVariableInstance(varNameSuffix,initialValue);
+			v = varCache.getVariable(varNameSuffix,initialValue);
 			if (v==null) {
 				Log.e("nils","Didnt find variable "+vName+" in AddVariableToList");
 				o.addRow("");

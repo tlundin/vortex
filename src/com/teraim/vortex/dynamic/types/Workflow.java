@@ -10,6 +10,8 @@ import android.util.Log;
 import com.teraim.vortex.dynamic.blocks.Block;
 import com.teraim.vortex.dynamic.blocks.PageDefineBlock;
 import com.teraim.vortex.dynamic.blocks.StartBlock;
+import com.teraim.vortex.utils.Expressor;
+import com.teraim.vortex.utils.Expressor.EvalExpr;
 import com.teraim.vortex.utils.Tools;
 
 //Workflow
@@ -19,55 +21,34 @@ public class Workflow implements Serializable {
 	 */
 	private static final long serialVersionUID = -8806673639097744372L;
 	//TODO: List of blocks needs to be a map.
-	
+
 	private List<Block> blocks;
 	private String name,label,applicationName,applicationVersion;
+	private CHash mContext=null;
 
-	public enum Unit {
-		percentage,
-		dm,
-		m,
-		cm,
-		meter,
-		cl,
-		ml,
-		m2,
-		dl2,
-		cl2,
-		m3,
-		dm3,
-		deg,
-		mm,
-		st,
-		m2_ha,
-		antal,
-		antal_ha,
-		år,
-		nd
 
-	};
-	
+
 
 	public Workflow() {
-		
+
 	}
-	
+
 	public Workflow(String bundleName) {
 		this.applicationName=bundleName;
 	}
-	
-	
+
+
 	public List<Block> getBlocks() {
 		return blocks;
 	}
-	
+
 	public List<Block> getCopyOfBlocks() {
 		if (blocks==null)
 			return null;
 		List<Block> ret = new ArrayList<Block>(blocks);
 		return ret;
 	}
-	
+
 	public void addBlocks(List<Block> _blocks) {
 		blocks = _blocks;
 	}
@@ -80,23 +61,23 @@ public class Workflow implements Serializable {
 		}
 		return name;
 	}
-	
+
 	public String getLabel() {
 		if (label==null) {
 			if (blocks!=null && blocks.size()>1 && blocks.get(1) instanceof PageDefineBlock)
-					label = ((PageDefineBlock)blocks.get(1)).getPageLabel();
+				label = ((PageDefineBlock)blocks.get(1)).getPageLabel();
 		}
-		return Tools.parseString(label);
+		return label;
 	}
 
 	public boolean isBackAllowed() {
 		if (blocks!=null && blocks.size()>1 && blocks.get(1) instanceof PageDefineBlock)
-				return ((PageDefineBlock)blocks.get(1)).goBackAllowed();
-		
+			return ((PageDefineBlock)blocks.get(1)).goBackAllowed();
+
 		Log.e("vortex","failed to find pagedefineblock");
 		return true;
 	}
-	
+
 	public Fragment createFragment(String templateName) {
 		Fragment f = null;
 		try {
@@ -109,38 +90,140 @@ public class Workflow implements Serializable {
 		} catch (IllegalAccessException e3) {
 			e3.printStackTrace();
 		}
-	return f;
-}
-
-public String getTemplate() {
-	for (Block b:blocks) {
-		if (b instanceof PageDefineBlock) {
-			PageDefineBlock bl = (PageDefineBlock)b;
-			return bl.getPageType();
-		}
+		return f;
 	}
-	Log.d("vortex","Could not find a PageDefineBlock for workflow "+this.getName());
+
+	public String getTemplate() {
+		for (Block b:blocks) {
+			if (b instanceof PageDefineBlock) {
+				PageDefineBlock bl = (PageDefineBlock)b;
+				return bl.getPageType();
+			}
+		}
+		Log.d("vortex","Could not find a PageDefineBlock for workflow "+this.getName());
+
+		return null;
+	}
+
+	public String getApplication() {
+		return applicationName;
+	}
+
+
+	public List<EvalExpr> getContext() {
+		if (blocks!=null && blocks.size()>0) {
+			StartBlock bl = ((StartBlock)blocks.get(0));
+			if (bl==null) {
+				Log.e("vortex","Missing Startblock...context will remain same.");
+				return null;
+			}
+			else
+				return bl.getWorkFlowContext();
+		} 
+
+		Log.e("vortex","startblock missing");
+		return null;
+	}
+
 	
-	return null;
-}
-
-public String getApplication() {
-	return applicationName;
-}
-
-
-public String getContext() {
-	if (blocks!=null && blocks.size()>0) {
-		StartBlock bl = ((StartBlock)blocks.get(0));
-		return bl.getWorkFlowContext();
-	} 
-	
-	Log.e("vortex","startblock missing");
-	return null;
 }
 
 
 
 
 
+/*	
+
+									else {
+										//Variable or function. need to evaluate first..
+										Variable v=null;// = getVariableConfiguration().getVariableInstance(val);
+										String varVal=null;
+										//if (v==null) {
+										//Parse value..either constant, function or variable.
+
+										List<TokenizedItem> tokens = myExecutor.findTokens(val, null);
+										if (tokens!=null && !tokens.isEmpty()) {										
+											TokenizedItem firstToken = tokens.get(0);
+											if (firstToken.getType()==TokenType.variable) {
+												Log.d("vortex","Found variable!");
+												v = firstToken.getVariable();
+												varVal = v.getValue();
+												if (varVal==null) {
+													o.addRow("");
+													o.addRedText("One of the variables used in current context("+v.getId()+") has no value in database");
+													Log.e("nils","var was null or empty: "+v.getId());
+													err = "One of the variables used in current context("+v.getId()+") has no value in database";
+													contextError=true;
+												}
+											} else if (firstToken.getType().getParent()==TokenType.function) {
+												Log.d("vortex","Found function!");
+												SubstiResult subsRes = myExecutor.substituteForValue(tokens, val, false);
+												if (subsRes!=null) {
+													varVal = subsRes.result;
+												} else {
+													Log.e("vortex","subsresult was null for function"+val+" in evalContext");
+													contextError=true;
+													err = "subsresult was null for function"+val+" in evalContext";
+												}
+											} else if (firstToken.getType()==TokenType.literal) {
+												Log.d("vortex","Found literal!");
+												varVal = val;
+											} else {
+												Log.e("vortex","Could not find "+firstToken.getType().name());
+												contextError=true;
+												err = "Could not find "+firstToken.getType().name();
+											}
+
+										} else {
+											o.addRow("");
+											o.addRedText("Could not evaluate expression "+val+" in context");
+											Log.e("vortex","Could not evaluate expression "+val+" in context");
+											contextError=true;
+											err="Could not evaluate expression "+val+" in context";
+										}
+
+										//} else 
+										//	varVal = v.getValue();
+
+										if(!contextError) {
+											keyHash.put(arg, varVal);
+											rawHash.put(arg,v);
+											Log.d("nils","Added "+arg+","+varVal+" to current context");
+											if (v!=null)
+												v.setKeyChainVariable(arg);
+											//update status menu
+
+										}
+
+
+									}
+								}
+							}
+						}
+					} else {
+						Log.d("nils","Found empty or null pair");
+						contextError=true;
+						err="Found empty or null pair";
+					}
+
+				} 
+
+			}
+		}
+
+		if (keyHash!=null && !contextError && !keyHash.isEmpty()) {
+			o.addRow("");
+			o.addYellowText("Context now: "+keyHash.toString());
+			return new CHash(keyHash,rawHash);
+		}
+		else
+			return new CHash(err);
+
+	}
 }
+ */
+
+
+
+
+

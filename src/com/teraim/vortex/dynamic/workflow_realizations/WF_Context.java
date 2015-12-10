@@ -326,20 +326,13 @@ public class WF_Context {
 	}
 	public Map<String, String> getKeyHash() {
 		if (myHash!=null)
-			return myHash.keyHash;
+			return myHash.getContext();
 		else {
 			Log.e("vortex", "myhash was null i getKeyHash, context!!");
 			return null;
 		}
 	}
-	public Map<String, Variable> getRawHash() {
-		if (myHash!=null)
-			return myHash.rawHash;
-		else {
-			Log.e("vortex", "myhash was null i getRawHash, context!!");
-			return null;
-		}
-	}
+	
 	public boolean hasSatNav() {
 		return hasSatNav;
 	}

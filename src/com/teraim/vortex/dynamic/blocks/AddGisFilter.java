@@ -14,16 +14,15 @@ import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
 import com.teraim.vortex.dynamic.types.GisLayer;
-import com.teraim.vortex.dynamic.workflow_abstracts.Drawable;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.FullGisObjectConfiguration.PolyType;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.GisFilter;
 import com.teraim.vortex.dynamic.workflow_realizations.gis.WF_Gis_Map;
 import com.teraim.vortex.log.LoggerI;
-import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
+import com.teraim.vortex.utils.Expressor;
+import com.teraim.vortex.utils.Expressor.EvalExpr;
 import com.teraim.vortex.utils.Tools;
 
 public class AddGisFilter extends Block implements GisFilter {
@@ -40,6 +39,7 @@ public class AddGisFilter extends Block implements GisFilter {
 	PolyType polyType;
 	boolean hasWidget=true,isActive=true;
 	private WF_Gis_Map myGis;
+	private List<EvalExpr> expressionE;
 
 
 	public AddGisFilter(String id, String nName, String label, String targetObjectType,String targetLayer,
@@ -52,7 +52,7 @@ public class AddGisFilter extends Block implements GisFilter {
 		this.label = label;
 		this.targetObjectType = targetObjectType;
 		this.targetLayer = targetLayer;
-		this.expression = expression;
+		this.expressionE = Expressor.preCompileExpression(expression);
 		this.imgSource = imgSource;
 		this.color = color;
 		this.fillType=Paint.Style.FILL;
@@ -135,8 +135,10 @@ public class AddGisFilter extends Block implements GisFilter {
 	}
 
 	@Override
-	public String getExpression() {
-		return expression;
+	public EvalExpr getExpression() {
+		if (expressionE!=null && expressionE.size()==1)
+			return expressionE.get(0);
+		return null;
 	}
 
 	@Override
@@ -170,21 +172,6 @@ public class AddGisFilter extends Block implements GisFilter {
 		return isActive;
 	}
 
-	private List<TokenizedItem> myT = null;
-	@Override
-	public boolean hasCachedFilterResult() {
-		return myT!=null;
-	}
-
-	@Override
-	public void setTokens(List<TokenizedItem> myTokens) {
-		myT=myTokens;
-	}
-
-	@Override
-	public List<TokenizedItem> getTokens() {
-		return myT;
-	}
 
 	@Override
 	public PolyType getShape() {

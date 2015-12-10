@@ -1,7 +1,7 @@
 package com.teraim.vortex.dynamic.blocks;
 
 import com.teraim.vortex.GlobalState;
-import com.teraim.vortex.dynamic.VariableConfiguration;
+import com.teraim.vortex.dynamic.types.VarCache;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_ClickableField_Selection;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
@@ -33,7 +33,6 @@ public class AddVariableToEntryFieldBlock extends Block {
 	public Variable create(WF_Context myContext) {
 		gs = GlobalState.getInstance();
 		o = gs.getLogger();
-		VariableConfiguration al = gs.getVariableConfiguration();
 
 		WF_ClickableField_Selection myField = (WF_ClickableField_Selection)myContext.getDrawable(target);
 		if (myField == null) {
@@ -41,7 +40,7 @@ public class AddVariableToEntryFieldBlock extends Block {
 			o.addRedText("Couldn't find Entry Field with name "+target+" in AddVariableToEntryBlock" );
 			
 		} else {
-			Variable var = al.getVariableInstance(namn,initialValue);
+			Variable var =  gs.getVariableCache().getVariable(namn,initialValue);
 			if (var!=null) {
 				myField.addVariable(var, displayOut, format,isVisible,showHistorical);
 				return var;

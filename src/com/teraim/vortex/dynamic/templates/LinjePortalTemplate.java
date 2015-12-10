@@ -10,7 +10,6 @@ import java.util.Set;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -43,9 +42,9 @@ import com.teraim.vortex.R;
 import com.teraim.vortex.Start;
 import com.teraim.vortex.dynamic.Executor;
 import com.teraim.vortex.dynamic.VariableConfiguration;
-import com.teraim.vortex.dynamic.types.CHash;
 import com.teraim.vortex.dynamic.types.ColumnDescriptor;
 import com.teraim.vortex.dynamic.types.SweLocation;
+import com.teraim.vortex.dynamic.types.VarCache;
 import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.types.Workflow;
 import com.teraim.vortex.dynamic.workflow_abstracts.Event;
@@ -58,7 +57,6 @@ import com.teraim.vortex.dynamic.workflow_realizations.WF_Linje_Meter_List;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_TimeOrder_Sorter;
 import com.teraim.vortex.non_generics.Constants;
 import com.teraim.vortex.non_generics.NamedVariables;
-import com.teraim.vortex.synchronization.EnvelopedMessage;
 import com.teraim.vortex.synchronization.LinjeDone;
 import com.teraim.vortex.synchronization.LinjeStarted;
 import com.teraim.vortex.ui.Linje;
@@ -71,7 +69,7 @@ import com.teraim.vortex.utils.Tools;
 
 public class LinjePortalTemplate extends Executor implements LocationListener, EventListener {
 	List<WF_Container> myLayouts;
-	VariableConfiguration al;
+	VarCache varCache;
 	DbHelper db;
 
 	private SweLocation myL=null;
@@ -101,9 +99,9 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 	private SweLocation center;
 	private String histNorr;
 	private String histOst;
-	
+
 	private String[] avgrValueA;
-	
+
 	@Override
 	public View onCreateView(final LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
@@ -128,10 +126,11 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 		stopB = (Button)new Button(this.getActivity());
 		startB = (Button)fieldList.findViewById(R.id.startB);
 
+		varCache = gs.getVariableCache();
 		al = gs.getVariableConfiguration();
 		db = gs.getDb();
-		currentYear = al.getVariableValue(null,"Current_Year");
-		currentLinje = al.getVariableValue(null,"Current_Linje");
+		currentYear = varCache.getVariableValue(null,"Current_Year");
+		currentLinje = varCache.getVariableValue(null,"Current_Linje");
 
 		if (currentLinje == null) {
 			AlertDialog.Builder alert = new AlertDialog.Builder(v.getContext());
@@ -156,10 +155,10 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 
 			Log.e("nils","eastW: "+eastW+" westW: "+westW+" southW:"+southW+" northW: "+northW);
 			Map<String,String>pyKeyMap = al.createLinjeKeyMap();
-			linjeKey = Tools.createKeyMap(VariableConfiguration.KEY_YEAR,currentYear,"ruta",al.getVariableValue(null,"Current_Ruta"),"linje",currentLinje);
-			linjeStatus = al.getVariableUsingKey(linjeKey, NamedVariables.STATUS_LINJE);
-			Variable pyCentrumNorr = al.getVariableUsingKey(pyKeyMap, "CentrumGPSNS");
-			Variable pyCentrumOst = al.getVariableUsingKey(pyKeyMap, "CentrumGPSEW");
+			linjeKey = Tools.createKeyMap(VariableConfiguration.KEY_YEAR,currentYear,"ruta",varCache.getVariableValue(null,"Current_Ruta"),"linje",currentLinje);
+			linjeStatus = varCache.getVariableUsingKey(linjeKey, NamedVariables.STATUS_LINJE);
+			Variable pyCentrumNorr = varCache.getVariableUsingKey(pyKeyMap, "CentrumGPSNS");
+			Variable pyCentrumOst = varCache.getVariableUsingKey(pyKeyMap, "CentrumGPSEW");
 			histNorr = pyCentrumNorr.getHistoricalValue();
 			histOst = pyCentrumOst.getHistoricalValue();
 			Log.d("nils","pyKEyMap: "+pyKeyMap.toString());
@@ -167,7 +166,7 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 
 
 
-			stratum = al.getVariableValue(al.createRutaKeyMap(),NamedVariables.STRATUM_HISTORICAL);
+			stratum = varCache.getVariableValue(al.createRutaKeyMap(),NamedVariables.STRATUM_HISTORICAL);
 
 			Log.d("nils","STRATUM: "+stratum);
 			//			status = Active.INITIAL;
@@ -175,8 +174,8 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 
 			startB.setText("STARTA");
 			fieldListB.setVisibility(View.INVISIBLE);
-			linjeStartEast = al.getVariableUsingKey(linjeKey, "!linjestartEast");
-			linjeStartNorth = al.getVariableUsingKey(linjeKey, "!linjestartNorth");
+			linjeStartEast = varCache.getVariableUsingKey(linjeKey, "!linjestartEast");
+			linjeStartNorth = varCache.getVariableUsingKey(linjeKey, "!linjestartNorth");
 
 			if (linjeStatus.getValue()!=null) {
 				if (linjeStatus.getValue().equals(Constants.STATUS_STARTAD_MEN_INTE_KLAR)) {
@@ -231,8 +230,8 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 
 			avgrSp = (Spinner) intervallL.findViewById(R.id.avgrTyp);
 
-//			List<String>avgrTyper = Arrays.asList(new String[] {"Åkermark","Slåttervall","Vatten","Otillgänglig våtmark","Otillgänglig brant","Rasrisk","Tomt/Bebyggelse","Onåbar biotopö","Beträdnadsförbud"});			
-			
+			//			List<String>avgrTyper = Arrays.asList(new String[] {"Åkermark","Slåttervall","Vatten","Otillgänglig våtmark","Otillgänglig brant","Rasrisk","Tomt/Bebyggelse","Onåbar biotopö","Beträdnadsförbud"});			
+
 			List<String>avgrTyperRaw = al.getListElements(al.getCompleteVariableDefinition(NamedVariables.AVGRTYP));
 			String[] tmp;
 			String[] avgrTyper = new String[avgrTyperRaw.size()];
@@ -377,7 +376,7 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 											//Send a LinjeStarted Message in an envelope.
 											gs.sendMessage(new EnvelopedMessage(new LinjeStarted(currentLinje)));
 										}
-										*/
+										 */
 
 									}
 								}
@@ -395,9 +394,9 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 
 				}});
 
-			Log.d("nils","year: "+currentYear+" Ruta: "+al.getVariableValue(null,"Current_Ruta")+" Linje: "+currentLinje);
+			Log.d("nils","year: "+currentYear+" Ruta: "+varCache.getVariableValue(null,"Current_Ruta")+" Linje: "+currentLinje);
 
-			Map<String,String> keySet = Tools.createKeyMap(VariableConfiguration.KEY_YEAR,currentYear,"ruta",al.getVariableValue(null,"Current_Ruta"),"linje",currentLinje);
+			Map<String,String> keySet = Tools.createKeyMap(VariableConfiguration.KEY_YEAR,currentYear,"ruta",varCache.getVariableValue(null,"Current_Ruta"),"linje",currentLinje);
 
 			Selection selection = db.createSelection(keySet,"!linjeobjekt");
 
@@ -562,7 +561,7 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 			gpsView.setText(info);
 
 	}
-	
+
 	boolean eastW,southW,northW,westW = false;
 	private String refreshGPSInfo() {
 
@@ -650,15 +649,15 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 	}
 
 	Dialog complexD=null;
-	
+
 	private void openInterVallPopup(final Linjetyp typ,final String linjeObjLabel, ViewGroup myView) {
 		complexD = null;
 		boolean skipToEnd=false;
 
 		AlertDialog.Builder alert = new AlertDialog.Builder(this.getActivity());
-		
-		
-		
+
+
+
 		alert.setMessage("Ange metertal för linjeobjekt");
 		//If punkt, determine what kind of view to present. If existing objects, show selection.
 		if (typ==Linjetyp.PUNKT && myView==null) {
@@ -727,7 +726,7 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 					boolean error = false;
 					if (typ==Linjetyp.INTERVALL) {
 						metA = meterEnEd.getText();
-						
+
 						if (metA.length()==0||metS.length()==0) {
 							o.addRow("");
 							o.addRedText("Avstånd meter tom");
@@ -740,7 +739,7 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 							.setNeutralButton("Ok",new Dialog.OnClickListener() {				
 								@Override
 								public void onClick(DialogInterface dialog, int which) {
-									
+
 								}
 							} )
 							.show();
@@ -756,7 +755,7 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 							.setNeutralButton("Ok",new Dialog.OnClickListener() {				
 								@Override
 								public void onClick(DialogInterface dialog, int which) {
-									
+
 								}
 							} )
 							.show();
@@ -788,28 +787,27 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 	}
 
 	private void jumpToWorkFlow(String start, String end, String linjeObjLabel,Linjetyp typ) {
-		Variable currentMeter = al.getVariableInstance(NamedVariables.CURRENT_METER);
-		if (currentYear==null||al.getVariableValue(null,"Current_Ruta")==null||currentLinje==null||currentMeter==null) {
+		Variable currentMeter = varCache.getVariable(NamedVariables.CURRENT_METER);
+		if (currentYear==null||varCache.getVariableValue(null,"Current_Ruta")==null||currentLinje==null||currentMeter==null) {
 			o.addRow("");
 			o.addRedText("Could not start workflow "+linjeObjLabel+
 					"_wf, since no value exist for one of [Current_year, Current_ruta, Current_Linje, Current_Meter]");
 		} else {
 			currentMeter.setValue(start);
 			//check if the variable exist. If so - no deal.
-			Map<String,String> key = Tools.createKeyMap(VariableConfiguration.KEY_YEAR,currentYear,"ruta",al.getVariableValue(null,"Current_Ruta"),"linje",currentLinje,"meter",start,"value",linjeObjLabel);
+			Map<String,String> key = Tools.createKeyMap(VariableConfiguration.KEY_YEAR,currentYear,"ruta",varCache.getVariableValue(null,"Current_Ruta"),"linje",currentLinje,"meter",start,"value",linjeObjLabel);
 			Map<String,String> keyI = new HashMap<String,String>(key);
 			keyI.remove("value");
 			if (typ==Linjetyp.INTERVALL) {							
 				Log.d("nils","Sätter intervall variabler");
-				gs.setKeyHash(keyI);
-				Variable v = al.getVariableInstance(NamedVariables.AVGRANSSLUT);
+				Variable v = varCache.getVariableUsingKey(keyI,NamedVariables.AVGRANSSLUT);
 				v.setValue(end);
-				v= al.getVariableInstance(NamedVariables.AVGRTYP);
+				v= varCache.getVariableUsingKey(keyI,NamedVariables.AVGRTYP);
 				Log.d("nils","Setting avgrtyp to "+((String)avgrSp.getSelectedItem()));
 				v.setValue(avgrValueA[avgrSp.getSelectedItemPosition()]);
 			}
-			gs.setKeyHash(key);
-			Variable v = al.getVariableUsingKey(key, NamedVariables.LINJEOBJEKT);
+
+			Variable v = varCache.getVariableUsingKey(key, NamedVariables.LINJEOBJEKT);
 			//Variable v = al.getVariableInstance();
 
 			if (v.setValue(linjeObjLabel)) {
@@ -820,35 +818,17 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 
 			if (typ == Linjetyp.PUNKT) {
 				if (linjeObjLabel.equals(NamedVariables.RENSTIG)) {								
-					al.getVariableUsingKey(keyI, NamedVariables.TransportledTyp).setValue("2");
+					varCache.getVariableUsingKey(keyI, NamedVariables.TransportledTyp).setValue("2");
 				} else {
 					//Start workflow here.
 					Log.d("nils","Trying to start workflow "+"wf_"+linjeObjLabel);
 					Workflow wf = gs.getWorkflow("wf_"+linjeObjLabel);
-					if (wf!=null) {
-						Fragment f = wf.createFragment(wf.getTemplate());
-						if (f == null) {
-							o.addRow("");
-							o.addRedText("Couldn't create new fragment...Workflow was named"+wf.getName());
-							Log.e("nils","Couldn't create new fragment...Workflow was named"+wf.getName());
-						}
-						Bundle b = new Bundle();
-						b.putString("workflow_name", "wf_"+linjeObjLabel); //Your id
-						f.setArguments(b); //Put your id to your next Intent
-						//save all changes¨
-						CHash r = gs.evaluateContext(wf.getContext());
-						if (r.err==null) {
-							gs.setKeyHash(r.keyHash);
-							//Keep this if the hash values change.
-							gs.setRawHash(r.rawHash);
 
-							Start.singleton.changePage(f,linjeObjLabel);
-							Log.d("nils","Should have started "+"wf_"+linjeObjLabel);
-						} else {
-							o.addRow("");
-							o.addRedText("Error in context when trying to start : "+"wf_"+linjeObjLabel+". Error: "+r.err);
-						}
-					} else {
+					if (wf!=null) {
+						Start.singleton.changePage(wf, null);
+						Log.d("nils","Should have started "+"wf_"+linjeObjLabel);
+					} 
+					else {
 						o.addRow("");
 						o.addRedText("Couldn't find workflow named "+"wf_"+linjeObjLabel);
 						Log.e("nils","Couldn't find workflow named"+"wf_"+linjeObjLabel);
@@ -860,7 +840,7 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 
 
 	private Set<Map<String, String>> getExistingObjects(String linjeObjLabel) {
-		Map<String,String> objChain = Tools.createKeyMap(VariableConfiguration.KEY_YEAR,currentYear,"ruta",al.getVariableValue(null,"Current_Ruta"),"linje",currentLinje,"value",linjeObjLabel);
+		Map<String,String> objChain = Tools.createKeyMap(VariableConfiguration.KEY_YEAR,currentYear,"ruta",varCache.getVariableValue(null,"Current_Ruta"),"linje",currentLinje,"value",linjeObjLabel);
 		return db.getKeyChainsForAllVariableInstances(NamedVariables.LINJEOBJEKT, objChain, "meter");
 	}
 

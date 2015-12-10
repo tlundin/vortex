@@ -42,10 +42,7 @@ public  class StartBlock extends Block {
 		return args;
 	}
 	
-	public String getWorkFlowContext() {
-		if (contextE!=null)
-			return analyze(contextE);
-	System.err.println("Bananas !! "+context);
-		return context;
+	public List<EvalExpr> getWorkFlowContext() {
+		return contextE;
 	}
 }

@@ -14,7 +14,7 @@ import android.widget.TableLayout.LayoutParams;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.R;
-import com.teraim.vortex.dynamic.VariableConfiguration;
+import com.teraim.vortex.dynamic.types.VarCache;
 import com.teraim.vortex.dynamic.workflow_abstracts.Filter;
 import com.teraim.vortex.dynamic.workflow_abstracts.Filterable;
 import com.teraim.vortex.dynamic.workflow_abstracts.Listable;
@@ -30,7 +30,7 @@ public abstract class WF_List extends WF_Widget implements Sortable,Filterable {
 
 	protected WF_Context myContext;
 	protected GlobalState gs;
-	protected VariableConfiguration al;
+	protected VarCache varCache;
 	
 	private ViewGroup myW = null; 
 	
@@ -38,8 +38,7 @@ public abstract class WF_List extends WF_Widget implements Sortable,Filterable {
 	public WF_List(String id,boolean isVisible,WF_Context ctx, View v) {
 		super(id,v,isVisible,ctx);	
 		myContext = ctx;
-		gs = GlobalState.getInstance();
-		
+		gs = GlobalState.getInstance();		
 		myW = (TableLayout)v.findViewById(R.id.table);
 		
 
@@ -54,7 +53,7 @@ public abstract class WF_List extends WF_Widget implements Sortable,Filterable {
 		ll.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 		myContext = ctx;
 		gs = GlobalState.getInstance();
-		al = gs.getVariableConfiguration();
+		varCache = gs.getVariableCache();
 	}
 	
 	@Override

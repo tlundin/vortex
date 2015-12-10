@@ -1,17 +1,9 @@
 package com.teraim.vortex.dynamic.blocks;
 
 import java.util.List;
-import java.util.Set;
-import java.util.Map.Entry;
 
-import android.util.Log;
-
-import com.teraim.vortex.GlobalState;
-import com.teraim.vortex.dynamic.types.Variable.DataType;
-import com.teraim.vortex.utils.RuleExecutor;
-import com.teraim.vortex.utils.RuleExecutor.SubstiResult;
-import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
-import com.teraim.vortex.utils.Tools;
+import com.teraim.vortex.utils.Expressor;
+import com.teraim.vortex.utils.Expressor.EvalExpr;
 
 public class SetValueBlock extends Block {
 
@@ -25,12 +17,16 @@ public class SetValueBlock extends Block {
 	}
 
 
-	String target,expression;
+	String target;
 	ExecutionBehavior executionBehaviour=ExecutionBehavior.update_flow;
+	private List<EvalExpr> expression;
+	private String formula;
+	
 	public SetValueBlock(String id,String target,String expression,String eb) {
 		this.blockId = id;
 		this.target=target;
-		this.expression=expression;
+		this.expression=Expressor.preCompileExpression(expression);
+		this.formula = expression;
 		if (eb !=null) {
 			for (ExecutionBehavior ex:ExecutionBehavior.values()) {
 				if (eb.equals(ex.name()))
@@ -41,8 +37,12 @@ public class SetValueBlock extends Block {
 	}
 
 
-	public String getFormula() {
-		return expression;
+	public String getEvaluation() {
+		return Expressor.analyze(expression);
+	}
+	
+	public String getExpression() {
+		return formula;
 	}
 
 	public String getMyVariable() {
@@ -53,7 +53,7 @@ public class SetValueBlock extends Block {
 		return executionBehaviour;
 	}
 
-
+	/*
 	RuleExecutor re;
 	public String evaluate(GlobalState gs,String formula,
 			List<TokenizedItem> tokens, boolean stringT) {
@@ -79,5 +79,6 @@ public class SetValueBlock extends Block {
 		}
 
 	}
+	*/
 
 }

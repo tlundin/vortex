@@ -6,13 +6,9 @@ import java.util.List;
 import android.content.Context;
 import android.util.Log;
 
-import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.expr.SyntaxException;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.utils.Expressor;
-import com.teraim.vortex.utils.RuleExecutor;
-import com.teraim.vortex.utils.RuleExecutor.SubstiResult;
-import com.teraim.vortex.utils.RuleExecutor.TokenizedItem;
 
 public class Rule implements Serializable {
 
@@ -24,8 +20,6 @@ public class Rule implements Serializable {
     private Expressor.EvalExpr condition;
     private Context ctx;
     private Type myType;
-    private List<TokenizedItem> tokens;
-    private RuleExecutor re;
     private boolean initDone = false;
     private LoggerI o;
     private int myTarget=-1;

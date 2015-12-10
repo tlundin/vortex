@@ -1479,7 +1479,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		for (int delyteID=0;delyteID<=DelyteManager.MAX_DELYTEID;delyteID++) {
 			baseKey.put("delyta", delyteID+"");	
 			if (delyteID >0) {
-				Variable tagV = gs.getVariableConfiguration().getVariableUsingKey(baseKey,NamedVariables.DELNINGSTAG);
+				Variable tagV = gs.getVariableCache().getVariableUsingKey(baseKey,NamedVariables.DELNINGSTAG);
 				//Hack to prevent synk.
 
 				if (tagV!=null) {
@@ -1636,8 +1636,8 @@ public class DbHelper extends SQLiteOpenHelper {
 
 
 	public void insertGisObject(GisObject go) {
-		Variable gpsCoord = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(go.getKeyHash(), GisConstants.Location);
-		Variable geoType = GlobalState.getInstance().getVariableConfiguration().getVariableUsingKey(go.getKeyHash(), GisConstants.Geo_Type);
+		Variable gpsCoord = GlobalState.getInstance().getVariableCache().getVariableUsingKey(go.getKeyHash(), GisConstants.Location);
+		Variable geoType = GlobalState.getInstance().getVariableCache().getVariableUsingKey(go.getKeyHash(), GisConstants.Geo_Type);
 		if (gpsCoord == null || geoType == null) {
 			LoggerI o = GlobalState.getInstance().getLogger();
 			o.addRow("");

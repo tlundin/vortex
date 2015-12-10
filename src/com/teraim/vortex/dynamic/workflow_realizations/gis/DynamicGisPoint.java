@@ -69,7 +69,7 @@ public class DynamicGisPoint extends GisPointObject {
 		String res="";
 		res+=" \nDynamic: yes";
 		res+="\nMultivar: "+(multivar?"yes":"no");
-		res+="\nLabel: "+poc.getLabel();
+		res+="\nLabel: "+poc.getRawLabel();
 		res+="\nVariable values: xy, x, y";
 			if (myXYVar==null)
 				res+="null, ";

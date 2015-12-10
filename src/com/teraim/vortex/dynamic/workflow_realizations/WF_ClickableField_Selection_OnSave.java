@@ -1,14 +1,10 @@
 package com.teraim.vortex.dynamic.workflow_realizations;
 
-import java.util.Set;
-
 import android.util.Log;
 
-import com.teraim.vortex.dynamic.types.Variable;
 import com.teraim.vortex.dynamic.workflow_abstracts.Event;
-import com.teraim.vortex.dynamic.workflow_abstracts.EventListener;
 import com.teraim.vortex.dynamic.workflow_abstracts.Event.EventType;
-import com.teraim.vortex.utils.RuleExecutor;
+import com.teraim.vortex.dynamic.workflow_abstracts.EventListener;
 
 public class WF_ClickableField_Selection_OnSave extends WF_ClickableField_Selection implements EventListener {
 

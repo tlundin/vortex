@@ -4,6 +4,7 @@
 package com.teraim.vortex.dynamic.blocks;
 
 import java.io.InputStream;
+import java.util.List;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -22,6 +23,8 @@ import com.teraim.vortex.dynamic.workflow_realizations.WF_Container;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Widget;
 import com.teraim.vortex.non_generics.Constants;
+import com.teraim.vortex.utils.Expressor;
+import com.teraim.vortex.utils.Expressor.EvalExpr;
 import com.teraim.vortex.utils.Tools;
 
 /**
@@ -42,12 +45,14 @@ public class CreateImageBlock extends Block implements EventListener {
 	private WF_Context myContext;
 	private boolean isVisible;
 	private String dynImgName;
+	private List<EvalExpr> sourceE;
 
 	public CreateImageBlock(String id, String nName, String container,
 			String source, String scale, boolean isVisible) {
 		this.blockId=id;
 		this.name=nName;
 		this.container = container;
+		this.sourceE=Expressor.preCompileExpression(source);
 		this.source=source;
 		this.scale = scale;
 		this.isVisible = isVisible;
@@ -60,8 +65,8 @@ public class CreateImageBlock extends Block implements EventListener {
 		o = GlobalState.getInstance().getLogger();
 		WF_Container myContainer = (WF_Container)myContext.getContainer(container);
 		Log.d("vortex","Source name is "+source);
-		if (myContainer != null && source!=null) {
-			dynImgName = Tools.parseString(source);
+		if (myContainer != null && sourceE!=null) {
+			dynImgName = Expressor.analyze(sourceE);
 			ScaleType scaleT=ScaleType.FIT_XY;
 			img = new ImageView(myContext.getContext());
 			if (Tools.isURL(dynImgName)) {
@@ -77,9 +82,9 @@ public class CreateImageBlock extends Block implements EventListener {
 			myContainer.add(myWidget);
 			myContext.addEventListener(this, EventType.onActivityResult);
 		} else {
-			if (source==null) {
+			if (source==null || sourceE == null) {
 				o.addRow("");
-				o.addRedText("Failed to add image with block id "+blockId+" - missing source tag");				
+				o.addRedText("Failed to add image with block id "+blockId+" - source is either null or evaluates to null: "+source);				
 			}
 			o.addRow("");
 			o.addRedText("Failed to add image with block id "+blockId+" - missing container "+container);

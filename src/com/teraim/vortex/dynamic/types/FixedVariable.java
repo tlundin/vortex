@@ -42,12 +42,7 @@ public class FixedVariable extends Variable implements Serializable {
 	}
 
 
-	@Override
-	public void invalidateKey() {
-		Log.d("nils","Disregarding invalidateKey call");
-	}
-
-
+	
 
 
 }
