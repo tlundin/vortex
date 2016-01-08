@@ -225,16 +225,11 @@ public class VariableConfiguration implements Serializable {
 		if (row == null)
 			return null;
 		String  res= myTable.getElement("Label", row);
-		if (res == null) {
-			Log.d("vortex","row is: ["+row.toString()+"]");
-			Log.d("vortex","Column label not found, trying 'svenskt namn'");
-			res= myTable.getElement("Svenskt Namn", row);
-		}
 		//If this is a non-art variable, use varlabel instead.
 		if (res==null) {
-			Log.d("vortex","failed to find column Label. Will use varlabel "+this.getVarLabel(row)+" instead.");
+			Log.d("vortex","failed to find value for column Label. Will use varlabel "+this.getVarLabel(row)+" instead.");
 			gs.getLogger().addRow("");
-			gs.getLogger().addYellowText("failed to find column Label. Will use varlabel "+this.getVarLabel(row)+" instead.");
+			gs.getLogger().addYellowText("failed to find value for column Label. Will use varlabel "+this.getVarLabel(row)+" instead.");
 			res =this.getVarLabel(row);
 		}
 		if (res == null)

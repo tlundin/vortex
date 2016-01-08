@@ -289,12 +289,13 @@ public class Expressor {
          StringBuilder endResult = new StringBuilder();
         for (EvalExpr expr:expressions) {
             Object rez=null;
-            System.out.println("EvalClass "+expr.getClass().getCanonicalName());
+            System.out.println("Evaluating "+expr.toString());
             rez = expr.eval();
             if (rez!=null) {
+            	System.out.println("Part Result "+rez.toString());
                 endResult.append(rez);
             } else
-                System.err.println("Err in analyze..null EvalExpr");
+                System.err.println("Err in analyze..got null back when evaluating "+expr.toString());
 
         }
         System.out.println("Result "+endResult.toString());
@@ -311,7 +312,19 @@ public class Expressor {
         gs = GlobalState.getInstance();
         o = gs.getLogger();
         currentKeyChain = evalContext;
-        return (Boolean)expr.eval();
+        Log.d("Vortex","BoolExpr: "+expr.toString());
+       // Log.d("Vortex","Class "+expr.getClass().getCanonicalName());
+        Object eval = expr.eval();
+        Log.d("Vortex","Got back "+eval);
+        if (eval==null)
+        	Log.e("vortex","LOGICAL EXP "+expr+" EVALUATES TO NULL!!");
+        if (eval instanceof String) {
+        	Log.e("vortex","String back in analyzeBoolean...likely missing [..]");
+        	o.addRow("");
+        	o.addRedText("The expression "+expr.toString()+" evaluated to Text: '"+eval+"'. This is likely because of missing [ ] parantheses around the expression in the XML");
+        	return false;
+        } else
+        	return (Boolean)eval;
     }
 	/**
 	 * Class Token
@@ -765,9 +778,18 @@ public class Expressor {
 			switch(type) {
 				case variable:
 					String value = gs.getVariableCache().getVariableValue(currentKeyChain,myToken.str);
-					if (value == null)
+					if (value == null) {
                         System.out.println("Variable '"+this.toString()+"' does not have a value");
-					return value;
+                        return null;
+					}
+					if (Tools.isNumeric(value))
+						return Double.parseDouble(value);
+					if (value.equalsIgnoreCase("false"))
+						return false;
+					else if (value.equalsIgnoreCase("true"))
+						return true;
+					else
+						return value;
 				case number:
 					if (myToken !=null && myToken.str!=null) {
 						//System.out.println("Numeric value: "+myToken.str);
@@ -832,14 +854,42 @@ public class Expressor {
 
 		public Object eval() {
 			Object arg1v = arg1.eval();
-			Object arg2v = arg2.eval();
-			if (arg1v==null || arg2v==null)
+//			Log.e("vortex","I am literal? "+isLiteralOperator);
+//			Log.e("vortex","arg1v: "+((arg1v==null)?"null":arg1v.toString()));
+//			Log.e("vortex","arg2v: "+((arg2v==null)?"null":arg2v.toString()));
+			
+
+			if (arg1v==null) {
+					String opS =operator.myToken.str;
+					if (opS!=null) {
+						TokenType op = TokenType.valueOfIgnoreCase(opS);
+						if (op.equals(TokenType.or))
+							return arg2.eval();
+					}
 				return null;
+			}
+			
+			Object arg2v = arg2.eval();
+			
+			if (arg2v==null) {
+				String opS =operator.myToken.str;
+				if (opS!=null) {
+					TokenType op = TokenType.valueOfIgnoreCase(opS);
+					if (op.equals(TokenType.or))
+						if(arg1v instanceof Boolean)
+							if ((Boolean)arg1v)
+								return true;
+						
+				}
+				return null;
+			}
+
 			boolean isDoubleOperator = arg1v instanceof Double && arg2v instanceof Double;
 			boolean isBooleanOperator = arg1v instanceof Boolean && arg2v instanceof Boolean;
 			//if any of the arguments are string, then treat both as literal.
 			boolean isLiteralOperator = arg1v instanceof String || arg2v instanceof String;
-
+			
+			
 			if (!isDoubleOperator && !isBooleanOperator && !isLiteralOperator) {
 				System.err.println("Argument types are wrong in operand: "+arg1v.getClass().getSimpleName()+","+arg2v.getClass().getSimpleName());
 				return null;
@@ -855,7 +905,7 @@ public class Expressor {
 				if (opS!=null) {
 					TokenType op = TokenType.valueOf(opS);
 					switch (op) {
-						//works for Double and literal (string).
+						
 						case add:
 							res = arg1F+arg2F;
 							break;
@@ -870,6 +920,7 @@ public class Expressor {
 							break;
 						case eq:
 							res = arg1F.compareTo(arg2F)==0;
+							Log.e("vortex","arg1F eq arg2F? "+arg1F+" eq "+arg2F+": "+res);
 							break;
 						case neq:
 							res = arg1F.compareTo(arg2F)==-1;
@@ -905,9 +956,9 @@ public class Expressor {
 				if (opS!=null) {
 					TokenType op = TokenType.valueOfIgnoreCase(opS);
 					switch (op) {
-						case or:
-							//System.err.println("Gets to or");
+						case or:						
 							res = (arg1B||arg2B);
+							Log.e("vortex","OR Evaluates to "+res+" for "+arg1B+" and "+arg2B);
 							break;
 						case and:
 							//System.err.println("Gets to and");
@@ -986,6 +1037,7 @@ public class Expressor {
 		private static final int No_Null_Numeric=2;
 		private static final int No_Null_Literal=3;
 		private static final int NO_CHECK = 4;
+		private static final int Null_Numeric = 5;
 
 		private List<EvalExpr> args = new ArrayList<EvalExpr>();
 
@@ -1231,12 +1283,13 @@ public class Expressor {
 					return false;
 				//Return 0 if one of the values are undefined.
 				case sum:
-					if (!checkPreconditions(evalArgs,-1,No_Null_Numeric))
+					if (!checkPreconditions(evalArgs,-1,Null_Numeric))
 						return 0;
 					else {
 						double sum = 0;
 						for (Object arg : evalArgs) {
-							sum += (Double) arg;
+							if (arg!=null)
+								sum += (Double) arg;
 						}
 						return sum;
 					}
@@ -1518,6 +1571,16 @@ public class Expressor {
 						o.addRow("");
 						o.addRedText("Type error. Non literal argument for function '" + type.toString() + "'.");
 						Log.e("Vortex","Type error. Non literal argument for function '"+type.toString()+"'.");
+						return false;
+					}
+				}
+			}
+			if (flags == Null_Numeric) {
+				for (Object obj:evaluatedArgumentsList) {
+					if (obj !=null && !(obj instanceof Double)) {
+						o.addRow("");
+						o.addRedText("Type error. Not null & not numeric argument for function '" + type.toString() + "'.");
+						Log.e("Vortex","Type error. Not null & not numeric argument for function '"+type.toString()+"'.");
 						return false;
 					}
 				}

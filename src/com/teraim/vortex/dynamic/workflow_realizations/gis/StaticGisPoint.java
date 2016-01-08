@@ -26,7 +26,7 @@ public class StaticGisPoint extends GisPointObject {
 	public String toString() {
 		String res="";
 		res+=" \nDynamic: no";
-		res+="\nLabel: "+poc.getRawLabel();
+		res+="\nLabel: "+this.getLabel();
 		return res;
 	}
 
