@@ -37,7 +37,7 @@ public class WF_Instance_List extends WF_Static_List implements EventListener,Ev
 	private Map<String, String> myKeyHash;
 
 
-	private Set<String> mySuffixes=new HashSet<String>();
+	//private Set<String> mySuffixes=new HashSet<String>();
 
 
 	private boolean showHistorical;
@@ -51,7 +51,7 @@ public class WF_Instance_List extends WF_Static_List implements EventListener,Ev
 		ctx.addEventListener(this, EventType.onSave);
 		o = GlobalState.getInstance().getLogger();
 		this.variatorColumn=variatorColumn;
-		Log.d("nils","INSTANCE LIST CREATED. ROWS: "+rows.size());
+		Log.d("nils","INSTANCE LIST CREATED. ROWS: "+rows.size()+" VARIATOR: "+variatorColumn);
 	}
 
 
@@ -71,7 +71,7 @@ public class WF_Instance_List extends WF_Static_List implements EventListener,Ev
 			o.addRedText("Addvariable - did not find any new variables to add for "+varSuffix);
 		}
 
-		mySuffixes.add(varSuffix);
+		//mySuffixes.add(varSuffix);
 		return null;
 	}
 

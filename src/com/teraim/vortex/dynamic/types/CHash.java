@@ -12,6 +12,7 @@ import android.util.Log;
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.log.LoggerI;
 import com.teraim.vortex.utils.Expressor;
+import com.teraim.vortex.utils.Expressor.Atom;
 import com.teraim.vortex.utils.Expressor.EvalExpr;
 
 public class CHash implements Serializable {
@@ -125,8 +126,10 @@ public class CHash implements Serializable {
 				o.addRow("");
 				o.addRedText(err);
 				return new CHash(err);
-			} else
+			} else {
+				
 				return new CHash(cContext,keyHash);
+			}
 		}
 	}
 	

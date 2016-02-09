@@ -127,7 +127,7 @@ public class Variable implements Serializable {
 //			Log.d("nils","done:     "+System.currentTimeMillis()+" var: "+this.getId());
 			//refreshRuleState();
 		}
-		//Log.d("nils","Getvalue returns "+myValue+" for "+this.getId());
+		Log.d("nils","Getvalue returns "+myValue+" for "+this.getId());
 		return myValue;
 	}
 
@@ -267,7 +267,7 @@ public class Variable implements Serializable {
 
 
 	public Variable(String name,String label,List<String> row,Map<String,String>keyChain, GlobalState gs,String valueColumn, String defaultOrExistingValue, Boolean valueIsPersisted) {
-		//Log.e("nils","Creating variable ["+name+"] with keychain "+((keyChain==null)?"null":printKeyChain(keyChain))+"\nthis obj: "+this);
+		Log.e("nils","Creating variable ["+name+"] with keychain "+((keyChain==null)?"null":printKeyChain(keyChain))+"\nthis obj: "+this);
 		this.gs=gs;
 		al=gs.getVariableConfiguration();
 		this.name = name;

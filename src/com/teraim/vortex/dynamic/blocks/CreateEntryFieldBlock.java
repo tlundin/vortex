@@ -72,7 +72,7 @@ public class CreateEntryFieldBlock extends Block {
 			Variable v = gs.getVariableCache().getVariable(name,initialValue);
 			if (v == null) {
 				o.addRow("");
-				o.addRedText("Variable "+name+" referenced in block_create_entry_field not found.");
+				o.addRedText("Failed to create entryfield for block "+blockId);
 				Log.d("nils","Variable "+name+" referenced in block_create_entry_field not found.");
 
 				o.addRedText("Current keyChain: ["+gs.getCurrentKeyMap()+"]");

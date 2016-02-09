@@ -63,6 +63,7 @@ public class Expressor {
 		hasNullValue(booleanFunction,-1),
 		photoExists(booleanFunction,1),
 		allHaveValue(booleanFunction,-1),
+		not(booleanFunction,1),
 		iff(valueFunction,3),
 		getColumnValue(valueFunction,1),
 		historical(valueFunction,1),
@@ -75,6 +76,7 @@ public class Expressor {
 		getCurrentWeekNumber(valueFunction,0),
 		getSweDate(valueFunction,0),
 		sum(valueFunction,-1),
+		concatenate(valueFunction,-1),
 		getDelytaArea(valueFunction,1),
 		abs(valueFunction,1),
 		acos(valueFunction,1),
@@ -93,6 +95,7 @@ public class Expressor {
 		max(valueFunction,2),
 		min(valueFunction,2),
 		unaryMinus(valueFunction,1),
+		
 
 		variable(null,-1),
 		text(variable,0),
@@ -775,6 +778,7 @@ public class Expressor {
 		}
 
 		public Object eval() {
+			Log.d("vortex","In eval for Atom");
 			switch(type) {
 				case variable:
 					String value = gs.getVariableCache().getVariableValue(currentKeyChain,myToken.str);
@@ -853,6 +857,7 @@ public class Expressor {
 		}
 
 		public Object eval() {
+			Log.d("vortex","In eval for convo");
 			Object arg1v = arg1.eval();
 //			Log.e("vortex","I am literal? "+isLiteralOperator);
 //			Log.e("vortex","arg1v: "+((arg1v==null)?"null":arg1v.toString()));
@@ -1038,6 +1043,7 @@ public class Expressor {
 		private static final int No_Null_Literal=3;
 		private static final int NO_CHECK = 4;
 		private static final int Null_Numeric = 5;
+		private static final int Null_Literal = 6;
 
 		private List<EvalExpr> args = new ArrayList<EvalExpr>();
 
@@ -1125,6 +1131,8 @@ public class Expressor {
 
 		@Override
 		public Object eval() {
+			
+			Log.d("vortex","evaluating function "+type);
 
 			Object argEval=null,result=null;
 			List<Object> evalArgs = new ArrayList<Object>();
@@ -1134,7 +1142,7 @@ public class Expressor {
 				argEval= arg.eval();
 				evalArgs.add(argEval);
 			}
-			Log.d("vortex","evaluating function "+type);
+			
 
             
 			//Now all arguments are evaluated. Execute function!
@@ -1218,9 +1226,11 @@ public class Expressor {
 					if (checkPreconditions(evalArgs,1,No_Null_Numeric))
 						return -((Double)evalArgs.get(0));
 					break;
-
-				//Vortex functions follows here
-
+				case not:
+					if (checkPreconditions(evalArgs,1,No_Null_Literal))
+						return !((Boolean)evalArgs.get(0));
+				break;
+					
 				case historical:
 					if (checkPreconditions(evalArgs,1,No_Null_Literal)) {
 						Variable var = gs.getVariableCache().getVariable(evalArgs.get(0).toString());
@@ -1292,6 +1302,18 @@ public class Expressor {
 								sum += (Double) arg;
 						}
 						return sum;
+					}
+				case concatenate:
+					if (!checkPreconditions(evalArgs,-1,Null_Literal)) {
+						return null;
+					}
+					else {
+						StringBuilder stringSum= new StringBuilder();
+						for (Object arg : evalArgs) {
+							if (arg!=null)
+								stringSum.append(arg);
+						}
+						return stringSum.toString();
 					}
 				case hasNullValue:
 					return !checkPreconditions(evalArgs,-1,No_Null);
@@ -1585,6 +1607,17 @@ public class Expressor {
 					}
 				}
 			}
+			if (flags == Null_Literal) {
+				for (Object obj:evaluatedArgumentsList) {
+					if (obj !=null && !(obj instanceof String)) {
+						o.addRow("");
+						o.addRedText("Type error. Not null & Non literal argument for function '" + type.toString() + "'.");
+						Log.e("Vortex","Type error. Not null & Non literal argument for function '"+type.toString()+"'.");
+						return false;
+					}
+				}
+			}
+			
 			return true;
 
 		}
@@ -1620,7 +1653,7 @@ public class Expressor {
 			if (e==null)
 				continue;
 			System.out.println("Next E: "+e.toString());
-			//System.out.println("Expr: "+e);
+			System.out.println("Expr: "+e.getClass().getCanonicalName());
 			//subexpr.
 			if (e instanceof Push) {
 				depth++;

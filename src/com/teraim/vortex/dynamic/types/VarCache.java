@@ -28,11 +28,11 @@ public class VarCache {
 
 	private GlobalState gs;
 	private LoggerI o;
-	private VariableConfiguration al;
+	//private VariableConfiguration al;
 
 	public VarCache(GlobalState gs) {
 		this.gs = gs;
-		al = gs.getVariableConfiguration();
+		//al = gs.getVariableConfiguration();
 		this.o = gs.getLogger();
 
 	}
@@ -104,9 +104,15 @@ public class VarCache {
 		try {
 			instKey = buildDbKey(gs.getVariableConfiguration().getKeyChain(row),context);
 		} catch (KeyException e) {
+			
 			Log.e("nils","Current context is not complete! ");
-			if (context!=null)
+			o.addRow("");
+			o.addRedText("Context incomplete for " +varId+" (missing a column in referenced in the variable keychain)");
+			if (context!=null) {
+				o.addRow("");
+				o.addRedText("KeyChain: "+gs.getVariableConfiguration().getKeyChain(row)+" Context: "+context.toString());
 				Log.e("nils","KeyChain: "+gs.getVariableConfiguration().getKeyChain(row)+" Context: "+context.toString());
+			}
 			if (newA)
 				cache.remove(ret);
 			return null;
@@ -254,8 +260,8 @@ public class VarCache {
 
 	//A variable type that will not allow its keychain to be changed.
 	public Variable getFixedVariableInstance(Map<String, String> keyChain, String varId,String defaultValue) {
-		List<String> row = al.getCompleteVariableDefinition(varId);
-		return new FixedVariable(varId,al.getEntryLabel(row),row,keyChain,gs,defaultValue,true);
+		List<String> row = gs.getVariableConfiguration().getCompleteVariableDefinition(varId);
+		return new FixedVariable(varId,gs.getVariableConfiguration().getEntryLabel(row),row,keyChain,gs,defaultValue,true);
 	}	
 
 

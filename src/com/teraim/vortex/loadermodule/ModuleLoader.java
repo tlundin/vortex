@@ -174,6 +174,10 @@ public class ModuleLoader implements FileLoadedCb{
 				Log.d("vortex","Dependant ["+res.errorMessage+"] needs to be reloaded.");
 				ConfigurationModule reloadModule = myModules.getModule(res.errorMessage);
 				if (reloadModule!=null) {
+					if (reloadModule.isMissing() && !reloadModule.isRequired()) {
+						Log.d("vortex","Dependant is not required and is not defined");
+						
+					} else {
 					reloadModule.setLoaded(false);
 					reloadModule.setFrozenVersion(-1);
 					
@@ -185,6 +189,8 @@ public class ModuleLoader implements FileLoadedCb{
 					//majorVersionChange=true;
 					reloadModule.load(this);
 					o.draw();
+					
+					}
 					return;
 				}
 				break;

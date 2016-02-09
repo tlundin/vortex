@@ -594,6 +594,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 			myVars.put(var,l);
 			break;
 		case auto_increment:
+			Log.d("vortex","Adding AUTO_INCREMENT variable "+var.getLabel());
 			l = LayoutInflater.from(myContext.getContext()).inflate(R.layout.edit_field_numeric,null);
 			header = (TextView)l.findViewById(R.id.header);
 			header.setText(varLabel);
@@ -707,15 +708,16 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 						}
 					} else
 						if (type == DataType.auto_increment) {
-							/*EditText etview = (EditText)view.findViewById(R.id.edit);
+							EditText etview = (EditText)view.findViewById(R.id.edit);
 							String s = etview.getText().toString();
 							if (s!=null && s.length()>0) {
 								int val = Integer.parseInt(etview.getText().toString());
 								val++;
 								newValue = val+"";
+							} else {
+								Log.e("vortex","value is null or len 0 in auto_increment");
+								newValue = existingValue;
 							}
-							 */
-							newValue = existingValue;
 						}
 
 			if (newValue == null || !newValue.equals(existingValue)||variable.isUsingDefault()) {
@@ -783,16 +785,26 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 			.show();
 		}
 		if (saveEvent) {
+			
+			boolean contextChanged=false;
 			//Commit cached value into db.
 			for (Variable v:myVars.keySet()) {
 				String value = v.getValue();
 				v.setOnlyCached(null);
-				v.setValue(value);
-			}
+				//If value of variable has changed and it is a context variable, the whole workflow needs reload!
+				if (v.setValue(value) && myContext.isContextVariable(v.getId())) {
+					Log.e("vortex","detected change of context variable in wf_clickfield: "+v.getLabel());
+					contextChanged=true;
+				}
 
+			}
 			Log.d("nils","IN SAVE() SENDING EVENT");
 			gs.sendEvent(MenuActivity.REDRAW);
 			myContext.registerEvent(new WF_Event_OnSave(this.getId(),oldValue));
+			//If context changed, add a event to rerun the workflow.
+			//myContext.registerEvent(new WF_Event_OnContextChange());
+			if (contextChanged)
+				myContext.reload();
 		}
 
 
@@ -818,7 +830,8 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 		for (Rule r:myRules) {
 			Log.d("vortex"," Rule: "+r.getCondition());
 			try {
-				if (!r.execute())
+				Boolean res = r.execute();
+				if (res!=null && !res)
 					return r;
 			} catch (SyntaxException e) {
 				Log.e("vortex","Syntax exception on rule "+r.id);

@@ -742,7 +742,10 @@ public class DbHelper extends SQLiteOpenHelper {
 			Log.d("nils","In getvalue with name "+name+" and selection "+s.selection+" and selectionargs "+print(s.selectionArgs));
 			db = this.getWritableDatabase();
 		}
-		Cursor c = db.query(TABLE_VARIABLES,valueCol,
+		Log.d("nils","In getvalue with name "+name+" and selection "+s.selection+" and selectionargs "+print(s.selectionArgs));
+		Cursor c =null;
+		if (checkForNulls(s.selectionArgs)) {
+		c= db.query(TABLE_VARIABLES,valueCol,
 				s.selection,s.selectionArgs,null,null,null,null);
 		if (c != null && c.moveToFirst()) {
 			//Log.d("nils","Cursor count "+c.getCount()+" columns "+c.getColumnCount());
@@ -751,6 +754,7 @@ public class DbHelper extends SQLiteOpenHelper {
 			c.close();		
 			return value;
 		} 
+		}
 
 		Log.d("nils","Did NOT find value in db for "+name+". Key arguments:");
 
@@ -779,6 +783,13 @@ public class DbHelper extends SQLiteOpenHelper {
 	}
 
 
+
+	private boolean checkForNulls(String[] selectionArgs) {
+		for(String s:selectionArgs)
+			if (s==null)
+				return false;
+		return true;
+	}
 
 	public int getId(String name, Selection s) {
 		//Log.d("nils","In getId with name "+name+" and selection "+s.selection+" and selectionargs "+print(s.selectionArgs));
@@ -903,21 +914,22 @@ public class DbHelper extends SQLiteOpenHelper {
 
 	private void createValueMap(Variable var,String newValue,ContentValues values, String timeStamp) {
 		//Add column,value mapping.
+		Log.d("vortex","in createvaluemap");
 		Map<String,String> keyChain=var.getKeyChain();
 		//If no key column mappings, skip. Variable is global with Id as key.
 		if (keyChain!=null) {
-			//			Log.d("nils","keychain has "+keyChain.size()+" elements");
+						Log.d("nils","keychain for "+var.getLabel()+" has "+keyChain.size()+" elements");
 			for(String key:keyChain.keySet()) { 
 				String value = keyChain.get(key);
 				String column = getColumnName(key);
 				values.put(column,value);
-				//				Log.d("nils","Adding column "+column+"(key):"+key+" with value "+value);
+								Log.d("nils","Adding column "+column+"(key):"+key+" with value "+value);
 			}
-		} //else
-		//	Log.d("nils","Inserting global variable "+var.getId()+" value: "+newValue);
+		} else
+			Log.d("nils","Inserting global variable "+var.getId()+" value: "+newValue);
 		values.put("var", var.getId());
 		//if (!var.isKeyVariable()) {
-		//Log.d("nils","Inserting new value into column "+var.getValueColumnName()+" ("+getColumnName(var.getValueColumnName())+")");
+		Log.d("nils","Inserting new value into column "+var.getValueColumnName()+" ("+getColumnName(var.getValueColumnName())+")");
 		values.put(getColumnName(var.getValueColumnName()), newValue);
 		//}
 		values.put("lag",globalPh.get(PersistenceHelper.LAG_ID_KEY));
@@ -1714,8 +1726,12 @@ public class DbHelper extends SQLiteOpenHelper {
 		for (String key:keyChain.keySet()) {
 			query += " AND "+this.getColumnName(key)+"= ?";
 			selArgs[i++]=keyChain.get(key);
+			Log.d("vortex","column: "+this.getColumnName(key)+" SelArg: "+keyChain.get(key));
 		}
-
+		Log.d("vortex","Selarg: "+selArgs.toString());
+		
+		
+		
 		Cursor c = db.rawQuery(query, selArgs);
 		Log.d("nils","Got "+c.getCount()+" results. PrefetchValue."+namePrefix+" with key: "+keyChain.toString());
 		Map<String,String> ret = new HashMap<String,String>();

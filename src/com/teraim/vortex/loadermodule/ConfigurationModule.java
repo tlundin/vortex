@@ -91,6 +91,10 @@ public abstract class ConfigurationModule {
 		// :)
 		return IamLoaded||notFound;
 	}
+	
+	public boolean isMissing() {
+		return notFound;
+	}
 
 	public void cancelLoader() {
 		if (mLoader!=null) {

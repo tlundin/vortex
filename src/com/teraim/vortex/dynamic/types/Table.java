@@ -165,7 +165,7 @@ public class Table implements Serializable {
 	}
 
 	public int getColumnIndex(String c) {
-		Log.d("vortex","My columns: "+myColumns.toString());
+		//Log.d("vortex","My columns: "+myColumns.toString());
 		for (int i=0;i<myColumns.size();i++)
 			if (c.equalsIgnoreCase(myColumns.get(i)))
 				return i;
@@ -208,7 +208,7 @@ public class Table implements Serializable {
 		if (index !=-1) {	
 			if (row.size()>index)
 				result = row.get(index);
-			Log.d("nils","found field "+columnName+": "+result+" in class Table");
+			//Log.d("nils","found field "+columnName+": "+result+" in class Table");
 		} else {
 			Log.e("nils","Did NOT find field ["+columnName+"] in class Table. Columns available:");
 			for (int i=0;i<myColumns.size();i++)

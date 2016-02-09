@@ -56,6 +56,7 @@ public class WF_Context {
 	private Workflow myWorkflow;
 	private boolean hasSatNav;
 	public int mapLayer=0;
+	private List<String> contextVariables = null;
 
 
 	public WF_Context(Context ctx,Executor e,int rootContainerId) {
@@ -202,7 +203,7 @@ public class WF_Context {
 		currentGis = null;
 		gisses.clear();
 		hasGPSTracker=false;
-
+		contextVariables=null;
 	}
 
 	public void emptyContainers() {
@@ -341,6 +342,16 @@ public class WF_Context {
 	}
 	public void reload() {
 		myTemplate.restart();
+	}
+	
+	public void setContextVariables(List<String> contextVars) {
+		contextVariables = contextVars;
+	}
+	
+	public boolean isContextVariable(String cVar) {
+		if (contextVariables == null)
+			return false;
+		return (contextVariables.contains(cVar));
 	}
 	
 

@@ -10,7 +10,7 @@ public class SetValueBlock extends Block {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -9113802658084282750L;
+	private static final long serialVersionUID = -9113802658084282751L;
 
 	public enum ExecutionBehavior {
 		constant,dynamic,update_flow

@@ -16,6 +16,10 @@ import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
 
 public class MenuHeaderBlock extends Block {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2542614941496953004L;
 	String label,textColor, bgColor;
 
 	public MenuHeaderBlock(String id, String label, String textColor,

@@ -58,7 +58,7 @@ public class Rule implements Serializable {
 
 
     //Execute Rule. Target will be colored accordingly.
-    public boolean execute() throws SyntaxException {
+    public Boolean execute() throws SyntaxException {
        if (condition!=null) {
     	   System.err.println("BANANA: CALING BOOL ANALYSIS WITH "+condition.toString());
        

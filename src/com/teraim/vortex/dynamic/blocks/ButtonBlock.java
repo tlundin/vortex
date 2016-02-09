@@ -312,13 +312,14 @@ public  class ButtonBlock extends Block {
 									boolean isDeveloper = gs.getGlobalPreferences().getB(PersistenceHelper.DEVELOPER_SWITCH);
 
 									for (Rule r:myRules) {
-										boolean ok=false;
+										Boolean ok=false;
 										try {
 											ok = r.execute();								
 										} catch (SyntaxException e) {
 											o.addRow("");
 											o.addRedText("Rule "+r.id+" has syntax errors in condition: "+r.getCondition());										
 										}
+										if (ok!=null) {
 										Rule.Type type = r.getType();
 										int indicatorId=0;
 										boolean bok = false;
@@ -349,6 +350,7 @@ public  class ButtonBlock extends Block {
 											body.setText(r.getRuleText());
 											frame.addView(row);
 										}
+									}
 									}
 
 								} 
