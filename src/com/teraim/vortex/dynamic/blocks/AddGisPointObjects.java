@@ -180,6 +180,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 		Log.d("vortex","OBJ KEYHASH "+objectKeyHash.toString());
 		//Use current year for statusvar.
 		Map<String, String> currYearH = Tools.copyKeyHash(objectKeyHash.getContext());
+		//TODO: FIX THIS.
 		currYearH.put("år",Constants.getYear());
 		Log.d("vortex","Curryear HASH "+currYearH.toString());
 

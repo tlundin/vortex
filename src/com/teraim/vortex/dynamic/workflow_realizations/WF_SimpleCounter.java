@@ -17,7 +17,7 @@ public class WF_SimpleCounter extends WF_Not_ClickableField {
 
 	public WF_SimpleCounter(String targetId, String label, String descriptionT,
 			WF_Context myContext, boolean isVisible) {
-		super(label, descriptionT, myContext, 
+		super(label,label, descriptionT, myContext, 
 				LayoutInflater.from(myContext.getContext()).inflate(R.layout.selection_field_normal,null), isVisible);
 
 		gs = GlobalState.getInstance();

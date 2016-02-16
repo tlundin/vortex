@@ -45,8 +45,9 @@ public class WF_List_UpdateOnSaveEvent extends WF_Static_List implements EventLi
 		ctx.addEventListener(this, EventType.onSave);
 		o = GlobalState.getInstance().getLogger();
 
-		for (List<String>r:rows) 
+		for (List<String>r:rows)  {
 			addEntryField(r);
+		}
 	}
 
 	private void addEntryField(List<String> r) {

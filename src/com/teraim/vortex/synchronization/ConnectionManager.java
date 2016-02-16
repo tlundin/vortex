@@ -1,7 +1,7 @@
 package com.teraim.vortex.synchronization;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import android.content.Context;
 
@@ -17,7 +17,14 @@ import com.teraim.vortex.GlobalState;
 public class ConnectionManager {
 
 	private final GlobalState gs;
-	private final List<ConnectionProvider> activeConnections = new ArrayList<ConnectionProvider>();
+	private final Map<ConnectionType,ConnectionProvider> activeConnections = new HashMap<ConnectionType,ConnectionProvider>();
+	
+	
+	public enum ConnectionType{
+		bluetooth,
+		mobilenet,
+		wlan
+	}
 	
 	//This is a singleton owned by GlobalState.
 	public ConnectionManager(GlobalState gs) {
@@ -35,12 +42,34 @@ public class ConnectionManager {
 	 */
 	public ConnectionProvider requestConnection(Context ctx) {
 		if (activeConnections.isEmpty()) {
-			activeConnections.add(new BluetoothConnectionProvider(ctx));
+			activeConnections.put(ConnectionType.bluetooth,new BluetoothConnectionProvider(ctx));
 			
 		} 
-		return activeConnections.get(0);
+		return activeConnections.get(ConnectionType.bluetooth);
 	}
 
+	public ConnectionProvider requestConnection(Context ctx, ConnectionType cType) {
+		
+		ConnectionProvider provider = null;
+		switch (cType) {
+		case bluetooth:
+			provider = new BluetoothConnectionProvider(ctx); 
+			break;
+		case mobilenet:
+			provider = new MobileRadioConnectionProvider(ctx); 
+			break;
+		case wlan:
+			break;
+			
+		}
+		if (activeConnections.isEmpty() && provider !=null) {
+			activeConnections.put(cType,provider);
+			
+		} 
+		return provider;
+	}
+	
+	
 
 	public void releaseConnection(ConnectionProvider mConnection) {
 		if (activeConnections!=null) {

@@ -84,6 +84,12 @@ public class DummyLogger implements LoggerI {
 		
 	}
 
+	@Override
+	public boolean hasRed() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 
 
 }

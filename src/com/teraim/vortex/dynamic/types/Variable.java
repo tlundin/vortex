@@ -213,11 +213,13 @@ public class Variable implements Serializable {
 	protected void insertVariable(final String value,
 			final boolean isSynchronized) {
 		long mil = System.currentTimeMillis();
-		threadPool.execute( new Thread(new Runnable() {
+		myDb.insertVariable(Variable.this,value,isSynchronized);
+		/*threadPool.execute( new Thread(new Runnable() {
 	        public void run() {
 	        	myDb.insertVariable(Variable.this,value,isSynchronized);
 	        }
 	    }));
+	    */
 		Log.d("vortex","Timex used "+(System.currentTimeMillis()-mil)+"");
 	}
 
@@ -267,7 +269,7 @@ public class Variable implements Serializable {
 
 
 	public Variable(String name,String label,List<String> row,Map<String,String>keyChain, GlobalState gs,String valueColumn, String defaultOrExistingValue, Boolean valueIsPersisted) {
-		Log.e("nils","Creating variable ["+name+"] with keychain "+((keyChain==null)?"null":printKeyChain(keyChain))+"\nthis obj: "+this);
+		Log.d("nils","Creating variable ["+name+"] with keychain "+((keyChain==null)?"null":keyChain.toString())+"\nthis obj: "+this);
 		this.gs=gs;
 		al=gs.getVariableConfiguration();
 		this.name = name;
@@ -450,14 +452,16 @@ public class Variable implements Serializable {
 
 	public Long getTimeOfInsert() {
 		if (timeStamp!=null) {
-			//Log.d("nils","returned cached timestamp for var "+this.getId());
+			Log.d("vortex","cached Timestamp for "+this.getId()+" is "+timeStamp);
 			return timeStamp;
 		}
 			String tmp = myDb.getValue(name, mySelection,Variable.timeStampS);
 			if (tmp!=null) {
+				Log.d("vortex","Timestamp for "+this.getId()+" is "+tmp);
 				timeStamp = Long.parseLong(tmp);
 				return timeStamp;
 			}
+			Log.e("vortex","returning null in gettimeofinsert");
 			return null;
 		
 	}
@@ -481,6 +485,34 @@ public class Variable implements Serializable {
 
 	public CombinedRangeAndListFilter getLimitFilter() {
 		return myFilter;
+	}
+
+	//Cut out the instance part of a variable name.
+	public static String getVarInstancePart(String varId) {
+		final String sep = Constants.VariableSeparator;
+		if (varId == null)
+			return null;
+		int start=varId.indexOf(sep);
+		if (start!=-1 && (start+1<varId.length())) {
+			int end= varId.indexOf(sep, start+1);
+			if (end!=-1) {
+				Log.d("vortex","getVarInstancePart returns: "+varId.substring(start+1,end));
+				return varId.substring(start+1, end);
+			}
+		}
+		return null;
+	}
+
+	public static String getVarSuffixPart(String varId) {
+		if (varId == null)
+			return null;
+		int c = varId.lastIndexOf(Constants.VariableSeparator);
+		if (c!=-1 && c<(varId.length()-1))
+			return varId.substring(c+1,varId.length());
+		else {
+			Log.d("vortex","getVarSuffix returns null for "+varId);
+			return null;
+		}
 	}
 
 

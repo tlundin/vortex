@@ -17,5 +17,6 @@ public interface LoggerI {
 	 public void writeTicky(String tickyText);
 	 public void removeTicky();
 	 public void removeLine();
+	 public boolean hasRed();
 
 }

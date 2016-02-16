@@ -35,7 +35,7 @@ WF_Not_ClickableField implements EventListener {
 
 	public WF_Not_ClickableField_SumAndCountOfVariables(String header,String descriptionT, WF_Context myContext, 
 			 String myTarget, String pattern,Type sumOrCount,boolean isVisible, String textColor, String bgColor) {
-		super(header, descriptionT, myContext, LayoutInflater.from(myContext.getContext()).inflate(R.layout.selection_field_normal_colored,null),isVisible);
+		super(header,header, descriptionT, myContext, LayoutInflater.from(myContext.getContext()).inflate(R.layout.selection_field_normal_colored,null),isVisible);
 		this.myContext=myContext;
 		o = GlobalState.getInstance().getLogger();
 		targetList = myContext.getList(myTarget);

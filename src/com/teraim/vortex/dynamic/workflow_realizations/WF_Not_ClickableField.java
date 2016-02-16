@@ -64,9 +64,9 @@ public abstract class WF_Not_ClickableField extends WF_ListEntry {
 	}
 
 
-	public WF_Not_ClickableField(final String label,final String descriptionT, WF_Context myContext, 
+	public WF_Not_ClickableField(String id,final String label,final String descriptionT, WF_Context myContext, 
 			View view,boolean isVisible) {
-		super(label,view,myContext,isVisible);
+		super(id,view,myContext,isVisible);
 		TextView myHeader;
 
 		this.myContext = myContext;
@@ -85,7 +85,8 @@ public abstract class WF_Not_ClickableField extends WF_ListEntry {
 
 		if (displayOut && virgin) {
 			virgin = false;
-			super.setKeyRow(var);
+			super.setKey(var);
+			myDescription=al.getDescription(var.getBackingDataSet());
 		}		
 		if (displayOut) {
 			LinearLayout ll = getFieldLayout();

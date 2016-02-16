@@ -1,5 +1,6 @@
 package com.teraim.vortex.dynamic.workflow_abstracts;
 
+import java.util.Map;
 import java.util.Set;
 
 import com.teraim.vortex.dynamic.types.Variable;
@@ -8,6 +9,8 @@ import com.teraim.vortex.dynamic.types.Variable;
 //TODO: Weaknesses : Cannot sort on value, only columns in Configuration Time data.
 public interface Listable {
 	public String getSortableField(String columnId);
+	//Return the keychain for this listables key.
+	public Map<String,String> getKeyChain();
 	public String getKey();
 	//TODO: Must separate into Comparable class or similar?
 	public long getTimeStamp();

@@ -19,6 +19,7 @@ public class Logger implements LoggerI {
 	Context myContext;
 	String loggerId;
 	int ticky=0;
+	boolean hasRed=false;
 
 	public Logger(Context c,String loggerId) {
 		myContext = c;
@@ -34,11 +35,12 @@ public class Logger implements LoggerI {
 		myTxt.append(s);
 	}
 	public void addRedText(String text) {
-
+		hasRed=true;
 		s = new SpannableString(text);
 		s.setSpan(new TextAppearanceSpan(myContext, R.style.RedStyle),0,s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 		myTxt.append(s);	 
 		//if (log!=null) log.setText(myTxt);
+		Log.d("vortex","hasRed true for "+this.toString());
 	}	 
 	public void addGreenText(String text) {
 		s = new SpannableString(text);
@@ -116,6 +118,16 @@ public class Logger implements LoggerI {
 	public void removeLine() {
 		if (s!=null)
 			myTxt = myTxt.delete(myTxt.length()-s.length(),myTxt.length());
+	}
+
+	@Override
+	public boolean hasRed() {
+		Log.d("vortex","calling hasred on "+this.toString());
+		if (hasRed) {
+			hasRed=false;
+			return true;
+		}
+		return false;
 	}
 
 

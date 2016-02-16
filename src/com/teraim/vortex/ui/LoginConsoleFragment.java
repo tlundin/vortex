@@ -377,11 +377,11 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 						GlobalState.createInstance(this.getActivity().getApplicationContext(),globalPh,ph,debugConsole,myDb, workflows, t,sd);
 				Start.alive=true;
 				//Update app version if new
-				if (majorVersionChange) {
+				//if (majorVersionChange) {
 					float loadedAppVersion = ph.getF(PersistenceHelper.NEW_APP_VERSION);
 					Log.d("vortex","updating App version to "+loadedAppVersion);
 					ph.put(PersistenceHelper.CURRENT_VERSION_OF_APP,loadedAppVersion);
-				}
+//				}
 				//drawermenu
 				gs.setDrawerMenu(Start.singleton.getDrawerMenu());
 

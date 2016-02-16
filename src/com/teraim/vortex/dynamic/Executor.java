@@ -68,6 +68,7 @@ import com.teraim.vortex.dynamic.workflow_abstracts.Event.EventType;
 import com.teraim.vortex.dynamic.workflow_abstracts.EventListener;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Container;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
+import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnFlowExecuted;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Event_OnSave;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Static_List;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Table;
@@ -706,7 +707,9 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 
 					}
 				 */
-
+				//Send event that flow has executed.
+				Log.d("vortex","Registering WF EXECUTION");
+				myContext.registerEvent(new WF_Event_OnFlowExecuted("executor"));
 
 			}
 

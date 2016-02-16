@@ -41,7 +41,7 @@ import com.teraim.vortex.utils.PersistenceHelper;
 
 public class Constants {
 
-	public final static float VORTEX_VERSION = 3.02f;
+	public final static float VORTEX_VERSION = 3.07f;
 
 	//String constants
 	//The root folder for the SD card is in the global Environment.

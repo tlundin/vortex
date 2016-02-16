@@ -381,7 +381,8 @@ public  class ButtonBlock extends Block {
 								Workflow wf = gs.getWorkflow(target);
 								if (wf == null) {
 									Log.e("NILS","Cannot find workflow ["+target+"] referenced by button "+getName());
-
+									o.addRow("");
+									o.addRow("Cannot find workflow ["+target+"] referenced by button "+getName());
 								} else {
 									o.addRow("");
 									o.addRow("Action button pressed. Executing wf: "+target);

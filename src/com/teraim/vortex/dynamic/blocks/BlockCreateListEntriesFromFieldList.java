@@ -5,13 +5,13 @@ import java.util.List;
 import java.util.Map;
 
 import android.util.Log;
-import android.view.LayoutInflater.Filter;
 
 import com.teraim.vortex.GlobalState;
 import com.teraim.vortex.dynamic.VariableConfiguration;
 import com.teraim.vortex.dynamic.workflow_abstracts.Container;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Alphanumeric_Sorter;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Context;
+import com.teraim.vortex.dynamic.workflow_realizations.WF_IndexOrder_Sorter;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Instance_List;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_List_UpdateOnSaveEvent;
 import com.teraim.vortex.dynamic.workflow_realizations.WF_Static_List;
@@ -76,7 +76,7 @@ public class BlockCreateListEntriesFromFieldList extends Block {
 					if (type.equals("instance_list")) {
 						o.addRow("instance selection list. Time sorter.");
 						myList = new WF_Instance_List(id,myContext,rows,variatorColumn,isVisible);
-						myList.addSorter(new WF_TimeOrder_Sorter());	
+						myList.addSorter(new WF_IndexOrder_Sorter());	
 					} else
 					{
 						//TODO: Find other solution

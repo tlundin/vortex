@@ -135,7 +135,10 @@ public class ModuleLoader implements FileLoadedCb{
 			case frozen:
 			case nothingToFreeze:
 				module.setLoaded(true);
-				o.addGreenText(" New!");
+				if (debug.hasRed())
+					o.addRedText(" *Check Log!*");
+				else
+					o.addGreenText(" New!");
 				o.addText(" [");
 				if (module.newVersion!=-1)
 					o.addText(module.newVersion+"");

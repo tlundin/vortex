@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import android.database.Cursor;
 import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
@@ -45,9 +46,11 @@ public class WF_Instance_List extends WF_Static_List implements EventListener,Ev
 
 	public WF_Instance_List(String id, WF_Context ctx,List<List<String>> rows,String variatorColumn,boolean isVisible) {
 		super(id, ctx,rows,isVisible);
-		this.namePrefix = al.getFunctionalGroup(rows.get(0));
+		suffices.clear();
+		namePrefix = al.getFunctionalGroup(rows.get(0));
 		myKeyHash = new HashMap<String,String>(gs.getCurrentKeyMap());
 		myKeyHash.remove(variatorColumn);
+		ctx.addEventListener(this, EventType.onFlowExecuted);
 		ctx.addEventListener(this, EventType.onSave);
 		o = GlobalState.getInstance().getLogger();
 		this.variatorColumn=variatorColumn;
@@ -55,10 +58,13 @@ public class WF_Instance_List extends WF_Static_List implements EventListener,Ev
 	}
 
 
+	//A set containing all variable suffices used in EntryFields.
+	Set<String> suffices = new HashSet<String>();
+	
 	@Override 
 	public Set<Variable> addVariableToEveryListEntry(String varSuffix,boolean displayOut,String format,boolean isVisible, boolean showHistorical,String initialValue) {
 		this.showHistorical = showHistorical;	
-
+/*
 		Set<String> vars = findAllVarsEndingWith(varSuffix,myRows);
 		Log.d("nils","Addvartolistentry found "+vars.size()+" entries for varSuffix "+varSuffix);
 		if (vars.size()!=0) {
@@ -73,6 +79,10 @@ public class WF_Instance_List extends WF_Static_List implements EventListener,Ev
 
 		//mySuffixes.add(varSuffix);
 		return null;
+*/
+		suffices.add(varSuffix);
+		Log.d("vortex","In addvariabletoEverylist! Suffices now: "+suffices.toString());
+		return null;
 	}
 
 	Map<String,List<String>> suffixToVars=null;
@@ -80,18 +90,92 @@ public class WF_Instance_List extends WF_Static_List implements EventListener,Ev
 
 
 	private Set<String> myVars=new HashSet<String>();
-
+	
 	private void updateEntryFields() {
-		//clear existing entries.
-		entryFields.clear();
-		//Cache entryfields.
-		//Map<String,WF_ClickableField_Selection> visitedEntryFields = new HashMap<String,WF_ClickableField_Selection>();	
-		//Remove variator.
+		//fetch all variable instances of given namePrefix. Remove variator from keychain so that all variables independent of variator are loaded.
+		
+		
 		myKeyHash.remove(variatorColumn);
-		//fetch all variable instances of given namePrefix.
+		//preload
+		Cursor c = gs.getDb().getPrefetchCursor(myKeyHash, namePrefix, variatorColumn);
+		if (c!=null && c.moveToFirst() ) {
+			Log.d("nils","In prefetchValues. Got "+c.getCount()+" results. PrefetchValues "+namePrefix+" with key "+myKeyHash.toString());
+			do {
+				Log.d("nils","varid: "+c.getString(0)+" index: "+c.getString(1)+" value: "+c.getString(2));
+				String varId = c.getString(0);
+				String index = c.getString(1);
+				String value = c.getString(2);
+				String varName = Variable.getVarInstancePart(varId);
+				String varSuffix = Variable.getVarSuffixPart(varId);
+				if (suffices!=null && !suffices.isEmpty() && !suffices.contains(varSuffix)) {
+					Log.d("vortex","discarding "+varId+". Not part of this list");
+					continue;
+				}
+				
+				if (varName!=null) {
+					myKeyHash.put(variatorColumn, index);	
+					Variable var = varCache.getVariable(myKeyHash, varId, value, true);//(myKeyHash, varId,value);
+					if (var!=null) {
+						String entryInstanceLabel = al.getEntryLabel(var.getBackingDataSet())+" ["+index+"]";
+						WF_ClickableField_Selection ef = entryFields.get(entryInstanceLabel);
+						if (ef == null) {
+							ef = new WF_ClickableField_Selection(entryInstanceLabel,al.getDescription(var.getBackingDataSet()),myContext,entryInstanceLabel,true);
+							Log.d("nils","Added list entry for "+entryInstanceLabel);
+							//cache
+							entryFields.put(entryInstanceLabel, ef);	
+							
+							list.add(ef);
+							//Create a standard variable for each as part of entryfield.
+							String efVarName;
+							Variable efVar;
+							for (String suffix:suffices) {
+								efVarName = namePrefix+":"+varName+":"+suffix;
+								Log.d("vortex","will generate: "+efVarName);
+								//If this equals the main var, then dont generate - use existing. 
+								if (efVarName.equals(varId)) 
+									ef.addVariable(var, true, null, true,showHistorical);
+								else {
+									efVar =varCache.getVariable(myKeyHash, efVarName, null, true);
+									ef.addVariable(efVar, true, null, true,showHistorical);
+								}
+							}
+							
+						} else {
+							Set<Variable> vars = ef.getAssociatedVariables();
+							if (vars!=null)
+								Log.d("vortex","ASSOC VARS: "+vars.toString());
+							else
+								Log.d("Vortex","ASSOCs are null");
+							//find missing variables for myvars. missing = var - suffix + other endings.				
+							if (vars==null || !vars.contains(var)) {
+								Log.e("vortex","Variable did not exist. It must exist...!!!");
+							} else {
+								Log.d("vortex","found existing value...updating value");
+								var.setValue(value);
+							}
+						}
+						
+
+
+						//							visitedEntryFields.put(entryInstanceLabel,ef);
+					} else
+						Log.e("nils","Variable "+varId+" does not exist! (In WF_InstanceList, updateEntryFields)");
+				}
+				
+			} while (c.moveToNext());
+		}
+		
+		/*
+		
 		Map<String, Map<String, String>> allInstances = gs.getDb().preFetchValues(myKeyHash, namePrefix, variatorColumn);		
-		Log.d("nils","in update entry fields. AllInstances contain "+allInstances.size());
-		if (allInstances !=null) {
+
+		if (allInstances !=null ) {
+			Log.d("nils","in update entry fields. AllInstances contain "+allInstances.size());
+			//clear existing entries.
+			entryFields.clear();
+			//Cache entryfields.
+			//Map<String,WF_ClickableField_Selection> visitedEntryFields = new HashMap<String,WF_ClickableField_Selection>();	
+			//Remove variator.
 			//For each instance, create new List entry if needed. Otherwise add.
 			//Iterate over all variable instances.
 			for (String varId: allInstances.keySet()) {
@@ -139,9 +223,12 @@ public class WF_Instance_List extends WF_Static_List implements EventListener,Ev
 					Log.d("nils",mvS);						
 				}
 			}
-		}
+		} else
+			Log.d("vortex","Instance list size same as before.");
 
 		//		entryFields = visitedEntryFields;
+		 
+		 */
 	}
 
 	private Set<String> findAllVarsEndingWith(String suffix,
@@ -211,14 +298,32 @@ public class WF_Instance_List extends WF_Static_List implements EventListener,Ev
 
 	@Override
 	public void onEvent(Event e) {
-		if (e.getProvider().equals(this))
+		if (e.getProvider()!=null && e.getProvider().equals(this))
 			Log.d("nils","Throwing event that originated from me");
 		else {
-			Log.d("nils","GOT EVENT IN WF_INSTANCE!!");
+			if (e.getType()==EventType.onFlowExecuted) {
+			Log.d("nils","WF has executed.");
 			//Regenerate list.
-			list.clear();
+			//list.clear();
 			updateEntryFields();
 			draw();
+			}
+			else if (e.getType()==EventType.onSave) {
+				Log.d("nils","OnSave i instancelist");
+				String provider = e.getProvider();
+				if (provider!=null) {
+					WF_ClickableField_Selection ef = entryFields.get(provider);
+					if (ef!=null) {
+						Log.d("vortex","ef is not null, found it!");
+						if (!ef.hasValue()) {
+							Log.d("vortex","main variable is null. Delete!");
+							list.remove(ef);
+							draw();
+						}
+					}
+
+				}
+			}
 		}
 		myContext.registerEvent(new WF_Event_OnRedraw(this.getId()));
 	}

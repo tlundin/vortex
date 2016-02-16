@@ -170,6 +170,11 @@ public class WF_Table_Row extends WF_Widget implements Listable,Comparable<Lista
 	public String getKey() {
 		return getLabel();
 	}
+	@Override
+	public Map<String, String> getKeyChain() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 
 }

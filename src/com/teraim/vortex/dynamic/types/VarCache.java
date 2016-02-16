@@ -75,7 +75,7 @@ public class VarCache {
 
 		boolean newA = false;
 		if (ret==null) {
-			//Log.d("nils","Creating new CacheList entry for "+varId);			
+			Log.d("nils","Creating new CacheList entry for "+varId);			
 			ret = new ArrayList<Variable>();
 			cache.put(varId.toLowerCase(), ret);
 			newA=true;
@@ -107,7 +107,7 @@ public class VarCache {
 			
 			Log.e("nils","Current context is not complete! ");
 			o.addRow("");
-			o.addRedText("Context incomplete for " +varId+" (missing a column in referenced in the variable keychain)");
+			o.addRedText("Context incomplete for " +varId+" (context and keychain do not match or there is a null value)");
 			if (context!=null) {
 				o.addRow("");
 				o.addRedText("KeyChain: "+gs.getVariableConfiguration().getKeyChain(row)+" Context: "+context.toString());
@@ -121,7 +121,7 @@ public class VarCache {
 		//Not there? Create new. Add to cache. 
 		//Here we know that the variable is not in the cache. So here we should insert historical or default value.
 		if (v == null) {
-			//Log.d("nils","Variable not found. Inserting"+varId+" with chain "+(instKey==null?"null":instKey.toString()));							
+			Log.d("nils","Variable not found. Inserting"+varId+" with chain "+(instKey==null?"null":instKey.toString()));							
 			String header = gs.getVariableConfiguration().getVarLabel(row);
 			DataType type = gs.getVariableConfiguration().getnumType(row);
 			if (type == DataType.array)
@@ -191,7 +191,7 @@ public class VarCache {
 				//Log.d("nils","Adding keychain key:"+key+" value: "+value);
 			}
 			else {
-				Log.e("nils","Couldn't find key "+key+" in current context");
+				Log.e("nils","Couldn't find key "+key+" in current context, or value is null");
 				throwE = true;
 			}
 		}

@@ -110,7 +110,8 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 		float appVersion=-1,newWorkflowVersion = -1;
 		try {
 			newWorkflowVersion = Float.parseFloat(parser.getAttributeValue(null, "version"));
-			appVersion = Float.parseFloat(parser.getAttributeValue(null, "app_version"));} 
+			appVersion = Float.parseFloat(parser.getAttributeValue(null, "app_version"));
+			ph.put(PersistenceHelper.NEW_APP_VERSION,appVersion);}
 		catch (Exception e) {
 			Log.e("vortex","No app version, or no workflowversion.");
 			o.addRow("");
@@ -137,9 +138,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			if (frozenVersion!=-1 && frozenAppVersion >= appVersion && versionControl!=null && versionControl.equals("Major")) {				
 				return new LoadResult(this,ErrorCode.majorVersionNotUpdated);
 			}
-			else
-				//Hack: store the new major version number in Persistent memory.
-				ph.put(PersistenceHelper.NEW_APP_VERSION,appVersion);
+				
 			Log.d("vortex","frozen Worfklowfile version "+frozenVersion);
 			if (frozenVersion!=-1 && newWorkflowVersion==frozenVersion) {
 				Log.d("vortex","Returning same old!");
@@ -147,6 +146,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			}
 				
 		}
+		
 		this.setNewVersion(newWorkflowVersion);
 		return null;
 	}
@@ -790,7 +790,6 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 
 	}
 	private Block readBlockSetValue(XmlPullParser parser) throws IOException, XmlPullParserException {
-		//		o.addRow("Parsing block: block_set_value...");
 		String id=null,target=null,expression=null;
 		String executionBehavior=null;
 		parser.require(XmlPullParser.START_TAG, null,"block_set_value");
@@ -801,6 +800,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			String name= parser.getName();
 			if (name.equals("block_ID")) {
 				id = readText("block_ID",parser);
+				o.addRow("Parsing block: block_set_value, with id "+id);
 			} else if (name.equals("target")) {
 				target = readText("target",parser);
 			} else if (name.equals("expression")) {

@@ -212,8 +212,9 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 	ActionMode mActionMode;
 
 	public  WF_ClickableField(final String label,final String descriptionT, WF_Context context,String id, View view,boolean isVisible) {
-		super(label,descriptionT,context,view,isVisible);	
-		//Log.e("nils ","Creating WF_ClickableField: "+label+" "+id);
+		super(id,label,descriptionT,context,view,isVisible);	
+		//Log.e("nils ","Creating WF_ClickableField: label: "+label+" descr: "+descriptionT+ " id: "+id);
+
 		gs = GlobalState.getInstance();
 
 		sd = gs.getSpinnerDefinitions();
@@ -275,7 +276,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 					//On click, create dialog 			
 					AlertDialog.Builder alert = new AlertDialog.Builder(v.getContext());
 					alert.setTitle(label);
-					alert.setMessage(descriptionT);
+					alert.setMessage(myDescription);
 					refreshInputFields();
 					iAmOpen = true;
 					
@@ -335,22 +336,24 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 		String[] opt=null;
 		String[] val=null;
 		boolean spin = false;
-
-		if (showHistorical) 
-			hist = var.getHistoricalValue();
-
-		// Set an EditText view to get user input 
-		if (displayOut && virgin) {
+		if (virgin) {
 			virgin = false;
-			//Log.d("nils","Setting key variable to "+varId);
-			super.setKeyRow(var);
 			if (var.getType()!=null && var.getType().equals(DataType.bool)) 
 				singleBoolean=true;
-
+			myDescription = al.getDescription(var.getBackingDataSet());
 		} else 
 			//cancel singleboolean if it was set.
-			if (!virgin && singleBoolean)
+			if (singleBoolean)
 				singleBoolean = false;
+		if (showHistorical) 
+			hist = var.getHistoricalValue();
+		// Set an EditText view to get user input 
+		if (displayOut && super.getKey()==null) {			
+			Log.d("nils","Setting key variable to "+varId);
+			super.setKey(var);
+			
+			Log.d("nils","Setting key variable to "+varId);
+		} 
 
 		if (var.getType()==null) {
 			o.addRow("");
@@ -795,16 +798,23 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 				if (v.setValue(value) && myContext.isContextVariable(v.getId())) {
 					Log.e("vortex","detected change of context variable in wf_clickfield: "+v.getLabel());
 					contextChanged=true;
+					//If context changed, rerun the workflow.
+					
 				}
 
+			}
+			if (contextChanged) {
+				//No save event...reload the whole workflow instead.
+				myContext.reload();
+				return;
 			}
 			Log.d("nils","IN SAVE() SENDING EVENT");
 			gs.sendEvent(MenuActivity.REDRAW);
 			myContext.registerEvent(new WF_Event_OnSave(this.getId(),oldValue));
-			//If context changed, add a event to rerun the workflow.
+			
 			//myContext.registerEvent(new WF_Event_OnContextChange());
-			if (contextChanged)
-				myContext.reload();
+			//if (contextChanged)
+			//	myContext.reload();
 		}
 
 

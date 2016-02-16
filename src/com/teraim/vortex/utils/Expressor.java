@@ -196,7 +196,8 @@ public class Expressor {
 	static LoggerI o;
 	static GlobalState gs;
     static Map<String,String> currentKeyChain=null;
-
+    //TODO solution for the  string reverse for string a+b..
+    static String tret=null;
 
 	/**
 	 * Takes an input string and replaces all expr with values.
@@ -271,7 +272,9 @@ public class Expressor {
             }
 
 		}
-		
+		o.addRow("");
+		o.addRedText("failed to precompile: "+expression);
+		o.addRedText("End Result: "+endResult);
 		Log.e("vortex","failed to precompile: "+expression);
 		Log.e("vortex","End Result: "+endResult);
 		printTokens(result);
@@ -284,13 +287,20 @@ public class Expressor {
     }
 
 	public static String analyze(List<EvalExpr> expressions, Map<String,String> evalContext) {
+	
 		gs = GlobalState.getInstance();
 		o = gs.getLogger();
+		if (expressions == null) {
+			o.addRow("");
+			o.addRedText("Expression was null in Analyze. This is likely due to a syntax error in the original formula");
+			return null;
+		}
         //evaluate in default context.
         currentKeyChain = evalContext;
         System.out.println("Evaluating "+expressions.toString());
          StringBuilder endResult = new StringBuilder();
         for (EvalExpr expr:expressions) {
+        	tret=null;
             Object rez=null;
             System.out.println("Evaluating "+expr.toString());
             rez = expr.eval();
@@ -579,6 +589,7 @@ public class Expressor {
 
 	private static boolean testTokens(List<Token> result) {
 		//Rule 1: op op
+		o = WorkFlowBundleConfiguration.debugConsole;
 		boolean valueF=false,booleanF=false;
 		Token current=null,prev=null;
 		int pos=-1,lparC=0,rparC=0;
@@ -629,7 +640,7 @@ public class Expressor {
 					//check if function
 					if (current.type == TokenType.leftparenthesis) {
 						if (x==null) {
-							System.err.println("Syntax Error: Function "+prev.str+" does not exist!");
+							o.addRedText("Syntax Error: Function "+prev.str+" does not exist!");
 							return false;
 						}
 						if (isFunction(x)) {
@@ -643,7 +654,8 @@ public class Expressor {
 							if (parent == TokenType.booleanFunction)
 								booleanF = true;
 						} else {
-							System.err.println("The token "+prev.str+" is used as function, but is in fact a "+prev.type);
+							o.addRow("");
+							o.addRedText("The token "+prev.str+" is used as function, but is in fact a "+prev.type);
 							return false;
 						}
 					}
@@ -660,6 +672,8 @@ public class Expressor {
 
 				}
 				if (!found) {
+					o.addRow("");
+					o.addRedText("Syntax Error: Operator "+prev.str+" does not exist.");
 					System.err.println("Syntax Error: Operator "+prev.str+" does not exist.");
 					return false;
 				}
@@ -985,8 +999,12 @@ public class Expressor {
 				TokenType op = TokenType.valueOfIgnoreCase(operator.myToken.str);
 				System.out.println("in isliteral with exp: "+arg1S+" "+operator.myToken.str+" "+arg2S);
 				switch (op) {
-					case add:
-						return arg1S+arg2S;
+					case add: 
+						if (tret==null) {
+							tret ="foock";
+							return arg1S+arg2S;
+						} else
+							return arg2S+arg1S;
 					case eq:
 						return arg1S.equals(arg2S);
 					case neq:

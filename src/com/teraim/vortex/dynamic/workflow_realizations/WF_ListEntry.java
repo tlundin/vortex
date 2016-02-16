@@ -2,6 +2,7 @@ package com.teraim.vortex.dynamic.workflow_realizations;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 import android.util.Log;
 import android.view.View;
@@ -18,7 +19,7 @@ public abstract class WF_ListEntry extends WF_Widget implements Listable,Compara
 	//String keyVariable=null;
 	List<String> keyRow =null;
 	String label = "";
-	Variable myVar = null;
+	protected Variable myVar = null;
 	
 	public abstract void refresh();
 //	public abstract void refreshInputFields();
@@ -27,7 +28,7 @@ public abstract class WF_ListEntry extends WF_Widget implements Listable,Compara
 		super(id,v,isVisible,ctx);
 	}
 
-	public void setKeyRow(Variable var) {
+	public void setKey(Variable var) {
 			myVar = var;
 			if (myVar!=null) {
 				keyRow = myVar.getBackingDataSet();		
@@ -86,6 +87,9 @@ public abstract class WF_ListEntry extends WF_Widget implements Listable,Compara
 		return this.getLabel().compareTo(other.getLabel());
 	}
 
+	public Map<String,String> getKeyChain() {
+		return myVar.getKeyChain();
+	}
 	
 	 public static class Comparators {
 
@@ -99,6 +103,18 @@ public abstract class WF_ListEntry extends WF_Widget implements Listable,Compara
 	            @Override
 	            public int compare(Listable o1, Listable o2) {
 	                return (int)(o2.getTimeStamp() - o1.getTimeStamp());
+	            }
+	        };
+	        
+	        public static Comparator<Listable> Index = new Comparator<Listable>() {
+	            @Override
+	            public int compare(Listable o1, Listable o2) {
+	            	String i1 = o1.getKeyChain().get("index");
+	            	String i2 = o2.getKeyChain().get("index");
+	            	if (i1 == null || i2==null)
+	            		return -1;
+	                return (int)( Float.parseFloat(i2)-Float.parseFloat(i1));
+	            	
 	            }
 	        };
 	     
