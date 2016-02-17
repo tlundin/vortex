@@ -352,7 +352,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 			Log.d("nils","Setting key variable to "+varId);
 			super.setKey(var);
 			
-			Log.d("nils","Setting key variable to "+varId);
+			
 		} 
 
 		if (var.getType()==null) {

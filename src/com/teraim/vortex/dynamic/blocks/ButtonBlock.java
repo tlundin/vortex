@@ -2,7 +2,6 @@ package com.teraim.vortex.dynamic.blocks;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import android.app.Activity;
@@ -50,7 +49,8 @@ import com.teraim.vortex.utils.Exporter.Report;
 import com.teraim.vortex.utils.Expressor;
 import com.teraim.vortex.utils.Expressor.EvalExpr;
 import com.teraim.vortex.utils.PersistenceHelper;
-import com.teraim.vortex.utils.Tools;
+import com.teraim.vortex.webservices.WebService;
+import com.teraim.vortex.webservices.WebService.WsCallback;
 
 
 /**
@@ -471,12 +471,23 @@ public  class ButtonBlock extends Block {
 								})			    
 								.setIcon(android.R.drawable.ic_dialog_alert)
 								.show();
+							} else if (onClick.equals("synctest")) {
+								Log.e("vortex","gets HEREE!!!!");
+								WebService ws = new WebService(new WsCallback() {
+									
+									@Override
+									public void doSomething(String res) {
+											
+									}
+								});
+								ws.execute(Constants.SynkServerURI);
+								
 							}
 							else {
 								o.addRow("");
 								o.addRedText("Action button had no associated action!");
 							}
-						}
+						} 
 
 						clickOngoing = false;
 						button.setBackgroundDrawable(originalBackground);

@@ -1,17 +1,14 @@
 package com.teraim.vortex.webservices;
 
-import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
-
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.StatusLine;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.URL;
+import java.net.URLConnection;
 
 import android.os.AsyncTask;
+import android.util.Log;
 
 public class WebService extends AsyncTask<String, String, String>{
 
@@ -29,31 +26,39 @@ public class WebService extends AsyncTask<String, String, String>{
 
 	@Override
 	protected String doInBackground(String... uri) {
-		HttpClient httpclient = new DefaultHttpClient();
-		HttpResponse response;
-		String responseString = null;
-		ByteArrayOutputStream out = null;
+		Object obj = new Integer(42);
+		 URL url ;
+		URLConnection conn;
 		try {
-			response = httpclient.execute(new HttpGet(SERVICE_URI+uri[0]));
-			StatusLine statusLine = response.getStatusLine();
-			if(statusLine.getStatusCode() == HttpStatus.SC_OK){
-				out = new ByteArrayOutputStream();
-				response.getEntity().writeTo(out);
-				responseString = out.toString();
-				out.close();
-
-			} else{
-				//Closes the connection.
-				response.getEntity().getContent().close();
-				throw new IOException(statusLine.getReasonPhrase());
+			Log.d("vortex","In webservice");
+			url = new URL(uri[0]);
+			 conn = url.openConnection();
+		        conn.setDoInput(true);
+		        conn.setDoOutput(true);
+		        conn.setUseCaches(false);
+		        
+		        // send object
+		        ObjectOutputStream objOut = new ObjectOutputStream(conn.getOutputStream());
+		        objOut.writeObject(obj);
+		        objOut.flush();
+		        objOut.close();
 			}
-		} catch (ClientProtocolException e) {
-			//TODO Handle problems..
-		}  catch (IOException e) {
-			//TODO Handle problems..
+		 catch (IOException e) {
+			e.printStackTrace();
+			return null;
 		}
-
-		return responseString;
+		 Object reply="cheeze";
+		try {
+		        ObjectInputStream objIn = new ObjectInputStream(conn.getInputStream());
+		        reply = objIn.readObject();
+		        objIn.close();
+		    } catch (Exception ex) {
+		      ex.printStackTrace();
+		       
+		      
+		    }
+		    return reply.toString();
+		
 	}
 
 	@Override

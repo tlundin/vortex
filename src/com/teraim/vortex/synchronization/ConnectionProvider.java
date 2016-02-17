@@ -3,6 +3,8 @@ package com.teraim.vortex.synchronization;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.util.Log;
+
 import com.teraim.vortex.synchronization.ConnectionListener.ConnectionEvent;
 
 /**
@@ -24,6 +26,13 @@ public abstract class ConnectionProvider {
 
 	public void registerConnectionListener(ConnectionListener listener) {
 		listeners.add(listener);
+	}
+	
+	public void unRegisterConnectionListener(ConnectionListener listener) {
+		if(listeners.remove(listener))
+			Log.d("vortex","removed listener in unregister!");
+		else
+			Log.e("vortex","failed to remove listener in unregister!");
 	}
 
 	protected void broadcastEvent(ConnectionEvent ce) {

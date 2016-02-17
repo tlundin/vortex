@@ -9,7 +9,7 @@ public class SlavePing extends PingMessage {
 	
 	
 	public SlavePing(String myName, String myApp, String myTeam,
-			float appVersion, float softwareVersion, boolean requestAll) {
-		super(myName,myApp,myTeam,appVersion,softwareVersion,requestAll);
+			float appVersion, float softwareVersion, boolean requestAll, String myTime) {
+		super(myName,myApp,myTeam,appVersion,softwareVersion,requestAll,myTime);
 	}
 }

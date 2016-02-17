@@ -30,8 +30,10 @@ public class DataSyncSessionManager implements ConnectionListener {
 		waiting_for_confirmation,
 		sending_ping,
 		error,
-		sending_data;
+		sending_data,
+		closed;
 	}
+	private static DataSyncSessionManager singleton=null;
 	Context ctx;
 	ConnectionProvider mConnection;
 	private UIProvider ui;
@@ -82,13 +84,13 @@ public class DataSyncSessionManager implements ConnectionListener {
 
 	@Override
 	public void handleEvent(ConnectionEvent e) {
-
+		Log.d("vortex","In HandleEvent "+this.toString());
 		switch(e) {
 		case connectionAttemptFailed:
 			ui.alert("Trying to establish connection. Attempts left: #"+mConnection.getTriesRemaining());
 			break;
 		case connectionGained:
-
+			mState = State.initial;
 			/*if (mState==State.initial && pingAttempts>0) {
 				mState = State.sending_ping;
 				//If no reply within 3 seconds, we should retry.
@@ -103,16 +105,20 @@ public class DataSyncSessionManager implements ConnectionListener {
 						} 
 					}},5000);
 			*/
+			Log.d("vortex","Connection gained. sending ping");
 				ping();
 			//} else
 			//	Log.d("vortex","discarded duplicate message");
 			break;
 		case connectionBroken:
-			ui.alert("Connection to other device broken.");
-
+			if (mState!=State.closed)
+				ui.alert("Connection to other device broken.");
+			mState=State.closed;
 			break;
 		case connectionClosedGracefully:
-			ui.alert("Connection to other device closed.");
+			if (mState!=State.closed)
+				ui.alert("Connection to other device closed.");
+			mState=State.closed;
 			break;
 		case connectionFailed:
 			ui.alert("Connection failed");
@@ -174,6 +180,10 @@ public class DataSyncSessionManager implements ConnectionListener {
 			Log.d("vortex","[BT MESSAGE -->Received Nothing to SYNC message]");
 			pSyncDone=true;
 		} else if (message instanceof PingMessage) {
+			if (mState !=State.initial) {
+				Log.e("vortex","Double kiss...discard");
+				return;
+			}
 			mState = State.error;
 			if (message instanceof MasterPing && gs.isMaster()) 
 				ui.alert("Both devices configured as Master. Please change under Configuration.");
@@ -199,26 +209,43 @@ public class DataSyncSessionManager implements ConnectionListener {
 					float mySoftwareVersion = gs.getGlobalPreferences().getF(PersistenceHelper.CURRENT_VERSION_OF_PROGRAM);
 
 					Log.d("vortex","myBundleV "+myAppVersion+" msgVer "+sp.getAppVersion()+" swVer: "+mySoftwareVersion+" msgVer: "+sp.getSoftwareVersion());
-					String versionText = "My vortex version: "+mySoftwareVersion+
+					StringBuilder versionText = new StringBuilder();
+					versionText.append("My vortex version: "+mySoftwareVersion+
 							"\nOthers vortex version: "+sp.getSoftwareVersion()+
 							"\nMy App version: "+myAppVersion+
-							"\nOthers App version: "+sp.getAppVersion();
+							"\nOthers App version: "+sp.getAppVersion()+
+							"\nMy Time: "+Constants.getSweDate()+
+							"\nOthers Time: "+sp.getTime());
 					gs.setMyPartner(sp.getPartner());
+					String mYear = Constants.getYear();
+					String pYear = sp.getTime().substring(0,4);
+					boolean err=false;
 					if (myAppVersion!=sp.getAppVersion() ||
 							mySoftwareVersion!=sp.getSoftwareVersion()) {
-						versionText = "Version mismatch:\n"+versionText+"\n\n Please confirm that you wish to proceed";
-
+						err=true;
+						versionText.insert(0,"*WARNING*: Version mismatch:\n");
 						o.addRow("");
 						o.addRedText("[BT MESSAGE -->PING. VERSION MISMATCH!");
-						o.addRow(versionText);
-					} else {
-						versionText = versionText+"\n\nAll Ok!\nConfirm to start sync";				
+						o.addRow(versionText.toString());
+
+					} else if(!mYear.equals(pYear)) {
+						versionText.insert(0,"*WARNING*: Year mismatch:\n");
+						o.addRow("");
+						o.addRedText("[BT MESSAGE -->PING. TIME MISMATCH!");
+						o.addRow(versionText.toString());
+						err=true;
+					
+					} if (!err){
+						versionText.append("\n\nAll Ok!\nConfirm to start sync");				
 						o.addRow("");
 						o.addGreenText("[BT MESSAGE -->PING. VERSIONS OK");
 
+					} else {
+						versionText.append("\n\n Please confirm that you wish to proceed");
+
 					}
 					//Confirm!
-					ui.confirm(versionText,new ConfirmCallBack() {
+					ui.confirm(versionText.toString(),new ConfirmCallBack() {
 
 						@Override
 						public void confirm() {
@@ -335,6 +362,7 @@ public class DataSyncSessionManager implements ConnectionListener {
 			GlobalState.getInstance().sendEvent(Executor.REDRAW_PAGE);
 		GlobalState.getInstance().getConnectionManager().releaseConnection(mConnection);
 		mConnection.closeConnection();
+		mConnection.unRegisterConnectionListener(this);
 
 	}
 
@@ -342,20 +370,32 @@ public class DataSyncSessionManager implements ConnectionListener {
 		GlobalState gs = GlobalState.getInstance();
 		//Send a ping to see if we can connect straight away.
 		Log.d("NILS","Sending ping");
-		String myName, myTeam, myApp;
+		String myName, myTeam, myApp, myTime;
 		float appVersion,softwareVersion;
 		myName = gs.getGlobalPreferences().get(PersistenceHelper.USER_ID_KEY);
 		myTeam = gs.getGlobalPreferences().get(PersistenceHelper.LAG_ID_KEY);
 		myApp = gs.getGlobalPreferences().get(PersistenceHelper.BUNDLE_NAME);
 		appVersion = gs.getPreferences().getF(PersistenceHelper.CURRENT_VERSION_OF_APP);
 		softwareVersion = gs.getGlobalPreferences().getF(PersistenceHelper.CURRENT_VERSION_OF_PROGRAM);
+		myTime = Constants.getSweDate();
 		boolean requestAll = gs.getPreferences().get(PersistenceHelper.TIME_OF_LAST_SYNC).equals(PersistenceHelper.UNDEFINED);
 
 		//send(new PingMessage(myName,myLag,bundleVersion,softwareVersion,requestAll));
 		o.addRow("");
 		o.addGreenText("[BT MESSAGE -->SENDING PING");
-		send(gs.isMaster()?new MasterPing(myName,myApp,myTeam,appVersion,softwareVersion,requestAll):new SlavePing(myName,myApp,myTeam,appVersion,softwareVersion,requestAll));
+		send(gs.isMaster()?new MasterPing(myName,myApp,myTeam,appVersion,softwareVersion,requestAll,myTime):new SlavePing(myName,myApp,myTeam,appVersion,softwareVersion,requestAll,myTime));
 
+	}
+
+	public static void start(MenuActivity menuActivity, UIProvider uiProvider) {
+		if (singleton==null)
+			singleton = new DataSyncSessionManager(menuActivity,uiProvider);
+	}
+
+	public static void stop() {
+		if (singleton != null)
+			singleton.destroy();
+		singleton = null;
 	}
 
 

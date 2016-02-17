@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import android.renderscript.Element.DataType;
 import android.util.Log;
 
 import com.teraim.vortex.GlobalState;
@@ -297,21 +298,21 @@ public class Expressor {
 		}
         //evaluate in default context.
         currentKeyChain = evalContext;
-        System.out.println("Evaluating "+expressions.toString());
+        //System.out.println("Analyzing "+expressions.toString());
          StringBuilder endResult = new StringBuilder();
         for (EvalExpr expr:expressions) {
         	tret=null;
             Object rez=null;
-            System.out.println("Evaluating "+expr.toString());
+            //System.out.println("Analyze: "+expr.toString());
             rez = expr.eval();
             if (rez!=null) {
-            	System.out.println("Part Result "+rez.toString());
+            	//System.out.println("Part Result "+rez.toString());
                 endResult.append(rez);
             } else
                 System.err.println("Err in analyze..got null back when evaluating "+expr.toString());
 
         }
-        System.out.println("Result "+endResult.toString());
+        System.out.println(expressions.toString()+" -->  "+endResult.toString());
 		return endResult.toString();
 	}
 
@@ -793,15 +794,22 @@ public class Expressor {
 
 		public Object eval() {
 			Log.d("vortex","In eval for Atom");
+			String value;
 			switch(type) {
 				case variable:
-					String value = gs.getVariableCache().getVariableValue(currentKeyChain,myToken.str);
-					if (value == null) {
-                        System.out.println("Variable '"+this.toString()+"' does not have a value");
+					Variable v = gs.getVariableCache().getVariableUsingKey(currentKeyChain, myToken.str);
+					value = v.getValue();
+					if (v!=null && value == null || v==null) {
+                        System.out.println("Variable '"+this.toString()+"' does not have a value or Variable is missing.");
                         return null;
 					}
-					if (Tools.isNumeric(value))
-						return Double.parseDouble(value);
+					if (v.getType()== Variable.DataType.numeric || v.getType()== Variable.DataType.decimal)
+						if (Tools.isNumeric(value))
+							return Double.parseDouble(v.getValue());
+						else {
+							Log.d("vortex","Not a number: "+value);
+							return null;
+						}
 					if (value.equalsIgnoreCase("false"))
 						return false;
 					else if (value.equalsIgnoreCase("true"))
@@ -809,6 +817,7 @@ public class Expressor {
 					else
 						return value;
 				case number:
+					Log.d("vortex","this is a numeric atom");
 					if (myToken !=null && myToken.str!=null) {
 						//System.out.println("Numeric value: "+myToken.str);
 						return Double.parseDouble(myToken.str);
@@ -818,6 +827,7 @@ public class Expressor {
 						return null;
 					}
 				case literal:
+					Log.d("vortex","this is a literal atom");
 					if (myToken.str.equalsIgnoreCase("false"))
 						return false;
 					else if (myToken.str.equalsIgnoreCase("true"))

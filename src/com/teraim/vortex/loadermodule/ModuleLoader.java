@@ -237,7 +237,7 @@ public class ModuleLoader implements FileLoadedCb{
 		LoadResult res = module.thaw();
 		if (res.errCode!=ErrorCode.thawed) {
 			debug.addRow("");
-			debug.addRedText("Failed to thaw module "+module.fileName+" due to "+res.errCode.name());
+			debug.addYellowText("Failed to thaw module "+module.fileName+" due to "+res.errCode.name());
 			Log.e("vortex","Failed to thaw module "+module.fileName+" due to "+res.errCode.name());
 			
 			//Remove the corrupt file and remove version.

@@ -186,7 +186,7 @@ public class MenuActivity extends Activity   {
 		mnu[mnu.length-1].setVisible(true);
 	}
 
-	DataSyncSessionManager syncMgr=null;
+	
 
 	private boolean MenuChoice(MenuItem item) {
 
@@ -278,17 +278,14 @@ public class MenuActivity extends Activity   {
 
 
 	private void startSyncIfNotRunning() {
-		if (syncMgr==null) 
-			syncMgr = new DataSyncSessionManager(MenuActivity.this, new UIProvider(this) {
-				@Override
-				public void onClose() {
-					me.onCloseSync();
-					
-				};
-			});
-		else
-			Log.d("vortex","Discarded...syncmgr is not null");
-
+		DataSyncSessionManager.start(MenuActivity.this, new UIProvider(this) {
+			@Override
+			public void onClose() {
+				me.onCloseSync();
+				
+			};
+		});
+		
 	}
 
 
@@ -296,12 +293,8 @@ public class MenuActivity extends Activity   {
 
 	protected void onCloseSync() {
 		Log.d("vortex","IN on close SYNC!!");
-		if (syncMgr!=null) {
-			syncMgr.destroy();
-			syncMgr=null;
-			refreshStatusRow();
-		} else
-			Log.e("vortex","SyncManager was null in onCloseSync");
+		refreshStatusRow();
+		DataSyncSessionManager.stop();
 	}
 
 
@@ -318,6 +311,7 @@ public class MenuActivity extends Activity   {
 		public static final int LOCK =1, UNLOCK=2, ALERT = 3, UPDATE_SUB = 4, CONFIRM = 5, UPDATE = 6; 
 		private String row1="",row2="";
 		private AlertDialog uiBlockerWindow=null;  
+		public static final int Destroy_Sync = 1;
 
 		Handler mHandler= new Handler(Looper.getMainLooper()) {
 			boolean twoButton=false;
@@ -333,7 +327,7 @@ public class MenuActivity extends Activity   {
 
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
-
+						
 						onClose();
 					}
 				})
@@ -392,6 +386,9 @@ public class MenuActivity extends Activity   {
 					row1 = (String)msg.obj;
 					row2="";
 					uiBlockerWindow.setMessage(row1+"\n"+row2);
+					
+						
+					
 					break;
 				case UPDATE:
 					row1 = (String)msg.obj;
@@ -441,6 +438,12 @@ public class MenuActivity extends Activity   {
 			mHandler.obtainMessage(ALERT,msg).sendToTarget();
 
 		}
+		
+		public void syncTry(String msg) {
+			mHandler.obtainMessage(ALERT,msg).sendToTarget();
+
+		}
+		
 		public void open() {
 			mHandler.obtainMessage(UNLOCK).sendToTarget();
 		}
@@ -450,8 +453,9 @@ public class MenuActivity extends Activity   {
 
 		}
 
+		
 		public void onClose() {
-
+			
 		}
 
 		/**

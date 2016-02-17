@@ -51,13 +51,13 @@ public class WF_DisplayValueField extends WF_Widget implements EventListener {
 		}
 		this.format = format;
 		
-		this.onEvent(new WF_Event_OnSave("display_value_field"));
+		//this.onEvent(new WF_Event_OnSave("display_value_field"));
 	}
 
 	//update variable.
 	@Override
 	public void onEvent(Event e) {
-
+		Log.d("vortex","In onEvent for create_display_value_field. Caller: "+e.getProvider());
 		String result = Expressor.analyze(formulaE);
 		//Do not evaluate if the expression is evaluated to be a literal or defined as literal.
 		if (result==null) {

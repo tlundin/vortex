@@ -29,7 +29,7 @@ public abstract class WF_Not_ClickableField extends WF_ListEntry {
 	//Removed myVar 2.07.15
 	//protected Variable myVar;
 	public abstract LinearLayout getFieldLayout();
-
+	private TextView myHeader;
 
 
 	//	public abstract String getFormattedText(Variable varId, String value);
@@ -67,7 +67,7 @@ public abstract class WF_Not_ClickableField extends WF_ListEntry {
 	public WF_Not_ClickableField(String id,final String label,final String descriptionT, WF_Context myContext, 
 			View view,boolean isVisible) {
 		super(id,view,myContext,isVisible);
-		TextView myHeader;
+		
 
 		this.myContext = myContext;
 		myHeader = (TextView)getWidget().findViewById(R.id.editfieldtext);
@@ -115,7 +115,7 @@ public abstract class WF_Not_ClickableField extends WF_ListEntry {
 		TextView u = (TextView)ll.findViewById(R.id.outputUnitField);			
 		String value = variable.getValue();
 
-		//Log.d("nils","In refreshoutputfield for variable "+varId.getId()+" with value "+varId.getValue());
+		//Log.d("nils","In refreshoutputfield for variable "+variable.getId()+" with value "+variable.getValue());
 
 		if (value!=null&&!value.isEmpty()) {
 			CombinedRangeAndListFilter filter = variable.getLimitFilter();
@@ -128,7 +128,10 @@ public abstract class WF_Not_ClickableField extends WF_ListEntry {
 			} else {
 				if (variable.isUsingDefault()) {
 					Log.d("nils","Variable "+variable.getId()+" is purple");
-					o.setTextColor(myContext.getContext().getResources().getColor(R.color.purple));
+					int purple = myContext.getContext().getResources().getColor(R.color.purple);
+					o.setTextColor(purple);
+					if (myHeader!=null)
+						myHeader.setTextColor(purple);
 				} else
 					o.setTextColor(Color.BLACK);
 			}
@@ -150,12 +153,12 @@ public abstract class WF_Not_ClickableField extends WF_ListEntry {
 			} 
 			//boolean..use yes or no.
 			else {
-				if (variable.getValue()!=null&&variable.getValue().length()>0) {
-					if(variable.getValue().equals("0"))
+				if (value.length()>0) {
+					if(value.equals("0"))
 						outS=myContext.getContext().getString(R.string.no);
-						else if (variable.getValue().equals("1"))
-							outS=myContext.getContext().getString(R.string.yes);
-					Log.e("vortex","VARIABELVÄRDE: "+variable.getValue());
+					else if (value.equals("1"))
+						outS=myContext.getContext().getString(R.string.yes);
+					Log.e("vortex","VARIABELVÄRDE: "+value);
 				}
 			}
 			o.setText(outS);	

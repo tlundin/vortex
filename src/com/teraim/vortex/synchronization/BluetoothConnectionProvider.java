@@ -435,7 +435,7 @@ public class BluetoothConnectionProvider extends ConnectionProvider {
 			try {
 				mmSocket.close();
 			} catch (IOException e) {Log.e("vortex","upzzz");}
-			broadcastEvent(ConnectionEvent.connectionFailed);
+			broadcastEvent(ConnectionEvent.connectionBroken);
 		}
 
 	}	
