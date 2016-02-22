@@ -20,7 +20,7 @@
         android:layout_alignParentTop="true"
         android:textStyle="bold" />
 
-    <com.teraim.vortex.dynamic.workflow_realizations.gis.GisObjectsMenu
+    <com.teraim.fieldapp.dynamic.workflow_realizations.gis.GisObjectsMenu
         android:id="@+id/gisObjectsMenu"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

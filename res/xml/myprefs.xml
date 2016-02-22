@@ -75,7 +75,7 @@ xmlns:android="http://schemas.android.com/apk/res/android" >
 <EditTextPreference
             android:key="backup_location"
             android:title="Backup folder" 
-            android:summary=""
+            android:summary="Leave empty to use folder named 'backup' under project folder"
             android:dialogTitle="Backup folder"
             android:dialogMessage="Export and backup files are saved to this folder. If you leave the field empty, the files will be stored under 'backup' in your project folder." 
             android:defaultValue="" />

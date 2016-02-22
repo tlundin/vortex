@@ -1,8 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.teraim.vortex"
-    android:versionCode="1"
-    android:versionName="1.0" >
+    package="com.teraim.fieldapp"
+    android:versionCode="3"
+    android:versionName="3.10" >
 
     <uses-sdk
         android:minSdkVersion="14"
@@ -21,12 +21,9 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />
     <uses-permission android:name="android.permission.VIBRATE"/>
-
-    <permission
-        android:name="com.example.mapdemo.permission.MAPS_RECEIVE"
-        android:protectionLevel="signature" />
-
-    <uses-permission android:name="com.example.mapdemo.permission.MAPS_RECEIVE" />
+    <uses-permission android:name="android.permission.READ_SYNC_SETTINGS"/>
+    <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS"/>
+    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS"/>
 
     <application
         android:icon="@drawable/ic_launcher"
@@ -35,9 +32,15 @@
         android:theme="@android:style/Theme.Holo.Light"
         tools:ignore="AllowBackup" >
 
-
+ 		<provider
+        android:name="com.teraim.fieldapp.synchronization.framework.StubProvider"
+        android:authorities="com.teraim.fieldapp.provider"
+        android:exported="false"
+        android:label="collected variables"
+        android:syncable="true"/>
+ 		
         <activity
-            android:name="com.teraim.vortex.Start"
+            android:name="com.teraim.fieldapp.Start"
             android:label="@string/app_name"
             android:screenOrientation="portrait" >
             <intent-filter>
@@ -46,17 +49,36 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        
         <activity
-            android:name="com.teraim.vortex.ui.ConfigMenu"
-            android:exported="false"
-            android:label="@string/title_select_yta" >
-            <intent-filter>
-                <action android:name="com.teraim.vortex.ConfigMenu" />
+            android:name="com.teraim.fieldapp.ui.ConfigMenu"
+            android:label="@string/menu_settings"
+            android:screenOrientation="portrait" >
 
-                <category android:name="android.intent.category.PREFERENCE" />
-            </intent-filter>
         </activity>
-
+        
+         <service
+                android:name="com.teraim.fieldapp.synchronization.framework.SyncService"
+                android:exported="true"
+                android:process=":sync">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter"/>
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter"
+                    android:resource="@xml/syncadapter" />
+        </service>
+       
+		<service
+            android:name="com.teraim.fieldapp.synchronization.framework.AuthenticatorService"
+            android:exported="true" 
+            android:process=":auth">
+        <intent-filter>
+            <action android:name="android.accounts.AccountAuthenticator"/>
+        </intent-filter>
+        <meta-data
+            android:name="android.accounts.AccountAuthenticator"
+            android:resource="@xml/authenticator" />
+    </service>
 
 
     </application>
