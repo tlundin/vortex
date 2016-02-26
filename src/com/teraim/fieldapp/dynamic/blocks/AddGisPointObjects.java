@@ -175,7 +175,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 
 
 
-		//Generate the context for this object.
+		//Generate the context for these objects.
 		objectKeyHash = CHash.evaluate(objContextE);
 		Log.d("vortex","OBJ KEYHASH "+objectKeyHash.toString());
 		//Use current year for statusvar.

@@ -13,7 +13,7 @@ xmlns:android="http://schemas.android.com/apk/res/android" >
 <EditTextPreference
             android:key="lag_id"
             android:title="Team" 
-            android:summary="Name of team"
+            android:summary="Name of team. Also defines the Sync Group if 4G sync is selected below!"
             android:dialogTitle="Team"
             android:inputType="textCapSentences"  
             android:dialogMessage="Name of team"    
@@ -57,13 +57,12 @@ xmlns:android="http://schemas.android.com/apk/res/android" >
     		android:defaultValue="Major"
             android:entries="@array/versionArray"
             android:entryValues="@array/versionValues" />
-<CheckBoxPreference
-    		android:key="sync_feature"
-    		android:title="Sync"
-    		android:summary="Turn on or off the sync feature"
-    		android:dialogTitle=""
-    		android:dialogMessage=""
-    		android:defaultValue="true" />
+<ListPreference
+    		android:key="sync_method"
+    		android:title="Sync method"
+    		android:defaultValue="Bluetooth"
+    		android:entries="@array/syncMethodArray"
+            android:entryValues="@array/syncMethodValues" />
 <CheckBoxPreference
     		android:key="show_context"
     		android:title="Context"

@@ -33,7 +33,7 @@
         tools:ignore="AllowBackup" >
 
  		<provider
-        android:name="com.teraim.fieldapp.synchronization.framework.StubProvider"
+        android:name="com.teraim.fieldapp.synchronization.framework.SyncContentProvider"
         android:authorities="com.teraim.fieldapp.provider"
         android:exported="false"
         android:label="collected variables"

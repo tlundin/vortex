@@ -65,9 +65,9 @@ public class Start extends MenuActivity {
     // The account name
     public static final String ACCOUNT = "FieldApp";
 
-	private static final long SYNC_INTERVAL = 60;
+	public static final long SYNC_INTERVAL = 60;
     // Instance fields
-    Account mAccount;
+   // Account mAccount;
 
 	private ContentResolver mResolver;
 
@@ -92,18 +92,9 @@ public class Start extends MenuActivity {
 		getActionBar().setDisplayHomeAsUpEnabled(true);
 		getActionBar().setHomeButtonEnabled(true);
 		
-		  // Create a dummy Sync account
-        mAccount = CreateSyncAccount(this);
-		
-        mResolver = getContentResolver();
-        /*
-         * Turn on periodic syncing
-         */
-        
-		
-		
-		
-		
+		  // Create a Sync account
+       // mAccount = CreateSyncAccount(this);
+	  	
 		//Determine if program should start or first reload its configuration.
 		if (!loading)
 			checkStatics();
@@ -119,13 +110,7 @@ public class Start extends MenuActivity {
 		else 
 			loading = false;
 		 
-		Log.d("vortex", "periodic sync added");
-		ContentResolver.addPeriodicSync(
-                mAccount,
-                AUTHORITY,
-                Bundle.EMPTY,
-                SYNC_INTERVAL);
-		ContentResolver.setSyncAutomatically(mAccount, AUTHORITY, true);
+		
 		super.onResume();
 
 	}

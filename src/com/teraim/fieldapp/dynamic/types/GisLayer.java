@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import android.os.Bundle;
 import android.util.Log;
 
 import com.teraim.fieldapp.GlobalState;
@@ -43,6 +44,8 @@ public class GisLayer {
 		
 	}
 
+	//TODO: Potentially split incoming objects into two bags. one for static and one for changeable. 
+	//This would speed up CRUD for map objects.
 	
 	public void addObjectBag(String key, Set<GisObject> myGisObjects, boolean dynamic) {
 		if (myObjects==null) {
@@ -69,7 +72,7 @@ public class GisLayer {
 		setOfFilters.add(f);
 		Log.d("vortex","added filter "+name+" of type "+key);
 		myFilters.put(key, setOfFilters);
-
+		
 	}
 
 	public Map<String,Set<GisObject>> getGisBags() {

@@ -1,7 +1,4 @@
 package com.teraim.fieldapp.synchronization;
-
-import android.util.Log;
-
 public class SyncEntry extends SyncMessage {
 
 	enum Type {
@@ -33,13 +30,13 @@ public class SyncEntry extends SyncMessage {
 		else if (a.equals("A"))
 			mType = Type.insertArray;
 		else {
-			Log.e("nils","Unknown type of Sync action!: "+a);
+			System.err.println("Unknown type of Sync action!: "+a);
 			mType = Type.unknown;
 		}
 		if(!isDeleteDelytor() && !isDeleteProvyta()&&!isDelete()) {	
 			String[] tmp = changes.split("_\\$_");
 			if (tmp==null||tmp.length!=2) 
-				Log.e("nils","something wrong with syncentry with changes: ["+changes+"]");
+				System.err.println("something wrong with syncentry with changes: ["+changes+"]");
 			else {
 				keys = tmp[0];
 				values = tmp[1];

@@ -2,10 +2,12 @@ package com.teraim.fieldapp.ui;
 
 import java.util.Map;
 
+import android.accounts.Account;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -61,7 +63,7 @@ public class MenuActivity extends Activity   {
 
 
 
-		
+
 
 		brr = new BroadcastReceiver() {
 			@Override
@@ -79,7 +81,7 @@ public class MenuActivity extends Activity   {
 				}
 				else if (intent.getAction().equals(SYNC_REQUIRED))
 					startSyncIfNotRunning();
-				
+
 				me.refreshStatusRow();
 			}
 
@@ -139,16 +141,16 @@ public class MenuActivity extends Activity   {
 	private final static int NO_OF_MENU_ITEMS = 5;
 
 	MenuItem mnu[] = new MenuItem[NO_OF_MENU_ITEMS];
-	
+
 	private void CreateMenu(Menu menu)
 	{
 
 		for(int c=0;c<mnu.length-1;c++) {
 			mnu[c]=menu.add(0,c,c,"");
-			mnu[c].setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM|MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);	
+			mnu[c].setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);	
 
 		}
-		mnu[1].setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+		//mnu[1].setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);		
 		//mnu[1].setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM|MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 		mnu[mnu.length-1]=menu.add(0,mnu.length-1,mnu.length-1,"");
 		mnu[mnu.length-1].setIcon(android.R.drawable.ic_menu_preferences);
@@ -170,7 +172,7 @@ public class MenuActivity extends Activity   {
 		}
 		if (gs==null || !initdone) 
 			return;
-		
+
 		globalPh = gs.getGlobalPreferences();
 		//Log.d("vortex","Global prefs: "+gs.getGlobalPreferences()+" isdev "+globalPh.getB(PersistenceHelper.DEVELOPER_SWITCH));
 		if (!syncIsRunning)
@@ -179,19 +181,32 @@ public class MenuActivity extends Activity   {
 			mnu[0].setTitle("Synkar..");
 		mnu[1].setTitle("Context");
 
-		mnu[0].setVisible(globalPh.getB(PersistenceHelper.SYNC_FEATURE)&&!gs.isSolo());	
+		mnu[0].setVisible(!globalPh.get(PersistenceHelper.SYNC_METHOD).equals("NONE")&&!gs.isSolo());	
 		mnu[1].setVisible(globalPh.getB(PersistenceHelper.SHOW_CONTEXT));		
-		mnu[2].setVisible(globalPh.getB(PersistenceHelper.DEVELOPER_SWITCH));	
+		mnu[2].setVisible(globalPh.getB(PersistenceHelper.DEVELOPER_SWITCH));		
+		mnu[3].setVisible(true);
 		mnu[mnu.length-1].setVisible(true);
+
+		if (globalPh.getB(PersistenceHelper.SYNC_VIA_INTERNET)&&
+				globalPh.get(PersistenceHelper.SYNC_METHOD).equals("Internet"))
+			mnu[3].setIcon(R.drawable.syncon);
+		else if (!globalPh.getB(PersistenceHelper.SYNC_VIA_INTERNET)) {
+			if (globalPh.get(PersistenceHelper.SYNC_METHOD).equals("Internet"))
+				mnu[3].setIcon(R.drawable.syncoff);
+			else
+				mnu[3].setIcon(null);
+		}
+
 	}
 
-	
+
 
 	private boolean MenuChoice(MenuItem item) {
 
 		switch (item.getItemId()) {
 		case 0:
-			startSyncIfNotRunning();
+			if (globalPh.get(PersistenceHelper.SYNC_METHOD).equals("Bluetooth"))
+				startSyncIfNotRunning();
 			break;
 		case 1:
 			Map<String, String> hash = gs.getCurrentKeyMap();
@@ -262,7 +277,21 @@ public class MenuActivity extends Activity   {
 
 			break;
 		case 3:
-
+			Account mAccount = Start.CreateSyncAccount(getApplicationContext());
+			if (!globalPh.getB(PersistenceHelper.SYNC_VIA_INTERNET)) {
+				ContentResolver.addPeriodicSync(
+						mAccount,
+						Start.AUTHORITY,
+						Bundle.EMPTY,
+						Start.SYNC_INTERVAL);
+				ContentResolver.setSyncAutomatically(mAccount, Start.AUTHORITY, true);
+				globalPh.put(PersistenceHelper.SYNC_VIA_INTERNET,true);
+				Log.d("vortex", "Internet sync started");
+			} else {
+				ContentResolver.setSyncAutomatically(mAccount, Start.AUTHORITY, false);
+				globalPh.put(PersistenceHelper.SYNC_VIA_INTERNET,false);
+			}
+			this.refreshStatusRow();
 			break;
 		case 4:
 			//close drawer menu if open
@@ -281,10 +310,10 @@ public class MenuActivity extends Activity   {
 			@Override
 			public void onClose() {
 				me.onCloseSync();
-				
+
 			};
 		});
-		
+
 	}
 
 
@@ -326,7 +355,7 @@ public class MenuActivity extends Activity   {
 
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
-						
+
 						onClose();
 					}
 				})
@@ -385,9 +414,9 @@ public class MenuActivity extends Activity   {
 					row1 = (String)msg.obj;
 					row2="";
 					uiBlockerWindow.setMessage(row1+"\n"+row2);
-					
-						
-					
+
+
+
 					break;
 				case UPDATE:
 					row1 = (String)msg.obj;
@@ -437,12 +466,12 @@ public class MenuActivity extends Activity   {
 			mHandler.obtainMessage(ALERT,msg).sendToTarget();
 
 		}
-		
+
 		public void syncTry(String msg) {
 			mHandler.obtainMessage(ALERT,msg).sendToTarget();
 
 		}
-		
+
 		public void open() {
 			mHandler.obtainMessage(UNLOCK).sendToTarget();
 		}
@@ -452,9 +481,9 @@ public class MenuActivity extends Activity   {
 
 		}
 
-		
+
 		public void onClose() {
-			
+
 		}
 
 		/**
@@ -480,13 +509,20 @@ public class MenuActivity extends Activity   {
 
 
 
-		public void resynchAtClose() {
-			// TODO Auto-generated method stub
-			
-		}
+		
 
 
-
+		/**if (globalPh.getB(PersistenceHelper.SYNC_VIA_INTERNET)) {
+						Account mAccount = Start.CreateSyncAccount(getActivity().getApplicationContext());
+						Log.d("vortex", "periodic sync starts!");
+						ContentResolver.addPeriodicSync(
+								mAccount,
+								Start.AUTHORITY,
+								Bundle.EMPTY,
+								Start.SYNC_INTERVAL);
+						ContentResolver.setSyncAutomatically(mAccount, Start.AUTHORITY, true);
+					}
+		 */
 
 
 	}

@@ -53,10 +53,10 @@ import com.teraim.fieldapp.utils.Exporter.Report;
 public class DbHelper extends SQLiteOpenHelper {
 
 	// Database Version
-	private static final int DATABASE_VERSION = 6;
+	public static final int DATABASE_VERSION = 6;
 	// Books table name
 	private static final String TABLE_VARIABLES = "variabler";
-	private static final String TABLE_AUDIT = "audit";
+	public static final String TABLE_AUDIT = "audit";
 
 	private static final String VARID = "var",VALUE="value",TIMESTAMP="timestamp",LAG="lag",AUTHOR="author";
 	private static final String[] VAR_COLS = new String[] { TIMESTAMP, AUTHOR, LAG, VALUE };
@@ -134,6 +134,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		if (db!=null && db.isOpen())
 			db.close();
 		db = this.getWritableDatabase();
+		
 		this.globalPh=globalPh;
 		this.ph = appPh;
 		if (t!=null)
@@ -1458,17 +1459,36 @@ public class DbHelper extends SQLiteOpenHelper {
 
 	public int getNumberOfUnsyncedEntries() {
 		int ret = 0;
-		String timestamp = ph.get(PersistenceHelper.TIME_OF_LAST_SYNC);
-		if (timestamp==null||timestamp.equals(PersistenceHelper.UNDEFINED))
-			timestamp = "0";
-		//Log.d("nils","Time of last sync is "+timestamp+" in getNumberOfUnsyncedEntries (dbHelper)");
-		Cursor c = db.query(TABLE_AUDIT,null,
-				"timestamp > ?",new String[] {timestamp},null,null,"timestamp asc",null);
-		if (c != null && c.getCount()>0) 
-			ret = c.getCount();
-		if (c!=null)
-			c.close();
-		return ret;
+		if (globalPh.get(PersistenceHelper.SYNC_METHOD).equals("Bluetooth")) {
+			
+			String timestamp = ph.get(PersistenceHelper.TIME_OF_LAST_SYNC);
+			if (timestamp==null||timestamp.equals(PersistenceHelper.UNDEFINED))
+				timestamp = "0";
+			//Log.d("nils","Time of last sync is "+timestamp+" in getNumberOfUnsyncedEntries (dbHelper)");
+			Cursor c = db.query(TABLE_AUDIT,null,
+					"timestamp > ?",new String[] {timestamp},null,null,"timestamp asc",null);
+			if (c != null && c.getCount()>0) 
+				ret = c.getCount();
+			if (c!=null)
+				c.close();
+			Log.d("vortex","Get SyncEtries BT: "+ret);
+			return ret;
+		}
+		if (globalPh.get(PersistenceHelper.SYNC_METHOD).equals("Internet")) {			
+			String timestamp = ph.get(PersistenceHelper.TIME_OF_LAST_SYNC_INTERNET);
+			if (timestamp==null||timestamp.equals(PersistenceHelper.UNDEFINED))
+				timestamp = "0";
+			//Log.d("nils","Time of last sync is "+timestamp+" in getNumberOfUnsyncedEntries (dbHelper)");
+			Cursor c = db.query(TABLE_AUDIT,null,
+					"timestamp > ?",new String[] {timestamp},null,null,"timestamp asc",null);
+			if (c != null && c.getCount()>0) 
+				ret = c.getCount();
+			if (c!=null)
+				c.close();
+			Log.d("vortex","Get SyncEtries Internet: "+ret);
+			return ret;
+		}		
+		return -1;
 	}
 
 

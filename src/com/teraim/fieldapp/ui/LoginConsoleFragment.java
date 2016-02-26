@@ -4,10 +4,12 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.List;
 
+import android.accounts.Account;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -78,13 +80,13 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		//Create global state
 
 
-		globalPh = new PersistenceHelper(this.getActivity().getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_PRIVATE));
-
+		globalPh = new PersistenceHelper(this.getActivity().getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_MULTI_PROCESS));
+		
 		bundleName = globalPh.get(PersistenceHelper.BUNDLE_NAME);
 		if (bundleName == null || bundleName.length()==0)
 			bundleName = "Vortex";
 
-		ph	 = new PersistenceHelper(this.getActivity().getSharedPreferences(globalPh.get(PersistenceHelper.BUNDLE_NAME), Context.MODE_PRIVATE));
+		ph	 = new PersistenceHelper(this.getActivity().getSharedPreferences(globalPh.get(PersistenceHelper.BUNDLE_NAME), Context.MODE_MULTI_PROCESS));
 		oldV= ph.getF(PersistenceHelper.CURRENT_VERSION_OF_APP);
 		//appTxt.setText("Running application "+bundleName+" ["+oldV+"]");
 
@@ -281,7 +283,9 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 			globalPh.put(PersistenceHelper.DEVELOPER_SWITCH, false);
 		if (globalPh.get(PersistenceHelper.VERSION_CONTROL).equals(PersistenceHelper.UNDEFINED))
 			globalPh.put(PersistenceHelper.VERSION_CONTROL, "Major");
-
+		if (globalPh.get(PersistenceHelper.SYNC_METHOD).equals(PersistenceHelper.UNDEFINED))
+			globalPh.put(PersistenceHelper.SYNC_METHOD, "Bluetooth");
+		
 
 		folder = new File(Constants.VORTEX_ROOT_DIR+globalPh.get(PersistenceHelper.BUNDLE_NAME)+"/"+Constants.CACHE_ROOT_DIR);
 		if(!folder.mkdirs())
@@ -377,10 +381,10 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 				Start.alive=true;
 				//Update app version if new
 				//if (majorVersionChange) {
-					float loadedAppVersion = ph.getF(PersistenceHelper.NEW_APP_VERSION);
-					Log.d("vortex","updating App version to "+loadedAppVersion);
-					ph.put(PersistenceHelper.CURRENT_VERSION_OF_APP,loadedAppVersion);
-//				}
+				float loadedAppVersion = ph.getF(PersistenceHelper.NEW_APP_VERSION);
+				Log.d("vortex","updating App version to "+loadedAppVersion);
+				ph.put(PersistenceHelper.CURRENT_VERSION_OF_APP,loadedAppVersion);
+				//				}
 				//drawermenu
 				gs.setDrawerMenu(Start.singleton.getDrawerMenu());
 
@@ -411,6 +415,17 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 					Log.d("vortex","executing workflow main!");
 					gs.setModules(myModules);
 
+					//Start sync if on!
+					if (globalPh.getB(PersistenceHelper.SYNC_VIA_INTERNET)) {
+						Account mAccount = Start.CreateSyncAccount(getActivity().getApplicationContext());
+						Log.d("vortex", "periodic sync starts!");
+						ContentResolver.addPeriodicSync(
+								mAccount,
+								Start.AUTHORITY,
+								Bundle.EMPTY,
+								Start.SYNC_INTERVAL);
+						ContentResolver.setSyncAutomatically(mAccount, Start.AUTHORITY, true);
+					}
 				} else {
 					loginConsole.addRow("");
 					loginConsole.addRedText("Found no workflow 'Main'. Exiting..");

@@ -48,7 +48,7 @@ public class ConfigMenu extends PreferenceActivity {
 			//Set default values for the prefs.
 			//			getPreferenceScreen().getSharedPreferences()
 			//			.registerOnSharedPreferenceChangeListener(this);
-			this.getActivity().getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_PRIVATE)
+			this.getActivity().getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_MULTI_PROCESS)
 			.registerOnSharedPreferenceChangeListener(this);
 
 			//Create a filter that stops users from entering disallowed characters.
@@ -91,6 +91,9 @@ public class ConfigMenu extends PreferenceActivity {
 			
 			ListPreference versionControl = (ListPreference)findPreference(PersistenceHelper.VERSION_CONTROL);
 			versionControl.setSummary(versionControl.getValue());
+			
+			ListPreference sync = (ListPreference)findPreference(PersistenceHelper.SYNC_METHOD);
+			sync.setSummary(sync.getValue());
 
 			epref = (EditTextPreference) findPreference(PersistenceHelper.USER_ID_KEY);
 			epref.setSummary(epref.getText());
@@ -111,8 +114,8 @@ public class ConfigMenu extends PreferenceActivity {
 			epref.setSummary(epref.getText());
 
 			final Preference button = (Preference)findPreference(getString(R.string.resetSyncButton));
-			String bName = getActivity().getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_PRIVATE).getString(PersistenceHelper.BUNDLE_NAME,null);
-			String syncPValue = getActivity().getSharedPreferences(bName,Context.MODE_PRIVATE).getString(PersistenceHelper.TIME_OF_LAST_SYNC,null);
+			String bName = getActivity().getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_MULTI_PROCESS).getString(PersistenceHelper.BUNDLE_NAME,null);
+			String syncPValue = getActivity().getSharedPreferences(bName,Context.MODE_MULTI_PROCESS).getString(PersistenceHelper.TIME_OF_LAST_SYNC,null);
 			if (bName!=null && syncPValue!=null) {
 				button.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 					@Override
@@ -125,11 +128,11 @@ public class ConfigMenu extends PreferenceActivity {
 						.setPositiveButton(R.string.ok,new Dialog.OnClickListener() {				
 							@Override
 							public void onClick(DialogInterface dialog, int which) {
-								String bName = getActivity().getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_PRIVATE).getString(PersistenceHelper.BUNDLE_NAME,null);
-								String syncPValue = getActivity().getSharedPreferences(bName,Context.MODE_PRIVATE).getString(PersistenceHelper.TIME_OF_LAST_SYNC,null);
+								String bName = getActivity().getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_MULTI_PROCESS).getString(PersistenceHelper.BUNDLE_NAME,null);
+								String syncPValue = getActivity().getSharedPreferences(bName,Context.MODE_MULTI_PROCESS).getString(PersistenceHelper.TIME_OF_LAST_SYNC,null);
 								Log.d("vortex","syncPValue is "+syncPValue);
 								if (bName!=null && syncPValue!=null) {
-									getActivity().getSharedPreferences(bName,Context.MODE_PRIVATE).edit().remove(PersistenceHelper.TIME_OF_LAST_SYNC).commit();
+									getActivity().getSharedPreferences(bName,Context.MODE_MULTI_PROCESS).edit().remove(PersistenceHelper.TIME_OF_LAST_SYNC).commit();
 									Intent intent = new Intent();
 									intent.setAction(MenuActivity.REDRAW);
 									getActivity().sendBroadcast(intent);
@@ -162,7 +165,7 @@ public class ConfigMenu extends PreferenceActivity {
 		 */
 		@Override
 		public void onPause() {
-			this.getActivity().getSharedPreferences("GlobalPrefs", Context.MODE_PRIVATE)
+			this.getActivity().getSharedPreferences("GlobalPrefs", Context.MODE_MULTI_PROCESS)
 			.unregisterOnSharedPreferenceChangeListener(this);
 			super.onPause();
 		}
@@ -176,7 +179,7 @@ public class ConfigMenu extends PreferenceActivity {
 		@Override
 		public void onResume() {
 			//this.getPreferenceManager().setSharedPreferencesName(phone);
-			this.getActivity().getSharedPreferences("GlobalPrefs", Context.MODE_PRIVATE)
+			this.getActivity().getSharedPreferences("GlobalPrefs", Context.MODE_MULTI_PROCESS)
 			.registerOnSharedPreferenceChangeListener(this);			
 			//getPreferenceScreen().getSharedPreferences()
 			//.registerOnSharedPreferenceChangeListener(this);
@@ -239,7 +242,7 @@ public class ConfigMenu extends PreferenceActivity {
 						Log.d("nils","Changed to CLIENT");
 					else if (letp.getValue().equals("Solo")) {
 						//Turn off sync if on
-						this.getActivity().getSharedPreferences(Constants.GLOBAL_PREFS,Context.MODE_PRIVATE).edit().putBoolean(PersistenceHelper.SYNC_FEATURE,false).apply();
+						this.getActivity().getSharedPreferences(Constants.GLOBAL_PREFS,Context.MODE_MULTI_PROCESS).edit().putString(PersistenceHelper.SYNC_METHOD,"NONE").apply();
 						Log.d("nils","Changed to SOLO");
 					}
 					Tools.restart(this.getActivity());
