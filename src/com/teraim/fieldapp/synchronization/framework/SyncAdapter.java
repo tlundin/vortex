@@ -17,6 +17,9 @@ import android.content.SyncResult;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
 import android.util.Log;
 
 import com.teraim.fieldapp.non_generics.Constants;
@@ -35,6 +38,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 	// Define a variable to contain a content resolver instance
 	ContentResolver mContentResolver;
 	SharedPreferences gh;
+	private Messenger mClient;
 
 	/**
 	 * Set up the sync adapter
@@ -74,13 +78,21 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
 
 	}
+	
+	public void setClient(Messenger client) {
+		Log.d("vortex","mClient SET! ");
+		mClient = client;
+	}
 
 	int i=0;
 	@Override
 	public void onPerformSync(Account account, Bundle extras, String authority,
 			ContentProviderClient provider, SyncResult syncResult) {
 		Log.d("vortex","I am performing sync here! ");
-
+		if(mClient==null) {
+			Log.d("vortex","Not ready so discarding call");
+			return;
+		}
 		String app=null, user=null, group=null;
 
 		final Uri CONTENT_URI = Uri.parse("content://"
@@ -137,14 +149,27 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 			}
 			c.close();
 			//If succesful, update the counter.
-			ContentValues cv = new ContentValues();
-			if (sendAndReceive(group,user,app,sa,cv)) {
-
-				cv.put("timestamp",maxStamp==-1?null:maxStamp);
-				Log.d("vortex","Timestamp for last sync entry from me is "+maxStamp+":"+cv.getAsString("timestamp"));
-				mContentResolver.insert(CONTENT_URI, cv);
-			} else
+			Bundle bundle = new Bundle();
+			if (sendAndReceive(group,user,app,sa,bundle,maxStamp)) {
+				//mContentResolver.insert(CONTENT_URI, cv);
+				Message msg = Message.obtain(null, SyncService.MSG_SYNC_DATA);
+				msg.setData(bundle);
+				try {
+					mClient.send(msg);
+				} catch (RemoteException e) {
+					
+					e.printStackTrace();
+				}
+			} else {
 				Log.e("vortex","Send failed!");
+				Message msg = Message.obtain(null, SyncService.MSG_SYNC_FAIL);
+				try {
+					mClient.send(msg);
+				} catch (RemoteException e) {
+					
+					e.printStackTrace();
+				}
+			}
 
 
 		}
@@ -152,7 +177,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
 	}
 
-	private boolean sendAndReceive(String group,String user, String app, SyncEntry[] sa, ContentValues cv) {
+	private boolean sendAndReceive(String group,String user, String app, SyncEntry[] sa, Bundle bundle, long maxStamp) {
 		URL url ;
 		URLConnection conn=null;
 		assert(sa!=null);
@@ -161,21 +186,30 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 		try { 
 			url = new URL(Constants.SynkServerURI);
 			conn = url.openConnection();
+			conn.setConnectTimeout(10*1000);
 			conn.setDoInput(true);
 			conn.setDoOutput(true);
 			conn.setUseCaches(false);
 
 			// send object
-
+			Log.d("vortex","creating outstream...");
 			ObjectOutputStream objOut = new ObjectOutputStream(conn.getOutputStream());
 			//First syncgroup
+			Log.d("vortex","writing group..."+group);
 			objOut.writeObject(group);
 			//Then user
+			Log.d("vortex","writing user..."+user);
 			objOut.writeObject(user);
 			//Then app name
+			Log.d("vortex","writing app..."+app);
 			objOut.writeObject(app);
-			if (sa!=null && sa.length>0)
-				objOut.writeObject(sa);
+			Long trId= System.currentTimeMillis();
+			Log.d("vortex","writing transID..."+trId);
+			objOut.writeObject(trId);
+			if (sa!=null && sa.length>0) {
+				Log.d("vortex","written object...");
+				objOut.writeObject(sa);				
+			}
 			else
 				Log.d("vortex","did not write any data...sa empty");
 			objOut.writeObject(new EndOfStream());
@@ -183,7 +217,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 			
 
 			Object reply=null;
-			Log.d("vortex","data written...now waiting for data back");
+			Log.d("vortex","...now waiting for data back");
 			ObjectInputStream objIn = new ObjectInputStream(conn.getInputStream());
 
 			reply = objIn.readObject();
@@ -192,6 +226,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
 			if (reply instanceof String && reply.equals("OK")) {
 				Log.d("vortex","ok!! "+reply.toString());
+				bundle.putLong("timestamp",maxStamp);
+				Log.d("vortex","Timestamp for last sync entry from me is "+maxStamp);
 				boolean notDone = true;
 				int i=0;
 				while (notDone) {
@@ -205,8 +241,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 						notDone=false;
 					}
 					else if (reply instanceof byte[]) {
-						cv.put(i+"", (byte[])reply);
-						Log.d("vortex","inserted byte array no "+i+" into cv");
+						bundle.putByteArray(i+"", (byte[])reply);
+						Log.d("vortex","inserted byte array no "+i+" into bundle");
 						i++;
 					}
 					else {

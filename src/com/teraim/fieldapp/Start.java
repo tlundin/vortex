@@ -1,5 +1,7 @@
 package com.teraim.fieldapp;
 
+import java.lang.reflect.Field;
+
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.AlertDialog;
@@ -7,20 +9,29 @@ import android.app.Dialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MenuItem;
+import android.view.ViewConfiguration;
 
+import com.teraim.fieldapp.dynamic.Executor;
 import com.teraim.fieldapp.dynamic.templates.LinjePortalTemplate;
 import com.teraim.fieldapp.dynamic.types.CHash;
 import com.teraim.fieldapp.dynamic.types.Workflow;
@@ -30,9 +41,17 @@ import com.teraim.fieldapp.dynamic.workflow_realizations.WF_Event_OnActivityResu
 import com.teraim.fieldapp.loadermodule.LoadResult;
 import com.teraim.fieldapp.log.Logger;
 import com.teraim.fieldapp.log.LoggerI;
+import com.teraim.fieldapp.non_generics.Constants;
+import com.teraim.fieldapp.synchronization.SyncEntry;
+import com.teraim.fieldapp.synchronization.SyncStatus;
+import com.teraim.fieldapp.synchronization.SyncStatusListener;
+import com.teraim.fieldapp.synchronization.framework.SyncService;
 import com.teraim.fieldapp.ui.DrawerMenu;
 import com.teraim.fieldapp.ui.LoginConsoleFragment;
 import com.teraim.fieldapp.ui.MenuActivity;
+import com.teraim.fieldapp.utils.DbHelper;
+import com.teraim.fieldapp.utils.PersistenceHelper;
+import com.teraim.fieldapp.utils.Tools;
 
 
 
@@ -98,6 +117,17 @@ public class Start extends MenuActivity {
 		//Determine if program should start or first reload its configuration.
 		if (!loading)
 			checkStatics();
+		
+		 try {
+		        ViewConfiguration config = ViewConfiguration.get(this);
+		        Field menuKeyField = ViewConfiguration.class.getDeclaredField("sHasPermanentMenuKey");
+		        if(menuKeyField != null) {
+		            menuKeyField.setAccessible(true);
+		            menuKeyField.setBoolean(config, false);
+		        }
+		    } catch (Exception ex) {
+		        // Ignore
+		    }
 		super.onCreate(savedInstanceState);
 	}
 
@@ -115,6 +145,8 @@ public class Start extends MenuActivity {
 
 	}
 
+	
+	
 	
 	/**
 	 * 
@@ -394,54 +426,27 @@ public class Start extends MenuActivity {
 	}
 
 	
-	  /**
-     * Create a new dummy account for the sync adapter
-     *
-     * @param context The application context
-     */
-    public static Account CreateSyncAccount(Context context) {
-        // Create the account type and default account
-        Account newAccount = new Account(
-                ACCOUNT, ACCOUNT_TYPE);
-        // Get an instance of the Android account manager
-        AccountManager accountManager =
-                (AccountManager) context.getSystemService(
-                        ACCOUNT_SERVICE);
-        /*
-         * Add the account and account type, no password or user data
-         * If successful, return the Account object, otherwise report an error.
-         */
-        if (accountManager.addAccountExplicitly(newAccount, null, null)) {
-            /*
-             * If you don't set android:syncable="true" in
-             * in your <provider> element in the manifest,
-             * then call context.setIsSyncable(account, AUTHORITY, 1)
-             * here.
-             */
-        	Log.d("vortex","Created account: "+newAccount.name);
-        	
-        } else {
-        	/*
-        	Account[] aa = accountManager.getAccounts();
-        	Log.d("vortex","Accounts found: ");
-        	for (Account a:aa) {
-        		Log.d("vortex",a.name);
-        		if (a.equals(newAccount)) {
-        			Log.d("vortex","failed...exists..");
-        			break;
-        		}
-        	}
-        	*/
-            /*
-             * The account exists or some other error occurred. Log this, report it,
-             * or handle it internally.
-             */
-        	Log.d("vortex","add  sync account failed for some reason");
-        }
-        return newAccount;
-    }
-
 	
+ 
+    
+    
+
+
+    /*
+    public void sayHello() {
+        if (!mBound) return;
+        // Create and send a message to the service, using a supported 'what' value
+        Message msg = Message.obtain(null, SyncService.MSG_SAY_HELLO, 0, 0);
+        
+        try {
+            mService.send(msg);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+    */
+    
+  
 
 
 }

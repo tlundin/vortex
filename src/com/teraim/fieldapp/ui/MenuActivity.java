@@ -7,16 +7,21 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -29,9 +34,17 @@ import android.widget.TextView;
 import com.teraim.fieldapp.GlobalState;
 import com.teraim.fieldapp.R;
 import com.teraim.fieldapp.Start;
+import com.teraim.fieldapp.dynamic.Executor;
 import com.teraim.fieldapp.log.LoggerI;
+import com.teraim.fieldapp.non_generics.Constants;
 import com.teraim.fieldapp.synchronization.DataSyncSessionManager;
+import com.teraim.fieldapp.synchronization.SyncEntry;
+import com.teraim.fieldapp.synchronization.SyncStatus;
+import com.teraim.fieldapp.synchronization.SyncStatusListener;
+import com.teraim.fieldapp.synchronization.framework.SyncService;
+import com.teraim.fieldapp.utils.DbHelper;
 import com.teraim.fieldapp.utils.PersistenceHelper;
+import com.teraim.fieldapp.utils.Tools;
 
 /**
  * Parent class for Activities having a menu row.
@@ -45,8 +58,6 @@ public class MenuActivity extends Activity   {
 	private GlobalState gs;
 	private PersistenceHelper globalPh;
 	private boolean initdone=false,initfailed=false;
-
-	private boolean syncIsRunning=false;
 	private MenuActivity me;
 
 	public final static String REDRAW = "com.teraim.fieldapp.menu_redraw";
@@ -60,7 +71,7 @@ public class MenuActivity extends Activity   {
 		super.onCreate(savedInstanceState);	
 		me = this;
 
-
+		globalPh = new PersistenceHelper(getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_MULTI_PROCESS));
 
 
 
@@ -115,12 +126,156 @@ public class MenuActivity extends Activity   {
 
 	}
 
+	@Override
+	protected void onStop() {
+		super.onStop();
+		// Unbind from the service
+		if (mBound) {
+			unbindService(mConnection);
+			mBound = false;
+		}
+	}
+	@Override
+	protected void onStart() {
+		super.onStart();
+		// Bind to the service
+		if (globalPh.getB(PersistenceHelper.USER_HAS_INTERNET_SYNC_ON)) {
+			startSynk();
+		}
+
+
+	}
+
+	/** Flag indicating whether we have called bind on the service. */
+	boolean mBound;
+
+	private ServiceConnection mConnection = new ServiceConnection() {
+		public void onServiceConnected(ComponentName className, IBinder service) {
+			// This is called when the connection with the service has been
+			// established, giving us the object we can use to
+			// interact with the service.  We are communicating with the
+			// service using a Messenger, so here we get a client-side
+			// representation of that from the raw IBinder object.
+			mService = new Messenger(service);
+			mBound = true;
+			Message msg = Message.obtain(null, SyncService.MSG_REGISTER_CLIENT);
+			msg.replyTo = mMessenger;
+			try {
+				mService.send(msg);
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+
+
+		}
+
+		public void onServiceDisconnected(ComponentName className) {
+			// This is called when the connection with the service has been
+			// unexpectedly disconnected -- that is, its process crashed.
+			mService = null;
+			mBound = false;
+			syncError=false;
+			me.refreshStatusRow();
+		}
+	};
+
+	public boolean isSynkServiceRunning() {
+		return mBound;
+	}
+
+	//TEST BELOW
+	Messenger mService = null;
+	boolean syncActive=false, syncError = false;
+
+	final Messenger mMessenger = new Messenger(new IncomingHandler());
+
+	class IncomingHandler extends Handler {
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+			case SyncService.MSG_SYNC_DATA:
+				Log.d("vortex","got sync data");
+				syncError=false;
+				if (GlobalState.getInstance()!=null) {
+					syncActive = true;
+					me.refreshStatusRow();
+					//insert into database.
+					//If succesful, move pointer.
+					Bundle b = msg.getData();
+					int i=0;
+					if (b!=null) {
+						//Get timestamp.
+						long timeStamp = b.getLong("timestamp");
+						if (timeStamp!=-1) {
+							Log.d("vortex","Inserting timestamp for last sync internet");
+							GlobalState.getInstance().getPreferences().put(PersistenceHelper.TIME_OF_LAST_SYNC_INTERNET,timeStamp+"");
+						} else
+							Log.d("vortex","timestamp -1 in incoming...no need to update");
+						while(true) {               			
+							byte[] byteArray = b.getByteArray(i+"");
+							if (byteArray!=null) {
+								Object o = Tools.bytesToObject(byteArray);
+								if (o!=null) {
+									SyncEntry[] ses = (SyncEntry[])o;
+									//insert into database!
+									DbHelper dbHandler = GlobalState.getInstance().getDb();
+									if (dbHandler!=null) {
+										Log.d("vortex","Dbhandler aquired");
+										dbHandler.synchronise(ses, null,GlobalState.getInstance().getLogger(), new SyncStatusListener() {
+
+											@Override
+											public void send(Object entry) {
+												Log.d("vortex","Synkstatus: "+((SyncStatus)entry).getStatus());
+											}});
+										Log.d("vortex","sync done, calling redraw page");
+										gs.sendEvent(Executor.REDRAW_PAGE);
+									} else
+										Log.e("vortex","DB hanlder was null in handleMessage(synx)!!");
+								}
+								else
+									Log.e("vortex","Courrupted object in sync message pos "+i);
+
+							}
+							else {
+								if (i==0) {
+									Log.e("vortex","no sync messages.");
+
+								}
+								else
+									Log.d("vortex","done, no more sync messages to insert: "+i);
+								syncActive = false;
+								me.refreshStatusRow();
+								break;
+							}
+
+							i++;	
+						}
+
+					}
+
+				}
+				break;
+			case SyncService.MSG_SYNC_FAIL:
+				Log.d("vortex","sync failed");
+				if (GlobalState.getInstance()!=null) {
+					syncError=true;
+					me.refreshStatusRow();
+				}
+				break;
+
+			default:
+				super.handleMessage(msg);
+			}
+		}
+	}
+
+	public static final String MESSAGE_ACTION = "Massage_Massage";
 
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		super.onCreateOptionsMenu(menu);
-		CreateMenu(menu);
+		createMenu(menu);
 		return true;
 	}
 
@@ -138,75 +293,79 @@ public class MenuActivity extends Activity   {
 		return MenuChoice(item);
 	}
 
-	private final static int NO_OF_MENU_ITEMS = 5;
+	private final static int NO_OF_MENU_ITEMS = 4;
 
 	MenuItem mnu[] = new MenuItem[NO_OF_MENU_ITEMS];
 
-	private void CreateMenu(Menu menu)
+	private void createMenu(Menu menu)
 	{
-
-		for(int c=0;c<mnu.length-1;c++) {
+		for(int c=0;c<mnu.length;c++) 
 			mnu[c]=menu.add(0,c,c,"");
-			mnu[c].setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);	
 
-		}
-		//mnu[1].setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);		
-		//mnu[1].setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM|MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
-		mnu[mnu.length-1]=menu.add(0,mnu.length-1,mnu.length-1,"");
+		mnu[0].setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS|MenuItem.SHOW_AS_ACTION_WITH_TEXT);
+		mnu[1].setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+		mnu[2].setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+		mnu[mnu.length-1].setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+
+		mnu[1].setTitle(R.string.context);
+		mnu[2].setTitle(R.string.log);
+		mnu[mnu.length-1].setTitle(R.string.settings);
 		mnu[mnu.length-1].setIcon(android.R.drawable.ic_menu_preferences);
-		mnu[mnu.length-1].setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-		mnu[mnu.length-1].setVisible(false);
-		//mnu5.setIcon(android.R.drawable.ic_menu_preferences);
-		//mnu5.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-		//refreshStatusRow();
+
 	}
 
 	protected void refreshStatusRow() {
-		Log.d("NILS","Refreshing status row ");
-		mnu[2].setTitle("LOG");
-		mnu[2].setVisible(true);
-		gs = GlobalState.getInstance();
 		if (initfailed) {
+			mnu[2].setVisible(true);
 			mnu[mnu.length-1].setVisible(true);
-			return;
+			mnu[mnu.length-1].setShowAsAction(MenuItem.SHOW_AS_ACTION_WITH_TEXT);
+
+		} else 	if (GlobalState.getInstance()!=null && initdone) { 
+			gs = GlobalState.getInstance();
+			if (globalPh.get(PersistenceHelper.SYNC_METHOD).equals("NONE") || gs.isSolo()) 
+				mnu[0].setVisible(false);
+			else {
+				mnu[0].setTitle(gs.getDb().getNumberOfUnsyncedEntries()+"");
+				mnu[0].setIcon(getSyncStateAsIcon());
+				mnu[0].setVisible(true);
+			}
+
+			mnu[1].setVisible(globalPh.getB(PersistenceHelper.SHOW_CONTEXT));		
+			mnu[2].setVisible(globalPh.getB(PersistenceHelper.DEVELOPER_SWITCH));		
+			mnu[mnu.length-1].setVisible(true);
 		}
-		if (gs==null || !initdone) 
-			return;
-
-		globalPh = gs.getGlobalPreferences();
-		//Log.d("vortex","Global prefs: "+gs.getGlobalPreferences()+" isdev "+globalPh.getB(PersistenceHelper.DEVELOPER_SWITCH));
-		if (!syncIsRunning)
-			mnu[0].setTitle("Osynkat: "+gs.getDb().getNumberOfUnsyncedEntries());
-		else 
-			mnu[0].setTitle("Synkar..");
-		mnu[1].setTitle("Context");
-
-		mnu[0].setVisible(!globalPh.get(PersistenceHelper.SYNC_METHOD).equals("NONE")&&!gs.isSolo());	
-		mnu[1].setVisible(globalPh.getB(PersistenceHelper.SHOW_CONTEXT));		
-		mnu[2].setVisible(globalPh.getB(PersistenceHelper.DEVELOPER_SWITCH));		
-		mnu[3].setVisible(true);
-		mnu[mnu.length-1].setVisible(true);
-
-		if (globalPh.getB(PersistenceHelper.SYNC_VIA_INTERNET)&&
-				globalPh.get(PersistenceHelper.SYNC_METHOD).equals("Internet"))
-			mnu[3].setIcon(R.drawable.syncon);
-		else if (!globalPh.getB(PersistenceHelper.SYNC_VIA_INTERNET)) {
-			if (globalPh.get(PersistenceHelper.SYNC_METHOD).equals("Internet"))
-				mnu[3].setIcon(R.drawable.syncoff);
-			else
-				mnu[3].setIcon(null);
-		}
-
 	}
 
+	private Integer getSyncStateAsIcon() {
+		Integer ret = R.drawable.syncoff;
+		if (globalPh.get(PersistenceHelper.SYNC_METHOD).equals("Bluetooth"))
+			ret = R.drawable.bt;
+		else if (globalPh.get(PersistenceHelper.SYNC_METHOD).equals("NONE"))
+			ret = null;
+		else if (globalPh.get(PersistenceHelper.SYNC_METHOD).equals("Internet")) {
+			if (mBound) {
+				ret = R.drawable.syncon;
+				if (syncError)
+					ret = R.drawable.syncerr;
+				else 
+					if (syncActive)
+						ret = R.drawable.syncactive;
+			}
+		}
+		return ret;
+	}
 
 
 	private boolean MenuChoice(MenuItem item) {
 
-		switch (item.getItemId()) {
+		int selection = item.getItemId();
+		//case must be constant..
+		if (selection == mnu.length-1)
+			selection = 99;
+
+		switch (selection) {
 		case 0:
-			if (globalPh.get(PersistenceHelper.SYNC_METHOD).equals("Bluetooth"))
-				startSyncIfNotRunning();
+			startSyncIfNotRunning();
 			break;
 		case 1:
 			Map<String, String> hash = gs.getCurrentKeyMap();
@@ -276,24 +435,8 @@ public class MenuActivity extends Activity   {
 			});
 
 			break;
-		case 3:
-			Account mAccount = Start.CreateSyncAccount(getApplicationContext());
-			if (!globalPh.getB(PersistenceHelper.SYNC_VIA_INTERNET)) {
-				ContentResolver.addPeriodicSync(
-						mAccount,
-						Start.AUTHORITY,
-						Bundle.EMPTY,
-						Start.SYNC_INTERVAL);
-				ContentResolver.setSyncAutomatically(mAccount, Start.AUTHORITY, true);
-				globalPh.put(PersistenceHelper.SYNC_VIA_INTERNET,true);
-				Log.d("vortex", "Internet sync started");
-			} else {
-				ContentResolver.setSyncAutomatically(mAccount, Start.AUTHORITY, false);
-				globalPh.put(PersistenceHelper.SYNC_VIA_INTERNET,false);
-			}
-			this.refreshStatusRow();
-			break;
-		case 4:
+
+		case 99:
 			//close drawer menu if open
 			if (Start.singleton.getDrawerMenu()!=null)
 				Start.singleton.getDrawerMenu().closeDrawer();
@@ -306,14 +449,76 @@ public class MenuActivity extends Activity   {
 
 
 	private void startSyncIfNotRunning() {
-		DataSyncSessionManager.start(MenuActivity.this, new UIProvider(this) {
-			@Override
-			public void onClose() {
-				me.onCloseSync();
+		if (globalPh.get(PersistenceHelper.SYNC_METHOD).equals("Bluetooth")) {
+			DataSyncSessionManager.start(MenuActivity.this, new UIProvider(this) {
+				@Override
+				public void onClose() {
+					me.onCloseSync();
 
-			};
-		});
+				};
+			});
+		} else {
+			if (!globalPh.getB(PersistenceHelper.USER_HAS_INTERNET_SYNC_ON) ) {
+				Log.d("vortex", "Trying to start Internet sync");
+				startSynk();
+				globalPh.put(PersistenceHelper.USER_HAS_INTERNET_SYNC_ON,true);					
+			} else {
+				Log.d("vortex", "Trying to stop Internet sync");
+				stopSynk();
+				globalPh.put(PersistenceHelper.USER_HAS_INTERNET_SYNC_ON,false);
+			}
+			this.refreshStatusRow();
+		}
+	}
 
+	private void startSynk() {
+		Account mAccount = GlobalState.getmAccount(getApplicationContext());
+		Intent myIntent = new Intent(MenuActivity.this, SyncService.class);
+		myIntent.setAction(MESSAGE_ACTION);
+		bindService(myIntent, mConnection,
+				Context.BIND_AUTO_CREATE);
+		ContentResolver.addPeriodicSync(
+				mAccount,
+				Start.AUTHORITY,
+				Bundle.EMPTY,
+				Start.SYNC_INTERVAL);
+		//} else
+		ContentResolver.setSyncAutomatically(mAccount, Start.AUTHORITY, true);
+	}
+
+	public void stopSynk() {
+		if (!this.isSynkServiceRunning())
+			return;
+		Account mAccount = GlobalState.getmAccount(getApplicationContext());
+		ContentResolver.setSyncAutomatically(mAccount, Start.AUTHORITY, false);
+
+		if (mBound && mService!=null) {
+			Message msg = Message.obtain(null, SyncService.MSG_STOP_REQUESTED);
+
+			msg.replyTo = mMessenger;
+			try {
+				mService.send(msg);
+				if (mBound) {
+					unbindService(mConnection);
+					mBound = false;
+
+				}
+			} catch (RemoteException e) {
+
+				new AlertDialog.Builder(getApplicationContext())
+				.setTitle("Stop failed")
+				.setMessage("The Sync Service did not stop properly. It is strongly recommended you restart the App.") 
+				.setIcon(android.R.drawable.ic_dialog_alert)
+				.setCancelable(false)
+				.setNegativeButton(R.string.close, new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+					}
+				})
+				.show();
+				e.printStackTrace();
+			}
+		}
 	}
 
 
@@ -509,7 +714,7 @@ public class MenuActivity extends Activity   {
 
 
 
-		
+
 
 
 		/**if (globalPh.getB(PersistenceHelper.SYNC_VIA_INTERNET)) {

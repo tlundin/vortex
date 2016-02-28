@@ -514,10 +514,11 @@ public  class ButtonBlock extends Block {
 							         * Request the sync for the default account, authority, and
 							         * manual sync settings
 							         */
-							        Account mAccount = Start.CreateSyncAccount(ctx);
+							        Account mAccount = GlobalState.getmAccount(ctx);
 							        final String AUTHORITY = "com.teraim.fieldapp.provider";
 							        ContentResolver.requestSync(mAccount, AUTHORITY, settingsBundle);
 							  
+							        //Also try to say hello.
 								
 								
 								

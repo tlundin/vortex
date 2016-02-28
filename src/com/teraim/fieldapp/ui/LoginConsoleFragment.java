@@ -415,17 +415,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 					Log.d("vortex","executing workflow main!");
 					gs.setModules(myModules);
 
-					//Start sync if on!
-					if (globalPh.getB(PersistenceHelper.SYNC_VIA_INTERNET)) {
-						Account mAccount = Start.CreateSyncAccount(getActivity().getApplicationContext());
-						Log.d("vortex", "periodic sync starts!");
-						ContentResolver.addPeriodicSync(
-								mAccount,
-								Start.AUTHORITY,
-								Bundle.EMPTY,
-								Start.SYNC_INTERVAL);
-						ContentResolver.setSyncAutomatically(mAccount, Start.AUTHORITY, true);
-					}
+					
 				} else {
 					loginConsole.addRow("");
 					loginConsole.addRedText("Found no workflow 'Main'. Exiting..");

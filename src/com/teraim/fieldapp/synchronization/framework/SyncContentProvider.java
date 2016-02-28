@@ -122,7 +122,7 @@ public class SyncContentProvider extends ContentProvider {
 	@Override
 	public Uri insert(Uri uri, ContentValues values) {
 		//used to update the timestamp counter.
-		
+		/*
 			int i=0;
 			byte[] b;
 			while (true) {
@@ -156,45 +156,13 @@ public class SyncContentProvider extends ContentProvider {
 				ph.edit().putString(PersistenceHelper.TIME_OF_LAST_SYNC_INTERNET, ts).commit();
 			else
 				Log.d("vortex","no timestamp change in insert!");
+				*/
 		return null;
 
 	}
 
 
-	private Object bytesToObject(byte[] inB) {
-		ByteArrayInputStream bis = new ByteArrayInputStream(inB);
-		ObjectInput in = null;
-		Object o =null;
-		try {
-			in = new ObjectInputStream(bis);
-			o = in.readObject(); 
 
-		} catch (IOException e) {
-
-			e.printStackTrace();
-			return null;
-		} catch (ClassNotFoundException e) {
-
-			e.printStackTrace();
-			return null;
-		} finally {
-			try {
-				bis.close();
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			}
-			try {
-				if (in != null) {
-					in.close();
-				}
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			}
-		}
-		if (o==null)
-			Log.d("vortex","returning null in bytestoobject for "+inB+" with l "+inB.length+" inBS "+inB.toString());
-		return o;
-	}
 
 
 

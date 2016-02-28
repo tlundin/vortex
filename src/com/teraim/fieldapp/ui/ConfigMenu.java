@@ -22,6 +22,7 @@ import android.util.Log;
 
 import com.teraim.fieldapp.GlobalState;
 import com.teraim.fieldapp.R;
+import com.teraim.fieldapp.Start;
 import com.teraim.fieldapp.non_generics.Constants;
 import com.teraim.fieldapp.utils.PersistenceHelper;
 import com.teraim.fieldapp.utils.Tools;
@@ -247,6 +248,11 @@ public class ConfigMenu extends PreferenceActivity {
 					}
 					Tools.restart(this.getActivity());
 
+				} //change the sync state if user swapped method.
+				else if (letp.getKey().equals(PersistenceHelper.SYNC_METHOD)) {
+						if (letp.getValue().equals("Bluetooth")) {
+							Start.singleton.stopSynk();
+						}
 				}
 
 			}

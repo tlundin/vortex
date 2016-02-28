@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
@@ -29,6 +32,7 @@ import com.teraim.fieldapp.non_generics.StatusHandler;
 import com.teraim.fieldapp.synchronization.ConnectionManager;
 import com.teraim.fieldapp.synchronization.SyncMessage;
 import com.teraim.fieldapp.ui.DrawerMenu;
+import com.teraim.fieldapp.ui.MenuActivity;
 import com.teraim.fieldapp.utils.BackupManager;
 import com.teraim.fieldapp.utils.DbHelper;
 import com.teraim.fieldapp.utils.PersistenceHelper;
@@ -49,7 +53,7 @@ public class GlobalState  {
 	private static GlobalState singleton;
 
 
-	private Context myC;
+	private static Context myC=null;
 	private LoggerI log;
 	private PersistenceHelper ph = null;	
 	private DbHelper db = null;
@@ -60,8 +64,7 @@ public class GlobalState  {
 	//Spinner definitions
 	private SpinnerDefinition mySpinnerDef;
 	private DrawerMenu myDrawerMenu;
-	//Global state for sync.
-	private SyncStatus syncStatus;	
+	
 	public String TEXT_LARGE;
 	private WF_Context currentContext;
 	private String myPartner="?";
@@ -70,7 +73,7 @@ public class GlobalState  {
 	private Tracker myTracker;
 	private ConnectionManager myConnectionManager; 
 	private BackupManager myBackupManager;
-	
+	private static Account mAccount;
 	
 	public static GlobalState getInstance() {
 
@@ -122,35 +125,25 @@ public class GlobalState  {
 		myBackupManager = new BackupManager(this);
 		
 		myBackupManager.startBackupIfTimeAndNeed();
+		
+		
+		
+		
+		sendEvent(MenuActivity.REDRAW);
 	}
 
 
-
+	public static Account getmAccount(Context ctx) {
+		if (mAccount==null )
+			mAccount = CreateSyncAccount(ctx);
+		return mAccount;
+	}
 
 	/*Validation
 	 * 
 	 */
 
-	/*
-	public ErrorCode validateFrozenObjects() {
-
-		if (myWfs == null)
-			return ErrorCode.workflows_not_found;
-		if (artLista == null)
-			return ErrorCode.config_not_found;
-			//return ErrorCode.spinners_not_found;
-		else {
-			ErrorCode artL = artLista.validateAndInit();
-			if (artL != ErrorCode.ok)
-				return artL;
-			else
-				if(myWfs.size()==0)
-					return ErrorCode.workflows_not_found;
-				else
-					return ErrorCode.ok;
-		}
-	}
-	 */
+	
 
 	/*Singletons available for all classes
 	 * 
@@ -158,15 +151,7 @@ public class GlobalState  {
 	public SpinnerDefinition getSpinnerDefinitions() {
 		return mySpinnerDef;
 	}
-	/*
-	public void setSpinnerDefinitions(SpinnerDefinition sd) {
-		if (sd!=null)
-			Log.d("nils","SetSpinnerDef called with "+sd.size()+" spinners");
-		else 
-			Log.e("nils","Spinnerdef null!!!");
-		mySpinnerDef=sd;
-	}
-	 */
+	
 	//Persistance for app specific variables.
 	public PersistenceHelper getPreferences() {
 		return ph;
@@ -276,42 +261,6 @@ public class GlobalState  {
 		return array;
 
 	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	/**************************************
-	 * Getter/Setter for sync status and Globally accessible method for sending data asynchronously to twin device.
-	 */
-
-	public enum SyncStatus {
-		stopped,
-		searching,
-		waiting_for_ping,
-		waiting_for_data,
-		reading_data_from_db,
-		writing_data,
-		waiting_for_ack,		
-		ack_received, 
-		sending, 
-		waiting_for_connection_to_close, started, restarting, insert_update_message, 
-
-	}
-	public SyncStatus getSyncStatus() {
-		return syncStatus;
-	}
-
-	
 
 
 
@@ -581,6 +530,56 @@ public class GlobalState  {
 	public CharSequence getString(int identifier) {
 		return getContext().getResources().getString(identifier);
 	}
+
+	
+
+	  /**
+     * Create a new dummy account for the sync adapter
+     *
+     * @param context The application context
+     */
+    private static Account CreateSyncAccount(Context context) {
+        // Create the account type and default account
+        Account newAccount = new Account(
+                Start.ACCOUNT, Start.ACCOUNT_TYPE);
+        // Get an instance of the Android account manager
+        AccountManager accountManager =
+                (AccountManager) context.getSystemService(
+                		Start.ACCOUNT_SERVICE);
+        /*
+         * Add the account and account type, no password or user data
+         * If successful, return the Account object, otherwise report an error.
+         */
+        if (accountManager.addAccountExplicitly(newAccount, null, null)) {
+            /*
+             * If you don't set android:syncable="true" in
+             * in your <provider> element in the manifest,
+             * then call context.setIsSyncable(account, AUTHORITY, 1)
+             * here.
+             */
+        	Log.d("vortex","Created account: "+newAccount.name);
+        	
+        } else {
+        	/*
+        	Account[] aa = accountManager.getAccounts();
+        	Log.d("vortex","Accounts found: ");
+        	for (Account a:aa) {
+        		Log.d("vortex",a.name);
+        		if (a.equals(newAccount)) {
+        			Log.d("vortex","failed...exists..");
+        			break;
+        		}
+        	}
+        	*/
+            /*
+             * The account exists or some other error occurred. Log this, report it,
+             * or handle it internally.
+             */
+        	Log.d("vortex","add  sync account failed for some reason");
+        }
+        return newAccount;
+    }
+
 	
 
 

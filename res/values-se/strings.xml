@@ -8,8 +8,6 @@
     <string name="title_find_area">Hitta Provyta</string>
     <string name="title_select_ruta">Välj Ruta</string>
 	<string name="title_select_yta">Välj Yta</string>
-    <string name="title_select_color">Välj dosans färg</string>
-		
 	<string name="drawer_open">Öppna</string>
 	<string name="drawer_close">Stäng</string>
 	<string name="local_service_started">Blåtandtjänst startad</string>
@@ -23,9 +21,10 @@
 	<string name="description">Beskrivning</string>		
 	<string name="reference">Referens</string>		
 	<string name="resetSyncButton">Nollställ synk</string>		
-	
-	<string name="length_">Length:</string>		
-	
+	<string name="settings">Inställningar</string>
+	<string name="length_">Length:</string>	
+	<string name="context">Context</string>	
+	<string name="log">Logg</string>				
 	<string name="ok">OK</string>		
 	<string name="save">Spara</string>
 	<string name="cancel">Avbryt</string>

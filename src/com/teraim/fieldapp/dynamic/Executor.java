@@ -167,6 +167,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 
 						myContext.registerEvent(new WF_Event_OnSave(Constants.SYNC_ID));
 						Log.d("nils","Redraw page received in Executor. Sending onSave event.");
+						gs.sendEvent(MenuActivity.REDRAW);
 					} 
 					/*
 				else if (intent.getAction().equals(BluetoothConnectionService.BLUETOOTH_MESSAGE_RECEIVED)) {

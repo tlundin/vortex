@@ -45,6 +45,7 @@ import com.teraim.fieldapp.synchronization.SyncEntry;
 import com.teraim.fieldapp.synchronization.SyncEntryHeader;
 import com.teraim.fieldapp.synchronization.SyncReport;
 import com.teraim.fieldapp.synchronization.SyncStatus;
+import com.teraim.fieldapp.synchronization.SyncStatusListener;
 import com.teraim.fieldapp.synchronization.VariableRowEntry;
 import com.teraim.fieldapp.ui.MenuActivity.UIProvider;
 import com.teraim.fieldapp.utils.Exporter.ExportReport;
@@ -1187,7 +1188,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
 
 
-	public SyncReport synchronise(SyncEntry[] ses, UIProvider ui, LoggerI o, DataSyncSessionManager dataSyncSessionManager) {
+	public SyncReport synchronise(SyncEntry[] ses, UIProvider ui, LoggerI o, SyncStatusListener syncListener) {
 		if (ses == null) {
 			Log.d("sync","ses är tom! i synchronize");
 			return null;
@@ -1216,8 +1217,9 @@ public class DbHelper extends SQLiteOpenHelper {
 			synC++;
 			if (synC%10==0) {
 				String syncStatus = synC+"/"+size;
-				ui.setInfo(synC+"/"+size);
-				dataSyncSessionManager.send(new SyncStatus(synC+"/"+size));
+				if (ui!=null) 
+					ui.setInfo(syncStatus);
+				syncListener.send(new SyncStatus(syncStatus));
 			}
 			if (s.isInsert()||s.isInsertArray()) {				
 				keySet.clear();
@@ -1476,8 +1478,10 @@ public class DbHelper extends SQLiteOpenHelper {
 		}
 		if (globalPh.get(PersistenceHelper.SYNC_METHOD).equals("Internet")) {			
 			String timestamp = ph.get(PersistenceHelper.TIME_OF_LAST_SYNC_INTERNET);
-			if (timestamp==null||timestamp.equals(PersistenceHelper.UNDEFINED))
+			if (timestamp==null||timestamp.equals(PersistenceHelper.UNDEFINED)) {
 				timestamp = "0";
+				Log.d("vortex","timestamp was null or undefined...will be set to zero");
+			}
 			//Log.d("nils","Time of last sync is "+timestamp+" in getNumberOfUnsyncedEntries (dbHelper)");
 			Cursor c = db.query(TABLE_AUDIT,null,
 					"timestamp > ?",new String[] {timestamp},null,null,"timestamp asc",null);

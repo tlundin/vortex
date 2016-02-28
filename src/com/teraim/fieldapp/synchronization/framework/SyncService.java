@@ -1,8 +1,17 @@
 package com.teraim.fieldapp.synchronization.framework;
 
+import java.util.ArrayList;
+
 import android.app.Service;
 import android.content.Intent;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
+import android.util.Log;
+import android.widget.Toast;
+
+import com.teraim.fieldapp.Start;
 
 /**
  * Define a Service that returns an IBinder for the
@@ -14,11 +23,52 @@ public class SyncService extends Service {
     private static SyncAdapter sSyncAdapter = null;
     // Object to use as a thread-safe lock
     private static final Object sSyncAdapterLock = new Object();
-    /*
-     * Instantiate the sync adapter object.
+  
+    
+    
+    Messenger mClient; 
+    
+	public static final int MSG_REGISTER_CLIENT = 1;
+	public static final int MSG_SYNC_DATA = 2;
+	public static final int MSG_SYNC_FAIL = 3;
+	public static final int MSG_STOP_REQUESTED = 4;
+
+    class IncomingHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case MSG_REGISTER_CLIENT:
+                    Toast.makeText(getApplicationContext(), "sync service started", Toast.LENGTH_SHORT).show();
+                    mClient=msg.replyTo;
+                    if (sSyncAdapter != null) {
+                    	sSyncAdapter.setClient(mClient);
+                    	
+                    }
+                    break;
+                case MSG_STOP_REQUESTED:
+                	Toast.makeText(getApplicationContext(), "sync stopping..", Toast.LENGTH_SHORT).show();
+                	SyncService.this.stopSelf();
+                	break;
+                default:
+                    super.handleMessage(msg);
+            }
+        }
+    }
+
+    /**
+     * Target we publish for clients to send messages to IncomingHandler.
      */
+    final Messenger mMessenger = new Messenger(new IncomingHandler());
+
+    /**
+     * When binding to the service, we return an interface to our messenger
+     * for sending messages to the service.
+     */
+   
+    
     @Override
     public void onCreate() {
+    
         /*
          * Create the sync adapter as a singleton.
          * Set the sync adapter as syncable
@@ -43,6 +93,17 @@ public class SyncService extends Service {
          * in the base class code when the SyncAdapter
          * constructors call super()
          */
-        return sSyncAdapter.getSyncAdapterBinder();
+    	if (intent.getAction().equals(Start.MESSAGE_ACTION)) {
+    		Log.d("vortex","MASSAGE!");
+    		return mMessenger.getBinder();
+    		}
+    	else {
+    		Log.d("vortex","CRISP!");
+    		if (mClient!=null) {
+    			Log.d("vortex","CRAP!");
+    			sSyncAdapter.setClient(mClient);
+    		}
+    		return sSyncAdapter.getSyncAdapterBinder();
+    	}
     }
 }

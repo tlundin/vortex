@@ -2,8 +2,6 @@ package com.teraim.fieldapp.synchronization;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import android.content.Context;
 import android.util.Log;
@@ -23,7 +21,7 @@ import com.teraim.fieldapp.utils.PersistenceHelper;
  *
  * Class that keeps track of a connection.
  */
-public class DataSyncSessionManager implements ConnectionListener {
+public class DataSyncSessionManager implements ConnectionListener,SyncStatusListener {
 
 	enum State {
 		initial,

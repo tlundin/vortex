@@ -40,8 +40,6 @@ public class PersistenceHelper {
 	public static final String GIS_CREATE_FIRST_TIME_KEY = "fzzzt_gis";
 	public static final String DEVELOPER_SWITCH = "dev_switch";
 	public static final String VERSION_CONTROL = "version_control";
-	public static final String SYNC_METHOD = "sync_method";
-	public static final String TIME_OF_LAST_SYNC = "kakkadua";
 	public static final String HistoricalRutorList = "historical_rutor";
 	public static final String AVSTAND_IS_PRESSED = "avstands_matning_pressed";
 	public static final String NO_OF_PROVYTOR = "antalprovytor";
@@ -56,8 +54,11 @@ public class PersistenceHelper {
 	public static final String NEW_APP_VERSION = "new_app_version";
 	public static final String TIME_OF_LAST_BACKUP = "time_of_last_backup";
 	public static final String BACKUP_AUTOMATICALLY = "auto_backup";
-	public static final String SYNC_VIA_INTERNET = "4g_sync";
+	public static final String USER_HAS_INTERNET_SYNC_ON = "user_wants_sync";
 	public static final String TIME_OF_LAST_SYNC_INTERNET = "time_of_last_sync_4g";
+	public static final String SYNC_METHOD = "sync_method";
+	public static final String TIME_OF_LAST_SYNC = "kakkadua";
+	
 
 
 	

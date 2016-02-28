@@ -2,11 +2,13 @@ package com.teraim.fieldapp.utils;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
@@ -901,6 +903,41 @@ public class Tools {
 		long existingTimeStamp = Long.parseLong(existingTime);
 		long newTimeStamp = Long.parseLong(newTime);
 		return (existingTimeStamp>=newTimeStamp);
+	}
+	
+	public static Object bytesToObject(byte[] inB) {
+		ByteArrayInputStream bis = new ByteArrayInputStream(inB);
+		ObjectInput in = null;
+		Object o =null;
+		try {
+			in = new ObjectInputStream(bis);
+			o = in.readObject(); 
+
+		} catch (IOException e) {
+
+			e.printStackTrace();
+			return null;
+		} catch (ClassNotFoundException e) {
+
+			e.printStackTrace();
+			return null;
+		} finally {
+			try {
+				bis.close();
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
+			try {
+				if (in != null) {
+					in.close();
+				}
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
+		}
+		if (o==null)
+			Log.d("vortex","returning null in bytestoobject for "+inB+" with l "+inB.length+" inBS "+inB.toString());
+		return o;
 	}
 
 }
