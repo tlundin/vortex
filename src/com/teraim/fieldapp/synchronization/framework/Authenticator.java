@@ -52,7 +52,7 @@ public class Authenticator extends AbstractAccountAuthenticator {
     // Getting a label for the auth token is not supported
     @Override
     public String getAuthTokenLabel(String s) {
-        throw new UnsupportedOperationException();
+       return null;
     }
     // Updating user credentials is not supported
     @Override

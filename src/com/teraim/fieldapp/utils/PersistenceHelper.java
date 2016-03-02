@@ -54,10 +54,11 @@ public class PersistenceHelper {
 	public static final String NEW_APP_VERSION = "new_app_version";
 	public static final String TIME_OF_LAST_BACKUP = "time_of_last_backup";
 	public static final String BACKUP_AUTOMATICALLY = "auto_backup";
-	public static final String USER_HAS_INTERNET_SYNC_ON = "user_wants_sync";
 	public static final String TIME_OF_LAST_SYNC_INTERNET = "time_of_last_sync_4g";
 	public static final String SYNC_METHOD = "sync_method";
 	public static final String TIME_OF_LAST_SYNC = "kakkadua";
+	public static final String SYNC_ON_FIRST_TIME_KEY = "sync_first_use";
+	
 	
 
 

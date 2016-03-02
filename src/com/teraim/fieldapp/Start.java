@@ -84,7 +84,7 @@ public class Start extends MenuActivity {
     // The account name
     public static final String ACCOUNT = "FieldApp";
 
-	public static final long SYNC_INTERVAL = 60;
+	public static final long SYNC_INTERVAL = 20;
     // Instance fields
    // Account mAccount;
 
@@ -99,7 +99,7 @@ public class Start extends MenuActivity {
 	 */
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-
+		
 		Log.d("nils","in START onCreate");
 		singleton = this;
 		//This is the frame for all pages, defining the Action bar and Navigation menu.

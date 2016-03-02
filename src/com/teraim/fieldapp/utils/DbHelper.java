@@ -1205,7 +1205,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		String name=null;
 
 		synC=0;
-		if (ses==null||ses.length<2) {
+		if (ses==null||ses.length==0) {
 			Log.e("sync","either syncarray is short or null. no data to sync.");
 			db.endTransaction();
 			return null;
@@ -1286,7 +1286,7 @@ public class DbHelper extends SQLiteOpenHelper {
 				TimeAndId ti = this.getIdAndTimeStamp(name, sel);
 				long rId=-1;
 				if (ti==null || s.isInsertArray()) {// || gs.getVariableConfiguration().getnumType(row).equals(DataType.array)) {
-					Log.d("sync","Vairable doesn't exist or is an Array. Inserting..");
+					Log.d("sync","INSERTING NEW (OR ARRAY) "+name);
 					//now there should be ContentValues that can be inserted.
 					rId = db.insert(TABLE_VARIABLES, // table
 							null, //nullColumnHack
@@ -1298,7 +1298,7 @@ public class DbHelper extends SQLiteOpenHelper {
 					boolean existingTimestampIsMoreRecent = (Tools.existingTimestampIsMoreRecent(ti.time,s.getTimeStamp()));
 					if (ti.time!=null && s.getTimeStamp()!=null) {
 						if (!existingTimestampIsMoreRecent) {
-							Log.d("sync","Existing variable is less recent. Replace!");
+							Log.d("sync","REPLACING "+name);
 							cv.put("id", ti.id);
 							rId = db.replace(TABLE_VARIABLES, // table
 									null, //nullColumnHack
@@ -1476,9 +1476,10 @@ public class DbHelper extends SQLiteOpenHelper {
 			Log.d("vortex","Get SyncEtries BT: "+ret);
 			return ret;
 		}
-		if (globalPh.get(PersistenceHelper.SYNC_METHOD).equals("Internet")) {			
-			String timestamp = ph.get(PersistenceHelper.TIME_OF_LAST_SYNC_INTERNET);
-			if (timestamp==null||timestamp.equals(PersistenceHelper.UNDEFINED)) {
+		if (globalPh.get(PersistenceHelper.SYNC_METHOD).equals("Internet")) {	
+			final String teamName = globalPh.get(PersistenceHelper.LAG_ID_KEY);
+			String timestamp = ph.get(PersistenceHelper.TIME_OF_LAST_SYNC_INTERNET+teamName);
+			if (timestamp.equals(PersistenceHelper.UNDEFINED)) {
 				timestamp = "0";
 				Log.d("vortex","timestamp was null or undefined...will be set to zero");
 			}

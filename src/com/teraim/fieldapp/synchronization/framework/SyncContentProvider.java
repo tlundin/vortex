@@ -76,8 +76,8 @@ public class SyncContentProvider extends ContentProvider {
 		Context ctx = getContext();
 
 		SharedPreferences globalPh = ctx.getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_MULTI_PROCESS);
-		String bundleName = globalPh.getString(PersistenceHelper.BUNDLE_NAME,null);
-
+		final String bundleName = globalPh.getString(PersistenceHelper.BUNDLE_NAME,null);
+		final String teamName =  globalPh.getString(PersistenceHelper.LAG_ID_KEY,"");
 		if (bundleName == null || bundleName.length()==0) {
 			Log.e("vortex","Bundlename was null in content provider!");
 			return null;
@@ -92,8 +92,8 @@ public class SyncContentProvider extends ContentProvider {
 					dbHelper = new DatabaseHelper(getContext(),bundleName);
 
 
-
-			String timestamp = ph.getString(PersistenceHelper.TIME_OF_LAST_SYNC_INTERNET,"0");
+			//Timestamp key includes team name, since change of team name should lead to resync from zero.
+			String timestamp = ph.getString(PersistenceHelper.TIME_OF_LAST_SYNC_INTERNET+teamName,"0");
 			SQLiteDatabase db = dbHelper.getReadableDatabase();
 			Cursor c = db.query(DbHelper.TABLE_AUDIT,null,
 					"timestamp > ?",new String[] {timestamp},null,null,"timestamp asc",null);
@@ -121,42 +121,7 @@ public class SyncContentProvider extends ContentProvider {
 
 	@Override
 	public Uri insert(Uri uri, ContentValues values) {
-		//used to update the timestamp counter.
-		/*
-			int i=0;
-			byte[] b;
-			while (true) {
-				b = values.getAsByteArray(i+"");
-				if (b==null) {
-					Log.d("vortex","found no entry for "+i+" so i am done. Saving the time of last sync!");
-					break;
-				}
-				//turn byte array into sync entry[]
-				Log.d("vortex","B is instance of "+b.getClass().getCanonicalName());
-				Log.d("vortex","And this is a "+this.bytesToObject(b).getClass());
-				Log.d("vortex","Looks like "+this.bytesToObject(b));
-
-				Object o = this.bytesToObject(b);
-				if (o!=null && o instanceof SyncEntry[]) {
-					SyncEntry[] se = (SyncEntry[])o;
-
-					Log.d("vortex","Have a SyncEntry[] object!");
-					i++;
-				} else {
-					Log.e("vortex","Database corrupt...object either null or not syncentry array: "+o);
-					break;
-				}
-
-			} 
-
-
-
-			String ts = values.getAsString("timestamp");
-			if (ts!=null) 
-				ph.edit().putString(PersistenceHelper.TIME_OF_LAST_SYNC_INTERNET, ts).commit();
-			else
-				Log.d("vortex","no timestamp change in insert!");
-				*/
+		
 		return null;
 
 	}

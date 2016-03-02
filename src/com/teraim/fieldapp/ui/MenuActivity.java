@@ -59,6 +59,7 @@ public class MenuActivity extends Activity   {
 	private PersistenceHelper globalPh;
 	private boolean initdone=false,initfailed=false;
 	private MenuActivity me;
+	private Account mAccount;
 
 	public final static String REDRAW = "com.teraim.fieldapp.menu_redraw";
 	public static final String INITDONE = "com.teraim.fieldapp.init_done";
@@ -72,9 +73,6 @@ public class MenuActivity extends Activity   {
 		me = this;
 
 		globalPh = new PersistenceHelper(getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_MULTI_PROCESS));
-
-
-
 
 		brr = new BroadcastReceiver() {
 			@Override
@@ -109,7 +107,7 @@ public class MenuActivity extends Activity   {
 		//Listen for Service started/stopped event.
 
 
-
+		configureSynk();
 	}
 
 
@@ -138,12 +136,11 @@ public class MenuActivity extends Activity   {
 	@Override
 	protected void onStart() {
 		super.onStart();
-		// Bind to the service
-		if (globalPh.getB(PersistenceHelper.USER_HAS_INTERNET_SYNC_ON)) {
-			startSynk();
-		}
-
-
+		//Bind to synk service
+		Intent myIntent = new Intent(MenuActivity.this, SyncService.class);
+		myIntent.setAction(MESSAGE_ACTION);
+		bindService(myIntent, mConnection,
+				Context.BIND_AUTO_CREATE);
 	}
 
 	/** Flag indicating whether we have called bind on the service. */
@@ -206,14 +203,17 @@ public class MenuActivity extends Activity   {
 					if (b!=null) {
 						//Get timestamp.
 						long timeStamp = b.getLong("timestamp");
+						String teamName = globalPh.get(PersistenceHelper.LAG_ID_KEY);
 						if (timeStamp!=-1) {
 							Log.d("vortex","Inserting timestamp for last sync internet");
-							GlobalState.getInstance().getPreferences().put(PersistenceHelper.TIME_OF_LAST_SYNC_INTERNET,timeStamp+"");
+							GlobalState.getInstance().getPreferences().put(PersistenceHelper.TIME_OF_LAST_SYNC_INTERNET+teamName,timeStamp+"");
 						} else
-							Log.d("vortex","timestamp -1 in incoming...no need to update");
+							Log.d("vortex","Timestamp for Time Of Last Sync not changed for Internet sync.");
 						while(true) {               			
 							byte[] byteArray = b.getByteArray(i+"");
 							if (byteArray!=null) {
+								if (timeStamp==-1)
+									Log.e("vortex","Can timestamp be -1 when data is coming? Doubtfully!!!!");
 								Object o = Tools.bytesToObject(byteArray);
 								if (o!=null) {
 									SyncEntry[] ses = (SyncEntry[])o;
@@ -343,7 +343,7 @@ public class MenuActivity extends Activity   {
 		else if (globalPh.get(PersistenceHelper.SYNC_METHOD).equals("NONE"))
 			ret = null;
 		else if (globalPh.get(PersistenceHelper.SYNC_METHOD).equals("Internet")) {
-			if (mBound) {
+			if (ContentResolver.getSyncAutomatically(mAccount,Start.AUTHORITY)) {
 				ret = R.drawable.syncon;
 				if (syncError)
 					ret = R.drawable.syncerr;
@@ -449,7 +449,8 @@ public class MenuActivity extends Activity   {
 
 
 	private void startSyncIfNotRunning() {
-		if (globalPh.get(PersistenceHelper.SYNC_METHOD).equals("Bluetooth")) {
+		String syncMethod = globalPh.get(PersistenceHelper.SYNC_METHOD);
+		if (syncMethod.equals("Bluetooth")) {
 			DataSyncSessionManager.start(MenuActivity.this, new UIProvider(this) {
 				@Override
 				public void onClose() {
@@ -458,41 +459,71 @@ public class MenuActivity extends Activity   {
 				};
 			});
 		} else {
-			if (!globalPh.getB(PersistenceHelper.USER_HAS_INTERNET_SYNC_ON) ) {
-				Log.d("vortex", "Trying to start Internet sync");
-				startSynk();
-				globalPh.put(PersistenceHelper.USER_HAS_INTERNET_SYNC_ON,true);					
-			} else {
-				Log.d("vortex", "Trying to stop Internet sync");
-				stopSynk();
-				globalPh.put(PersistenceHelper.USER_HAS_INTERNET_SYNC_ON,false);
+			if (syncMethod.equals("Internet")) {
+				if (!ContentResolver.getSyncAutomatically(mAccount,Start.AUTHORITY)) {
+					Log.d("vortex", "Trying to start Internet sync");
+					//Check there is name and team.
+					String user = globalPh.get(PersistenceHelper.USER_ID_KEY);
+					String team = globalPh.get(PersistenceHelper.LAG_ID_KEY);
+					if (user==null || user.length()==0 || team==null || team.length()==0) {
+						new AlertDialog.Builder(this)
+						.setTitle("Sync cannot start")
+						.setMessage("Missing team ["+team+"] or user name ["+user+"]. Please add under the Settings menu") 
+						.setIcon(android.R.drawable.ic_dialog_alert)
+						.setCancelable(false)
+						.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+							}
+						})
+						.show();
+					}
+					
+					
+					if (!globalPh.getB(PersistenceHelper.SYNC_ON_FIRST_TIME_KEY)) {
+						globalPh.put(PersistenceHelper.SYNC_ON_FIRST_TIME_KEY,true);
+						new AlertDialog.Builder(this)
+						.setTitle("Sync starting up")
+						.setMessage("The sync symbol turns green only when data succesfully reaches the server. Your sync interval is set to: "+Start.SYNC_INTERVAL+" seconds. If the symbol is not green after this time, you likely have network issues.") 
+						.setIcon(android.R.drawable.ic_dialog_alert)
+						.setCancelable(false)
+						.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+							}
+						})
+						.show();
+					}
+					ContentResolver.setSyncAutomatically(mAccount, Start.AUTHORITY, true);		
+				} else {
+					Log.d("vortex", "Trying to stop Internet sync");
+					ContentResolver.setSyncAutomatically(mAccount, Start.AUTHORITY, false);
+				}
+				this.refreshStatusRow();
 			}
-			this.refreshStatusRow();
 		}
 	}
-
-	private void startSynk() {
-		Account mAccount = GlobalState.getmAccount(getApplicationContext());
-		Intent myIntent = new Intent(MenuActivity.this, SyncService.class);
-		myIntent.setAction(MESSAGE_ACTION);
-		bindService(myIntent, mConnection,
-				Context.BIND_AUTO_CREATE);
+	private void configureSynk() {
+		mAccount = GlobalState.getmAccount(getApplicationContext());
+		
 		ContentResolver.addPeriodicSync(
 				mAccount,
 				Start.AUTHORITY,
 				Bundle.EMPTY,
 				Start.SYNC_INTERVAL);
-		//} else
-		ContentResolver.setSyncAutomatically(mAccount, Start.AUTHORITY, true);
+		Log.d("vortex","added periodic sync to account.");
 	}
-
+	/*
 	public void stopSynk() {
-		if (!this.isSynkServiceRunning())
+		if (!isSynkServiceRunning()) {
+			Log.d("vortex","Cannot stop synk. It is not running");
 			return;
+		} 
+
 		Account mAccount = GlobalState.getmAccount(getApplicationContext());
 		ContentResolver.setSyncAutomatically(mAccount, Start.AUTHORITY, false);
 
-		if (mBound && mService!=null) {
+		if (mService!=null) {
 			Message msg = Message.obtain(null, SyncService.MSG_STOP_REQUESTED);
 
 			msg.replyTo = mMessenger;
@@ -520,7 +551,7 @@ public class MenuActivity extends Activity   {
 			}
 		}
 	}
-
+	 */
 
 
 
@@ -708,6 +739,8 @@ public class MenuActivity extends Activity   {
 		 */
 		public void update(String msg) {
 			mHandler.obtainMessage(UPDATE,msg).sendToTarget();			
+
+
 		}
 
 
@@ -717,17 +750,7 @@ public class MenuActivity extends Activity   {
 
 
 
-		/**if (globalPh.getB(PersistenceHelper.SYNC_VIA_INTERNET)) {
-						Account mAccount = Start.CreateSyncAccount(getActivity().getApplicationContext());
-						Log.d("vortex", "periodic sync starts!");
-						ContentResolver.addPeriodicSync(
-								mAccount,
-								Start.AUTHORITY,
-								Bundle.EMPTY,
-								Start.SYNC_INTERVAL);
-						ContentResolver.setSyncAutomatically(mAccount, Start.AUTHORITY, true);
-					}
-		 */
+
 
 
 	}

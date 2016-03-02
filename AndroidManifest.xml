@@ -2,7 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.teraim.fieldapp"
     android:versionCode="3"
-    android:versionName="3.10" >
+    android:versionName="3.14" >
 
     <uses-sdk
         android:minSdkVersion="14"
@@ -35,8 +35,8 @@
  		<provider
         android:name="com.teraim.fieldapp.synchronization.framework.SyncContentProvider"
         android:authorities="com.teraim.fieldapp.provider"
-        android:exported="false"
-        android:label="collected variables"
+        android:exported="true"
+        android:label="collected"
         android:syncable="true"/>
  		
         <activity
@@ -70,7 +70,7 @@
        
 		<service
             android:name="com.teraim.fieldapp.synchronization.framework.AuthenticatorService"
-            android:exported="true" 
+            android:exported="true"
             android:process=":auth">
         <intent-filter>
             <action android:name="android.accounts.AccountAuthenticator"/>

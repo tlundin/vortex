@@ -22,6 +22,7 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 
+import com.teraim.fieldapp.Start;
 import com.teraim.fieldapp.non_generics.Constants;
 import com.teraim.fieldapp.synchronization.EndOfStream;
 import com.teraim.fieldapp.synchronization.SyncEntry;
@@ -56,7 +57,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
 			System.err.println("JAJAJA");
 
-		}
+		} else
+			System.err.println("NEJNEJNEJ");
 	}
 
 	/**
@@ -78,7 +80,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
 
 	}
-	
+
 	public void setClient(Messenger client) {
 		Log.d("vortex","mClient SET! ");
 		mClient = client;
@@ -88,12 +90,51 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 	@Override
 	public void onPerformSync(Account account, Bundle extras, String authority,
 			ContentProviderClient provider, SyncResult syncResult) {
-		Log.d("vortex","I am performing sync here! ");
+		boolean fail = false;
+		String app=null, user=null, group=null;
+
+		Log.d("vortex","onPerformSync for ("+gh.getString(PersistenceHelper.USER_ID_KEY, ""));
 		if(mClient==null) {
 			Log.d("vortex","Not ready so discarding call");
 			return;
+		} else {
+
+			if (gh!=null) {
+				String syncMethod = gh.getString(PersistenceHelper.SYNC_METHOD,null);
+
+				if (syncMethod == null || !syncMethod.equals("Internet")) {
+					Log.e("vortex","Sync method is not Internet...but sync is on. Will turn sync off and exit..");
+					ContentResolver.setSyncAutomatically(account, authority, false);
+					fail = true;
+				} else {
+
+					app = gh.getString(PersistenceHelper.BUNDLE_NAME, null);
+					user = gh.getString(PersistenceHelper.USER_ID_KEY, null);
+					group = gh.getString(PersistenceHelper.LAG_ID_KEY, null);
+					Log.d("vortex","APP: "+app+" user: "+user+" Group: "+group);
+					if (user == null || user.length()==0 ||
+							group == null || group.length()==0 || 
+							app==null || app.length() == 0) {
+						Log.e("vortex","user id or group name or app name is null or zero length in Sync Adapter. Cannot sync: "+user+","+group+","+app);
+						fail = true;
+					}
+				}
+			} else {
+				Log.e("vortex","GLOBAL_PREFS null in Sync Adapter. Cannot sync!");
+				fail = true;
+			}
 		}
-		String app=null, user=null, group=null;
+		//Send a fail msg back to listener. This will turn sync symbol red.
+		if (fail) {
+			Message msg = Message.obtain(null, SyncService.MSG_SYNC_FAIL);
+			try {
+				mClient.send(msg);
+			} catch (RemoteException e) {
+
+				e.printStackTrace();
+			}
+			return;
+		}
 
 		final Uri CONTENT_URI = Uri.parse("content://"
 				+ SyncContentProvider.AUTHORITY + "/synk");
@@ -102,25 +143,11 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 		final int MaxSyncable = 100;
 
 		//Check values for application, group and user.
-		if (gh!=null) {
-			app = gh.getString(PersistenceHelper.BUNDLE_NAME, null);
-			user = gh.getString(PersistenceHelper.USER_ID_KEY, null);
-			group = gh.getString(PersistenceHelper.LAG_ID_KEY, null);
-			if (user == null || user.length()==0 ||
-					group == null || group.length()==0 || 
-					app==null || app.length() == 0) {
-				Log.e("vortex","user id or group name or app name is null or zero length in Sync Adapter. Cannot sync: "+user+","+group+","+app);
-				return;
-			}
-		} else {
-			Log.e("vortex","gh is null in Sync Adapter. Cannot sync!");
-			return;
-		}
 
-		Log.d("vortex","APP: "+app+" user: "+user+" Group: "+group);
 
 		Cursor c = mContentResolver.query(CONTENT_URI, null, null, null, MaxSyncable+"");
 		SyncEntry[] sa =null;
+		StringBuilder targets=new StringBuilder("");
 		long maxStamp = -1;
 		if (c!=null) {
 			if (c.getCount()==0) {
@@ -132,8 +159,9 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 				String entryStamp,action,changes,target;
 				int cn=0;
 				int maxToSync = Math.min(c.getCount(),MaxSyncable);
-				
+
 				sa = new SyncEntry[maxToSync];
+
 				while (c.moveToNext()&&cn<maxToSync) {
 					action 		=	c.getString(c.getColumnIndex("action"));
 					changes 	=	c.getString(c.getColumnIndex("changes"));
@@ -145,11 +173,15 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 					if (es>maxStamp) 
 						maxStamp=es;
 					sa[cn++] = new SyncEntry(action,changes,entryStamp,target);
+
+					targets.append(target);
+					targets.append(",");
 				}
 			}
 			c.close();
 			//If succesful, update the counter.
 			Bundle bundle = new Bundle();
+			Log.d("vortex","SYNCING --> ["+targets+"]");
 			if (sendAndReceive(group,user,app,sa,bundle,maxStamp)) {
 				//mContentResolver.insert(CONTENT_URI, cv);
 				Message msg = Message.obtain(null, SyncService.MSG_SYNC_DATA);
@@ -157,7 +189,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 				try {
 					mClient.send(msg);
 				} catch (RemoteException e) {
-					
+
 					e.printStackTrace();
 				}
 			} else {
@@ -166,7 +198,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 				try {
 					mClient.send(msg);
 				} catch (RemoteException e) {
-					
+
 					e.printStackTrace();
 				}
 			}
@@ -214,13 +246,15 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 				Log.d("vortex","did not write any data...sa empty");
 			objOut.writeObject(new EndOfStream());
 			objOut.flush();
-			
+
 
 			Object reply=null;
 			Log.d("vortex","...now waiting for data back");
 			ObjectInputStream objIn = new ObjectInputStream(conn.getInputStream());
 
 			reply = objIn.readObject();
+			Log.d("vortex","After read object. reply is "+(reply==null?"not":"")+" null");
+
 			if (reply instanceof String)
 				Log.d("vortex","got back "+reply.toString());
 
@@ -252,6 +286,11 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 				}
 				objIn.close();
 				objOut.close();
+
+			} else {
+				Log.e("vortex","OK not returned. instead "+reply.getClass().getCanonicalName());
+
+				return false;
 
 			}
 		} catch (StreamCorruptedException e) {

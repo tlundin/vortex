@@ -38,7 +38,7 @@ public class SyncService extends Service {
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case MSG_REGISTER_CLIENT:
-                    Toast.makeText(getApplicationContext(), "sync service started", Toast.LENGTH_SHORT).show();
+                	Log.d("vortex","received MSG_REGISTER_CLIENT in SyncService");
                     mClient=msg.replyTo;
                     if (sSyncAdapter != null) {
                     	sSyncAdapter.setClient(mClient);
@@ -46,7 +46,7 @@ public class SyncService extends Service {
                     }
                     break;
                 case MSG_STOP_REQUESTED:
-                	Toast.makeText(getApplicationContext(), "sync stopping..", Toast.LENGTH_SHORT).show();
+                	Log.d("vortex","received MSG_STOP_REQUESTED in SyncService");
                 	SyncService.this.stopSelf();
                 	break;
                 default:

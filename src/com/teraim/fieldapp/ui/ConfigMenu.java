@@ -1,7 +1,9 @@
 package com.teraim.fieldapp.ui;
 
+import android.accounts.Account;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
@@ -194,7 +196,7 @@ public class ConfigMenu extends PreferenceActivity {
 				SharedPreferences sharedPreferences, String key) {
 			Preference pref = findPreference(key);
 			GlobalState gs = GlobalState.getInstance();
-
+			Account mAccount = GlobalState.getmAccount(getActivity());
 			if (pref instanceof EditTextPreference) {
 				EditTextPreference etp = (EditTextPreference) pref;
 
@@ -228,7 +230,7 @@ public class ConfigMenu extends PreferenceActivity {
 							
 						}
 					}
-				}
+				} 
 				pref.setSummary(etp.getText());
 
 			}
@@ -243,16 +245,21 @@ public class ConfigMenu extends PreferenceActivity {
 						Log.d("nils","Changed to CLIENT");
 					else if (letp.getValue().equals("Solo")) {
 						//Turn off sync if on
-						this.getActivity().getSharedPreferences(Constants.GLOBAL_PREFS,Context.MODE_MULTI_PROCESS).edit().putString(PersistenceHelper.SYNC_METHOD,"NONE").apply();
+						getActivity().getSharedPreferences(Constants.GLOBAL_PREFS,Context.MODE_MULTI_PROCESS).edit().putString(PersistenceHelper.SYNC_METHOD,"NONE").apply();
 						Log.d("nils","Changed to SOLO");
+						Log.d("vortex","sync stopped");
+						ContentResolver.setSyncAutomatically(mAccount, Start.AUTHORITY, false);
 					}
 					Tools.restart(this.getActivity());
 
 				} //change the sync state if user swapped method.
 				else if (letp.getKey().equals(PersistenceHelper.SYNC_METHOD)) {
-						if (letp.getValue().equals("Bluetooth")) {
-							Start.singleton.stopSynk();
-						}
+					
+						if (!letp.getValue().equals("Internet")) {
+							Log.d("vortex","sync stopped");
+							ContentResolver.setSyncAutomatically(mAccount, Start.AUTHORITY, false);
+
+						} 
 				}
 
 			}
