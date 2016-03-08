@@ -41,7 +41,7 @@ import com.teraim.fieldapp.utils.PersistenceHelper;
 
 public class Constants {
 
-	public final static float VORTEX_VERSION = 3.14f;
+	public final static float VORTEX_VERSION = 3.21f;
 
 	//String constants
 	//The root folder for the SD card is in the global Environment.
@@ -223,7 +223,11 @@ public class Constants {
 	//Backup if data older than 24h
 	public static final long BACKUP_FREQUENCY = 86400000;
 
-	public static final String SynkServerURI = "http://86.159.186.236:8080/com.teraim.synkserv/SynkServ";
+	//public static final String SynkServerURI = "http://86.159.186.236:8080/com.teraim.synkserv/SynkServ";
+	
+	public static final String SynkServerURI = "http://130.211.51.77:8080/synkserv/SynkServ";
+	
+	public static final Object TRANS_ACK = "TRANSACK";
 
 
 

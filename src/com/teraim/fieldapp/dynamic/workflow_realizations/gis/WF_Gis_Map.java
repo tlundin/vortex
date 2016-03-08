@@ -52,6 +52,7 @@ import com.teraim.fieldapp.dynamic.types.PhotoMeta;
 import com.teraim.fieldapp.dynamic.workflow_abstracts.Drawable;
 import com.teraim.fieldapp.dynamic.workflow_abstracts.Event;
 import com.teraim.fieldapp.dynamic.workflow_abstracts.EventListener;
+import com.teraim.fieldapp.dynamic.workflow_abstracts.Event.EventType;
 import com.teraim.fieldapp.dynamic.workflow_realizations.WF_Context;
 import com.teraim.fieldapp.dynamic.workflow_realizations.WF_Widget;
 import com.teraim.fieldapp.dynamic.workflow_realizations.gis.FullGisObjectConfiguration.GisObjectType;
@@ -160,19 +161,17 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 	public WF_Gis_Map(CreateGisBlock createGisBlock,Rect rect, String id, final FrameLayout mapView, boolean isVisible, Bitmap bmp,
 			final WF_Context myContext, final PhotoMeta photoMeta, View avstRL, View createMenuL,  List<GisLayer> daddyLayers, final int realW, final int realH) {
 		super(id, mapView, isVisible, myContext);
+		
 		GlobalState gs = GlobalState.getInstance();
 
 		this.myContext=myContext;
 		this.myDaddy=createGisBlock;
 		//This is a zoom level if layers are imported.
 		isZoomLevel = daddyLayers!=null;
-
-		if (isZoomLevel) {
-			Log.e("vortex","Zoom level!");
-			myLayers = daddyLayers;
-			clearLayerCaches();
-		} else
-			myLayers = new ArrayList<GisLayer>();
+		gisImageView = (GisImageView)mapView.findViewById(R.id.GisV);		
+		gisImageView.setImageBitmap(bmp);
+		
+		
 		this.photoMeta = photoMeta; 
 		globalPh = gs.getGlobalPreferences();
 		ctx = myContext.getContext();	
@@ -180,9 +179,7 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 		//Bitmap bmp = Tools.getScaledImage(ctx,fullPicFileName);
 
 
-		gisImageView = (GisImageView)mapView.findViewById(R.id.GisV);		
-
-		gisImageView.setImageBitmap(bmp);
+		
 
 		//Only allow zoom if this is *not* a zoom level. Only one level of zoom!
 
@@ -453,7 +450,13 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 
 
 
-
+		
+		if (isZoomLevel) {
+			Log.e("vortex","Zoom level!");
+			myLayers = daddyLayers;
+			clearLayerCaches();
+		} else
+			myLayers = new ArrayList<GisLayer>();
 	}
 
 
@@ -579,27 +582,15 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 		Log.d("vortex","In GIS_Map Event Handler");
 		if (e.getProvider().equals(Constants.SYNC_ID)) {
 			Log.d("Vortex","new sync event. Refreshing map.");
-			//TODO: Add sync refresh of cache.!!
-			new AlertDialog.Builder(ctx)
-			.setTitle("Synchronisation detected.")
-			.setMessage("A synchronisation has changed the underlying data. Do you want to reload the map?") 
-			.setIcon(android.R.drawable.ic_dialog_alert)
-			.setCancelable(true)
-			.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-
-				}
-			})
-			.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-					myContext.reload();
-				}
-			})
-			.show();
-			//gisImageView.redraw();
+			myContext.refreshGisObjects();
+			Log.d("vortex","Issuing redraw of gisimageview!!");
+			gisImageView.redraw();
+			
+		}
+		else if (e.getType() == EventType.onFlowExecuted) {
+			Log.d("vortex","flow executed! Initializing gis imageview!");
+			//Must be done here since all layers first needs to be added.
+			gisImageView.initialize(this,photoMeta,!isZoomLevel);
 		}
 	}
 
@@ -784,12 +775,12 @@ public class WF_Gis_Map extends WF_Widget implements Drawable, EventListener, An
 
 
 
-	public void initialize() {
-		//Inititalize map, and set the layers view.
-		gisImageView.initialize(this,photoMeta,!isZoomLevel);
-		
-	}
+	
 
+
+
+
+	
 
 
 

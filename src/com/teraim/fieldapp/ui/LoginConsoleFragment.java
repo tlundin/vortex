@@ -85,7 +85,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		bundleName = globalPh.get(PersistenceHelper.BUNDLE_NAME);
 		if (bundleName == null || bundleName.length()==0)
 			bundleName = "Vortex";
-
+		appTxt.setText("Running application "+bundleName);
 		ph	 = new PersistenceHelper(this.getActivity().getSharedPreferences(globalPh.get(PersistenceHelper.BUNDLE_NAME), Context.MODE_MULTI_PROCESS));
 		oldV= ph.getF(PersistenceHelper.CURRENT_VERSION_OF_APP);
 		//appTxt.setText("Running application "+bundleName+" ["+oldV+"]");
@@ -415,7 +415,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 					Log.d("vortex","executing workflow main!");
 					gs.setModules(myModules);
 
-					
+					GlobalState.getInstance().onStart();
 				} else {
 					loginConsole.addRow("");
 					loginConsole.addRedText("Found no workflow 'Main'. Exiting..");

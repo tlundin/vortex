@@ -38,7 +38,7 @@ public class AddGisLayerBlock extends Block {
 		if (gisMap!=null && gisMap instanceof WF_Gis_Map) {
 			myGis = ((WF_Gis_Map)gisMap);
 			if (!myGis.isZoomLevel()) {
-			final GisLayer gisLayer = new GisLayer(name,label,isVisible,hasWidget,showLabels);		
+			final GisLayer gisLayer = new GisLayer(myGis,name,label,isVisible,hasWidget,showLabels);		
 			myGis.addLayer(gisLayer);
 			}
 		}

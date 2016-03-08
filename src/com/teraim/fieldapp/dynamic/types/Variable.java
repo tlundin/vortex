@@ -128,12 +128,14 @@ public class Variable implements Serializable {
 			//refreshRuleState();
 		}
 		Log.d("nils","Getvalue returns "+myValue+" for "+this.getId());
+		if (myType == DataType.bool && myValue !=null ) 
+			return boolValue(myValue);
 		return myValue;
 	}
 
 	public String getHistoricalValue() {
-		if (historyChecked)
-			return myHistory;
+		if (!historyChecked) {
+			
 		if (keyChain == null || keyChain.get(VariableConfiguration.KEY_YEAR)==null) {
 			Log.d("nils","historical keychain is null. Should contain year at least.");
 			return null;
@@ -144,8 +146,15 @@ public class Variable implements Serializable {
 			Log.d("nils","My historical keychain: "+histKeyChain.toString()+" my name: "+name);
 			histSelection = myDb.createSelection(histKeyChain,name);
 		}
+
 		myHistory= myDb.getValue(name,histSelection,myValueColumn);
+		
 		historyChecked = true;
+		
+		}
+		if (myHistory !=null && myType == DataType.bool) 
+			return boolValue(myHistory);
+		
 		return myHistory;
 	}
 
@@ -166,6 +175,15 @@ public class Variable implements Serializable {
 	 */
 
 	//return true if change.
+	
+	private String boolValue(String myValue) {
+		if (myValue.equals("1"))
+			return "true";
+		else if (myValue.equals("0"))
+				return "false";
+		
+		return myValue;
+	}
 
 	public boolean setValue(String value) {
 		//Log.d("nils","In SetValue for variable "+this.getId()+" New val: "+value+" existing val: "+myValue+" unknown? "+unknown+" using default? "+usingDefault);
@@ -182,9 +200,17 @@ public class Variable implements Serializable {
 		Log.e("nils","Var: "+this.getId()+" old Val: "+myValue+" new Val: "+value+" this var hash#"+this.hashCode());	
 		value = Tools.removeStartingZeroes(value);
 		myValue = value;
-		//Remove any .xx if numeric.
-		if (this.getType()==DataType.numeric) 
-			value = (int)(Float.parseFloat(value))+"";			
+		//Remove any .xx if numeric or list
+		if (this.getType()==DataType.numeric || this.getType()==DataType.list&& value.endsWith(".0")) {
+			value = (int)(Float.parseFloat(value))+"";
+			Log.d("vortex","chopped of .0 in setvalue: "+value);
+		}
+		if (this.getType()==DataType.bool) {
+			if (value.equals("true"))
+				value = "1";
+			if (value.equals("false"))
+				value = "0";
+		} 
 		//will change keyset as side effect if valueKey variable.
 		//reason for changing indirect is that old variable need to be erased. 
 		insertVariable(value,isSynchronized);

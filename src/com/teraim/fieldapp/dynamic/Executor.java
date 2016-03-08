@@ -189,7 +189,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 
 		gs = GlobalState.getInstance();
 		if (gs!=null) {
-			this.getActivity().registerReceiver(brr, ifi);
+			gs.getContext().registerReceiver(brr, ifi);
 			if(myContext!=null&&myContext.hasGPSTracker())
 				gs.getTracker().startScan(gs.getContext());
 
@@ -201,10 +201,10 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 	@Override
 	public void onPause()
 	{
-		Log.d("NILS", "In the onPause() event");
+		Log.d("Vortex", "onPause() for executor");
 		//Stop listening for bluetooth events.
-		if (brr!=null)
-			this.getActivity().unregisterReceiver(brr);
+		if (brr!=null && gs!=null)
+			gs.getContext().unregisterReceiver(brr);
 		if (gs!=null&&myContext!=null&&myContext.hasGPSTracker())
 			gs.getTracker().stopUsingGPS();
 		super.onPause();
@@ -450,9 +450,12 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 										//String	eval = bl.evaluate(gs,bl.getFormula(),tokens,v.getType()== DataType.text);
 										String val = v.getValue();
 										String eval = bl.getEvaluation();
+										
 										o.addRow("Variable: "+v.getId()+" Current val: "+val+" New val: "+eval);
 										if (!(eval == null && val == null)) {
 											if (eval == null && val != null || val == null && eval != null || !val.equals(eval)) {
+												//Remove .0 
+
 												v.setValue(eval);
 												o.addRow("");
 												o.addYellowText("Value has changed to or from null in setvalueblock OnSave for block "+bl.getBlockId());
@@ -538,7 +541,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 				}
 				else if (b instanceof ConditionalContinuationBlock) {
 					o.addRow("");
-					o.addYellowText("ConditionalContinuationBlock found");
+					o.addYellowText("ConditionalContinuationBlock "+b.getBlockId());
 					final ConditionalContinuationBlock bl = (ConditionalContinuationBlock)b;
 					final String formula = bl.getFormula();
 					//final List<TokenizedItem> vars = gs.getRuleExecutor().findTokens(formula,null);
@@ -680,9 +683,11 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 					l.draw();
 				for (WF_Table t:myContext.getTables())
 					t.draw();
+				/*
 				WF_Gis_Map gis = myContext.getCurrentGis();
 				if (gis!=null)
 					gis.initialize();
+					*/
 				//Trgger redraw event on lists.
 				//myContext.registerEvent(new WF_Event_OnSave("fackabuudle"));
 				if (root!=null) 
@@ -785,5 +790,17 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 				Log.d("vortex","workflow restarted");
 			}
 		}, 0);
+	}
+	
+	//Refresh all the gislayers.
+	public void refreshGisObjects() {
+		for (Block b: wf.getBlocks()) {
+			AddGisPointObjects bl;
+			if (b instanceof AddGisPointObjects) {
+				bl = ((AddGisPointObjects) b);
+				bl.create(myContext, true);
+			}
+		}
+		
 	}
 }

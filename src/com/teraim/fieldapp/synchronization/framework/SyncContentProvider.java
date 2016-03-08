@@ -91,9 +91,10 @@ public class SyncContentProvider extends ContentProvider {
 				if (dbHelper == null) 
 					dbHelper = new DatabaseHelper(getContext(),bundleName);
 
-
+			
 			//Timestamp key includes team name, since change of team name should lead to resync from zero.
 			String timestamp = ph.getString(PersistenceHelper.TIME_OF_LAST_SYNC_INTERNET+teamName,"0");
+			Log.d("vortex","Timestamp for last sync in Query is "+timestamp);
 			SQLiteDatabase db = dbHelper.getReadableDatabase();
 			Cursor c = db.query(DbHelper.TABLE_AUDIT,null,
 					"timestamp > ?",new String[] {timestamp},null,null,"timestamp asc",null);
@@ -109,7 +110,6 @@ public class SyncContentProvider extends ContentProvider {
 
 	@Override
 	public String getType(Uri uri) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -121,9 +121,9 @@ public class SyncContentProvider extends ContentProvider {
 
 	@Override
 	public Uri insert(Uri uri, ContentValues values) {
-		
+		SQLiteDatabase db = dbHelper.getReadableDatabase();
+		db.insert(DbHelper.TABLE_SYNC, null, values);
 		return null;
-
 	}
 
 

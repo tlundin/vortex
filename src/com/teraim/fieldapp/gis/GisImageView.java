@@ -325,102 +325,10 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 	public void initializeAndSiftGisObjects() {
 		for (GisLayer layer :myMap.getLayers()) {
 
-			filterLayer(layer);
+			layer.filterLayer(this);
 
 		}
 
-	}
-
-	/**
-	 * 
-	 * @param layer
-	 * 
-	 * Will go through a layer and check if the gisobjects are inside the map. 
-	 * If inside, the object is marked as useful.
-	 * As a sideeffect, calcualte all the local coordinates.
-	 */
-
-	public void filterLayer(GisLayer layer) {
-
-
-		Map<String, Set<GisObject>> gops = layer.getGisBags();
-		if (gops == null) {
-			Log.e("vortex","Layer "+layer.getLabel()+" has no bags. Exiting filterlayer");
-			return;
-		}
-		Log.d("vortex","In filterAndCopy, layer has "+gops.size()+" bags");
-		for (String key:gops.keySet()) {
-			Set<GisObject> bag = gops.get(key);
-
-			Iterator<GisObject> iterator = bag.iterator();
-			int[] xy;
-
-			while (iterator.hasNext()) {
-				GisObject go = iterator.next();
-				//All dynamic objects are always in the map potentially.
-				if (go instanceof DynamicGisPoint) {
-
-					//Dynamic objects are always useful and do not have a cached value.
-					go.markAsUseful();
-				}
-				else if (go instanceof GisPointObject) {
-					GisPointObject gop = (GisPointObject)go;
-					xy = new int[2];
-					boolean inside = translateMapToRealCoordinates(gop.getLocation(),xy);
-					if (inside) {
-						go.markAsUseful();
-						gop.setTranslatedLocation(xy);
-					}
-					//else 
-					//	Log.d("vortex","Removed object outside map");
-					continue;
-				} 
-				else if (go instanceof GisPathObject) {
-					GisPathObject gpo = (GisPathObject)go;
-					boolean hasAtleastOneCornerInside = false;
-					List<int[]> corners = new ArrayList<int[]>();
-					if (go.getCoordinates()==null) {
-						GlobalState.getInstance().getLogger().addRow("");
-						GlobalState.getInstance().getLogger().addRedText("Gis object had *NULL* coordinates: "+go.getLabel());
-						iterator.remove();
-						continue;
-					}
-					for (Location location:go.getCoordinates()) {
-						xy = new int[2];
-						if(translateMapToRealCoordinates(location,xy))
-							hasAtleastOneCornerInside = true;
-						corners.add(xy);
-					}
-					if (hasAtleastOneCornerInside) {
-						go.markAsUseful();
-						Path p = new Path();
-						boolean first =true;
-						for (int[] corner:corners) {
-							if (first) {
-								first=false;
-								p.moveTo(corner[0], corner[1]);
-							}
-							else
-								p.lineTo(corner[0], corner[1]);
-						}
-						if (go instanceof GisPolygonObject)
-							p.close();
-						gpo.setPath(p);
-					}
-				} 
-				else
-					Log.d("vortex","Gisobject "+go.getLabel()+" was not added");
-
-			}
-			Log.d("vortex","Bag: "+key+" size: "+bag.size());
-			int c=0;
-			for (GisObject gob:bag) {
-				if (gob.isUseful())
-					c++;
-			}
-			Log.d("vortex","bag has "+c+" useful members");
-
-		}
 	}
 
 
@@ -479,7 +387,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 	 * @param xy - the translated x and y into screen coordinates.
 	 * @return true if the coordinate is inside the current map.
 	 */
-	private boolean translateMapToRealCoordinates(Location l, int[] xy) {
+	public boolean translateMapToRealCoordinates(Location l, int[] xy) {
 		//Unknown location, surely outside.
 		if (l == null) {
 			xy=null;
@@ -653,12 +561,13 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 
 			for (GisLayer layerO:myMap.getLayers()) {
 				String layerId = layerO.getId();
-				//Log.d("vortex","drawing layer "+layerId);
+				Log.d("vortex","drawing layer "+layerId);
 				//get all objects that should be drawn on this layer.
 				if (!layerO.isVisible()) {
 					//Log.d("vortex","layer not visible...skipping "+layerId+" Obj: "+layerO.toString());
 					continue;
 				}
+				
 				//if (layerO.hasDynamic()) {
 				//Log.d("vortex","dynamic obj found in "+layer);
 				//	this.startDynamicRedraw();
@@ -674,9 +583,8 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 					for (String key:bags.keySet()) {
 						Set<GisFilter> filters = filterMap!=null?filterMap.get(key):null;
 						Set<GisObject> bagOfObjects = bags.get(key);
-						//Log.d("vortex","Found "+gisObjects.size()+" objects");
 						Iterator<GisObject> iterator = bagOfObjects.iterator();
-
+						Log.d("vortex","CAPROX Bag "+ " has "+bagOfObjects.size()+" members");
 						while (iterator.hasNext()) {
 							GisObject go = iterator.next();
 							//If not inside map, or if touched, skip.

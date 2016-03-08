@@ -258,8 +258,8 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 			o.addRow("Unknown keys: "+skipped.toString());
 		o.addRow("");
 		o.addGreenText("Keys Found:\n"+allKeys.toString());
-		
-		
+
+
 	}
 	boolean firstCall = true;
 
@@ -276,13 +276,15 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 		if (this.freezeSteps==(counter+1)) {
 			Log.d("vortex","Transaction ends");
 			myDb.endTransactionSuccess();
-			o.addRow("");
-			o.addRedText("Variables not found:");
-			for (String var:missingVariables) {
+			if (missingVariables !=null && !missingVariables.isEmpty()) {
 				o.addRow("");
-				o.addRedText(var);				
+				o.addRedText("Variables not found:");
+				for (String var:missingVariables) {
+					o.addRow("");
+					o.addRedText(var);				
+				}
+				Log.e("vortex","Variables not found:\n"+missingVariables.toString());
 			}
-			Log.e("vortex","Variables not found:\n"+missingVariables.toString());
 		}
 		//Insert variables into database
 		Entry e = entries.get(counter);
@@ -298,7 +300,7 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 					o.addRow("");
 					o.addRedText("Row: "+counter+". Insert failed. Variable: "+v.mkey);
 				}
-				
+
 			}
 		}
 

@@ -153,9 +153,9 @@ public abstract class WF_Not_ClickableField extends WF_ListEntry {
 			//boolean..use yes or no.
 			else {
 				if (value.length()>0) {
-					if(value.equals("0"))
+					if(value.equals("false"))
 						outS=myContext.getContext().getString(R.string.no);
-					else if (value.equals("1"))
+					else if (value.equals("true"))
 						outS=myContext.getContext().getString(R.string.yes);
 					Log.e("vortex","VARIABELVÄRDE: "+value);
 				}

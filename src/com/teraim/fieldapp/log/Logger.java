@@ -39,25 +39,25 @@ public class Logger implements LoggerI {
 		s = new SpannableString(text);
 		s.setSpan(new TextAppearanceSpan(myContext, R.style.RedStyle),0,s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 		myTxt.append(s);	 
-		//if (log!=null) log.setText(myTxt);
+		if (log!=null) log.setText(myTxt);
 		Log.d("vortex","hasRed true for "+this.toString());
 	}	 
 	public void addGreenText(String text) {
 		s = new SpannableString(text);
 		s.setSpan(new TextAppearanceSpan(myContext, R.style.GreenStyle),0,s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 		myTxt.append(s);	
-		//if (log!=null) log.setText(myTxt);
+		if (log!=null) log.setText(myTxt);
 	}
 	public void addYellowText(String text) {
 		s = new SpannableString(text);
 		s.setSpan(new TextAppearanceSpan(myContext, R.style.YellowStyle),0,s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 		myTxt.append(s);	
-		//if (log!=null) log.setText(myTxt);
+		if (log!=null) log.setText(myTxt);
 	}
 	public void addText(String text) {
 		s = new SpannableString(text);
 		myTxt.append(text);
-		//if (log!=null) log.setText(myTxt);
+		if (log!=null) log.setText(myTxt);
 	}
 
 

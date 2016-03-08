@@ -258,8 +258,10 @@ public class SimpleRutaTemplate extends Executor implements OnGesturePerformedLi
 							o.addRedText("Stratum missing for ruta "+pi+" Will default to 1");
 							strH="1";
 						}
-						hStratum.setValue(strH);
-						Log.d("nils","HISTORICAL STRATUM SET TO "+hStratum.getValue());
+						if (hStratum!=null) { 
+							hStratum.setValue(strH);
+							Log.d("nils","HISTORICAL STRATUM SET TO "+hStratum.getValue());
+						}
 						//copy
 						prevRutor.add(0,rl);
 						selectedListA.notifyDataSetChanged();

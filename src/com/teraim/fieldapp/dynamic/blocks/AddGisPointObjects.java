@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -70,6 +71,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 	private final List<EvalExpr>labelE;
 	private final List<Expressor.EvalExpr> objContextE;
 	private String unevaluatedLabel;
+	private String thisCheck,lastCheckTimeStamp;
 
 	public AddGisPointObjects(String id, String nName, String label,
 			String target, String objectContext,String coordType, String locationVars, 
@@ -133,8 +135,13 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 	}
 
 	//Assumed that all blocks will deal with "current gis".
-
 	public void create(WF_Context myContext) {
+		create(myContext, false);
+	}
+	
+	//Refresh: only add new objects created after last check. 
+	
+	public void create(WF_Context myContext, boolean refresh) {
 		setDefaultBitmaps(myContext);
 		o = GlobalState.getInstance().getLogger();
 		GlobalState gs = GlobalState.getInstance();
@@ -147,9 +154,12 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 				Log.d("vortex","Adding type to create menu for "+nName);
 				gisB.addGisObjectType(this);
 			}
-			if (gisB.isZoomLevel()) {
+			if (gisB.isZoomLevel() && !refresh) {
 				Log.d("vortex","Zoom level!..use existing gis objects!");
 				return;
+			}
+			if (refresh) {
+				Log.d("vortex","This is a refreshcall!");
 			}
 		}
 
@@ -230,13 +240,33 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 
 		Selection coordVar1S=null,coordVar2S=null,statusVarS = null;
 		DBColumnPicker pickerLocation1,pickerLocation2=null,pickerStatusVars=null;  
+		
+		//save timestamp for refresh.
+		thisCheck = System.currentTimeMillis()+"";
+		
+		
 		if (this.getStatusVariable()!=null) {
 			statusVarS = GlobalState.getInstance().getDb().createSelection(currYearH, this.getStatusVariable().trim());
+			if (refresh) {
+				statusVarS.selection+=" and timestamp > ?";
+				String[] s =Arrays.copyOf(statusVarS.selectionArgs, statusVarS.selectionArgs.length+1);
+				s[statusVarS.selectionArgs.length] = lastCheckTimeStamp;
+				statusVarS.selectionArgs = s;
+			}
+			
 			pickerStatusVars = GlobalState.getInstance().getDb().getAllVariableInstances(statusVarS);
 		}
 
 
 		coordVar1S = GlobalState.getInstance().getDb().createSelection(objectKeyHash.getContext(), locationVar1);
+		//If this is a refresh, dont fetch anything that has already been fetched.
+		if (refresh) {
+			coordVar1S.selection+=" and timestamp > ?";
+			String[] s =Arrays.copyOf(coordVar1S.selectionArgs, coordVar1S.selectionArgs.length+1);
+			s[coordVar1S.selectionArgs.length] = lastCheckTimeStamp;
+			coordVar1S.selectionArgs = s;
+		}
+		
 		Log.d("vortex","selection: "+coordVar1S.selection);
 		Log.d("vortex","sel args: "+print(coordVar1S.selectionArgs));
 		List<String> row = al.getCompleteVariableDefinition(locationVar1);
@@ -258,6 +288,12 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 
 			DataType t2 = al.getnumType(al.getCompleteVariableDefinition(locationVar2));
 			coordVar2S = GlobalState.getInstance().getDb().createSelection(objectKeyHash.getContext(), locationVar2);
+			if (refresh) {
+				coordVar2S.selection+=" and timestamp > ?";
+				String[] s =Arrays.copyOf(coordVar2S.selectionArgs, coordVar2S.selectionArgs.length+1);
+				s[coordVar2S.selectionArgs.length] = lastCheckTimeStamp;
+				coordVar2S.selectionArgs = s;
+			}
 			Log.d("vortex","selection: "+coordVar2S.selection);
 			Log.d("vortex","sel args: "+print(coordVar2S.selectionArgs));
 			if (t2==DataType.array)
@@ -396,6 +432,8 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 						//Add these variables to bag 
 
 					} while (pickerLocation1.next());
+					//Store timestamp for refresh calls.
+					lastCheckTimeStamp = thisCheck;
 					Log.d("vortex","Added "+myGisObjects.size()+" objects");
 
 				}
@@ -407,7 +445,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 			//Add bag to layer.
 			myLayer=myContext.getCurrentGis().getLayer(target);
 			if (myLayer!=null) {
-				myLayer.addObjectBag(nName,myGisObjects,dynamic);
+				myLayer.addObjectBag(nName,myGisObjects,dynamic,myContext.getCurrentGis().getGis());
 
 			} else {
 				Log.e("vortex","Could not find layer ["+target+"] for type "+nName);
@@ -566,6 +604,8 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 		return unevaluatedLabel;
 	}
 
+	
+	
 
 
 

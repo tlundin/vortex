@@ -47,6 +47,7 @@ import com.teraim.fieldapp.dynamic.workflow_abstracts.Event.EventType;
 import com.teraim.fieldapp.dynamic.workflow_abstracts.EventListener;
 import com.teraim.fieldapp.dynamic.workflow_realizations.WF_Container;
 import com.teraim.fieldapp.dynamic.workflow_realizations.WF_DisplayValueField;
+import com.teraim.fieldapp.dynamic.workflow_realizations.WF_Event_OnSave;
 import com.teraim.fieldapp.non_generics.Constants;
 import com.teraim.fieldapp.non_generics.DelyteManager;
 import com.teraim.fieldapp.non_generics.NamedVariables;
@@ -168,7 +169,7 @@ public class ProvytaTemplate extends Executor implements EventListener,OnGesture
 		myContext.addContainers(getContainers());
 
 
-		WF_DisplayValueField rSel = new WF_DisplayValueField("whatevar", "Current_Ruta",myContext, null, 
+		WF_DisplayValueField rSel = new WF_DisplayValueField("whatevar", "[$Current_Ruta]",myContext, null, 
 				"Vald Ruta", true,null,null,null);
 
 		LinearLayout provytorRemainingView = (LinearLayout)inflater.inflate(R.layout.display_value_textview, null);		
@@ -495,7 +496,7 @@ public class ProvytaTemplate extends Executor implements EventListener,OnGesture
 	 */
 	@Override
 	public void onResume() {
-		refreshStatus();
+		myContext.registerEvent(new WF_Event_OnSave("Template"));
 		super.onResume();
 
 	}

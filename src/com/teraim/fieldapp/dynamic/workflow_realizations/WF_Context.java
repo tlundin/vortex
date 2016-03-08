@@ -344,6 +344,10 @@ public class WF_Context {
 		myTemplate.restart();
 	}
 	
+	public void refreshGisObjects() {
+		myTemplate.refreshGisObjects();
+	}
+	
 	public void setContextVariables(List<String> contextVars) {
 		contextVariables = contextVars;
 	}
@@ -353,6 +357,7 @@ public class WF_Context {
 			return false;
 		return (contextVariables.contains(cVar));
 	}
+	
 	
 
 

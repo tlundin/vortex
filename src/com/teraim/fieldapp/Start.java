@@ -145,7 +145,13 @@ public class Start extends MenuActivity {
 
 	}
 
-	
+	@Override
+	protected void onStart() {
+		Log.d("nils","In START onStart");
+		if(GlobalState.getInstance()!=null)
+			GlobalState.getInstance().onStart();
+		super.onStart();	
+	}
 	
 	
 	/**

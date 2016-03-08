@@ -196,6 +196,7 @@ public class CreateGisBlock extends Block {
 						myContainer.add(gis);
 						myContext.addGis(gis.getId(),gis);
 						myContext.addEventListener(gis, EventType.onSave);
+						myContext.addEventListener(gis, EventType.onFlowExecuted);
 						myContext.addDrawable(name,gis);
 						final View menuL = mapView.findViewById(R.id.menuL);
 
@@ -327,6 +328,9 @@ public class CreateGisBlock extends Block {
 			serverUrl = "http://"+serverUrl;
 		return serverUrl;
 	}
+
+	
+	
 
 
 }

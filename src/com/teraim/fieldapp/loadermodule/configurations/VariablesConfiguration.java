@@ -158,8 +158,8 @@ public class VariablesConfiguration extends CSVConfigurationModule {
 				if (pGroup==null || pGroup.trim().length()==0) {
 					//Log.d("nils","found variable "+r[pNameIndex]+" in varpattern");							
 					myTable.addRow(trr);
-					o.addRow("Generated variable(1): ["+r[pNameIndex]+"]");
-					Log.d("vortex","Generated variable ["+r[pNameIndex]+"] ROW:\n"+row);
+					//o.addRow("Generated variable(1): ["+r[pNameIndex]+"]");
+					//Log.d("vortex","Generated variable ["+r[pNameIndex]+"] ROW:\n"+row);
 				} else {
 					//Log.d("nils","found group name: "+pGroup);
 					elems = groups.get(pGroup);
@@ -168,7 +168,7 @@ public class VariablesConfiguration extends CSVConfigurationModule {
 						//If the variable has a group,add it 
 						//Log.d("nils","Group "+pGroup+" in line#"+rowC+" does not exist in config file. Will use name: "+varPatternName);								
 						String name = pGroup.trim()+Constants.VariableSeparator+varPatternName.trim();
-						o.addRow("Generated variable(2): ["+name+"]");
+						//o.addRow("Generated variable(2): ["+name+"]");
 						trr.set(pNameIndex, name);
 						myTable.addRow(trr);
 					} else {
@@ -190,7 +190,7 @@ public class VariablesConfiguration extends CSVConfigurationModule {
 								varPatternL.addAll(elemCopy);
 								//Replace name column with full name.
 								varPatternL.set(pNameIndex, fullVarName);
-								o.addRow("Generated variable(3): ["+fullVarName+"]");
+								//o.addRow("Generated variable(3): ["+fullVarName+"]");
 								ErrCode err = myTable.addRow(varPatternL);
 								if (err!=ErrCode.ok) {
 									switch (err) {

@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
-import android.renderscript.Element.DataType;
 import android.util.Log;
 
 import com.teraim.fieldapp.GlobalState;
@@ -21,6 +20,7 @@ import com.teraim.fieldapp.dynamic.VariableConfiguration;
 import com.teraim.fieldapp.dynamic.types.Table;
 import com.teraim.fieldapp.dynamic.types.VarCache;
 import com.teraim.fieldapp.dynamic.types.Variable;
+import com.teraim.fieldapp.dynamic.types.Variable.DataType;
 import com.teraim.fieldapp.loadermodule.configurations.WorkFlowBundleConfiguration;
 import com.teraim.fieldapp.log.LoggerI;
 import com.teraim.fieldapp.non_generics.Constants;
@@ -96,7 +96,7 @@ public class Expressor {
 		max(valueFunction,2),
 		min(valueFunction,2),
 		unaryMinus(valueFunction,1),
-		
+
 
 		variable(null,-1),
 		text(variable,0),
@@ -121,7 +121,7 @@ public class Expressor {
 		neq(operand,6),
 		gt(operand,6),
 		lt(operand,6),
-		
+
 		parenthesis(literal,-1),
 		comma(literal,-1),
 		leftparenthesis(parenthesis,-1),
@@ -189,16 +189,16 @@ public class Expressor {
 		}
 
 	}
-	
-	
+
+
 	//Operands are transformed into functions. Below a name mapping.
 	final static String[] Operands = new String[]	     {"=",">","<","+","-","*","/",">=","<=","<>","=>","=<"};
 	final static String[] OperandFunctions= new String[]	 {"eq","gt","lt","add","subtract","multiply","divide","gte","lte","neq","gte","lte"};
 	static LoggerI o;
 	static GlobalState gs;
-    static Map<String,String> currentKeyChain=null;
-    //TODO solution for the  string reverse for string a+b..
-    static String tret=null;
+	static Map<String,String> currentKeyChain=null;
+	//TODO solution for the  string reverse for string a+b..
+	static String tret=null;
 
 	/**
 	 * Takes an input string and replaces all expr with values.
@@ -241,36 +241,37 @@ public class Expressor {
 		if (expression==null)
 			return null;
 		o = WorkFlowBundleConfiguration.debugConsole;
+		System.out.println("Precompiling: "+expression.toString());
 		List<Token> result = tokenize(expression);
-        List<EvalExpr> endResult = new ArrayList<EvalExpr>();
+		List<EvalExpr> endResult = new ArrayList<EvalExpr>();
 		if (result!=null && testTokens(result)) {
-            StreamAnalyzer streamAnalyzer = new StreamAnalyzer(result);
-            while (streamAnalyzer.hasNext()) {
+			StreamAnalyzer streamAnalyzer = new StreamAnalyzer(result);
+			while (streamAnalyzer.hasNext()) {
 
-                EvalExpr rez=null;
-                try {
-                    rez = streamAnalyzer.next();
-                } catch (ExprEvaluationException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-                if (rez!=null) {
-                    endResult.add(rez);
-                } else {
-                	o.addRow("");
-                	o.addRedText("Failed to Precompile "+result.toString());
-                    System.err.println("Tokenstream evaluated to null for: "+streamAnalyzer.getFaultyTokens());
-                }
-            }
-            if (endResult.size()>0){
-            	StringBuilder sb = new StringBuilder();
-            	for (EvalExpr e:endResult)
-            		sb.append(e);
-            	o.addRow("");
-            	o.addGreenText("Precompiled: "+sb);
-                System.out.println("Evaluation: "+endResult.toString());
-                return endResult;
-            }
+				EvalExpr rez=null;
+				try {
+					rez = streamAnalyzer.next();
+				} catch (ExprEvaluationException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				if (rez!=null) {
+					endResult.add(rez);
+				} else {
+					o.addRow("");
+					o.addRedText("Failed to Precompile "+result.toString());
+					System.err.println("Tokenstream evaluated to null for: "+streamAnalyzer.getFaultyTokens());
+				}
+			}
+			if (endResult.size()>0){
+				StringBuilder sb = new StringBuilder();
+				for (EvalExpr e:endResult)
+					sb.append(e);
+				o.addRow("");
+				o.addGreenText("Precompiled: "+sb);
+				System.out.println("Evaluation: "+endResult.toString());
+				return endResult;
+			}
 
 		}
 		o.addRow("");
@@ -283,12 +284,12 @@ public class Expressor {
 		return null;
 	}
 
-    public static String analyze(List<EvalExpr> expressions) {
-       return analyze(expressions,GlobalState.getInstance().getCurrentKeyMap());
-    }
+	public static String analyze(List<EvalExpr> expressions) {
+		return analyze(expressions,GlobalState.getInstance().getCurrentKeyMap());
+	}
 
 	public static String analyze(List<EvalExpr> expressions, Map<String,String> evalContext) {
-	
+
 		gs = GlobalState.getInstance();
 		o = gs.getLogger();
 		if (expressions == null) {
@@ -296,51 +297,55 @@ public class Expressor {
 			o.addRedText("Expression was null in Analyze. This is likely due to a syntax error in the original formula");
 			return null;
 		}
-        //evaluate in default context.
-        currentKeyChain = evalContext;
-        //System.out.println("Analyzing "+expressions.toString());
-         StringBuilder endResult = new StringBuilder();
-        for (EvalExpr expr:expressions) {
-        	tret=null;
-            Object rez=null;
-            //System.out.println("Analyze: "+expr.toString());
-            rez = expr.eval();
-            if (rez!=null) {
-            	//System.out.println("Part Result "+rez.toString());
-                endResult.append(rez);
-            } else
-                System.err.println("Err in analyze..got null back when evaluating "+expr.toString());
+		//evaluate in default context.
+		currentKeyChain = evalContext;
+		//System.out.println("Analyzing "+expressions.toString());
+		StringBuilder endResult = new StringBuilder();
+		for (EvalExpr expr:expressions) {
+			tret=null;
+			Object rez=null;
+			//System.out.println("Analyze: "+expr.toString());
+			rez = expr.eval();
+			if (rez!=null) {
+				//System.out.println("Part Result "+rez.toString());
+				endResult.append(rez);
+			} else
+				System.err.println("Err in analyze..got null back when evaluating "+expr.toString());
 
-        }
-        System.out.println(expressions.toString()+" -->  "+endResult.toString());       
+		}
+		System.out.println(expressions.toString()+" -->  "+endResult.toString());       
 		return endResult.toString();
 	}
 
 	public static Boolean analyzeBooleanExpression(EvalExpr expr) {
-        return analyzeBooleanExpression(expr,GlobalState.getInstance().getCurrentKeyMap());
- 	}
+		return analyzeBooleanExpression(expr,GlobalState.getInstance().getCurrentKeyMap());
+	}
 
-    public static Boolean analyzeBooleanExpression(EvalExpr expr, Map<String,String> evalContext) {
-    	tret=null;
-    	if (expr==null)
-    		return null;
-        gs = GlobalState.getInstance();
-        o = gs.getLogger();
-        currentKeyChain = evalContext;
-        Log.d("Vortex","BoolExpr: "+expr.toString());
-       // Log.d("Vortex","Class "+expr.getClass().getCanonicalName());
-        Object eval = expr.eval();
-        Log.d("Vortex","Got back "+eval);
-        if (eval==null)
-        	Log.e("vortex","LOGICAL EXP "+expr+" EVALUATES TO NULL!!");
-        if (eval instanceof String) {
-        	Log.e("vortex","String back in analyzeBoolean...likely missing [..]");
-        	o.addRow("");
-        	o.addRedText("The expression "+expr.toString()+" evaluated to Text: '"+eval+"'. This is likely because of missing [ ] parantheses around the expression in the XML");
-        	return false;
-        } else
-        	return (Boolean)eval;
-    }
+	public static Boolean analyzeBooleanExpression(EvalExpr expr, Map<String,String> evalContext) {
+		tret=null;
+		if (expr==null)
+			return null;
+		gs = GlobalState.getInstance();
+		o = gs.getLogger();
+		currentKeyChain = evalContext;
+		Log.d("Vortex","BoolExpr: "+expr.toString());
+		// Log.d("Vortex","Class "+expr.getClass().getCanonicalName());
+		Object eval = expr.eval();
+		Log.d("Vortex","BoolExpr: "+expr.toString()+" evaluated to "+eval);
+		if (eval==null) {
+			Log.e("vortex","LOGICAL EXP "+expr+" EVALUATES TO NULL!!");
+			o.addRow("");
+			o.addRedText("The expression "+expr.toString()+" evaluated to null");
+
+		}
+		if (eval instanceof String) {
+			Log.e("vortex","String back in analyzeBoolean...likely missing [..]");
+			o.addRow("");
+			o.addRedText("The expression "+expr.toString()+" evaluated to Text: '"+eval+"'. This is likely because of missing [ ] parantheses around the expression in the XML");
+			return false;
+		} else
+			return (Boolean)eval;
+	}
 	/**
 	 * Class Token
 	 * @author Terje
@@ -349,7 +354,7 @@ public class Expressor {
 	 */
 	public static class Token implements Serializable {
 
-        private static final long serialVersionUID = -1975204853256767316L;
+		private static final long serialVersionUID = -1975204853256767316L;
 		public String str;
 		public TokenType type;
 		public Token(String raw,TokenType t) {
@@ -415,14 +420,14 @@ public class Expressor {
 			return null;
 		}
 
-        public String getFaultyTokens() {
-            StringBuilder sres=new StringBuilder();
-            for (Token c:curr) {
-                 sres.append(c.toString());
-            }
-            return sres.toString();
-        }
-    }
+		public String getFaultyTokens() {
+			StringBuilder sres=new StringBuilder();
+			for (Token c:curr) {
+				sres.append(c.toString());
+			}
+			return sres.toString();
+		}
+	}
 
 	//Temp Entry point for testing purposes.
 
@@ -483,10 +488,10 @@ public class Expressor {
 			}
 			else if (Character.isLetter(c)) {
 				switch (t) {
-					case none:
-					case number:
-						t=TokenType.literal;
-						break;
+				case none:
+				case number:
+					t=TokenType.literal;
+					break;
 				}
 				currToken.append(c);
 			}
@@ -506,15 +511,15 @@ public class Expressor {
 					add(currToken,t,result);
 				}
 				switch (c) {
-					case '(':
-						t=TokenType.leftparenthesis;
-						break;
-					case ')':
-						t=TokenType.rightparenthesis;
-						break;
-					case ',':
-						t=TokenType.comma;
-						break;
+				case '(':
+					t=TokenType.leftparenthesis;
+					break;
+				case ')':
+					t=TokenType.rightparenthesis;
+					break;
+				case ',':
+					t=TokenType.comma;
+					break;
 				}
 				add(c,t,result);
 				t= TokenType.none;
@@ -527,7 +532,8 @@ public class Expressor {
 				}
 				//unary minus
 				//System.out.println("Found zunary operator "+c+" i "+i);
-				if ((t == TokenType.operand || (t == TokenType.none&&(i==1||result.get(result.size()-1).type==TokenType.leftparenthesis))) && (c =='-') && (i+1)!=formula.length() && (!Character.isWhitespace(formula.charAt(i+1)))) {
+				if ((t == TokenType.operand || (t == TokenType.none&&(i==1||result.get(result.size()-1).type==TokenType.leftparenthesis || result.get(result.size()-1).type==TokenType.operand))) && (c =='-') && (i+1)!=formula.length() && (!Character.isWhitespace(formula.charAt(i+1)))) {
+					//if ((t == TokenType.operand || (t == TokenType.none&&(i==1||result.get(result.size()-1).type==TokenType.leftparenthesis))) && (c =='-') && (i+1)!=formula.length() && (!Character.isWhitespace(formula.charAt(i+1)))) {
 					//System.out.println("Found unary operator "+c);
 					//System.out.println("Currtorken: "+currToken.toString());
 					add(currToken,t,result);
@@ -565,10 +571,10 @@ public class Expressor {
 			return null;
 		}
 		//system.out.println("Reached end of tokenizer. CurrentToken is "+currToken+" and t is "+t.name());
-		
+
 		if (t != TokenType.none)
 			add(currToken,t,result);
-		
+
 		return result;
 	}
 
@@ -726,19 +732,19 @@ public class Expressor {
 				TokenType type = t.type;
 
 				switch (type) {
-					case leftparenthesis:
-						return new Push();
-					case rightparenthesis:
-						return new Pop();
-					case variable:
-					case number:
-					case literal:
-					case comma:
-						return new Atom(t);
-					case operand:
-						return new Operand(t);
-					case text:
-						return new Text(t);
+				case leftparenthesis:
+					return new Push();
+				case rightparenthesis:
+					return new Pop();
+				case variable:
+				case number:
+				case literal:
+				case comma:
+					return new Atom(t);
+				case operand:
+					return new Operand(t);
+				case text:
+					return new Text(t);
 
 				}
 				TokenType p = type.parent;
@@ -754,9 +760,9 @@ public class Expressor {
 
 	//marker class
 	public abstract static class Expr implements Serializable {
-        private static final long serialVersionUID = -1968204853256767316L;
+		private static final long serialVersionUID = -1968204853256767316L;
 		final TokenType type;
-		
+
 		public Expr(TokenType t) {
 			type = t;
 		}
@@ -788,57 +794,67 @@ public class Expressor {
 			else
 				return null;
 		}
-		
+
 		public boolean isVariable() {
 			return (type==TokenType.variable);
 		}
 
 		public Object eval() {
-			Log.d("vortex","In eval for Atom");
+			Log.d("vortex","In eval for Atom type "+type);
 			String value;
 			switch(type) {
-				case variable:
-					Variable v = gs.getVariableCache().getVariableUsingKey(currentKeyChain, myToken.str);
-					value = v.getValue();
-					if (v!=null && value == null || v==null) {
-                        System.out.println("Variable '"+this.toString()+"' does not have a value or Variable is missing.");
-                        return null;
-					}
-					if (v.getType()== Variable.DataType.numeric || v.getType()== Variable.DataType.decimal)
-						if (Tools.isNumeric(value))
-							return Double.parseDouble(v.getValue());
-						else {
-							Log.d("vortex","Not a number: "+value);
-							return null;
-						}
-					if (value.equalsIgnoreCase("false"))
-						return false;
-					else if (value.equalsIgnoreCase("true"))
-						return true;
+			case variable:
+				Variable v = gs.getVariableCache().getVariableUsingKey(currentKeyChain, myToken.str);
+				value = v.getValue();
+				if (v!=null && value == null || v==null) {
+					System.out.println("Variable '"+this.toString()+"' does not have a value or Variable is missing.");
+					return null;
+				}
+				Log.d("vortex","Variable type is "+v.getType());
+				if (Tools.isNumeric(value)) {
+					if (v.getType()== Variable.DataType.decimal)
+						return Double.parseDouble(value);
 					else
-						return value;
-				case number:
-					Log.d("vortex","this is a numeric atom");
-					if (myToken !=null && myToken.str!=null) {
-						//System.out.println("Numeric value: "+myToken.str);
-						return Double.parseDouble(myToken.str);
+						return Integer.parseInt(value);
+				}
+				if (v.getType()==Variable.DataType.bool) {
+					if (value.equalsIgnoreCase("false")) {
+						Log.d("vortex","Returning false");
+						return false;
+					}
+					else if (value.equalsIgnoreCase("true")) {
+						Log.d("vortex","Returning true");
+						return true;
 					}
 					else {
-						System.err.println("Numeric value was null");
+						Log.d("vortex","Not a bool value: "+value);
 						return null;
 					}
-				case literal:
-					Log.d("vortex","this is a literal atom");
-					if (myToken.str.equalsIgnoreCase("false"))
-						return false;
-					else if (myToken.str.equalsIgnoreCase("true"))
-						return true;
-					else
-						return toString();
+				}
+				return value;
+			case number:
+				Log.d("vortex","this is a numeric atom");
+				if (myToken !=null && myToken.str!=null) {
+					System.out.println("Numeric value: "+myToken.str);
 
-				default:
-					System.err.println("Atom type has no value: "+this.type);
+					return Integer.parseInt(myToken.str);						
+				}
+				else {
+					System.err.println("Numeric value was null");
 					return null;
+				}
+			case literal:
+				Log.d("vortex","this is a literal atom");
+				if (myToken.str.equalsIgnoreCase("false"))
+					return false;
+				else if (myToken.str.equalsIgnoreCase("true"))
+					return true;
+				else
+					return toString();
+
+			default:
+				System.err.println("Atom type has no value: "+this.type);
+				return null;
 			}
 		}
 	}
@@ -884,23 +900,23 @@ public class Expressor {
 		public Object eval() {
 			Log.d("vortex","In eval for convo");
 			Object arg1v = arg1.eval();
-//			Log.e("vortex","I am literal? "+isLiteralOperator);
-//			Log.e("vortex","arg1v: "+((arg1v==null)?"null":arg1v.toString()));
-//			Log.e("vortex","arg2v: "+((arg2v==null)?"null":arg2v.toString()));
-			
+			//			Log.e("vortex","I am literal? "+isLiteralOperator);
+			//			Log.e("vortex","arg1v: "+((arg1v==null)?"null":arg1v.toString()));
+			//			Log.e("vortex","arg2v: "+((arg2v==null)?"null":arg2v.toString()));
+
 
 			if (arg1v==null) {
-					String opS =operator.myToken.str;
-					if (opS!=null) {
-						TokenType op = TokenType.valueOfIgnoreCase(opS);
-						if (op.equals(TokenType.or))
-							return arg2.eval();
-					}
+				String opS =operator.myToken.str;
+				if (opS!=null) {
+					TokenType op = TokenType.valueOfIgnoreCase(opS);
+					if (op.equals(TokenType.or))
+						return arg2.eval();
+				}
 				return null;
 			}
-			
+
 			Object arg2v = arg2.eval();
-			
+
 			if (arg2v==null) {
 				String opS =operator.myToken.str;
 				if (opS!=null) {
@@ -909,70 +925,89 @@ public class Expressor {
 						if(arg1v instanceof Boolean)
 							if ((Boolean)arg1v)
 								return true;
-						
+
 				}
 				return null;
 			}
 
-			boolean isDoubleOperator = arg1v instanceof Double && arg2v instanceof Double;
+			//functions require both arguments be of same kind.
+
+			boolean isIntegerOperator = arg1v instanceof Integer && arg2v instanceof Integer;
 			boolean isBooleanOperator = arg1v instanceof Boolean && arg2v instanceof Boolean;
 			//if any of the arguments are string, then treat both as literal.
 			boolean isLiteralOperator = arg1v instanceof String || arg2v instanceof String;
-			
-			
-			if (!isDoubleOperator && !isBooleanOperator && !isLiteralOperator) {
+
+
+
+			if (!isIntegerOperator && !isBooleanOperator && !isLiteralOperator) {
 				System.err.println("Argument types are wrong in operand: "+arg1v.getClass().getSimpleName()+","+arg2v.getClass().getSimpleName());
+				o.addRow("");
+				o.addRedText("Argument types are wrong in operand: "+arg1v.getClass().getSimpleName()+","+arg2v.getClass().getSimpleName());
 				return null;
 			}
+			if (isLiteralOperator) {
+				if ((arg1v instanceof Double || Tools.isNumeric((String)arg1v)) && (arg2v instanceof Double || Tools.isNumeric((String)arg2v))) {
+					Log.d("vortex","turning literal into numeric...both numbers");
+					arg1v = arg1v instanceof Double ? arg1v : Integer.parseInt((String)arg1v);
+					arg2v = arg2v instanceof Double ? arg2v : Integer.parseInt((String)arg2v);
+					isIntegerOperator = true;
+				}
+			}
 			//Requires Double arguments.
-			if (isDoubleOperator) {
-				Double arg1F,arg2F;
+			if (isIntegerOperator) {
+				Integer arg1F,arg2F;
 				Object res=null;
 
-				arg1F=(Double)arg1v;
-				arg2F=(Double)arg2v;
+				arg1F=(Integer)arg1v;
+				arg2F=(Integer)arg2v;
 				String opS =operator.myToken.str;
 				if (opS!=null) {
 					TokenType op = TokenType.valueOf(opS);
 					switch (op) {
-						
-						case add:
-							res = arg1F+arg2F;
-							break;
-						case subtract:
-							res = arg1F-arg2F;
-							break;
-						case multiply:
-							res = arg1F*arg2F;
-							break;
-						case divide:
-							res = arg1F/arg2F;
-							break;
-						case eq:
-							res = arg1F.compareTo(arg2F)==0;
-							Log.e("vortex","arg1F eq arg2F? "+arg1F+" eq "+arg2F+": "+res);
-							break;
-						case neq:
-							res = arg1F.compareTo(arg2F)==-1;
-							break;
-						case gt:
-							res = arg1F > arg2F;
-							break;
-						case lt:
-							res = arg1F < arg2F;
-							break;
-						case lte:
-							res = arg1F <= arg2F;
-							break;
-						case gte:
-							res = arg1F >= arg2F;
-							break;
-						default:
-							System.err.println("Unsupported operand: "+op);
-							break;
+
+					case add:
+						res = arg1F+arg2F;
+						break;
+					case subtract:
+						res = arg1F-arg2F;
+						break;
+					case multiply:
+						res = arg1F*arg2F;
+						break;
+					case divide:
+						res = arg1F/arg2F;
+						break;
+					case eq:
+						res = arg1F.compareTo(arg2F)==0;
+						Log.e("vortex","arg1F eq arg2F? "+arg1F+" eq "+arg2F+": "+res);
+						break;
+					case neq:
+						res = arg1F.compareTo(arg2F)!=0;
+						Log.e("vortex","arg1F neq arg2F? "+arg1F+" neq "+arg2F+": "+res);
+						break;
+					case gt:
+						res = arg1F > arg2F;
+						break;
+					case lt:
+						res = arg1F < arg2F;
+						break;
+					case lte:
+						res = arg1F <= arg2F;
+						break;
+					case gte:
+						res = arg1F >= arg2F;
+						break;
+					default:
+						System.err.println("Unsupported operand: "+op);
+						o.addRow("");
+						o.addRedText("Unsupported arithmetic operator: "+op);
+						break;
 					}
-				} else
+				} else {
 					System.err.println("Unsupported arithmetic operand: "+operator.type);
+					o.addRow("");
+					o.addRedText("Unsupported arithmetic operand: "+operator.type);
+				}
 
 				return res;
 			}
@@ -986,20 +1021,23 @@ public class Expressor {
 				if (opS!=null) {
 					TokenType op = TokenType.valueOfIgnoreCase(opS);
 					switch (op) {
-						case or:						
-							res = (arg1B||arg2B);
-							Log.e("vortex","OR Evaluates to "+res+" for "+arg1B+" and "+arg2B);
-							break;
-						case and:
-							//System.err.println("Gets to and");
-							res = (arg1B&&arg2B);
-							break;
-						case eq:
-							res = (arg1B==arg2B);
-							break;
-						default:
-							System.err.println("Unsupported boolean operand: "+op);
-							break;
+					case or:						
+						res = (arg1B||arg2B);
+						Log.e("vortex","OR Evaluates to "+res+" for "+arg1B+" and "+arg2B);
+						break;
+					case and:
+						//System.err.println("Gets to and");
+						res = (arg1B&&arg2B);
+						break;
+					case eq:
+						res = (arg1B==arg2B);
+						break;
+					default: 
+
+						System.err.println("Unsupported boolean operand: "+op);
+						o.addRow("");
+						o.addRedText("Unsupported boolean operator: "+op);
+						break;
 					}
 
 				}
@@ -1009,21 +1047,25 @@ public class Expressor {
 				String arg2S=arg2v.toString();
 				TokenType op = TokenType.valueOfIgnoreCase(operator.myToken.str);
 				System.out.println("in isliteral with exp: "+arg1S+" "+operator.myToken.str+" "+arg2S);
+				o.addText("calculating literal expression "+arg1S+" "+operator.myToken.str+" "+arg2S);
+
 				switch (op) {
-					case add: 
-						if (tret==null) {
-							tret ="foock";
-							Log.d("vortex","first so returning "+arg1S+arg2S);
-							return arg1S+arg2S;
-						} else
-							return arg2S+arg1S;
-					case eq:
-						return arg1S.equals(arg2S);
-					case neq:
-						return !arg1S.equals(arg2S);
-					default:
-						System.err.println("Unsupported literal operand: "+op);
-						break;
+				case add: 
+					if (tret==null) {
+						tret ="foock";
+						Log.d("vortex","first so returning "+arg1S+arg2S);
+						return arg1S+arg2S;
+					} else
+						return arg2S+arg1S;
+				case eq:
+					return arg1S.equals(arg2S);
+				case neq:
+					return !arg1S.equals(arg2S);
+				default:
+					System.err.println("Unsupported literal operand: "+op);
+					o.addRow("");
+					o.addRedText("Unsupported literal operator: "+op);
+					break;
 				}
 			}
 			return null;
@@ -1074,6 +1116,7 @@ public class Expressor {
 		private static final int NO_CHECK = 4;
 		private static final int Null_Numeric = 5;
 		private static final int Null_Literal = 6;
+		private static final int No_Null_Boolean = 7;
 
 		private List<EvalExpr> args = new ArrayList<EvalExpr>();
 
@@ -1161,7 +1204,7 @@ public class Expressor {
 
 		@Override
 		public Object eval() {
-			
+
 			Log.d("vortex","evaluating function "+type);
 
 			Object argEval=null,result=null;
@@ -1172,427 +1215,475 @@ public class Expressor {
 				argEval= arg.eval();
 				evalArgs.add(argEval);
 			}
-			
 
-            
+
+
 			//Now all arguments are evaluated. Execute function!
 			switch (type) {
-				case max:
-					if (checkPreconditions(evalArgs,2,No_Null_Numeric))
-						return Math.max((Double)evalArgs.get(0), (Double)evalArgs.get(1));
-					break;
-				case abs:
-					if (checkPreconditions(evalArgs,1,No_Null_Numeric))
-						return Math.abs((Double)evalArgs.get(0));
-					break;
-				case acos:
-					if (checkPreconditions(evalArgs,1,No_Null_Numeric))
-						return Math.acos((Double)evalArgs.get(0));
-					break;
-				case asin:
-					if (checkPreconditions(evalArgs,1,No_Null_Numeric))
-						return Math.asin((Double)evalArgs.get(0));
-					break;
-				case atan:
-					if (checkPreconditions(evalArgs,1,No_Null_Numeric))
-						return Math.atan((Double)evalArgs.get(0));
-					break;
-				case ceil:
-					if (checkPreconditions(evalArgs,1,No_Null_Numeric))
-						return Math.ceil((Double)evalArgs.get(0));
-					break;
-				case cos:
-					if (checkPreconditions(evalArgs,1,No_Null_Numeric))
-						return Math.cos((Double)evalArgs.get(0));
-					break;
-				case exp:
-					if (checkPreconditions(evalArgs,1,No_Null_Numeric))
-						return Math.exp((Double)evalArgs.get(0));
-					break;
-				case floor:
-					if (checkPreconditions(evalArgs,1,No_Null_Numeric))
-						return Math.floor((Double)evalArgs.get(0));
-					break;
-				case log:
-					if (checkPreconditions(evalArgs,1,No_Null_Numeric))
-						return Math.log((Double)evalArgs.get(0));
-					break;
-				case round:
-					if (checkPreconditions(evalArgs,1,No_Null_Numeric))
-						return Math.round((Double)evalArgs.get(0));
-					break;
-				case sin:
-					if (checkPreconditions(evalArgs,1,No_Null_Numeric))
-						return Math.sin((Double)evalArgs.get(0));
-					break;
-				case sqrt:
-					if (checkPreconditions(evalArgs,1,No_Null_Numeric))
-						return Math.sqrt((Double)evalArgs.get(0));
-					break;
-				case tan:
-					if (checkPreconditions(evalArgs,1,No_Null_Numeric))
-						return Math.tan((Double)evalArgs.get(0));
-					break;
-				case atan2:
-					if (checkPreconditions(evalArgs,2,No_Null_Numeric))
-						return Math.atan2((Double)evalArgs.get(0),(Double)evalArgs.get(1));
-					break;
-				case min:
-					if (checkPreconditions(evalArgs,2,No_Null_Numeric))
-						return Math.min((Double)evalArgs.get(0),(Double)evalArgs.get(1));
-					break;
-
-				case iff:
-					if (checkPreconditions(evalArgs,3,NO_CHECK)) {
-						if (evalArgs.get(0) instanceof Boolean) {
-							if ((Boolean)evalArgs.get(0))
-								return evalArgs.get(1);
-							else
-								return evalArgs.get(2);
-						}
-					}
-					break;
-				case unaryMinus:
-					if (checkPreconditions(evalArgs,1,No_Null_Numeric))
-						return -((Double)evalArgs.get(0));
-					break;
-				case not:
-					if (checkPreconditions(evalArgs,1,No_Null_Literal))
-						return !((Boolean)evalArgs.get(0));
+			case max:
+				if (checkPreconditions(evalArgs,2,No_Null_Numeric))
+					return Math.max((Double)evalArgs.get(0), (Double)evalArgs.get(1));
 				break;
-					
-				case historical:
-					if (checkPreconditions(evalArgs,1,No_Null_Literal)) {
-						Variable var = gs.getVariableCache().getVariable(evalArgs.get(0).toString());
-						if (var != null) {
-							String value = var.getHistoricalValue();
-							Log.d("nils","Found historical value "+value+" for variable "+var.getLabel());
-							return value;
-						} else {
-							Log.e("vortex","Variable not found for literal: ["+evalArgs.get(0)+"]");
-							o.addRow("");
-							o.addRedText("Variable not found in historical: ["+evalArgs.get(0)+"]");
-						}
-					}
-					break;
+			case abs:
+				if (checkPreconditions(evalArgs,1,No_Null_Numeric))
+					return Math.abs((Double)evalArgs.get(0));
+				break;
+			case acos:
+				if (checkPreconditions(evalArgs,1,No_Null_Numeric))
+					return Math.acos((Double)evalArgs.get(0));
+				break;
+			case asin:
+				if (checkPreconditions(evalArgs,1,No_Null_Numeric))
+					return Math.asin((Double)evalArgs.get(0));
+				break;
+			case atan:
+				if (checkPreconditions(evalArgs,1,No_Null_Numeric))
+					return Math.atan((Double)evalArgs.get(0));
+				break;
+			case ceil:
+				if (checkPreconditions(evalArgs,1,No_Null_Numeric))
+					return Math.ceil((Double)evalArgs.get(0));
+				break;
+			case cos:
+				if (checkPreconditions(evalArgs,1,No_Null_Numeric))
+					return Math.cos((Double)evalArgs.get(0));
+				break;
+			case exp:
+				if (checkPreconditions(evalArgs,1,No_Null_Numeric))
+					return Math.exp((Double)evalArgs.get(0));
+				break;
+			case floor:
+				if (checkPreconditions(evalArgs,1,No_Null_Numeric))
+					return Math.floor((Double)evalArgs.get(0));
+				break;
+			case log:
+				if (checkPreconditions(evalArgs,1,No_Null_Numeric))
+					return Math.log((Double)evalArgs.get(0));
+				break;
+			case round:
+				if (checkPreconditions(evalArgs,1,No_Null_Numeric))
+					return Math.round((Double)evalArgs.get(0));
+				break;
+			case sin:
+				if (checkPreconditions(evalArgs,1,No_Null_Numeric))
+					return Math.sin((Double)evalArgs.get(0));
+				break;
+			case sqrt:
+				if (checkPreconditions(evalArgs,1,No_Null_Numeric))
+					return Math.sqrt((Double)evalArgs.get(0));
+				break;
+			case tan:
+				if (checkPreconditions(evalArgs,1,No_Null_Numeric))
+					return Math.tan((Double)evalArgs.get(0));
+				break;
+			case atan2:
+				if (checkPreconditions(evalArgs,2,No_Null_Numeric))
+					return Math.atan2((Double)evalArgs.get(0),(Double)evalArgs.get(1));
+				break;
+			case min:
+				if (checkPreconditions(evalArgs,2,No_Null_Numeric))
+					return Math.min((Double)evalArgs.get(0),(Double)evalArgs.get(1));
+				break;
 
-				case getCurrentYear:
-					return Constants.getYear();
-				case getCurrentMonth:
-					return Constants.getMonth();
-				case getCurrentDay:
-					return Constants.getDayOfMonth();
-				case getCurrentHour:
-					return Constants.getHour();
-				case getCurrentMinute:
-					return Constants.getMinute();
-				case getCurrentSecond:
-					return Constants.getSecond();
-				case getCurrentWeekNumber:
-					return Constants.getWeekNumber();
-				case getSweDate:
-					return Constants.getSweDate();
-				case getColumnValue:
-					if (checkPreconditions(evalArgs,1,No_Null_Literal)) {
-						if (currentKeyChain==null) {
-							Log.e("vortex","Currentkeychain is missing in Expressor!");
-							return null;
-						}
-						else {
-							Log.d("vortex","keyhash "+currentKeyChain.toString());
-							Log.d("votex","value for column is "+currentKeyChain.get(evalArgs.get(0)));
-							return currentKeyChain.get(evalArgs.get(0));
-						}
+			case iff:
+				if (checkPreconditions(evalArgs,3,NO_CHECK)) {
+					if (evalArgs.get(0) instanceof Boolean) {
+						if ((Boolean)evalArgs.get(0))
+							return evalArgs.get(1);
+						else
+							return evalArgs.get(2);
 					}
-					break;
-				case photoExists:
-					if (checkPreconditions(evalArgs,1,No_Null_Literal)) {
-						System.out.println("In PhotoExist with "+evalArgs.get(0).toString());
-						File dir = new File(Constants.PIC_ROOT_DIR);
-						final String regexp = evalArgs.get(0).toString(); // needs to be final so the anonymous class can use it
-						File[] matchingFiles = dir.listFiles(new FileFilter() {
-							public boolean accept(File fileName) {
-								System.out.println("Testing "+fileName);
-								return fileName.getName().matches(regexp);
-							}
-						});
-						if (matchingFiles != null && matchingFiles.length != 0)
-							return true;
+				}
+				break;
+			case unaryMinus:
+				Log.d("vortex","In function unaryminus");
+				if (checkPreconditions(evalArgs,1,No_Null_Numeric)){
+					Log.d("vortex","returning: "+ (-(Integer)evalArgs.get(0)));
+					return -((Integer)evalArgs.get(0));
+				}
+				break;
+			case not:
+				Log.d("vortex","in function not");
+				if (checkPreconditions(evalArgs,1,No_Null_Boolean)) {
+					Log.d("vortex","got past..");
+					Log.d("vortex","evalArgs.get0 is "+evalArgs.get(0)+" type "+evalArgs.get(0).getClass().getSimpleName());
+					return !((Boolean)evalArgs.get(0));
+							
+				}
+				break;
 
+			case historical:
+				if (checkPreconditions(evalArgs,1,No_Null_Literal)) {
+					Variable var = gs.getVariableCache().getVariable(evalArgs.get(0).toString());
+					if (var != null) {
+						String value = var.getHistoricalValue();
+						Log.d("nils","Found historical value "+value+" for variable "+var.getLabel());
+								if (value !=null && var.getType() == DataType.bool) {
+									return value.equals("1");
+								} else
+									return value;
+					} else {
+						Log.e("vortex","Variable not found for literal: ["+evalArgs.get(0)+"]");
+						o.addRow("");
+						o.addRedText("Variable not found in historical: ["+evalArgs.get(0)+"]");
 					}
-					return false;
-				//Return 0 if one of the values are undefined.
-				case sum:
-					if (!checkPreconditions(evalArgs,-1,Null_Numeric))
-						return 0;
-					else {
-						double sum = 0;
-						for (Object arg : evalArgs) {
-							if (arg!=null)
-								sum += (Double) arg;
-						}
-						return sum;
-					}
-				case concatenate:
-					if (!checkPreconditions(evalArgs,-1,Null_Literal)) {
+				}
+				break;
+
+			case getCurrentYear:
+				return Constants.getYear();
+			case getCurrentMonth:
+				return Constants.getMonth();
+			case getCurrentDay:
+				return Constants.getDayOfMonth();
+			case getCurrentHour:
+				return Constants.getHour();
+			case getCurrentMinute:
+				return Constants.getMinute();
+			case getCurrentSecond:
+				return Constants.getSecond();
+			case getCurrentWeekNumber:
+				return Constants.getWeekNumber();
+			case getSweDate:
+				return Constants.getSweDate();
+			case getColumnValue:
+				if (checkPreconditions(evalArgs,1,No_Null_Literal)) {
+					if (currentKeyChain==null) {
+						Log.e("vortex","Currentkeychain is missing in Expressor!");
 						return null;
 					}
 					else {
-						StringBuilder stringSum= new StringBuilder();
-						for (Object arg : evalArgs) {
-							if (arg!=null)
-								stringSum.append(arg);
-						}
-						return stringSum.toString();
+						Log.d("vortex","keyhash "+currentKeyChain.toString());
+						Log.d("votex","value for column is "+currentKeyChain.get(evalArgs.get(0)));
+						return currentKeyChain.get(evalArgs.get(0));
 					}
-				case hasNullValue:
-					return !checkPreconditions(evalArgs,-1,No_Null);
-				case getDelytaArea:
-					if (checkPreconditions(evalArgs,1,No_Null_Numeric)) {
-						Log.d("vortex", "running getDelytaArea function");
-						DelyteManager dym = DelyteManager.getInstance();
-						if (dym == null) {
-							o.addRow("");
-							o.addRedText("Cannot calculate delyta area...no provyta selected");
-							return null;
+				}
+				break;
+			case photoExists:
+				if (checkPreconditions(evalArgs,1,No_Null_Literal)) {
+					System.out.println("In PhotoExist with "+evalArgs.get(0).toString());
+					File dir = new File(Constants.PIC_ROOT_DIR);
+					final String regexp = evalArgs.get(0).toString(); // needs to be final so the anonymous class can use it
+					File[] matchingFiles = dir.listFiles(new FileFilter() {
+						public boolean accept(File fileName) {
+							System.out.println("Testing "+fileName);
+							return fileName.getName().matches(regexp);
 						}
-						float area = dym.getArea((Integer)(evalArgs.get(0)));
-						if (area == 0) {
-							Log.e("vortex","area 0 in getdelytaarea");
-							o.addRow("Area 0");
-							o.addRedText("Either Delyta "+evalArgs.get(0)+" does not exist or area is 0 (in function getDelytaArea)");
-							return null;
-						}
-						return Float.toString(area/100);
+					});
+					if (matchingFiles != null && matchingFiles.length != 0)
+						return true;
+
+				}
+				return false;
+				//Return 0 if one of the values are undefined.
+			case sum:
+				if (!checkPreconditions(evalArgs,-1,Null_Numeric))
+					return 0;
+				else {
+					double sum = 0;
+					for (Object arg : evalArgs) {
+						if (arg!=null)
+							sum += (Integer) arg;
 					}
+					return sum;
+				}
+			case concatenate:
+				if (!checkPreconditions(evalArgs,-1,Null_Literal)) {
+					return null;
+				}
+				else {
+					StringBuilder stringSum= new StringBuilder();
+					for (Object arg : evalArgs) {
+						if (arg!=null)
+							stringSum.append(arg);
+					}
+					return stringSum.toString();
+				}
+			case hasNullValue:
+				return !checkPreconditions(evalArgs,-1,No_Null);
+			case getDelytaArea:
+				if (checkPreconditions(evalArgs,1,No_Null)) {
+					Log.d("vortex", "running getDelytaArea function");
+					DelyteManager dym = DelyteManager.getInstance();
+					if (dym == null) {
+						o.addRow("");
+						o.addRedText("Cannot calculate delyta area...no provyta selected");
+						return null;
+					}
+					float area = dym.getArea((Integer)evalArgs.get(0));
+					if (area == 0) {
+						Log.e("vortex","area 0 in getdelytaarea");
+						o.addRow("Area 0");
+						o.addRedText("Either Delyta "+evalArgs.get(0)+" does not exist or area is 0 (in function getDelytaArea)");
+						return null;
+					}
+					return Float.toString(area/100);
+				}
+				return  null;
+			case hasSame:
+			case hasValue:
+			case allHaveValue:
 
-				case hasSame:
-				case hasValue:
-				case allHaveValue:
+				String function = type.name();
+				if (checkPreconditions(evalArgs,3,No_Null)) {
 
-					String function = type.name();
-					if (checkPreconditions(evalArgs,3,No_Null)) {
+					List<List<String>> rows;
+					//hasValue(pattern,op,constant)
+					String pattern = (String) evalArgs.get(0);
+					//Get all variables in Functional Group x.
+					Table table = al.getTable();
+					if (type == TokenType.hasSame)
+						rows = table.getRowsContaining(VariableConfiguration.Col_Functional_Group, pattern);
+					else
+						rows = table.getRowsContaining(VariableConfiguration.Col_Variable_Name, pattern);
+					if (rows == null || rows.size() == 0) {
+						Log.e("vortex", "no variables found for filter " + pattern);
+						return null;
+					} else
+						Log.d("vortex", "found " + (rows.size() - 1) + " variables for " + pattern);
+					//Parse the expression. Find all references to Functional Group.
+					//Each argument need to either exist or not exist.
+					Map<String, String[]> values = new HashMap<String, String[]>();
+					boolean allNull = true;
+					final String op = (String) evalArgs.get(1);
+					final String constant = (String)evalArgs.get(2);
+					boolean prep = false; EvalExpr fifo=null;
+					for (List<String> row : rows) {
+						Log.d("vortex", "Var name: " + al.getVarName(row));
 
-						List<List<String>> rows;
-						//hasValue(pattern,op,constant)
-						String pattern = (String) evalArgs.get(0);
-						//Get all variables in Functional Group x.
-						Table table = al.getTable();
-						if (type == TokenType.hasSame)
-							rows = table.getRowsContaining(VariableConfiguration.Col_Functional_Group, pattern);
-						else
-							rows = table.getRowsContaining(VariableConfiguration.Col_Variable_Name, pattern);
-						if (rows == null || rows.size() == 0) {
-							Log.e("vortex", "no variables found for filter " + pattern);
-							return null;
-						} else
-							Log.d("vortex", "found " + (rows.size() - 1) + " variables for " + pattern);
-						//Parse the expression. Find all references to Functional Group.
-						//Each argument need to either exist or not exist.
-						Map<String, String[]> values = new HashMap<String, String[]>();
-						boolean allNull = true;
-						final String op = (String) evalArgs.get(1);
-						final String constant = (String) (String) evalArgs.get(2);
-                        boolean prep = false; EvalExpr fifo=null;
-						for (List<String> row : rows) {
-							Log.d("vortex", "Var name: " + al.getVarName(row));
-
-							if (type == TokenType.hasValue ||
-									type == TokenType.allHaveValue) {
+						if (type == TokenType.hasValue ||
+								type == TokenType.allHaveValue) {
 
 
-								String formula = "$" + al.getVarName(row) + op + constant;
-								Variable myVar = varCache.getVariable(al.getVarName(row));
-								Boolean res=null;
-								if (myVar != null && myVar.getValue() != null) {
-									allNull = false;
-                                    if (!prep) {
-                                        try {
-                                        	List<Token> resulto = Expressor.tokenize(formula);
-                                        	Expressor.testTokens(resulto);
-                                            fifo = Expressor.analyzeExpression(resulto);
-                                        } catch (ExprEvaluationException e) {
-                                            System.err.println("failed to analyze formula " + formula + " in hasValue/allHaveValue");
-                                        }
-                                        prep=true;
-                                    }
-                                    if (fifo!=null)
-                                        res = Expressor.analyzeBooleanExpression(fifo);
-
-									if (res == null) {
-										Log.e("vortex", formula + " evaluates to null..something wrong");
-									} else {
-
-										if (!res && type == TokenType.allHaveValue) {
-											o.addRow("");
-											o.addYellowText("allHaveValue failed on expression " + formula);
-											Log.e("vortex", "allHaveValue failed on " + formula);
-											return false;
-										} else {
-											if (!res)
-												continue;
-											else {
-												if (type == TokenType.hasValue) {
-													o.addRow("");
-													o.addGreenText("hasvalue succeeded on expression " + formula);
-													Log.d("vortex", "hasvalue succeeded on expression " + formula);
-													return (true);
-												}
-											}
-
-										}
+							String formula = "$" + al.getVarName(row) + op + constant;
+							Variable myVar = varCache.getVariable(al.getVarName(row));
+							Boolean res=null;
+							if (myVar != null && myVar.getValue() != null) {
+								allNull = false;
+								if (!prep) {
+									try {
+										List<Token> resulto = Expressor.tokenize(formula);
+										Expressor.testTokens(resulto);
+										fifo = Expressor.analyzeExpression(resulto);
+									} catch (ExprEvaluationException e) {
+										System.err.println("failed to analyze formula " + formula + " in hasValue/allHaveValue");
 									}
+									prep=true;
+								}
+								if (fifo!=null)
+									res = Expressor.analyzeBooleanExpression(fifo);
+
+								if (res == null) {
+									Log.e("vortex", formula + " evaluates to null..something wrong");
 								} else {
-									Log.d("vortex", "null value...skipping");
-								}
 
-							} else if (type == TokenType.hasSame) {
-								for (int i = 1; i < evalArgs.size(); i++) {
-									String[] varName = al.getVarName(row).split(Constants.VariableSeparator);
-									int size = varName.length;
-									if (size < 3) {
+									if (!res && type == TokenType.allHaveValue) {
 										o.addRow("");
-										o.addRedText("This variable has no Functional Group...cannot apply hasSame function. Variable id: " + varName);
-										Log.e("vortex", "This is not a group variable...stopping.");
-										return null;
-									} else {
-										String name = varName[size - 1];
-										String art = varName[size - 2];
-										String group = varName[0];
-										Log.d("vortex", "name: " + name + " art: " + art + " group: " + group + " args[" + i + "]: " + evalArgs.get(i));
-										if (name.equalsIgnoreCase((String) evalArgs.get(i))) {
-											Log.d("vortex", "found varname. Adding " + art);
-											Variable v = varCache.getVariable(al.getVarName(row));
-											String varde = null;
-											if (v == null) {
-												Log.d("vortex", "var was null!");
-
-											} else
-												varde = v.getValue();
-											String[] rezult;
-											if (values.get(art) == null) {
-												Log.d("vortex", "empty..creating new val arr");
-												rezult = new String[evalArgs.size() - 1];
-												values.put(art, rezult);
-											} else
-												rezult = values.get(art);
-											rezult[i - 1] = varde;
-											break;
-										}
-									}
-								}
-							}
-						}
-						if (type == TokenType.hasSame) {
-							//now we should have an array containing all values for all variables.
-							Log.d("vortex", "printing resulting map");
-							for (String key : values.keySet()) {
-								String vCompare = values.get(key)[0];
-								for (int i = 1; i < evalArgs.size() - 1; i++) {
-									String vz = values.get(key)[i];
-									if (vCompare == null && vz == null || vCompare != null && vz != null)
-										continue;
-									else {
-										o.addRow("hasSame difference detected for " + key + ". Stopping");
-										Log.e("vortex", "Diffkey values for " + key + ": " + (vCompare == null ? "null" : vCompare) + " " + (vz == null ? "null" : vz));
+										o.addYellowText("allHaveValue failed on expression " + formula);
+										Log.e("vortex", "allHaveValue failed on " + formula);
 										return false;
+									} else {
+										if (!res)
+											continue;
+										else {
+											if (type == TokenType.hasValue) {
+												o.addRow("");
+												o.addGreenText("hasvalue succeeded on expression " + formula);
+												Log.d("vortex", "hasvalue succeeded on expression " + formula);
+												return (true);
+											}
+										}
+
 									}
-
 								}
-							}
-							Log.d("vortex", "all values same. Success for hasSame!");
-							return true;
-
-						} else if (type == TokenType.hasValue) {
-							//Hasvalue fails since none of the variables fullfilled the criteria
-							o.addRow("");
-							o.addYellowText("hasvalue failed to find any match");
-							Log.e("vortex", "hasValue failed. No match found");
-							return false;
-						} else {
-							if (!allNull) {
-								o.addRow("");
-								o.addYellowText("allHaveValue succeeded!");
-								Log.e("vortex", "allHaveValue succeeded!");
-								return true;
 							} else {
-								o.addRow("");
-								o.addYellowText("allHaveValue failed - no values");
-								Log.e("vortex", "allHaveValue failed on empty list");
-								return false;
+								Log.d("vortex", "null value...skipping");
+							}
+
+						} else if (type == TokenType.hasSame) {
+							for (int i = 1; i < evalArgs.size(); i++) {
+								String[] varName = al.getVarName(row).split(Constants.VariableSeparator);
+								int size = varName.length;
+								if (size < 3) {
+									o.addRow("");
+									o.addRedText("This variable has no Functional Group...cannot apply hasSame function. Variable id: " + varName);
+									Log.e("vortex", "This is not a group variable...stopping.");
+									return null;
+								} else {
+									String name = varName[size - 1];
+									String art = varName[size - 2];
+									String group = varName[0];
+									Log.d("vortex", "name: " + name + " art: " + art + " group: " + group + " args[" + i + "]: " + evalArgs.get(i));
+									if (name.equalsIgnoreCase((String) evalArgs.get(i))) {
+										Log.d("vortex", "found varname. Adding " + art);
+										Variable v = varCache.getVariable(al.getVarName(row));
+										String varde = null;
+										if (v == null) {
+											Log.d("vortex", "var was null!");
+
+										} else
+											varde = v.getValue();
+										String[] rezult;
+										if (values.get(art) == null) {
+											Log.d("vortex", "empty..creating new val arr");
+											rezult = new String[evalArgs.size() - 1];
+											values.put(art, rezult);
+										} else
+											rezult = values.get(art);
+										rezult[i - 1] = varde;
+										break;
+									}
+								}
 							}
 						}
 					}
-					break;
-                case has:
-                    return checkPreconditions(evalArgs,1,No_Null);
+					if (type == TokenType.hasSame) {
+						//now we should have an array containing all values for all variables.
+						Log.d("vortex", "printing resulting map");
+						for (String key : values.keySet()) {
+							String vCompare = values.get(key)[0];
+							for (int i = 1; i < evalArgs.size() - 1; i++) {
+								String vz = values.get(key)[i];
+								if (vCompare == null && vz == null || vCompare != null && vz != null)
+									continue;
+								else {
+									o.addRow("hasSame difference detected for " + key + ". Stopping");
+									Log.e("vortex", "Diffkey values for " + key + ": " + (vCompare == null ? "null" : vCompare) + " " + (vz == null ? "null" : vz));
+									return false;
+								}
 
-                case hasSome:
-                case hasMost:
-                case hasAll:
-                    if (checkPreconditions(evalArgs,1,No_Null_Literal)) {
-                        Log.d("vortex", "HASx function");
-                        //Apply filter parameter <filter> on all variables in current table. Return those that match.
-                        float failC = 0;
-                        //If any of the variables matching filter doesn't have a value, return 0. Otherwise 1.
-                        List<List<String>> rows = al.getTable().getRowsContaining(VariableConfiguration.Col_Variable_Name, evalArgs.get(0).toString());
-                        if (rows == null || rows.size() == 0) {
-                            o.addRow("");
-                            o.addRedText("Filter returned empty list in HASx construction. Filter: " + type);
-                            o.addRow("");
-                            o.addRedText("Check your pattern: " + evalArgs.get(0));
-                            return null;
-                        }
-                        float rowC = rows.size();
+							}
+						}
+						Log.d("vortex", "all values same. Success for hasSame!");
+						return true;
 
-                        for (List<String> row : rows) {
-                            String value = varCache.getVariableValue(currentKeyChain, al.getVarName(row));
-                            if (value == null) {
-                                if (type == TokenType.hasAll) {
-                                    o.addRow("");
-                                    o.addYellowText("hasAll filter stopped on variable " + al.getVarName(row) + " that is missing a value");
-                                    return false;
-                                } else
-                                    failC++;
-                            } else if (type == TokenType.hasSome) {
-                                o.addRow("");
-                                o.addYellowText("hasSome filter succeeded on variable " + al.getVarName(row) + " that has value " + value);
-                                return true;
-                            }
-                        }
-                        if (failC == rowC && type == TokenType.hasSome) {
-                            o.addRow("");
-                            o.addYellowText("hasSome filter failed. No variables with values found for "+evalArgs.get(0));
-                            return false;
-                        }
-                        if (type == TokenType.hasAll) {
-                            o.addRow("");
-                            o.addYellowText("hasAll filter succeeded.");
-                            return true;
-                        }
-                        if (failC <= rowC / 2) {
-                            o.addRow("");
-                            o.addYellowText("hasMost filter succeeded. Filled in: " + (int) ((failC / rowC) * 100f) + "%");
-                            return true;
-                        }
-                        o.addRow("");
-                        o.addYellowText("hasMost filter failed. Not filled in: " + (int) ((failC / rowC) * 100f) + "%");
-                        return false;
-                    }
-                    break;
+					} else if (type == TokenType.hasValue) {
+						//Hasvalue fails since none of the variables fullfilled the criteria
+						o.addRow("");
+						o.addYellowText("hasvalue failed to find any match");
+						Log.e("vortex", "hasValue failed. No match found");
+						return false;
+					} else {
+						if (!allNull) {
+							o.addRow("");
+							o.addYellowText("allHaveValue succeeded!");
+							Log.e("vortex", "allHaveValue succeeded!");
+							return true;
+						} else {
+							o.addRow("");
+							o.addYellowText("allHaveValue failed - no values");
+							Log.e("vortex", "allHaveValue failed on empty list");
+							return false;
+						}
+					}
+				}
+				break;
+			case has:
+				Variable var = gs.getVariableCache().getVariable(evalArgs.get(0).toString());
+				if (var != null) {
+					String value = var.getValue();
+					Log.d("nils","Found value "+value+" for variable "+var.getLabel()+" in has!");
+					if (value== null)
+						return false;
+					else
+						return true;
+				} else {
+					Log.e("vortex","Variable not found for literal: ["+evalArgs.get(0)+"]");
+					o.addRow("");
+					o.addRedText("Variable not found in historical: ["+evalArgs.get(0)+"]");
+					return null;
+				}
+				//return checkPreconditions(evalArgs,1,No_Null);
+
+			case hasSome:
+			case hasMost:
+			case hasAll:
+				if (checkPreconditions(evalArgs,1,No_Null_Literal)) {
+					Log.d("vortex", "HASx function");
+					//Apply filter parameter <filter> on all variables in current table. Return those that match.
+					float failC = 0;
+					//If any of the variables matching filter doesn't have a value, return 0. Otherwise 1.
+					List<List<String>> rows = al.getTable().getRowsContaining(VariableConfiguration.Col_Variable_Name, evalArgs.get(0).toString());
+					if (rows == null || rows.size() == 0) {
+						o.addRow("");
+						o.addRedText("Filter returned empty list in HASx construction. Filter: " + type);
+						o.addRow("");
+						o.addRedText("Check your pattern: " + evalArgs.get(0));
+						return null;
+					}
+					float rowC = rows.size();
+
+					for (List<String> row : rows) {
+						String value = varCache.getVariableValue(currentKeyChain, al.getVarName(row));
+						if (value == null) {
+							if (type == TokenType.hasAll) {
+								o.addRow("");
+								o.addYellowText("hasAll filter stopped on variable " + al.getVarName(row) + " that is missing a value");
+								return false;
+							} else
+								failC++;
+						} else if (type == TokenType.hasSome) {
+							o.addRow("");
+							o.addYellowText("hasSome filter succeeded on variable " + al.getVarName(row) + " that has value " + value);
+							return true;
+						}
+					}
+					if (failC == rowC && type == TokenType.hasSome) {
+						o.addRow("");
+						o.addYellowText("hasSome filter failed. No variables with values found for "+evalArgs.get(0));
+						return false;
+					}
+					if (type == TokenType.hasAll) {
+						o.addRow("");
+						o.addYellowText("hasAll filter succeeded.");
+						return true;
+					}
+					if (failC <= rowC / 2) {
+						o.addRow("");
+						o.addYellowText("hasMost filter succeeded. Filled in: " + (int) ((failC / rowC) * 100f) + "%");
+						return true;
+					}
+					o.addRow("");
+					o.addYellowText("hasMost filter failed. Not filled in: " + (int) ((failC / rowC) * 100f) + "%");
+					return false;
+				}
+				break;
 
 
-				default:
-					System.err.println("Unimplemented function: "+type.toString());
-					break;
+			default:
+				System.err.println("Unimplemented function: "+type.toString());
+				break;
 
 
 			}
 			return null;
 		}
+/*
+		private Boolean booleanValue(Object obj) {
+			if (obj==null)
+				return (Boolean)null;
+			if (obj instanceof String) {
+				if (obj.equals("true")||obj.equals("1")||obj.equals("1.0"))
+					return true;
+				if (obj.equals("false")||obj.equals("0")||obj.equals("0.0"))
+					return false;
 
+
+
+			} else if (obj instanceof Double) {
+				if ((Double)obj==1.0d)
+					return true;
+				if ((Double)obj==0.0d)
+					return false;
+
+			}
+			Log.e("vortex","no boolean value found for "+obj);
+			o.addRedText("no boolean value found for "+obj);
+			return null;
+		}
+*/
 		private boolean checkPreconditions(List<Object> evaluatedArgumentsList,int cardinality, int flags) {
-			if ((flags==No_Null || flags== No_Null_Numeric || flags == No_Null_Literal)
+			if ((flags==No_Null || flags== No_Null_Numeric || flags == No_Null_Literal || flags == No_Null_Boolean)
 					&& evaluatedArgumentsList.contains(null)) {
 				o.addRow("");
 				o.addRedText("Argument in function '"+type.toString()+"' is null");
@@ -1608,12 +1699,15 @@ public class Expressor {
 			}
 			if (flags== No_Null_Numeric) {
 				for (Object obj:evaluatedArgumentsList) {
-					if (!(obj instanceof Double)) {
+					if ((obj instanceof Double)||(obj instanceof Integer)) {
+						continue;
+					} else {
 						o.addRow("");
-						o.addRedText("Type error. Non numeric argument for function '"+type.toString()+"'.");
-						Log.e("Vortex","Type error. Non numeric argument for function '"+type.toString()+"'.");
+						o.addRedText("Type error. Non numeric argument for function '"+type.toString()+"'. Argument is a "+obj.getClass().getSimpleName());
+						Log.e("Vortex","Type error. Non numeric argument for function '"+type.toString()+"'. Argument is a "+obj.getClass().getSimpleName());
 						return false;
 					}
+
 				}
 
 			}
@@ -1629,7 +1723,7 @@ public class Expressor {
 			}
 			if (flags == Null_Numeric) {
 				for (Object obj:evaluatedArgumentsList) {
-					if (obj !=null && !(obj instanceof Double)) {
+					if (obj !=null && !((obj instanceof Double)||!(obj instanceof Integer))) {
 						o.addRow("");
 						o.addRedText("Type error. Not null & not numeric argument for function '" + type.toString() + "'.");
 						Log.e("Vortex","Type error. Not null & not numeric argument for function '"+type.toString()+"'.");
@@ -1647,7 +1741,17 @@ public class Expressor {
 					}
 				}
 			}
-			
+			if (flags == No_Null_Boolean) {
+				for (Object obj:evaluatedArgumentsList) {
+					if (!(obj instanceof Boolean)) {
+						Log.e("Vortex","Type error. Non boolean argument for function '"+type.toString()+"'.  Argument: "+obj.toString());
+						o.addRow("");
+						o.addRedText("Type error. Non boolean argument for function '" + type.toString() + "'. Argument: "+obj.toString());
+						return false;
+					}
+				}
+			}
+
 			return true;
 
 		}
@@ -1834,8 +1938,13 @@ public class Expressor {
 				}
 				System.out.println("(Arg1:) "+rez.toString()+" OP: "+op.toString()+" (Arg2:) "+arg2.toString());
 				//Add new.
-				if (op instanceof Operand)
-					rez = new Convoluted((EvalExpr)rez, (EvalExpr)arg2,(Operand)op);
+				if (op instanceof Operand) {
+					try {
+						rez = new Convoluted((EvalExpr)rez, (EvalExpr)arg2,(Operand)op);
+					} catch (ClassCastException e) {
+						printfail(rez,arg2,op);
+					}
+				}
 				else
 					printfail(rez,arg2,op);
 			}
@@ -1847,10 +1956,20 @@ public class Expressor {
 
 
 	private static void printfail(Expr rez, Expr arg2, Expr op) throws ExprEvaluationException {
+		if (GlobalState.getInstance()!=null) {
+			o = GlobalState.getInstance().getLogger();
+			o.addRow("");
+			o.addRedText("Missing or wrong parameters. This is likely caused by a misplaced paranthesis.");
+			o.addRedText("arg1: "+rez);
+			o.addRedText("arg2: "+arg2);
+			o.addRedText("operator: "+op);
+		}
+
 		System.err.println("Missing or wrong parameters. This is likely caused by a misplaced paranthesis.");
 		System.err.println("arg1: "+rez);
 		System.err.println("arg2: "+arg2);
 		System.err.println("operator: "+op);
+
 		throw new ExprEvaluationException();
 
 	}

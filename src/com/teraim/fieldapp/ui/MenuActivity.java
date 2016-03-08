@@ -23,28 +23,24 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.teraim.fieldapp.GlobalState;
 import com.teraim.fieldapp.R;
 import com.teraim.fieldapp.Start;
-import com.teraim.fieldapp.dynamic.Executor;
 import com.teraim.fieldapp.log.LoggerI;
 import com.teraim.fieldapp.non_generics.Constants;
 import com.teraim.fieldapp.synchronization.DataSyncSessionManager;
-import com.teraim.fieldapp.synchronization.SyncEntry;
-import com.teraim.fieldapp.synchronization.SyncStatus;
-import com.teraim.fieldapp.synchronization.SyncStatusListener;
 import com.teraim.fieldapp.synchronization.framework.SyncService;
-import com.teraim.fieldapp.utils.DbHelper;
 import com.teraim.fieldapp.utils.PersistenceHelper;
-import com.teraim.fieldapp.utils.Tools;
 
 /**
  * Parent class for Activities having a menu row.
@@ -71,7 +67,7 @@ public class MenuActivity extends Activity   {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);	
 		me = this;
-
+		
 		globalPh = new PersistenceHelper(getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_MULTI_PROCESS));
 
 		brr = new BroadcastReceiver() {
@@ -190,27 +186,42 @@ public class MenuActivity extends Activity   {
 		@Override
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
-			case SyncService.MSG_SYNC_DATA:
-				Log.d("vortex","got sync data");
+			case SyncService.MSG_SYNC_DATA_INSERTED:
+				
+				Log.d("vortex","MSG -->SYNC DATA INSERTED");
+				break;
+				
+				
+			case SyncService.MSG_SYNC_ENDED:
+				Log.d("vortex","MSG -->SYNC ENDED");
+				
+				break;
+				
+				
+			case SyncService.MSG_SYNC_FAIL:
+				Log.d("vortex","MSG -->SYNC FAIL");
+				break;
+				
+			}
+		}
+	}
+	
+	/*
+	Log.d("vortex","got sync data");
 				syncError=false;
 				if (GlobalState.getInstance()!=null) {
 					syncActive = true;
-					me.refreshStatusRow();
+					//me.refreshStatusRow();
 					//insert into database.
 					//If succesful, move pointer.
 					Bundle b = msg.getData();
 					int i=0;
 					if (b!=null) {
 						//Get timestamp.
-						long timeStamp = b.getLong("timestamp");
 						String teamName = globalPh.get(PersistenceHelper.LAG_ID_KEY);
-						if (timeStamp!=-1) {
-							Log.d("vortex","Inserting timestamp for last sync internet");
-							GlobalState.getInstance().getPreferences().put(PersistenceHelper.TIME_OF_LAST_SYNC_INTERNET+teamName,timeStamp+"");
-						} else
-							Log.d("vortex","Timestamp for Time Of Last Sync not changed for Internet sync.");
+
 						while(true) {               			
-							byte[] byteArray = b.getByteArray(i+"");
+
 							if (byteArray!=null) {
 								if (timeStamp==-1)
 									Log.e("vortex","Can timestamp be -1 when data is coming? Doubtfully!!!!");
@@ -221,14 +232,17 @@ public class MenuActivity extends Activity   {
 									DbHelper dbHandler = GlobalState.getInstance().getDb();
 									if (dbHandler!=null) {
 										Log.d("vortex","Dbhandler aquired");
-										dbHandler.synchronise(ses, null,GlobalState.getInstance().getLogger(), new SyncStatusListener() {
+										SyncReport syncReport = dbHandler.synchronise(ses, null,GlobalState.getInstance().getLogger(), new SyncStatusListener() {
 
 											@Override
 											public void send(Object entry) {
 												Log.d("vortex","Synkstatus: "+((SyncStatus)entry).getStatus());
 											}});
 										Log.d("vortex","sync done, calling redraw page");
-										gs.sendEvent(Executor.REDRAW_PAGE);
+										if (syncReport.hasChanges())
+											gs.sendEvent(Executor.REDRAW_PAGE);
+										else
+											Log.d("vortex","Will not call redraw...no changes");
 									} else
 										Log.e("vortex","DB hanlder was null in handleMessage(synx)!!");
 								}
@@ -244,7 +258,6 @@ public class MenuActivity extends Activity   {
 								else
 									Log.d("vortex","done, no more sync messages to insert: "+i);
 								syncActive = false;
-								me.refreshStatusRow();
 								break;
 							}
 
@@ -252,6 +265,7 @@ public class MenuActivity extends Activity   {
 						}
 
 					}
+					me.refreshStatusRow();
 
 				}
 				break;
@@ -268,7 +282,7 @@ public class MenuActivity extends Activity   {
 			}
 		}
 	}
-
+*/
 	public static final String MESSAGE_ACTION = "Massage_Massage";
 
 
@@ -296,12 +310,18 @@ public class MenuActivity extends Activity   {
 	private final static int NO_OF_MENU_ITEMS = 4;
 
 	MenuItem mnu[] = new MenuItem[NO_OF_MENU_ITEMS];
-
+	ImageView animView = null;
+	
 	private void createMenu(Menu menu)
 	{
+		LayoutInflater inflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		animView = (ImageView)inflater.inflate(R.layout.refresh_load_icon, null);
+		
 		for(int c=0;c<mnu.length;c++) 
 			mnu[c]=menu.add(0,c,c,"");
 
+		
+		
 		mnu[0].setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS|MenuItem.SHOW_AS_ACTION_WITH_TEXT);
 		mnu[1].setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 		mnu[2].setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
@@ -311,7 +331,8 @@ public class MenuActivity extends Activity   {
 		mnu[2].setTitle(R.string.log);
 		mnu[mnu.length-1].setTitle(R.string.settings);
 		mnu[mnu.length-1].setIcon(android.R.drawable.ic_menu_preferences);
-
+		
+		
 	}
 
 	protected void refreshStatusRow() {
@@ -326,7 +347,7 @@ public class MenuActivity extends Activity   {
 				mnu[0].setVisible(false);
 			else {
 				mnu[0].setTitle(gs.getDb().getNumberOfUnsyncedEntries()+"");
-				mnu[0].setIcon(getSyncStateAsIcon());
+				setSyncStateAsIcon(mnu[0]);
 				mnu[0].setVisible(true);
 			}
 
@@ -335,8 +356,10 @@ public class MenuActivity extends Activity   {
 			mnu[mnu.length-1].setVisible(true);
 		}
 	}
-
-	private Integer getSyncStateAsIcon() {
+	
+	
+	private void setSyncStateAsIcon(MenuItem menuItem) {
+		
 		Integer ret = R.drawable.syncoff;
 		if (globalPh.get(PersistenceHelper.SYNC_METHOD).equals("Bluetooth"))
 			ret = R.drawable.bt;
@@ -352,7 +375,10 @@ public class MenuActivity extends Activity   {
 						ret = R.drawable.syncactive;
 			}
 		}
-		return ret;
+		if (ret == R.drawable.syncactive)
+			menuItem.setActionView(animView);
+		else
+			menuItem.setIcon(ret);
 	}
 
 

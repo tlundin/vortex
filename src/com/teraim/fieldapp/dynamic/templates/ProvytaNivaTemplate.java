@@ -44,6 +44,7 @@ import com.teraim.fieldapp.dynamic.workflow_abstracts.Event.EventType;
 import com.teraim.fieldapp.dynamic.workflow_abstracts.EventListener;
 import com.teraim.fieldapp.dynamic.workflow_realizations.WF_Container;
 import com.teraim.fieldapp.dynamic.workflow_realizations.WF_DisplayValueField;
+import com.teraim.fieldapp.dynamic.workflow_realizations.WF_Event_OnSave;
 import com.teraim.fieldapp.non_generics.Constants;
 import com.teraim.fieldapp.non_generics.DelyteManager;
 import com.teraim.fieldapp.non_generics.NamedVariables;
@@ -89,7 +90,7 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 
 		fieldListPanel = (LinearLayout)v.findViewById(R.id.fieldList);
 
-		WF_DisplayValueField rSel = new WF_DisplayValueField("whatevar", "Current_Ruta",myContext, null, 
+		WF_DisplayValueField rSel = new WF_DisplayValueField("whatevar", "[$Current_Ruta]",myContext, null, 
 				"Vald Ruta", true,null,null,null);
 
 
@@ -269,10 +270,12 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 
 		//Rita sidan
 		refresh();
-
+		
 		if (gs.isMaster()||gs.isSolo())
 			Toast.makeText(this.getActivity(),"<<<<<< Svep för Delningssidan!", Toast.LENGTH_SHORT).show();
 
+		myContext.registerEvent(new WF_Event_OnSave("Template"));
+		
 		return v;
 
 	}

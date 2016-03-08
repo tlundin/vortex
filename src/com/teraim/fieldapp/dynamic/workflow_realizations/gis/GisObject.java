@@ -59,6 +59,7 @@ public class GisObject {
 	protected final Map<String, String> keyChain;
 	protected Map<String, String> attributes;
 	private boolean isUseful;
+	private boolean isDefect;
 	
 
 	//This default behavior is overridden for objects with more than one point or dynamic value. See subclasses for implementation.
@@ -183,16 +184,23 @@ public class GisObject {
 
 	public void markAsUseful() {
 		this.isUseful = true;
-		
+	}
+	
+	//Used in rare cases when one parameter of the object has null value
+	public void markForDestruction() {
+		this.isDefect = true;
 	}
 	
 	public void unmark() {
 		this.isUseful = false;
-		
 	}
 
 	public boolean isUseful() {
 		return isUseful;
+	}
+
+	public boolean isDefect() {
+		return isDefect;
 	};
 
 	

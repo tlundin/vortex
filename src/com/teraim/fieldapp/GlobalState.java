@@ -580,6 +580,12 @@ public class GlobalState  {
         return newAccount;
     }
 
+	public void onStart() {
+		//check synk
+		//db.processSyncEntriesIfAny();
+			
+	}
+
 	
 
 

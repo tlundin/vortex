@@ -211,7 +211,7 @@ public class Tracker extends Service implements LocationListener {
                 break;
             case LocationProvider.AVAILABLE:    
             	sendMessage(GPS_State.ping);
-                System.out.println("GPS Available");
+                //System.out.println("GPS Available");
                 break;
             case LocationProvider.TEMPORARILY_UNAVAILABLE:
             	 System.out.println("Temp unavailable!!");

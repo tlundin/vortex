@@ -29,9 +29,12 @@ public class SyncService extends Service {
     Messenger mClient; 
     
 	public static final int MSG_REGISTER_CLIENT = 1;
-	public static final int MSG_SYNC_DATA = 2;
+	//public static final int MSG_SYNC_DATA = 2;
 	public static final int MSG_SYNC_FAIL = 3;
 	public static final int MSG_STOP_REQUESTED = 4;
+	public static final int MSG_SYNC_ENDED = 5;
+	public static final int MSG_SYNC_DATA_INSERTED = 6;
+	
 
     class IncomingHandler extends Handler {
         @Override

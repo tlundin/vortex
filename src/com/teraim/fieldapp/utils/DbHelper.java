@@ -54,10 +54,12 @@ import com.teraim.fieldapp.utils.Exporter.Report;
 public class DbHelper extends SQLiteOpenHelper {
 
 	// Database Version
-	public static final int DATABASE_VERSION = 6;
+	public static final int DATABASE_VERSION = 8;
 	// Books table name
 	private static final String TABLE_VARIABLES = "variabler";
 	public static final String TABLE_AUDIT = "audit";
+	public static final String TABLE_SYNC = "sync";
+
 
 	private static final String VARID = "var",VALUE="value",TIMESTAMP="timestamp",LAG="lag",AUTHOR="author";
 	private static final String[] VAR_COLS = new String[] { TIMESTAMP, AUTHOR, LAG, VALUE };
@@ -252,11 +254,17 @@ public class DbHelper extends SQLiteOpenHelper {
 				"action TEXT, "+
 				"target TEXT, "+
 				"changes TEXT ) ";
+		
+		//synck table to keep track of incoming rows of data (sync entries[])
+		String CREATE_SYNC_TABLE = "CREATE TABLE sync ( " +
+				"id INTEGER PRIMARY KEY ," + 				
+				"data BLOB ) ";
 
 		// 
 		db.execSQL(CREATE_VARIABLE_TABLE);
 		db.execSQL(CREATE_AUDIT_TABLE);
-
+		db.execSQL(CREATE_SYNC_TABLE);
+		
 		Log.d("NILS","DB CREATED");
 	}
 
@@ -265,6 +273,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		// Drop older books table if existed
 		db.execSQL("DROP TABLE IF EXISTS variabler");
 		db.execSQL("DROP TABLE IF EXISTS audit");
+		db.execSQL("DROP TABLE IF EXISTS sync");
 
 		// create fresh books table
 		this.onCreate(db);
@@ -461,38 +470,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		insert,
 		delete
 	}
-	/*
-	public void insertAudit(Variable var, ActionType a){
-		//for logging
-		Log.d("nils", "Audit"); 
-		// 1. get reference to writable DB
-		//SQLiteDatabase db = this.getWritableDatabase();
-
-		// 2. create ContentValues to add key "column"/value
-		ContentValues values = new ContentValues();
-		values.put("ruta", var.getRutId()); // get ruta
-		values.put("provyta", var.getProvytaId()); // get provyta
-		values.put("delyta", var.getDelytaId()); // get delyta
-		values.put("smayta", var.getSmaytaId());
-		values.put("var", var.getVarId());
-		values.put("timestamp", TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
-		values.put("action", (a==ActionType.insert)?"i":"d");
-
-		// 3. insert
-		long rId = db.insert(TABLE_AUDIT, // table
-				null, //nullColumnHack
-				values); // key/value -> keys = column names/ values = column values
-
-		// 4. close
-		//db.close(); 
-		var.setDatabaseId(rId);
-		Log.d("nils","Inserted new variable with ID "+rId);
-	} 
-	 */
-
-
-
-
+	
 	public void deleteVariable(String name,Selection s,boolean isSynchronized) {
 		// 1. get reference to writable DB
 		//SQLiteDatabase db = this.getWritableDatabase();
@@ -631,6 +609,9 @@ public class DbHelper extends SQLiteOpenHelper {
 		db.insert(TABLE_AUDIT, null, values);
 	}
 
+	
+	
+	
 
 	public StoredVariableData getVariable(String name, Selection s) {
 
@@ -1843,6 +1824,23 @@ public class DbHelper extends SQLiteOpenHelper {
 			return true;
 		}
 		return false;
+	}
+
+	public void processSyncEntriesIfAny() {
+		//check and process sync entries.
+		final String[] dataColumn = new String[]{"id,data"};
+		//get a cursor.
+//		db.beginTransaction();
+		Cursor c = db.query(TABLE_SYNC, dataColumn, null, null, null, null, null,null);
+		int lastId=-1;
+		while (c.moveToNext()) {
+			int id= c.getInt(0);
+			Log.d("vortex","id: "+id);
+		}
+		c.close();
+//		db.endTransaction();
+		//String[] lastIdS=new String[]{lastId+""};
+		//db.delete(TABLE_SYNC, "id<?", lastIdS);
 	}
 
 
