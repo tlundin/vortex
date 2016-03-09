@@ -5,6 +5,8 @@ import java.io.ObjectOutputStream;
 import java.io.StreamCorruptedException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.List;
 
 import android.accounts.Account;
 import android.content.AbstractThreadedSyncAdapter;
@@ -22,8 +24,6 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 
-import com.teraim.fieldapp.GlobalState;
-import com.teraim.fieldapp.Start;
 import com.teraim.fieldapp.non_generics.Constants;
 import com.teraim.fieldapp.synchronization.EndOfStream;
 import com.teraim.fieldapp.synchronization.SyncEntry;
@@ -41,11 +41,12 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 	ContentResolver mContentResolver;
 	SharedPreferences gh;
 	private Messenger mClient;
-	
+
 	private final Uri CONTENT_URI = Uri.parse("content://"
 			+ SyncContentProvider.AUTHORITY + "/synk");
 
-
+	boolean busy = false,internetSync = false, settingsError = false;
+	String app=null, user=null, team=null;
 	/**
 	 * Set up the sync adapter
 	 * @param globalState 
@@ -59,9 +60,17 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 		mContentResolver = context.getContentResolver();
 		gh = context.getSharedPreferences(Constants.GLOBAL_PREFS,Context.MODE_MULTI_PROCESS);
 		if (gh!=null) {
-
-			System.err.println("JAJAJA");
-
+			internetSync = gh.getString(PersistenceHelper.SYNC_METHOD,"").equals("Internet");
+			app = gh.getString(PersistenceHelper.BUNDLE_NAME, null);
+			user = gh.getString(PersistenceHelper.USER_ID_KEY, null);
+			team = gh.getString(PersistenceHelper.LAG_ID_KEY, null);
+			Log.d("vortex","APP: "+app+" user: "+user+" Group: "+team);
+			if (user == null || user.length()==0 ||
+					team == null || team.length()==0 || 
+					app==null || app.length() == 0) {
+				Log.e("vortex","user id or group name or app name is null or zero length in Sync Adapter. Cannot sync: "+user+","+team+","+app);
+				settingsError = true;
+			}
 		} else
 			System.err.println("NEJNEJNEJ");
 	}
@@ -91,128 +100,165 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 		mClient = client;
 	}
 
-	int i=0;
+
+	//Never sync more than 100 at a time.
+	final int MaxSyncableRows = 100;
+	private List<ContentValues> rowsToInsert=null;
+	private String potentiallyTimeStampToUseIfInsertDoesNotFail;
+
+
 	@Override
 	public void onPerformSync(Account account, Bundle extras, String authority,
 			ContentProviderClient provider, SyncResult syncResult) {
-		boolean fail = false;
-		String app=null, user=null, teamName=null;
-		return;
-		/*
-		Log.d("vortex","onPerformSync for ("+gh.getString(PersistenceHelper.USER_ID_KEY, ""));
 		
+		int err=-1;
+
+		Log.d("vortex","************onPerformSync ["+user+"]");
+
 		if(mClient==null) {
-			Log.d("vortex","Not ready so discarding call");
+			Log.e("vortex","Not ready so discarding call");
 			return;
-		} else {
-
-			if (gh!=null) {
-				String syncMethod = gh.getString(PersistenceHelper.SYNC_METHOD,null);
-
-				if (syncMethod == null || !syncMethod.equals("Internet")) {
-					Log.e("vortex","Sync method is not Internet...but sync is on. Will turn sync off and exit..");
-					ContentResolver.setSyncAutomatically(account, authority, false);
-					fail = true;
-				} else {
-
-					app = gh.getString(PersistenceHelper.BUNDLE_NAME, null);
-					user = gh.getString(PersistenceHelper.USER_ID_KEY, null);
-					teamName = gh.getString(PersistenceHelper.LAG_ID_KEY, null);
-					Log.d("vortex","APP: "+app+" user: "+user+" Group: "+teamName);
-					if (user == null || user.length()==0 ||
-							teamName == null || teamName.length()==0 || 
-							app==null || app.length() == 0) {
-						Log.e("vortex","user id or group name or app name is null or zero length in Sync Adapter. Cannot sync: "+user+","+teamName+","+app);
-						fail = true;
-					}
-				}
-			} else {
-				Log.e("vortex","GLOBAL_PREFS null in Sync Adapter. Cannot sync!");
-				fail = true;
-			}
-		}
-		//Send a fail msg back to listener. This will turn sync symbol red.
-		if (fail) {
-			Message msg = Message.obtain(null, SyncService.MSG_SYNC_FAIL);
-			try {
-				mClient.send(msg);
-			} catch (RemoteException e) {
-
-				e.printStackTrace();
-			}
-			return;
+		} 
+		if(busy) {
+			Log.e("vortex", "Busy so discarding call");
+			err=SyncService.ERR_SYNC_BUSY;
 		}
 
+		if (!internetSync) {
+			Log.e("vortex", "Not internet sync so discarding call");
+			ContentResolver.setSyncAutomatically(account, authority, false);
+			err=SyncService.ERR_NOT_INTERNET_SYNC;
+		}
 
-		//Never sync more than 100 at a time.
-		final int MaxSyncable = 100;
+		if (settingsError) {
+			Log.e("vortex", "Settings error prevents sync (missing user, team or appName");
+			err=SyncService.ERR_SETTINGS;
+		}
+		Message msg;
+		if (err!=-1) {
+			msg= Message.obtain(null, SyncService.MSG_SYNC_ERROR_STATE);
+			msg.arg1=err;
+		} else
+			//Send a Start Sync message to the other side.
+			msg = Message.obtain(null, SyncService.MSG_SYNC_STARTED);
+		try {
+			mClient.send(msg);
+		} catch (RemoteException e) {
+			
+			e.printStackTrace();
+		}
+		//Exit if error.
+		if(err!=-1)
+			return;
+		//Get data entries to sync if any.
 
-		//Check values for application, group and user.
-
-
-		Cursor c = mContentResolver.query(CONTENT_URI, null, null, null, MaxSyncable+"");
+		Cursor c = mContentResolver.query(CONTENT_URI, null, null, null, MaxSyncableRows+"");
 		SyncEntry[] sa =null;
 		StringBuilder targets=new StringBuilder("");
 		long maxStamp = -1;
 		if (c!=null) {
 			if (c.getCount()==0) {
-				Log.d("vortex","Nothing to sync from me!");
+				Log.d("vortex","Nothing to sync from ["+user+"] to ["+team+"]");
 
 			} else {
-				Log.d("vortex","cursor had "+c.getCount()+" elems");
+				Log.d("vortex","Found "+c.getCount()+" rows to sync from ["+user+"] to ["+team+"]");
 
-				String entryStamp,action,changes,target;
-				int cn=0;
-				int maxToSync = Math.min(c.getCount(),MaxSyncable);
+				String entryStamp,action,changes,variable;
+
+				int rowCount=0;
+
+				//Either sync the number of lines returned, or MAX. Never more.
+
+				int maxToSync = Math.min(c.getCount(),MaxSyncableRows);
 
 				sa = new SyncEntry[maxToSync];
 
-				while (c.moveToNext()&&cn<maxToSync) {
+				while (c.moveToNext()&& rowCount < maxToSync) {
 					action 		=	c.getString(c.getColumnIndex("action"));
 					changes 	=	c.getString(c.getColumnIndex("changes"));
 					entryStamp	=	c.getString(c.getColumnIndex("timestamp"));
-					target 		= 	c.getString(c.getColumnIndex("target"));
+					variable 		= 	c.getString(c.getColumnIndex("target"));
 
-					long es = Long.parseLong(entryStamp);
+					long currentStamp = Long.parseLong(entryStamp);
 
-					if (es>maxStamp) 
-						maxStamp=es;
-					sa[cn++] = new SyncEntry(action,changes,entryStamp,target);
+					//Keep track of the highest timestamp in the set!
+					if (currentStamp>maxStamp) 
+						maxStamp=currentStamp;
 
-					targets.append(target);
+					sa[rowCount++] = new SyncEntry(action,changes,entryStamp,variable);
+
+					targets.append(variable);
 					targets.append(",");
 				}
 			}
 			c.close();
 			//If succesful, update the counter.
-			
+
 			Log.d("vortex","SYNCING --> ["+targets+"]");
 			Log.d("vortex","Maxstamp--> ["+maxStamp+"]");
 
-			sendAndReceive(teamName,user,app,sa,maxStamp);
-			Message msg = Message.obtain(null, SyncService.MSG_SYNC_ENDED);
+			//Send and Receive.
+			rowsToInsert = sendAndReceive(team,user,app,sa,maxStamp);
+			if (rowsToInsert!=null)
+				//Now acquire DB Lock before continuing.
+				msg = Message.obtain(null, SyncService.MSG_SYNC_REQUEST_DB_LOCK);
+			else {
+				msg = Message.obtain(null, SyncService.MSG_SYNC_ERROR_STATE);
+				msg.arg1=SyncService.ERR_UNKNOWN;
+			}
 			try {
 				mClient.send(msg);
-				} catch (RemoteException e) {
-
-					e.printStackTrace();
-				}
-			} else 
-				Log.e("vortex","DATABASE CURSOR NULL IN SYNCADAPTER AFTER Q CALL");
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
 
 
+
+
+		} else 
+			Log.e("vortex","DATABASE CURSOR NULL IN SYNCADAPTER");
+
+
+	}
+
+	public void insertIntoDatabase() {
+		//Insert into database
+		for (ContentValues cv: rowsToInsert)
+			mContentResolver.insert(CONTENT_URI, cv);
+
+		//Release
+		Message msg = Message.obtain(null, SyncService.MSG_SYNC_RELEASE_DB);
+		try {
+			mClient.send(msg);
+		} catch (RemoteException e) {
+
+			e.printStackTrace();
 		}
+	}
 
 
-	
-	
+	public void updateCounters() {
+		Log.d("vortex","In Sync UpdateCounters");
+		//Here it is safe to update the timestamp for syncentries received from server.
+		if (potentiallyTimeStampToUseIfInsertDoesNotFail!=null) {
+			gh.edit().putString(PersistenceHelper.TIME_OF_LAST_SYNC_FROM_TEAM_TO_ME+team,
+					potentiallyTimeStampToUseIfInsertDoesNotFail).apply();
+			Log.d("vortex","LAST_SYNC TEAM --> ME: "+potentiallyTimeStampToUseIfInsertDoesNotFail);
+		}
+		busy = false;
+	}
 
-	private void sendAndReceive(String teamName,String user, String app, SyncEntry[] sa, long maxStamp) {
+
+
+	private List<ContentValues> sendAndReceive(String team,String user, String app, SyncEntry[] sa, long maxStamp) {
 		URL url ;
 		URLConnection conn=null;
 		assert(sa!=null);
-		Log.d("vortex","In Send");
+		List<ContentValues> ret =null;
 
+		Log.d("vortex","In Send And Receive.");
+
+		//Send the SynkEntry[] array to server.
 		try { 
 			url = new URL(Constants.SynkServerURI);
 			conn = url.openConnection();
@@ -226,122 +272,110 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 			Log.d("vortex","creating outstream...");
 			ObjectOutputStream objOut = new ObjectOutputStream(conn.getOutputStream());
 			//First syncgroup
-			Log.d("vortex","writing group..."+teamName);
-			objOut.writeObject(teamName);
+			Log.d("vortex","writing group..."+team);
+			objOut.writeObject(team);
 			//Then user
 			Log.d("vortex","writing user..."+user);
 			objOut.writeObject(user);
 			//Then app name
 			Log.d("vortex","writing app..."+app);
 			objOut.writeObject(app);
-			Long trId= System.currentTimeMillis();
-			Log.d("vortex","writing transID..."+trId);
+			//The last timestamp.
+			String trId=gh.getString(PersistenceHelper.TIME_OF_LAST_SYNC_FROM_TEAM_TO_ME+team,"0");
+			Log.d("vortex","LAST_SYNC_FROM_TEAM_TO_ME WAS "+trId);
 			objOut.writeObject(trId);
 			if (sa!=null && sa.length>0) {
-				Log.d("vortex","written object...");
+				Log.d("vortex","Writing SA[] Array.");
 				objOut.writeObject(sa);				
 			}
 			else
-				Log.d("vortex","did not write any data...sa empty");
+				Log.d("vortex","did not write any Sync Entries. SA[] Empty");
+
+			//Done sending.
 			objOut.writeObject(new EndOfStream());
-			//objOut.flush();
+			objOut.flush();
 			objOut.close();
+
+			//Receive.
+
 			ObjectInputStream objIn = new ObjectInputStream(conn.getInputStream());
-			
-			boolean moreData = true;
-			int cc=0;
-			//loop while the server has more data to offer.
-			while (moreData) {
-				Object reply=null;
-				Log.d("vortex","Waiting for Data ["+cc++ +"]");
 
-				reply = objIn.readObject();
-				Log.d("vortex","After read object. reply is "+(reply==null?"not":"")+" null");
+			int rowCount=0;
+			Object reply=null;
+			Log.d("vortex","Waiting for Data ["+rowCount++ +"]");
 
-				if (reply instanceof String ) {
-					Log.d("vortex","Number of Rows that will arrive: "+reply);
-					//We can advance the sync counter for this device. 
-					if (maxStamp!=-1) {
-						Log.d("vortex","Inserting timestamp for last sync internet: "+maxStamp);
-						gh.edit().putString(PersistenceHelper.TIME_OF_LAST_SYNC_INTERNET+teamName,maxStamp+"").apply();
-					} else
-						Log.d("vortex","Timestamp for Time Of Last Sync not changed for Internet sync.");
+			reply = objIn.readObject();
+			Log.d("vortex","After read object. reply is "+(reply==null?"not":"")+" null");
 
-					
-					boolean notDone = true;
-					int i=0;
-					ContentValues cv = new ContentValues();
-					while (notDone) {
-						reply = objIn.readObject();
-						if (reply instanceof EndOfStream) {
-							Log.d("vortex","Got END OF STREAM!!");
-							//TRANSMISSION SUCCESFUL. ACK
-							if (i>0) {
-								Log.d("vortex","has objects. writing trans ack...");
-								//If data has been received, acknowledge.
-								//TODO: Consider if ack should wait until firmly written into database.
-								//objOut.writeObject(Constants.TRANS_ACK);
-								//objOut.flush();
-								notDone = false;
-								moreData = true;
-							} else {
-								Log.d("vortex","has no objects, no trans ack");
-								//We are done here.
-								notDone = false;
-								moreData = false;
-							}
-						}
-						else if (reply instanceof SyncFailed) {
-							Log.e("vortex","SYNC FAILED. REASON: "+((SyncFailed)reply).getReason());
-							notDone=false;
-							moreData = false;
-							Message msg = Message.obtain(null, SyncService.MSG_SYNC_FAIL);
-							try {
-								mClient.send(msg);
-							} catch (RemoteException e) {
-								e.printStackTrace();
-							}
-						}
-						else if (reply instanceof byte[]) {							
-							cv.put("data", (byte[])reply);
-							mContentResolver.insert(CONTENT_URI, cv);
-							Log.d("vortex","sent byte array no "+i+" to database");
-							Message msg = Message.obtain(null, SyncService.MSG_SYNC_DATA_INSERTED);
-							try {
-								mClient.send(msg);
-							} catch (RemoteException e) {
-								e.printStackTrace();
-							}
-							
-							i++;
-						}
-						else {
-							Log.e("vortex","Got back alien object!!");
-							notDone=false;
-							moreData = false;
-						}
+			if (reply instanceof String ) {
+				String numberOfRows = (String) reply;
+				Log.d("vortex","Number of Rows that will arrive: "+numberOfRows);
+				//We now know that the SyncEntries from this user are safely stored. So advance the pointer! 
+				if (maxStamp!=-1) {
+					Log.d("vortex","LAST_SYNC ME --> TEAM: "+maxStamp);
+					//Each team + project has an associated TIME OF LAST SYNC pointer. 
+					gh.edit().putString(PersistenceHelper.TIME_OF_LAST_SYNC_TO_TEAM_FROM_ME+team,maxStamp+"").apply();
+				} else
+					Log.d("vortex","Timestamp for Time Of Last Sync not changed for Internet sync.");
+
+				int insertedRows=0;
+
+				ret = new ArrayList<ContentValues>();
+				potentiallyTimeStampToUseIfInsertDoesNotFail=null;
+
+				while (true) {
+					reply = objIn.readObject();
+					if (reply instanceof String) {
+						Log.d("Vortex","received timestamp for next cycle: "+reply);
+						//This should be the Timestamp of the last entry arriving.
+						potentiallyTimeStampToUseIfInsertDoesNotFail = (String) reply;
+						Log.d("Vortex","Inserted rows: "+insertedRows);
+						return ret;
 					}
 
-					
+					else if (reply instanceof SyncFailed) {
+						Log.e("vortex","SYNC FAILED. REASON: "+((SyncFailed)reply).getReason());
+						busy = false;
+						break;
 
-				} else {
-					Log.e("vortex","OK not returned. instead "+reply.getClass().getCanonicalName());
-					moreData = false;
 
+					}
+					else if (reply instanceof byte[]) {
+						ContentValues cv = new ContentValues();
+						cv.put("DATA", (byte[])reply);
+						ret.add(cv);
+						insertedRows++;
+					}
+					else {
+						Log.e("vortex","Got back alien object!! "+reply.getClass().getSimpleName());
+						busy = false;
+						break;
+					}
 				}
 			}
+
+			else {
+				Log.e("vortex","OK not returned. instead "+reply.getClass().getCanonicalName());
+				busy = false;
+			}
+
 			objIn.close();
 			objOut.close();
+
 		} catch (StreamCorruptedException e) {
 			Log.e("vortex","Stream corrupted. Reason: "+e.getMessage()+" Timestamp: "+System.currentTimeMillis());
-			
+
 		}
 
 		catch (Exception ex) {
 			ex.printStackTrace();
-			
+
 		}
 
-	*/
+		return null;
+
 	}
+
+
+
 }

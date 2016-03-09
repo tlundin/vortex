@@ -93,7 +93,7 @@ public class SyncContentProvider extends ContentProvider {
 
 			
 			//Timestamp key includes team name, since change of team name should lead to resync from zero.
-			String timestamp = ph.getString(PersistenceHelper.TIME_OF_LAST_SYNC_INTERNET+teamName,"0");
+			String timestamp = ph.getString(PersistenceHelper.TIME_OF_LAST_SYNC_TO_TEAM_FROM_ME+teamName,"0");
 			Log.d("vortex","Timestamp for last sync in Query is "+timestamp);
 			SQLiteDatabase db = dbHelper.getReadableDatabase();
 			Cursor c = db.query(DbHelper.TABLE_AUDIT,null,
@@ -121,8 +121,10 @@ public class SyncContentProvider extends ContentProvider {
 
 	@Override
 	public Uri insert(Uri uri, ContentValues values) {
-		SQLiteDatabase db = dbHelper.getReadableDatabase();
+		final SQLiteDatabase db = dbHelper.getReadableDatabase();
+		
 		db.insert(DbHelper.TABLE_SYNC, null, values);
+		
 		return null;
 	}
 

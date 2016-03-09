@@ -1459,7 +1459,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		}
 		if (globalPh.get(PersistenceHelper.SYNC_METHOD).equals("Internet")) {	
 			final String teamName = globalPh.get(PersistenceHelper.LAG_ID_KEY);
-			String timestamp = ph.get(PersistenceHelper.TIME_OF_LAST_SYNC_INTERNET+teamName);
+			String timestamp = ph.get(PersistenceHelper.TIME_OF_LAST_SYNC_TO_TEAM_FROM_ME+teamName);
 			if (timestamp.equals(PersistenceHelper.UNDEFINED)) {
 				timestamp = "0";
 				Log.d("vortex","timestamp was null or undefined...will be set to zero");

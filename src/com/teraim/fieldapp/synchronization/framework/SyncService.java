@@ -29,11 +29,20 @@ public class SyncService extends Service {
     Messenger mClient; 
     
 	public static final int MSG_REGISTER_CLIENT = 1;
-	//public static final int MSG_SYNC_DATA = 2;
-	public static final int MSG_SYNC_FAIL = 3;
-	public static final int MSG_STOP_REQUESTED = 4;
-	public static final int MSG_SYNC_ENDED = 5;
-	public static final int MSG_SYNC_DATA_INSERTED = 6;
+	public static final int MSG_SYNC_ERROR_STATE = 2;
+	public static final int MSG_SYNC_REQUEST_DB_LOCK = 3;
+	public static final int MSG_SYNC_RELEASE_DB = 4;
+	public static final int MSG_DATA_SAFELY_STORED = 5;
+	public static final int MSG_DATABASE_LOCK_GRANTED = 6;
+	public static final int MSG_SYNC_STARTED = 7;
+	
+	
+	
+	public static final int ERR_NOT_READY = 1;
+	public static final int ERR_SYNC_BUSY = 2;
+	public static final int ERR_NOT_INTERNET_SYNC = 3;
+	public static final int ERR_SETTINGS = 4;
+	public static final int ERR_UNKNOWN = 5;
 	
 
     class IncomingHandler extends Handler {
@@ -43,15 +52,17 @@ public class SyncService extends Service {
                 case MSG_REGISTER_CLIENT:
                 	Log.d("vortex","received MSG_REGISTER_CLIENT in SyncService");
                     mClient=msg.replyTo;
-                    if (sSyncAdapter != null) {
-                    	sSyncAdapter.setClient(mClient);
-                    	
-                    }
+                   	sSyncAdapter.setClient(mClient);
                     break;
-                case MSG_STOP_REQUESTED:
-                	Log.d("vortex","received MSG_STOP_REQUESTED in SyncService");
-                	SyncService.this.stopSelf();
+                case MSG_DATABASE_LOCK_GRANTED:
+                   	sSyncAdapter.insertIntoDatabase();
                 	break;
+                //When data is safely inserted in database, update current time for last update.
+                case MSG_DATA_SAFELY_STORED:
+                	Log.d("vortex","received MSG_SAFELY_STORED in SyncService");
+                	sSyncAdapter.updateCounters();
+                	break;
+
                 default:
                     super.handleMessage(msg);
             }
