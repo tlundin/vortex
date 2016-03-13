@@ -31,7 +31,7 @@ public class MenuHeaderBlock extends Block {
 	}
 
 	public void create(WF_Context myContext) {
-		Log.d("vortex","In create menuheader");
+		//Log.d("vortex","In create menuheader");
 		
 		GlobalState gs = GlobalState.getInstance();
 		

@@ -37,7 +37,7 @@ public class VariableConfiguration implements Serializable {
 	public static String Col_Variable_Dynamic_Limits = "D_Limits";
 
 	public final static String KEY_YEAR = "år";
-	public static final String HISTORICAL_MARKER = "H";
+
 	public static final List<String>requiredColumns=Arrays.asList(Col_Variable_Keys,Col_Functional_Group,Col_Variable_Name,Col_Variable_Label,Type,"Unit","List Values","Description",Col_Variable_Scope,Col_Variable_Limits,Col_Variable_Dynamic_Limits);
 	private static int KEY_CHAIN=0,FUNCTIONAL_GROUP=1,VARIABLE_NAME=2,VARIABLE_LABEL=3,TYPE=4,UNIT=5,LIST_VALUES=6,DESCRIPTION=7,SCOPE=8,LIMIT=9,D_LIMIT=10;
 

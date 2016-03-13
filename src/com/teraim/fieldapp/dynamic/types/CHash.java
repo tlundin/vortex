@@ -85,7 +85,7 @@ public class CHash implements Serializable {
 		} else {
 			keyHash = new HashMap<String, String>();
 			//rawHash = new HashMap<String, Variable>();
-			Log.d("nils","Evaluating context: "+eContext);
+			//Log.d("nils","Evaluating context: "+eContext);
 			//Returns fully evaluated context as a string
 			String cContext = Expressor.analyze(eContext);
 			if (cContext==null) {
@@ -99,7 +99,7 @@ public class CHash implements Serializable {
 
 				} else {
 					for (String pair:pairs) {
-						Log.d("nils","found pair: "+pair);
+						//Log.d("nils","found pair: "+pair);
 						if (pair!=null&&!pair.isEmpty()) {
 							String[] kv = pair.split("=");
 							if (kv==null||kv.length<2) {
@@ -114,7 +114,7 @@ public class CHash implements Serializable {
 									err = "Empty key or value in context keypair for context "+cContext;
 									break;
 								} else {
-									Log.d("nils","Added "+arg+","+val+" to current context");
+									//Log.d("nils","Added "+arg+","+val+" to current context");
 									keyHash.put(arg, val);
 								}
 							}

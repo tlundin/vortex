@@ -17,7 +17,6 @@ import android.util.JsonToken;
 import android.util.Log;
 import android.util.MalformedJsonException;
 
-import com.teraim.fieldapp.dynamic.VariableConfiguration;
 import com.teraim.fieldapp.dynamic.types.Location;
 import com.teraim.fieldapp.dynamic.types.SweLocation;
 import com.teraim.fieldapp.dynamic.workflow_realizations.gis.GisConstants;
@@ -27,6 +26,7 @@ import com.teraim.fieldapp.loadermodule.JSONConfigurationModule;
 import com.teraim.fieldapp.loadermodule.LoadResult;
 import com.teraim.fieldapp.loadermodule.LoadResult.ErrorCode;
 import com.teraim.fieldapp.log.LoggerI;
+import com.teraim.fieldapp.non_generics.Constants;
 import com.teraim.fieldapp.utils.DbHelper;
 import com.teraim.fieldapp.utils.PersistenceHelper;
 import com.teraim.fieldapp.utils.Tools;
@@ -245,7 +245,7 @@ public class GisObjectConfiguration extends JSONConfigurationModule {
 				keyChain.put("uid",uuid);
 			else
 				keyChain.put("uid",UUID.randomUUID().toString());
-			keyChain.put("år", VariableConfiguration.HISTORICAL_MARKER);
+			keyChain.put("år", Constants.HISTORICAL_TOKEN_IN_DATABASE);
 
 			//Tarfala hack. TODO: Remove.
 			if (rutaId==null)

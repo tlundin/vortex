@@ -32,7 +32,7 @@ public class DrawerMenuHeader implements DrawerMenuItem {
 		if (convertView == null) {
 			view = (View) inflater.inflate(R.layout.drawer_menu_header, null);
 			TextView tv = (TextView)view.findViewById(R.id.separator);
-			Log.d("vortex","Menuheader bg text colors: "+bgColor+" "+textColor);
+			//Log.d("vortex","Menuheader bg text colors: "+bgColor+" "+textColor);
 			if (bgColor!=null)
 				tv.setBackgroundColor(Color.parseColor(bgColor));
 			if (textColor!=null)

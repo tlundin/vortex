@@ -4,12 +4,11 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.List;
 
-import android.accounts.Account;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -57,6 +56,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 	private DbHelper myDb;
 	private TextView appTxt;
 	private float oldV = -1;
+	private Activity mActivity;
 
 
 	@Override
@@ -80,13 +80,13 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		//Create global state
 
 
-		globalPh = new PersistenceHelper(this.getActivity().getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_MULTI_PROCESS));
+		globalPh = new PersistenceHelper(mActivity.getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_MULTI_PROCESS));
 		
 		bundleName = globalPh.get(PersistenceHelper.BUNDLE_NAME);
 		if (bundleName == null || bundleName.length()==0)
 			bundleName = "Vortex";
 		appTxt.setText("Running application "+bundleName);
-		ph	 = new PersistenceHelper(this.getActivity().getSharedPreferences(globalPh.get(PersistenceHelper.BUNDLE_NAME), Context.MODE_MULTI_PROCESS));
+		ph	 = new PersistenceHelper(mActivity.getSharedPreferences(globalPh.get(PersistenceHelper.BUNDLE_NAME), Context.MODE_MULTI_PROCESS));
 		oldV= ph.getF(PersistenceHelper.CURRENT_VERSION_OF_APP);
 		//appTxt.setText("Running application "+bundleName+" ["+oldV+"]");
 
@@ -96,7 +96,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 
 
 
-		loginConsole = new Logger(this.getActivity(),"INITIAL");
+		loginConsole = new Logger(mActivity,"INITIAL");
 		loginConsole.setOutputView(log);
 		debugConsole = Start.singleton.getLogger();
 
@@ -142,7 +142,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		myModules = new Configuration(Constants.getCurrentlyKnownModules(globalPh,ph,server(),bundleName,debugConsole));
 		String loaderId = "moduleLoader";
 		boolean allFrozen = ph.getB(PersistenceHelper.ALL_MODULES_FROZEN+loaderId);
-		myLoader = new ModuleLoader(loaderId,myModules,loginConsole,globalPh,allFrozen,debugConsole,this,this.getActivity());
+		myLoader = new ModuleLoader(loaderId,myModules,loginConsole,globalPh,allFrozen,debugConsole,this,mActivity);
 
 		if (Constants.FreeVersion && expired())
 			showErrorMsg("The license has expired. The App still works, but you will not be able to export any data.");;
@@ -181,7 +181,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 
 				Intent intent = new Intent();
 				intent.setAction("INITSTARTS");
-				this.getActivity().sendBroadcast(intent);
+				mActivity.sendBroadcast(intent);
 				loginConsole.addRow("Loading In Memory Modules");
 				loginConsole.addRow("Version control: "+globalPh.get(PersistenceHelper.VERSION_CONTROL));
 				Log.d("vortex","Loading In Memory Modules");
@@ -299,7 +299,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 
 
 	private void showErrorMsg(String error) {
-		new AlertDialog.Builder(this.getActivity())
+		new AlertDialog.Builder(mActivity)
 		.setTitle("Error message")
 		.setMessage(error) 
 		.setIcon(android.R.drawable.ic_dialog_alert)
@@ -323,15 +323,20 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 	}
 
 
-
+	@Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        mActivity = activity;
+    }
 
 
 	@Override
 	public void loadSuccess(String loaderId, final boolean majorVersionChange) {
 		Log.d("vortex","Arrives to loadsucc with ID: "+loaderId);
 		ph.put(PersistenceHelper.ALL_MODULES_FROZEN+loaderId,true);
-		if (this.getActivity()==null) {
-			Log.e("vortex","No activity!");
+		if (mActivity==null) {
+			Log.e("vortex","No activity App cannot continue load. Must Restart...");
+			
 		}
 		//If load successful, create database and import data into it. 
 		if (loaderId.equals("moduleLoader")) {
@@ -343,9 +348,8 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 			ConfigurationModule m = myModules.getModule(VariablesConfiguration.NAME);
 
 			if (m!=null) {
-				Log.d("vortex","name "+m.getFileName());
 				Table t = (Table)m.getEssence();
-				myDb = new DbHelper(this.getActivity().getApplicationContext(),t, globalPh,ph,bundleName);
+				myDb = new DbHelper(mActivity.getApplicationContext(),t, globalPh,ph,bundleName);
 				//Load configuration files asynchronously.
 				Constants.getDBImportModules(globalPh, ph, server(), bundleName, debugConsole, myDb,t, new AsyncLoadDoneCb() {
 					public void onLoadSuccesful(List<ConfigurationModule> modules) {
@@ -353,7 +357,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 						if (modules!=null) {
 							String loaderId = "dbLoader";
 							boolean allFrozen = ph.getB(PersistenceHelper.ALL_MODULES_FROZEN+loaderId);
-							myDBLoader = new ModuleLoader(loaderId,dbModules,loginConsole,globalPh,allFrozen,debugConsole,LoginConsoleFragment.this,LoginConsoleFragment.this.getActivity());
+							myDBLoader = new ModuleLoader(loaderId,dbModules,loginConsole,globalPh,allFrozen,debugConsole,LoginConsoleFragment.this,mActivity);
 							loginConsole.addRow("Defaults & GIS modules");			
 							myDBLoader.loadModules(majorVersionChange);
 						} else 
@@ -375,9 +379,9 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 			List<Workflow> workflows = (List<Workflow>)(myModules.getModule(bundleName).getEssence());
 			Table t = (Table)(myModules.getModule(VariablesConfiguration.NAME).getEssence());
 			SpinnerDefinition sd = (SpinnerDefinition)(myModules.getModule(SpinnerConfiguration.NAME).getEssence());
-			if (this.getActivity()!=null) {
+			if (mActivity!=null) {
 				GlobalState gs = 
-						GlobalState.createInstance(this.getActivity().getApplicationContext(),globalPh,ph,debugConsole,myDb, workflows, t,sd);
+						GlobalState.createInstance(mActivity.getApplicationContext(),globalPh,ph,debugConsole,myDb, workflows, t,sd);
 				Start.alive=true;
 				//Update app version if new
 				//if (majorVersionChange) {

@@ -31,7 +31,7 @@ public class DrawerMenuSelectable implements DrawerMenuItem {
 	        if (convertView == null) {
 	            view = (View) inflater.inflate(R.layout.drawer_menu_selectable, null);
 				TextView tv = (TextView)view.findViewById(R.id.list_content1);
-				Log.d("vortex","Menuheader bg text colors: "+bgColor+" "+textColor);
+				//Log.d("vortex","Menuheader bg text colors: "+bgColor+" "+textColor);
 				if (bgColor!=null)
 					tv.setBackgroundColor(Color.parseColor(bgColor));
 				if (textColor!=null)

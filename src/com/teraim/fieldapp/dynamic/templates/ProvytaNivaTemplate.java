@@ -68,7 +68,7 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 	private ButtonBlock fixPunkter;
 	private ButtonBlock taBild;
 	private ButtonBlock[] delyteKnappar = new ButtonBlock[DelyteManager.MAX_DELYTEID];
-	private ButtonBlock[] smayteKnappar;
+	private ButtonBlock smayteKnapp;
 	private StatusHandler statusHandler;
 	private Button tagSidaB;
 	private boolean isAbo;
@@ -103,7 +103,7 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 
 		isAbo = Constants.isAbo(dym.getPyID());
 
-		smayteKnappar = new ButtonBlock[isAbo?9:3];
+		
 
 		LinearLayout delytorRemainingView = (LinearLayout)inflater.inflate(R.layout.display_value_textview, null);		
 		LinearLayout smaRemainingView = (LinearLayout)inflater.inflate(R.layout.display_value_textview, null);		
@@ -190,7 +190,15 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 					gs.sendEvent(MenuActivity.REDRAW);
 				} },buttonContext,-1);
 		}
-
+		 final String WF_ABO_SMA = "wf_småprovytor_Äbo";
+		 final String WF_NILS_SMA = "wf_småprovytor_Nils";
+		Map<String,String> buttonHash = al.createProvytaKeyMap();
+		//CHash buttonContext = new CHash(null,buttonHash);
+		Log.d("vortex","context for status_smaprovytor: "+buttonHash.toString());
+		smayteKnapp = new ButtonBlock("_smaprov","Småprovytor","Start_Workflow", "Småprovytor","Field_List_panel_1",(isAbo?WF_ABO_SMA:WF_NILS_SMA),"action", (isAbo?"status_abo":"status_smaprovytor"),true,null,null,true,"["+buttonHash.toString()+"]",false);
+		
+		//new ButtonBlock("_tabild","Foto","Start_Workflow", "fotobutton","Field_List_panel_1",NamedVariables.WF_FOTO,"action", "status_foto",true,null,null,true,xContext,false);
+		/*
 		for (int i=0; i<(isAbo?9:3);i++) {
 			int j=i+1;
 			final String I = j+"";
@@ -222,6 +230,7 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 					varCache.getVariable(NamedVariables.CURRENT_SMAPROVYTA).setValue(I);
 				} },buttonContext,-1);
 		}
+		*/
 
 
 		//Varna om provytecentrum flyttat eller saknas.
@@ -321,14 +330,16 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 			delyteKnappar[id].create(myContext);	
 			dys.add(id);			
 		}
-
+		smayteKnapp.create(myContext);
+		/*
 		for (int i=0;i<(isAbo?9:3);i++) {
 			map = al.createProvytaKeyMap();
 			map.put("smaprovyta", i+"");
 			gs.setKeyHash(new CHash(null,map));
 			smayteKnappar[i].create(myContext);
 		}
-
+		 */
+		
 		gs.setKeyHash(new CHash(null,al.createProvytaKeyMap()));		
 		
 		myContext.drawRecursively(myC);

@@ -112,7 +112,7 @@ public  class ButtonBlock extends Block {
 	}
 
 	public ButtonBlock(String id,String lbl,String action, String name,String container,String target, String type, String statusVariable,boolean isVisible,String exportContextS, String exportFormat,boolean enabled, String buttonContextS, boolean requestSync) {
-		Log.d("NILS","BUTTONBLOCK type Action. Action is set to "+action);
+		Log.d("NILS","In NEW for Button "+name+" with context: "+buttonContextS);
 		this.blockId=id;
 		this.textE = Expressor.preCompileExpression(lbl);
 		this.onClick=action;

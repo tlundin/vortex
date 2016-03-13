@@ -3,6 +3,7 @@ package com.teraim.fieldapp.dynamic.types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -11,9 +12,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import android.util.Log;
 
 import com.teraim.fieldapp.GlobalState;
-import com.teraim.fieldapp.dynamic.VariableConfiguration;
 import com.teraim.fieldapp.dynamic.types.Variable.DataType;
 import com.teraim.fieldapp.log.LoggerI;
+import com.teraim.fieldapp.utils.Tools;
 
 
 
@@ -75,7 +76,7 @@ public class VarCache {
 
 		boolean newA = false;
 		if (ret==null) {
-			Log.d("nils","Creating new CacheList entry for "+varId);			
+			//Log.d("nils","Creating new CacheList entry for "+varId);			
 			ret = new ArrayList<Variable>();
 			cache.put(varId.toLowerCase(), ret);
 			newA=true;
@@ -121,7 +122,7 @@ public class VarCache {
 		//Not there? Create new. Add to cache. 
 		//Here we know that the variable is not in the cache. So here we should insert historical or default value.
 		if (v == null) {
-			Log.d("nils","Variable not found. Inserting"+varId+" with chain "+(instKey==null?"null":instKey.toString()));							
+			//Log.d("nils","Variable not found. Inserting"+varId+" with chain "+(instKey==null?"null":instKey.toString()));							
 			String header = gs.getVariableConfiguration().getVarLabel(row);
 			DataType type = gs.getVariableConfiguration().getnumType(row);
 			if (type == DataType.array)
@@ -220,19 +221,22 @@ public class VarCache {
 
 	}
 
-	//Invalidate all variables matching the keyChain.
+	//Invalidate all variables in any group containing at least one instance matching the keyChain.
+	
 	public void invalidateOnKey(Map<String, String> keyChain) {
-		Set<String> vars = cache.keySet();
+		Set<String> varNames = cache.keySet();
 		Log.d("nils","erasing all variables matching "+keyChain.toString());
 		List<Variable>vl;
-		for (String var:vars) {
+		for (String varName:varNames) {
 			//Take first in each list.
-			vl=cache.get(var.toLowerCase());
+			
+			vl=cache.get(varName.toLowerCase());
 			if (vl.size()==0) {
-				Log.e("nils","Size zero varlist for variable ID: "+var);
+				Log.e("nils","Size zero varlist for variable ID: "+varName);
 			} else {
 				if (eq(vl.get(0).getKeyChain(),keyChain)) {
 					//Log.d("nils","Found match for variable "+vl.get(0).getId());
+					//invalidating the variable for all keychains
 					for (Variable v:vl)
 						v.invalidate();
 				}
@@ -245,13 +249,49 @@ public class VarCache {
 		cache.clear();
 	}
 
-	public  Collection<List<Variable>> getVariables() {
+	public  Collection<List<Variable>> getAllVariablesCurrentlyInCache() {
 		return cache.values();
 	}
 
-	
-	
+	//Find all variables in cache with a given keyhash that belongs to the given group.
+	public List<Variable> findVariablesBelongingToGroup(Map<String, String> keyChain, String groupName) {
+		Log.d("vortex","In FindVariablesBelongingToGroup");
+		//Identify matching variables.
+		Set<String> varNames = cache.keySet();
+		Log.d("vortex","find variables with key "+keyChain.toString()+" and size of cache "+cache.size());
+		boolean found = false;
+		groupName = groupName.toLowerCase();
+		Set<String>myKeys = new HashSet<String>();
+		for (String varName:varNames) {
+			Log.d("vortex","Looking at varName: "+varName);
+			//Take first in each list.
+			if (varName.startsWith(groupName)) {
+				Log.d("vortex","found one: "+varName);
+				myKeys.add(varName);
+			} 
 
+		}
+		if (myKeys.isEmpty()) {
+			Log.d("vortex","found no variable of group "+groupName);
+			return null;
+		}
+		List<Variable>resultSet = new ArrayList<Variable>();
+		//Find all variables with key above.
+		Log.d("vortex","myKeys has "+myKeys.size()+" members");
+		for (String key:myKeys) {
+			List<Variable> vList = cache.get(key);
+			//Go thro list to find var.
+			for (Variable v:vList) { 
+				if (Tools.sameKeys(v.getKeyChain(),keyChain)) {
+					Log.d("vortex","Found match: "+v.getId());
+					resultSet.add(v);
+					break;
+				}
+			}			
+		}
+		return resultSet;
+	}
+	
 
 	public Variable getVariableUsingKey(Map<String, String> keyChain, String varId) {
 		return getVariable(keyChain, varId, null,null);

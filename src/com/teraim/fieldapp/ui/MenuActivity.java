@@ -26,16 +26,21 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.teraim.fieldapp.GlobalState;
 import com.teraim.fieldapp.R;
 import com.teraim.fieldapp.Start;
+import com.teraim.fieldapp.dynamic.Executor;
 import com.teraim.fieldapp.log.LoggerI;
 import com.teraim.fieldapp.non_generics.Constants;
 import com.teraim.fieldapp.synchronization.DataSyncSessionManager;
@@ -94,7 +99,7 @@ public class MenuActivity extends Activity   {
 					initfailed=true;
 				}
 				else if (intent.getAction().equals(SYNC_REQUIRED))
-					startSyncIfNotRunning();
+					toggleSyncOnOff();
 
 				me.refreshStatusRow();
 			}
@@ -185,8 +190,10 @@ public class MenuActivity extends Activity   {
 	final Messenger mMessenger = new Messenger(new IncomingHandler());
 	AlertDialog uiLock=null;
 	Message reply=null;
-
+	private boolean inSync;
 	class IncomingHandler extends Handler {
+
+
 		@Override
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
@@ -197,33 +204,50 @@ public class MenuActivity extends Activity   {
 				syncError=false;
 				break;
 
-			case SyncService.MSG_SYNC_ERROR_STATE:				
+			case SyncService.MSG_SYNC_ERROR_STATE:
+				String toastMsg = "";
 				Log.d("vortex","MSG -->SYNC ERROR STATE");
 				switch(msg.arg1) {
-				case SyncService.ERR_NOT_INTERNET_SYNC:
+				case SyncService.ERR_NOT_INTERNET_SYNC:				
 					Log.d("vortex","ERR NOT INTERNET SYNC...");
-					//Send a config changed msg...reload!
+					//Send a config changed msg...reload!				
+					Log.d("vortex","Turning sync off.");
+					ContentResolver.setSyncAutomatically(mAccount, Start.AUTHORITY, false);					
 					break;
 				case SyncService.ERR_SETTINGS:
-					Log.d("vortex","ERR WRONG SETTINGS...");
+					Log.d("vortex","ERR WRONG SETTINGS...");				
+					if (uiLock == null) {
+						uiLock = new AlertDialog.Builder(MenuActivity.this)
+						.setTitle("Synchronize")
+						.setMessage("Please enter a team and a user name under Settings.") 
+						.setIcon(android.R.drawable.ic_dialog_alert)
+						.setCancelable(false)
+						.setNegativeButton(R.string.close, new DialogInterface.OnClickListener() {
 
-					uiLock = new AlertDialog.Builder(MenuActivity.this)
-					.setTitle("Synchronize")
-					.setMessage("Please enter a team and a user name under Settings.") 
-					.setIcon(android.R.drawable.ic_dialog_alert)
-					.setCancelable(false)
-					.setNegativeButton(R.string.close, new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+								uiLock=null;			
+							}
+						})
+						.show();
+					}
 
-						@Override
-						public void onClick(DialogInterface dialog, int which) {
-							uiLock=null;			
-						}
-					})
-					.show();
+					break;
+
+				case SyncService.ERR_SERVER_NOT_REACHABLE:
+					Log.d("vortex","Synkserver is currently not reachable.");
+					toastMsg = "Me --> Sync Server. No route";
+					break;
+				case SyncService.ERR_SERVER_CONN_TIMEOUT:
+					toastMsg = "Me-->Sync Server. Connection timeout";
 					break;
 				default:
 					Log.d("vortex","Any other error!");
+					toastMsg = "Me-->Sync Server. Connection failure.";
 					break;
+				}
+				if (toastMsg !=null && toastMsg.length()>0) {
+					Toast.makeText(getApplicationContext(), toastMsg, Toast.LENGTH_SHORT).show();
 				}
 				syncActive=false;
 				syncError=true;				
@@ -233,7 +257,8 @@ public class MenuActivity extends Activity   {
 
 			case SyncService.MSG_SYNC_REQUEST_DB_LOCK:
 				Log.d("vortex","MSG -->SYNC REQUEST DB LOCK");
-
+				inSync = false;
+				/*
 				uiLock = new AlertDialog.Builder(MenuActivity.this)
 				.setTitle("Synchronizing")
 				.setMessage("Inserting data from team..please wait") 
@@ -247,6 +272,7 @@ public class MenuActivity extends Activity   {
 					}
 				})
 				.show();
+				 */
 				reply = Message.obtain(null, SyncService.MSG_DATABASE_LOCK_GRANTED);
 				try {
 					mService.send(reply);
@@ -257,21 +283,51 @@ public class MenuActivity extends Activity   {
 				}
 				break;
 
+			case SyncService.MSG_DEVICES_IN_SYNC:
+				Log.d("vortex","Oh glorious days!");
+				inSync = true;
+				syncActive=false;
+				syncError = false;
+				break;
 
 			case SyncService.MSG_SYNC_RELEASE_DB:
 				Log.d("vortex","MSG -->SYNC RELEASE DB LOCK");
 				if (uiLock != null)
 					uiLock.cancel();
 				uiLock=null;
-				reply = Message.obtain(null, SyncService.MSG_DATA_SAFELY_STORED);
-				try {
-					mService.send(reply);
-				} catch (RemoteException e) {
-					e.printStackTrace();
-					syncError=true;		
-				}
+				//Check if something needs to be saved. If so, do it on its own thread.
+				Thread thread = new Thread() {
+					@Override
+					public void run() {
+						if (GlobalState.getInstance().getDb().scanSyncEntries()) {
+							Log.d("vortex","Changes made by sync. Requesting page redraw.");
+							gs.sendEvent(Executor.REDRAW_PAGE);
+						}
+						reply = Message.obtain(null, SyncService.MSG_DATA_SAFELY_STORED);
+						syncError=false;
+						syncActive=false;
+						try {
+							mService.send(reply);
+							runOnUiThread(new Runnable() {
+								@Override
+								public void run() {
 
-				syncActive=false;
+									refreshStatusRow();
+
+								}
+							});
+
+						} catch (RemoteException e) {
+							e.printStackTrace();
+							syncError=true;syncActive=false;
+						}
+					}
+
+				};
+
+				thread.start();
+				syncActive=true;
+				syncError=false;
 				break;
 			}
 			Log.d("Vortex","Refreshing status row. status is se: "+syncError+" sA: "+syncActive);
@@ -279,6 +335,8 @@ public class MenuActivity extends Activity   {
 		}
 
 	}
+
+
 
 	/*
 	Log.d("vortex","got sync data");
@@ -378,7 +436,7 @@ public class MenuActivity extends Activity   {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
-		return MenuChoice(item);
+		return menuChoice(item);
 	}
 
 	private final static int NO_OF_MENU_ITEMS = 4;
@@ -428,40 +486,63 @@ public class MenuActivity extends Activity   {
 		}
 	}
 
+	boolean animationRunning = false;
 
-	private void setSyncState(MenuItem menuItem) {
+	private void setSyncState(final MenuItem menuItem) {
 		Log.d("vortex","Entering setsyncstate");
 		menuItem.setTitle(gs.getDb().getNumberOfUnsyncedEntries()+"");
-		boolean internSync = globalPh.get(PersistenceHelper.SYNC_METHOD).equals("Internet");
+		boolean internetSync = globalPh.get(PersistenceHelper.SYNC_METHOD).equals("Internet");
 		Integer ret = R.drawable.syncoff;
 		if (globalPh.get(PersistenceHelper.SYNC_METHOD).equals("Bluetooth"))
 			ret = R.drawable.bt;
 		else if (globalPh.get(PersistenceHelper.SYNC_METHOD).equals("NONE"))
 			ret = null;
-	
-		else if (internSync) {
-			if (!ContentResolver.getSyncAutomatically(mAccount,Start.AUTHORITY))
-				ret = R.drawable.syncoff;
-			else
-				ret = R.drawable.syncon;
+
+		else if (internetSync) {
 			if (syncError) {
-				menuItem.setTitle("!ERROR!");
+				//menuItem.setTitle("!ERROR!");
 				ret = R.drawable.syncerr;
 			} 
+			else if (!ContentResolver.getSyncAutomatically(mAccount,Start.AUTHORITY))
+				ret = R.drawable.syncoff;
+			else if (inSync) {
+				ret = R.drawable.insync;
+			}
+			else if (syncActive) {
+				if (!animationRunning) {
+					Animation rotation = AnimationUtils.loadAnimation(this, R.anim.rotate);
+					rotation.setRepeatCount(Animation.INFINITE);
+					animView.startAnimation(rotation);
+					menuItem.setActionView(animView);
+					animView.setOnClickListener(new OnClickListener() {
+
+						@Override
+						public void onClick(View v) {
+							animView.clearAnimation();
+							menuItem.setActionView(null); 
+							menuItem.setOnMenuItemClickListener(null);
+							animView.setOnClickListener(null);
+							animationRunning = false;
+						}
+					});
+				}
+				return;
+			} else 
+				ret = R.drawable.syncon;
 
 		}
-		//if (!syncError && syncActive && internSync)
-		//	menuItem.setActionView(animView);
-		//else 
-			menuItem.setIcon(ret);
-		
+		animationRunning = false;
+		animView.clearAnimation();
+		menuItem.setActionView(null); 
+		menuItem.setOnMenuItemClickListener(null);
+		animView.setOnClickListener(null);
+		menuItem.setIcon(ret);
 		menuItem.setVisible(true);
 		Log.d("vortex","Exiting setsyncstate");
 	}
 
 
-
-	private boolean MenuChoice(MenuItem item) {
+	private boolean menuChoice(MenuItem item) {
 
 		int selection = item.getItemId();
 		//case must be constant..
@@ -470,7 +551,7 @@ public class MenuActivity extends Activity   {
 
 		switch (selection) {
 		case 0:
-			startSyncIfNotRunning();
+			toggleSyncOnOff();
 			break;
 		case 1:
 			Map<String, String> hash = gs.getCurrentKeyMap();
@@ -553,7 +634,7 @@ public class MenuActivity extends Activity   {
 	}
 
 
-	private void startSyncIfNotRunning() {
+	private void toggleSyncOnOff() {
 		String syncMethod = globalPh.get(PersistenceHelper.SYNC_METHOD);
 		if (syncMethod.equals("Bluetooth")) {
 			DataSyncSessionManager.start(MenuActivity.this, new UIProvider(this) {
@@ -579,14 +660,17 @@ public class MenuActivity extends Activity   {
 						.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
 							@Override
 							public void onClick(DialogInterface dialog, int which) {
+								syncError=false;
+								syncActive=false;
 							}
 						})
 						.show();
 					}
 
-
+					/*
 					if (!globalPh.getB(PersistenceHelper.SYNC_ON_FIRST_TIME_KEY)) {
 						globalPh.put(PersistenceHelper.SYNC_ON_FIRST_TIME_KEY,true);
+
 						new AlertDialog.Builder(this)
 						.setTitle("Sync starting up")
 						.setMessage("The sync symbol turns green only when data succesfully reaches the server. Your sync interval is set to: "+Start.SYNC_INTERVAL+" seconds. If the symbol is not green after this time, you likely have network issues.") 
@@ -599,12 +683,16 @@ public class MenuActivity extends Activity   {
 						})
 						.show();
 					}
+					 */
 					ContentResolver.setSyncAutomatically(mAccount, Start.AUTHORITY, true);		
 				} else {
 					Log.d("vortex", "Trying to stop Internet sync");
 					ContentResolver.setSyncAutomatically(mAccount, Start.AUTHORITY, false);
 				}
-				this.refreshStatusRow();
+
+				refreshStatusRow();
+
+
 			}
 		}
 	}

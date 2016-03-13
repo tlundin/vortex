@@ -598,7 +598,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 					}
 					else {
 						o.addRow("");
-						o.addRedText("Parsing of formula failed - no variables: ["+formula+"]");
+						o.addRedText("Cannot read formula: ["+formula+"] because of previous fail during the pre-Parse step. Please reimport the workflow configuration and check your log for the root cause.");
 						Log.d("nils","Parsing of formula failed - no variables: ["+formula+"]");
 					}
 				}

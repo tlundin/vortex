@@ -243,7 +243,8 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 		
 		//save timestamp for refresh.
 		thisCheck = System.currentTimeMillis()+"";
-		
+		if (lastCheckTimeStamp == null)
+			lastCheckTimeStamp = thisCheck;
 		
 		if (this.getStatusVariable()!=null) {
 			statusVarS = GlobalState.getInstance().getDb().createSelection(currYearH, this.getStatusVariable().trim());

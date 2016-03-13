@@ -41,7 +41,7 @@ import com.teraim.fieldapp.utils.PersistenceHelper;
 
 public class Constants {
 
-	public final static float VORTEX_VERSION = 3.22f;
+	public final static float VORTEX_VERSION = 3.3f;
 
 	//String constants
 	//The root folder for the SD card is in the global Environment.
@@ -50,7 +50,9 @@ public class Constants {
 
 	//Root for NILS
 
-	public final static String HISTORICAL_TOKEN = "*HISTORICAL*";
+	public final static String HISTORICAL_TOKEN_IN_XML = "*HISTORICAL*";
+	
+	public static final String HISTORICAL_TOKEN_IN_DATABASE = "H";
 	public final static String VORTEX_ROOT_DIR = path+"/vortex/";
 	public static final String EXPORT_FILES_DIR = VORTEX_ROOT_DIR + "export/";
 	public static final String PIC_ROOT_DIR = VORTEX_ROOT_DIR + "pics/";
@@ -223,7 +225,7 @@ public class Constants {
 	//Backup if data older than 24h
 	public static final long BACKUP_FREQUENCY = 86400000;
 
-	//public static final String SynkServerURI = "http://86.159.186.236:8080/com.teraim.synkserv/SynkServ";
+	//public static final String SynkServerURI = "http://109.157.177.172:8080/com.teraim.synkserv/SynkServ";
 	
 	public static final String SynkServerURI = "http://130.211.51.77:8080/synkserv/SynkServ";
 	

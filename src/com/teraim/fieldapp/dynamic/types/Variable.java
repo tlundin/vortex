@@ -127,7 +127,7 @@ public class Variable implements Serializable {
 //			Log.d("nils","done:     "+System.currentTimeMillis()+" var: "+this.getId());
 			//refreshRuleState();
 		}
-		Log.d("nils","Getvalue returns "+myValue+" for "+this.getId());
+		//Log.d("nils","Getvalue returns "+myValue+" for "+this.getId());
 		if (myType == DataType.bool && myValue !=null ) 
 			return boolValue(myValue);
 		return myValue;
@@ -142,7 +142,7 @@ public class Variable implements Serializable {
 		}
 		if (histKeyChain == null) {
 			histKeyChain = new HashMap<String,String>(keyChain);
-			histKeyChain.put(VariableConfiguration.KEY_YEAR, VariableConfiguration.HISTORICAL_MARKER);
+			histKeyChain.put(VariableConfiguration.KEY_YEAR, Constants.HISTORICAL_TOKEN_IN_DATABASE);
 			Log.d("nils","My historical keychain: "+histKeyChain.toString()+" my name: "+name);
 			histSelection = myDb.createSelection(histKeyChain,name);
 		}
@@ -154,7 +154,8 @@ public class Variable implements Serializable {
 		}
 		if (myHistory !=null && myType == DataType.bool) 
 			return boolValue(myHistory);
-		
+		if (myHistory !=null)
+			Log.d("vortex","getHistoricalValue returns "+myHistory+" for "+this.getId());
 		return myHistory;
 	}
 
@@ -295,7 +296,7 @@ public class Variable implements Serializable {
 
 
 	public Variable(String name,String label,List<String> row,Map<String,String>keyChain, GlobalState gs,String valueColumn, String defaultOrExistingValue, Boolean valueIsPersisted) {
-		Log.d("nils","Creating variable ["+name+"] with keychain "+((keyChain==null)?"null":keyChain.toString())+"\nthis obj: "+this);
+		//Log.d("nils","Creating variable ["+name+"] with keychain "+((keyChain==null)?"null":keyChain.toString())+"\nthis obj: "+this);
 		this.gs=gs;
 		al=gs.getVariableConfiguration();
 		this.name = name;
@@ -358,7 +359,7 @@ public class Variable implements Serializable {
 	private void setDefault(String defaultValue) {
 		if (defaultValue == null)
 			myDefaultValue = null;
-		else if (defaultValue.equals(Constants.HISTORICAL_TOKEN))
+		else if (defaultValue.equals(Constants.HISTORICAL_TOKEN_IN_XML))
 			myDefaultValue = this.getHistoricalValue();
 		else {
 			myDefaultValue = defaultValue.equals(Constants.NO_DEFAULT_VALUE)?null:defaultValue;

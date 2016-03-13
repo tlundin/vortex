@@ -1,13 +1,13 @@
 package com.teraim.fieldapp.synchronization.framework;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
+import java.util.ArrayList;
 
 import android.content.ContentProvider;
+import android.content.ContentProviderOperation;
+import android.content.ContentProviderResult;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.OperationApplicationException;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -16,7 +16,6 @@ import android.net.Uri;
 import android.util.Log;
 
 import com.teraim.fieldapp.non_generics.Constants;
-import com.teraim.fieldapp.synchronization.SyncEntry;
 import com.teraim.fieldapp.utils.DbHelper;
 import com.teraim.fieldapp.utils.PersistenceHelper;
 
@@ -26,7 +25,7 @@ public class SyncContentProvider extends ContentProvider {
 
 	public static final String AUTHORITY = "com.teraim.fieldapp.provider";
 
-	private DatabaseHelper db;
+
 
 	private SharedPreferences ph;
 
@@ -114,18 +113,38 @@ public class SyncContentProvider extends ContentProvider {
 	}
 
 
+	@Override
+	public ContentProviderResult[] applyBatch(
+	        ArrayList<ContentProviderOperation> operations)
+	            throws OperationApplicationException {
+	        System.out.println("starting transaction");
+			 if (db== null)
+				 db= dbHelper.getReadableDatabase();
+
+	        db.beginTransaction();
+	        ContentProviderResult[] result;
+	        try {
+	            result = super.applyBatch(operations);
+	        } catch (OperationApplicationException e) {
+	            System.out.println("aborting transaction");
+	            db.endTransaction();
+	            throw e;
+	        }
+	        db.setTransactionSuccessful();
+	        db.endTransaction();
+	        System.out.println("ending transaction");
+	        return result;
+	    }
 
 
 
-
-
+	SQLiteDatabase db;
 	@Override
 	public Uri insert(Uri uri, ContentValues values) {
-		final SQLiteDatabase db = dbHelper.getReadableDatabase();
-		
+		//Log.d("vortex","In insert with values data = "+values.getAsByteArray("DATA"));
 		db.insert(DbHelper.TABLE_SYNC, null, values);
 		
-		return null;
+		return uri;
 	}
 
 

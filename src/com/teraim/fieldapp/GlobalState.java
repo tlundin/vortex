@@ -320,7 +320,7 @@ public class GlobalState  {
 
 	public void  setKeyHash(CHash context) { 	
 		myKeyHash=context;
-		Log.d("vortex","SetKeyHash was called with "+context+" on this "+this.toString());
+		//Log.d("vortex","SetKeyHash was called with "+context+" on this "+this.toString());
 	}
 
 

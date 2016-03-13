@@ -35,6 +35,7 @@ public class SyncService extends Service {
 	public static final int MSG_DATA_SAFELY_STORED = 5;
 	public static final int MSG_DATABASE_LOCK_GRANTED = 6;
 	public static final int MSG_SYNC_STARTED = 7;
+	public static final int MSG_DEVICES_IN_SYNC = 8;
 	
 	
 	
@@ -42,7 +43,10 @@ public class SyncService extends Service {
 	public static final int ERR_SYNC_BUSY = 2;
 	public static final int ERR_NOT_INTERNET_SYNC = 3;
 	public static final int ERR_SETTINGS = 4;
-	public static final int ERR_UNKNOWN = 5;
+	public static final int ERR_UNKNOWN = 0;
+	public static final int ERR_SERVER_NOT_REACHABLE = 6;
+	public static final int ERR_SERVER_CONN_TIMEOUT = 7;
+	public static final int REFRESH = 8;
 	
 
     class IncomingHandler extends Handler {
@@ -62,7 +66,10 @@ public class SyncService extends Service {
                 	Log.d("vortex","received MSG_SAFELY_STORED in SyncService");
                 	sSyncAdapter.updateCounters();
                 	break;
-
+                case MSG_SYNC_ERROR_STATE:
+                	Log.d("vortex","received MSG_ERROR in SyncService");
+                	sSyncAdapter.releaseLock();
+                	break;
                 default:
                     super.handleMessage(msg);
             }
@@ -107,6 +114,7 @@ public class SyncService extends Service {
          * in the base class code when the SyncAdapter
          * constructors call super()
          */
+    	sSyncAdapter.releaseLock();
     	if (intent.getAction().equals(Start.MESSAGE_ACTION)) {
     		Log.d("vortex","MASSAGE!");
     		return mMessenger.getBinder();
