@@ -25,6 +25,7 @@ import com.teraim.fieldapp.dynamic.blocks.BlockAddColumnsToTable;
 import com.teraim.fieldapp.dynamic.blocks.BlockAddVariableToTable;
 import com.teraim.fieldapp.dynamic.blocks.BlockCreateListEntriesFromFieldList;
 import com.teraim.fieldapp.dynamic.blocks.BlockCreateTableEntriesFromFieldList;
+import com.teraim.fieldapp.dynamic.blocks.BlockDeleteAllVariables;
 import com.teraim.fieldapp.dynamic.blocks.ButtonBlock;
 import com.teraim.fieldapp.dynamic.blocks.ConditionalContinuationBlock;
 import com.teraim.fieldapp.dynamic.blocks.ContainerDefineBlock;
@@ -38,6 +39,7 @@ import com.teraim.fieldapp.dynamic.blocks.JumpBlock;
 import com.teraim.fieldapp.dynamic.blocks.LayoutBlock;
 import com.teraim.fieldapp.dynamic.blocks.MenuEntryBlock;
 import com.teraim.fieldapp.dynamic.blocks.MenuHeaderBlock;
+import com.teraim.fieldapp.dynamic.blocks.NoOpBlock;
 import com.teraim.fieldapp.dynamic.blocks.PageDefineBlock;
 import com.teraim.fieldapp.dynamic.blocks.RoundChartBlock;
 import com.teraim.fieldapp.dynamic.blocks.SetValueBlock;
@@ -299,6 +301,10 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 					blocks.add(readBlockAddGisPointObjects(parser,GisObjectType.Linestring));
 				else if (name.equals("block_add_gis_filter"))
 					blocks.add(readBlockAddGisFilter(parser));
+				else if (name.equals("block_delete_all_variables"))
+					blocks.add(readBlockDeleteAllVariables(parser));
+				else if (name.equals("block_no_op"))
+					blocks.add(readBlockNoOp(parser));
 				else {			
 					skip(name,parser,o);
 				}
@@ -327,6 +333,66 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 		return blocks;
 	}
 	
+	private Block readBlockNoOp(XmlPullParser parser) throws IOException, XmlPullParserException {
+		o.addRow("Parsing block: block_no_operation...");
+		String id=null,label=null,target=null,pattern=null;
+		
+
+		parser.require(XmlPullParser.START_TAG, null,"block_no_op");
+		Log.d("vortex","In create_list_filter!!");
+		while (parser.next() != XmlPullParser.END_TAG) {
+			if (parser.getEventType() != XmlPullParser.START_TAG) {
+				continue;
+			}
+			String name= parser.getName();
+			if (name.equals("block_ID")) {
+				id = readText("block_ID",parser);
+			} 
+			else {
+
+				Log.e("vortex","Skipped "+name);
+				skip(name,parser);
+			}
+		}
+
+		checkForNull("block_ID",id);
+		return new NoOpBlock(id);
+
+	}
+
+	private Block readBlockDeleteAllVariables(XmlPullParser parser) throws IOException, XmlPullParserException {
+			o.addRow("Parsing block: block_delete_all_variables...");
+			String id=null,label=null,target=null,pattern=null;
+			
+
+			parser.require(XmlPullParser.START_TAG, null,"block_delete_all_variables");
+			Log.d("vortex","In create_list_filter!!");
+			while (parser.next() != XmlPullParser.END_TAG) {
+				if (parser.getEventType() != XmlPullParser.START_TAG) {
+					continue;
+				}
+				String name= parser.getName();
+				if (name.equals("block_ID")) {
+					id = readText("block_ID",parser);
+				} else if (name.equals("target")) {
+					target = readText("target",parser);
+				} else if (name.equals("pattern")) {
+					pattern = readText("pattern",parser);
+				} else if (name.equals("label")) {
+					label = readText("label",parser);
+				} 
+				else {
+
+					Log.e("vortex","Skipped "+name);
+					skip(name,parser);
+				}
+			}
+
+			checkForNull("block_ID",id,"target",target);
+			return new BlockDeleteAllVariables(id, label, target, pattern);
+
+		}
+
 	private Block readBlockCreateListFilter(XmlPullParser parser) throws IOException, XmlPullParserException {
 		o.addRow("Parsing block: block_create_list_filter...");
 		String id=null,target=null,type=null,selectionField=null,selectionPattern=null;

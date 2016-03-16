@@ -262,7 +262,7 @@ public class Expressor {
 					endResult.add(rez);
 				} else {
 					o.addRow("");
-					o.addRedText("Failed to Precompile "+result.toString());
+					o.addRedText("Subexpr evaluated to null while evaluating "+expression);
 					System.err.println("Tokenstream evaluated to null for: "+streamAnalyzer.getFaultyTokens());
 				}
 			}
@@ -279,6 +279,7 @@ public class Expressor {
 		}
 		o.addRow("");
 		o.addRedText("failed to precompile: "+expression);
+		o.addRow("");
 		o.addRedText("End Result: "+endResult);
 		Log.e("vortex","failed to precompile: "+expression);
 		Log.e("vortex","End Result: "+endResult);
@@ -1360,7 +1361,7 @@ public class Expressor {
 									o.addRow("hasSameValueAsHistorical returns false, since variable "+name+" has a value: "+value+" but no historical value.");
 									return false;
 								} else {
-									if (historicalValue!=value) {
+									if (!historicalValue.equals(value)) {
 										Log.d("vortex","hasSameValueAsHistorical returns false, since variable "+name+" has a value: "+value+" that is not the same as the historical value: "+historicalValue);
 										o.addRow("hasSameValueAsHistorical returns false, since variable "+name+" has a value: "+value+" that is not the same as the historical value: "+historicalValue);
 										
@@ -2024,8 +2025,7 @@ public class Expressor {
 
 
 	private static void printfail(Expr rez, Expr arg2, Expr op) throws ExprEvaluationException {
-		if (GlobalState.getInstance()!=null) {
-			o = GlobalState.getInstance().getLogger();
+		if (o!=null) {
 			o.addRow("");
 			o.addRedText("Missing or wrong parameters. This is likely caused by a misplaced paranthesis.");
 			o.addRedText("arg1: "+rez);

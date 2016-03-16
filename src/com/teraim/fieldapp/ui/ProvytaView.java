@@ -57,7 +57,7 @@ public class ProvytaView extends View {
 		pf.setStyle(Style.STROKE);
 		pf.setStrokeWidth(1);
 
-		pySelected.setColor(Color.RED);
+		pySelected.setColor(Color.BLACK);
 		pySelected.setStyle(Style.STROKE);
 		pySelected.setStrokeWidth(3);
 
@@ -82,7 +82,7 @@ public class ProvytaView extends View {
 		p50.setTypeface(Typeface.SANS_SERIF); 
 
 
-		p100.setColor(Color.RED);
+		p100.setColor(Color.BLACK);
 		p100.setStrokeWidth(3);
 		p100.setStyle(Style.STROKE);
 		p100.setTypeface(Typeface.SANS_SERIF); 
@@ -291,7 +291,7 @@ public class ProvytaView extends View {
 					if (start<0)
 						start +=360;
 					
-					p.setColor(d.isSelected()?Color.RED:isSelected?Color.LTGRAY:d.getColor());
+					p.setColor(d.isSelected()?Color.BLACK:isSelected?Color.LTGRAY:d.getColor());
 					c.drawArc(oval, start, end, false, p);
 //					c.drawArc(oval, start, end, false, pySelected);
 
@@ -303,7 +303,7 @@ public class ProvytaView extends View {
 				endX = cx+(s.end.x*oScaleF);
 				endY = cy+(s.end.y*oScaleF);				
 				Log.d("nils","Drawing Start: "+startX+","+startY+" End: "+endX+","+endY);
-				p.setColor(d.isSelected()?Color.RED:isSelected?Color.LTGRAY:d.getColor());
+				p.setColor(d.isSelected()?Color.BLACK:isSelected?Color.LTGRAY:d.getColor());
 //				c.drawLine(startX,startY,endX,endY, d.isSelected()?pySelected:p);	
 				c.drawLine(startX,startY,endX,endY, p);
 			}
@@ -314,7 +314,7 @@ public class ProvytaView extends View {
 			float nx = cx+(numPos.x*oScaleF);
 			float ny = cy+(numPos.y*oScaleF);
 			Log.d("nils","Drawing number at: "+nx+","+ny);
-			px.setColor(d.isSelected()?Color.RED:isSelected?Color.LTGRAY:d.getColor());
+			px.setColor(d.isSelected()?Color.BLACK:isSelected?Color.LTGRAY:d.getColor());
 			c.drawText(d.getId()+"["+Math.round(d.getArea()/100)+"]", nx, ny, px);
 		}	}
 

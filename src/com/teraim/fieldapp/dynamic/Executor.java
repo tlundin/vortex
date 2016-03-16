@@ -38,6 +38,7 @@ import com.teraim.fieldapp.dynamic.blocks.BlockAddColumnsToTable;
 import com.teraim.fieldapp.dynamic.blocks.BlockAddVariableToTable;
 import com.teraim.fieldapp.dynamic.blocks.BlockCreateListEntriesFromFieldList;
 import com.teraim.fieldapp.dynamic.blocks.BlockCreateTableEntriesFromFieldList;
+import com.teraim.fieldapp.dynamic.blocks.BlockDeleteAllVariables;
 import com.teraim.fieldapp.dynamic.blocks.ButtonBlock;
 import com.teraim.fieldapp.dynamic.blocks.ConditionalContinuationBlock;
 import com.teraim.fieldapp.dynamic.blocks.ContainerDefineBlock;
@@ -50,6 +51,7 @@ import com.teraim.fieldapp.dynamic.blocks.DisplayValueBlock;
 import com.teraim.fieldapp.dynamic.blocks.JumpBlock;
 import com.teraim.fieldapp.dynamic.blocks.MenuEntryBlock;
 import com.teraim.fieldapp.dynamic.blocks.MenuHeaderBlock;
+import com.teraim.fieldapp.dynamic.blocks.NoOpBlock;
 import com.teraim.fieldapp.dynamic.blocks.PageDefineBlock;
 import com.teraim.fieldapp.dynamic.blocks.RoundChartBlock;
 import com.teraim.fieldapp.dynamic.blocks.SetValueBlock;
@@ -71,7 +73,6 @@ import com.teraim.fieldapp.dynamic.workflow_realizations.WF_Event_OnFlowExecuted
 import com.teraim.fieldapp.dynamic.workflow_realizations.WF_Event_OnSave;
 import com.teraim.fieldapp.dynamic.workflow_realizations.WF_Static_List;
 import com.teraim.fieldapp.dynamic.workflow_realizations.WF_Table;
-import com.teraim.fieldapp.dynamic.workflow_realizations.gis.WF_Gis_Map;
 import com.teraim.fieldapp.gis.Tracker;
 import com.teraim.fieldapp.log.LoggerI;
 import com.teraim.fieldapp.non_generics.Constants;
@@ -425,6 +426,10 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 					bl.create(myContext);
 
 				}
+				else if (b instanceof NoOpBlock) {
+					o.addRow("");
+					o.addYellowText("Noopblock found and skipped! "+b.getBlockId());
+				}
 				else if (b instanceof JumpBlock) {
 					o.addRow("");
 					o.addYellowText("Jumpblock found "+b.getBlockId());
@@ -650,6 +655,10 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 				else if (b instanceof AddGisFilter) {
 					((AddGisFilter) b).create(myContext);
 				}
+				else if (b instanceof BlockDeleteAllVariables) {
+					((BlockDeleteAllVariables) b).create(myContext);
+				}
+				
 
 				else if (b instanceof CreateListFilter) {
 					((CreateListFilter) b).create(myContext);

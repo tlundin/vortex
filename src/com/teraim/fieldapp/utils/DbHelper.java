@@ -1551,9 +1551,9 @@ public class DbHelper extends SQLiteOpenHelper {
 		Log.d("nils","Affected rows in eraseSmaProvyDelytaAssoc: "+affRows);
 	}
 
-	public void deleteAllVariablesUsingKey(Map<String,String> keyHash) {
+	public int deleteAllVariablesUsingKey(Map<String,String> keyHash) {
 		if (keyHash == null)
-			return;
+			return -1;
 		String queryP="";
 		String[] valA = new String[keyHash.keySet().size()];
 		Iterator<String> it = keyHash.keySet().iterator();
@@ -1567,7 +1567,8 @@ public class DbHelper extends SQLiteOpenHelper {
 		}
 		int affRows = db.delete(DbHelper.TABLE_VARIABLES, 
 				queryP, valA);
-		Log.d("vortex","Deleted "+affRows+"entries in deleteAllVariablesUsingKey");
+		Log.e("vortex","Deleted "+affRows+" entries in deleteAllVariablesUsingKey. Key: "+keyHash.toString());
+		return affRows;
 	}
 
 
