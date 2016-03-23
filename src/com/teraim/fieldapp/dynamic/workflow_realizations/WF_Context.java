@@ -258,6 +258,10 @@ public class WF_Context {
 
 		eventBroker.registerEventListener(et, el);
 	}
+	
+	public void removeEventListener(EventListener eventListener) {
+		eventBroker.removeEventListener(eventListener);
+	}
 
 	public void onEvent(Event ev) {
 		eventBroker.onEvent(ev);
@@ -357,6 +361,7 @@ public class WF_Context {
 			return false;
 		return (contextVariables.contains(cVar));
 	}
+	
 	
 	
 

@@ -289,12 +289,12 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 		//Insert variables into database
 		Entry e = entries.get(counter);
 		{
-
+			boolean success;
 			for(ValuePair v:e.variables) {
 				if(varTable.getRowFromKey(v.mkey)==null)
 					missingVariables.add(v.mkey);
 				//Still insert even if variable is missing.
-				boolean success = myDb.fastHistoricalInsert(e.keys,
+				success = myDb.fastHistoricalInsert(e.keys,
 						v.mkey,v.mval);
 				if (!success) {
 					o.addRow("");

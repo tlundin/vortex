@@ -104,8 +104,8 @@ public class ProvytaTemplate extends Executor implements EventListener,OnGesture
 			switch (item.getItemId()) {			        
 			case R.id.menu_delete:
 				keyChain = Tools.createKeyMap("ruta",gs.getVariableConfiguration().getCurrentRuta(),"provyta",provytaThatWasSelected);
-				gs.getVariableCache().invalidateOnKey(keyChain);
-				gs.getDb().eraseProvyta(al.getCurrentRuta(), provytaThatWasSelected, true);
+				gs.getVariableCache().invalidateOnKey(keyChain,false);
+				gs.getDb().eraseProvyta(al.getCurrentRuta(), provytaThatWasSelected);
 				//Ask the user to synchronize at this point.
 				gs.sendEvent(MenuActivity.SYNC_REQUIRED);
 				mode.finish(); // Action picked, so close the CAB

@@ -73,4 +73,8 @@ public class EventBroker {
 		eventListeners.clear();
 	}
 
+	public void removeEventListener(EventListener eventListener) {
+		eventListeners.remove(eventListener);
+	}
+
 }

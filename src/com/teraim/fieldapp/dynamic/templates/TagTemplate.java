@@ -100,11 +100,9 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 
 		areaL = (LinearLayout)v.findViewById(R.id.areaL);
 
-		Marker man = new Marker(BitmapFactory.decodeResource(getResources(),R.drawable.icon_man));
-
 		dym = DelyteManager.getInstance();
 
-		pyv = new ProvytaView(this.getActivity(), null, man, Constants.isAbo(dym.getPyID()));		
+		pyv = new ProvytaView(this.getActivity(), null, Constants.isAbo(dym.getPyID()));		
 
 		py.addView(pyv);
 
@@ -192,7 +190,7 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 				.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) { 
 						drawEmptyTable();
-						gs.getDb().eraseDelytor(gs,rutaId,provytaId,true);	
+						gs.getDb().eraseDelytor(rutaId,provytaId);	
 
 
 						//Mark as nyutlägg.

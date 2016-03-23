@@ -54,10 +54,10 @@ public class VarCache {
 		}
 		//check that it doesnt exist already.
 		if (find(ret,v.getKeyChain())==null)
-				ret.add(v);
+			ret.add(v);
 		return;
-				
-		
+
+
 	}
 
 	public Variable getVariable(String varId) {
@@ -105,7 +105,7 @@ public class VarCache {
 		try {
 			instKey = buildDbKey(gs.getVariableConfiguration().getKeyChain(row),context);
 		} catch (KeyException e) {
-			
+
 			Log.e("nils","Current context is not complete! ");
 			o.addRow("");
 			o.addRedText("Context incomplete for " +varId+" (context and keychain do not match or there is a null value)");
@@ -139,7 +139,7 @@ public class VarCache {
 
 	private Variable find(List<Variable> vars,Map <String,String> chainToFind) {
 		for (Variable v:vars) {
-			if (eq(chainToFind,v.getKeyChain())) {
+			if (Eq(chainToFind,v.getKeyChain())) {
 				//Log.d("nils","found cached entry for VAR: "+v.getId()+" Value: "+v.getValue()+" isInvalidated: "+v.isInvalidated());
 				return v;
 			}
@@ -148,7 +148,7 @@ public class VarCache {
 	}
 
 	//Check if two maps are equal
-	private boolean eq(Map<String,String> chainToFind, Map<String,String> varChain) {
+	private static boolean Eq(Map<String,String> chainToFind, Map<String,String> varChain) {
 		//		Log.d("nils","in Varcache EQ");
 		if (chainToFind==null && varChain==null)
 			return true;
@@ -159,6 +159,31 @@ public class VarCache {
 		//		Log.d("nils","ChainToFind: "+chainToFind.toString());
 		//		Log.d("nils","VarChain: "+varChain.toString());
 		for (String key:varChain.keySet()) {
+			if (chainToFind.get(key)==null) {
+				//				Log.d("nils","eq returns false. Key "+key+" is not in Chaintofind: "+chainToFind.toString());
+				return false;
+			}
+			if (!chainToFind.get(key).equals(varChain.get(key))) {
+				//				Log.d("nils","eq returns false. Key "+key+" has different value than varchain with same key: "+chainToFind.get(key)+","+varChain.get(key));
+				return false;
+			}
+
+		}
+		return true;
+	}
+
+	//Check if two maps are equal
+	private static boolean SubsetOf(Map<String,String> chainToFind, Map<String,String> varChain) {
+		//		Log.d("nils","in Varcache EQ");
+		if (chainToFind==null && varChain==null)
+			return true;
+		if (chainToFind==null||varChain==null||varChain.size()<chainToFind.size()) {
+			//			Log.d("nils","eq returns false. Trying to match: "+(chainToFind==null?"null":chainToFind.toString())+" with: "+(varChain==null?"null":varChain.toString()));
+			return false;
+		}
+		//		Log.d("nils","ChainToFind: "+chainToFind.toString());
+		//		Log.d("nils","VarChain: "+varChain.toString());
+		for (String key:chainToFind.keySet()) {
 			if (chainToFind.get(key)==null) {
 				//				Log.d("nils","eq returns false. Key "+key+" is not in Chaintofind: "+chainToFind.toString());
 				return false;
@@ -222,19 +247,22 @@ public class VarCache {
 	}
 
 	//Invalidate all variables in any group containing at least one instance matching the keyChain.
-	
-	public void invalidateOnKey(Map<String, String> keyChain) {
+
+	public void invalidateOnKey(Map<String, String> keyChain, boolean exactMatch) {
 		Set<String> varNames = cache.keySet();
-		Log.d("nils","erasing all variables matching "+keyChain.toString());
+		Log.d("nils","invalidating all variables in Cache matching "+keyChain.toString());
 		List<Variable>vl;
 		for (String varName:varNames) {
 			//Take first in each list.
-			
+
 			vl=cache.get(varName.toLowerCase());
 			if (vl.size()==0) {
 				Log.e("nils","Size zero varlist for variable ID: "+varName);
 			} else {
-				if (eq(vl.get(0).getKeyChain(),keyChain)) {
+				if ( (exactMatch && Eq(vl.get(0).getKeyChain(),keyChain)) ||
+						(!exactMatch &&  SubsetOf(vl.get(0).getKeyChain(),keyChain)) 
+						)
+				{
 					//Log.d("nils","Found match for variable "+vl.get(0).getId());
 					//invalidating the variable for all keychains
 					for (Variable v:vl)
@@ -244,6 +272,9 @@ public class VarCache {
 
 		}
 	}
+
+
+
 
 	public void invalidateAll() {
 		cache.clear();
@@ -291,7 +322,7 @@ public class VarCache {
 		}
 		return resultSet;
 	}
-	
+
 
 	public Variable getVariableUsingKey(Map<String, String> keyChain, String varId) {
 		return getVariable(keyChain, varId, null,null);
@@ -325,7 +356,7 @@ public class VarCache {
 	}
 
 	public void destroy() {
-		
+
 	}
 
 

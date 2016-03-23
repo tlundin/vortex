@@ -129,9 +129,9 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 		aggregatePanel.addView(smaRemainingView);
 		aggregatePanel.addView(synkadMedView);
 
-		Marker man = new Marker(BitmapFactory.decodeResource(getResources(),R.drawable.icon_man));
+		//Marker man = new Marker(BitmapFactory.decodeResource(getResources(),R.drawable.icon_man));
 
-		pyv = new ProvytaView(this.getActivity(), null, man,Constants.isAbo(dym.getPyID()));		
+		pyv = new ProvytaView(this.getActivity(), null, Constants.isAbo(dym.getPyID()));		
 
 		provytaViewPanel.addView(pyv);
 

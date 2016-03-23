@@ -2,7 +2,6 @@ package com.teraim.fieldapp.dynamic.types;
 
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +11,6 @@ import android.util.Log;
 import com.teraim.fieldapp.GlobalState;
 import com.teraim.fieldapp.log.LoggerI;
 import com.teraim.fieldapp.utils.Expressor;
-import com.teraim.fieldapp.utils.Expressor.Atom;
 import com.teraim.fieldapp.utils.Expressor.EvalExpr;
 
 public class CHash implements Serializable {
@@ -109,14 +107,22 @@ public class CHash implements Serializable {
 								String arg = kv[0].trim();
 								String val = kv[1].trim();
 								Log.d("nils","Keypair: "+arg+","+val);
-
+								
 								if (val.isEmpty()||arg.isEmpty()) {
 									err = "Empty key or value in context keypair for context "+cContext;
 									break;
-								} else {
-									//Log.d("nils","Added "+arg+","+val+" to current context");
-									keyHash.put(arg, val);
+								} 
+								
+								for (char c:val.toCharArray()) {
+									if(!Character.isLetterOrDigit(c)) {
+										err = "The literal "+val+"contains non alfabetic-nonnumeric characters. Did you forget braces? [ ] ";
+										break;	
+									}
 								}
+								if (err==null)
+									keyHash.put(arg, val);
+								//Log.d("nils","Added "+arg+","+val+" to current context");
+
 							}
 						}
 					}

@@ -60,7 +60,7 @@ public class DbHelper extends SQLiteOpenHelper {
 	public static final String TABLE_AUDIT = "audit";
 	public static final String TABLE_SYNC = "sync";
 
-	
+
 	private static final String VARID = "var",VALUE="value",TIMESTAMP="timestamp",LAG="lag",AUTHOR="author";
 	private static final String[] VAR_COLS = new String[] { TIMESTAMP, AUTHOR, LAG, VALUE };
 	//	private static final Set<String> MY_VALUES_SET = new HashSet<String>(Arrays.asList(VAR_COLS));
@@ -137,7 +137,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		if (db!=null && db.isOpen())
 			db.close();
 		db = this.getWritableDatabase();
-		
+
 		this.globalPh=globalPh;
 		if (t!=null)
 			init(t.getKeyParts(),appPh);
@@ -253,7 +253,7 @@ public class DbHelper extends SQLiteOpenHelper {
 				"action TEXT, "+
 				"target TEXT, "+
 				"changes TEXT ) ";
-		
+
 		//synck table to keep track of incoming rows of data (sync entries[])
 		String CREATE_SYNC_TABLE = "CREATE TABLE sync ( " +
 				"id INTEGER PRIMARY KEY ," + 				
@@ -263,7 +263,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		db.execSQL(CREATE_VARIABLE_TABLE);
 		db.execSQL(CREATE_AUDIT_TABLE);
 		db.execSQL(CREATE_SYNC_TABLE);
-		
+
 		Log.d("NILS","DB CREATED");
 	}
 
@@ -469,7 +469,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		insert,
 		delete
 	}
-	
+
 	public void deleteVariable(String name,Selection s,boolean isSynchronized) {
 		// 1. get reference to writable DB
 		//SQLiteDatabase db = this.getWritableDatabase();
@@ -490,14 +490,6 @@ public class DbHelper extends SQLiteOpenHelper {
 
 
 
-	private void insertDeleteDelytorAuditEntry(String rId,String pyId) {		
-		storeAuditEntry("E",rId+"|"+pyId,null);
-		Log.d("nils","inserted Erase Delytor into audit for R:"+rId+" P:"+pyId);
-	}
-	private void insertDeleteProvytaAuditEntry(String rId,String pyId) {		
-		storeAuditEntry("P",rId+"|"+pyId,null);
-		Log.d("nils","inserted Erase Provyta into audit for R:"+rId+" P:"+pyId);
-	}
 
 	private Map<String, String> createAuditEntry(Variable var,String newValue,
 			String timeStamp) {
@@ -560,6 +552,13 @@ public class DbHelper extends SQLiteOpenHelper {
 		//Log.d("nils","INSERT Delete audit entry. Args:  "+dd);
 	}
 
+	public void insertEraseAuditEntry(String keyPairs) {		
+		storeAuditEntry("M",keyPairs,null);
+		Log.d("nils","inserted Erase Many with: "+keyPairs);
+
+	}
+
+
 	private void insertAuditEntry(Variable v,Map<String,String> valueSet,String action) {
 		String changes = "";
 		//First the keys.
@@ -609,9 +608,9 @@ public class DbHelper extends SQLiteOpenHelper {
 		db.insert(TABLE_AUDIT, null, values);
 	}
 
-	
-	
-	
+
+
+
 
 	public StoredVariableData getVariable(String name, Selection s) {
 
@@ -725,21 +724,21 @@ public class DbHelper extends SQLiteOpenHelper {
 			Log.d("nils","In getvalue with name "+name+" and selection "+s.selection+" and selectionargs "+print(s.selectionArgs));
 			db = this.getWritableDatabase();
 		}
-//		Log.d("nils","In getvalue with name "+name+" and selection "+s.selection+" and selectionargs "+print(s.selectionArgs));
+		//		Log.d("nils","In getvalue with name "+name+" and selection "+s.selection+" and selectionargs "+print(s.selectionArgs));
 		Cursor c =null;
 		if (checkForNulls(s.selectionArgs)) {
-		c= db.query(TABLE_VARIABLES,valueCol,
-				s.selection,s.selectionArgs,null,null,null,null);
-		if (c != null && c.moveToFirst()) {
-			//Log.d("nils","Cursor count "+c.getCount()+" columns "+c.getColumnCount());
-			String value = c.getString(0);
-//			Log.d("nils","GETVALUE ["+name+" :"+value+"] Value = null? "+(value==null));
-			c.close();		
-			return value;
-		} 
+			c= db.query(TABLE_VARIABLES,valueCol,
+					s.selection,s.selectionArgs,null,null,null,null);
+			if (c != null && c.moveToFirst()) {
+				//Log.d("nils","Cursor count "+c.getCount()+" columns "+c.getColumnCount());
+				String value = c.getString(0);
+				//			Log.d("nils","GETVALUE ["+name+" :"+value+"] Value = null? "+(value==null));
+				c.close();		
+				return value;
+			} 
 		}
 
-//		Log.d("nils","Did NOT find value in db for "+name+". Key arguments:");
+		//		Log.d("nils","Did NOT find value in db for "+name+". Key arguments:");
 
 		String sel = s.selection;
 		int cc=0;
@@ -751,13 +750,13 @@ public class DbHelper extends SQLiteOpenHelper {
 			}
 		}
 		Set<Entry<String, String>> x = colKeyM.entrySet();
-//		for(Entry e:x) 
-//			Log.d("nils","kolkey KEY:"+e.getKey()+" "+e.getValue());
-//		for (int i=0;i<cc;i++) {
-//
-//
-//			Log.d("nils"," Key: ("+k[i]+") "+colKeyM.get(k[i])+" = "+s.selectionArgs[i]);
-//		}	
+		//		for(Entry e:x) 
+		//			Log.d("nils","kolkey KEY:"+e.getKey()+" "+e.getValue());
+		//		for (int i=0;i<cc;i++) {
+		//
+		//
+		//			Log.d("nils"," Key: ("+k[i]+") "+colKeyM.get(k[i])+" = "+s.selectionArgs[i]);
+		//		}	
 
 		if (c!=null)
 			c.close();
@@ -901,12 +900,12 @@ public class DbHelper extends SQLiteOpenHelper {
 		Map<String,String> keyChain=var.getKeyChain();
 		//If no key column mappings, skip. Variable is global with Id as key.
 		if (keyChain!=null) {
-						Log.d("nils","keychain for "+var.getLabel()+" has "+keyChain.size()+" elements");
+			Log.d("nils","keychain for "+var.getLabel()+" has "+keyChain.size()+" elements");
 			for(String key:keyChain.keySet()) { 
 				String value = keyChain.get(key);
 				String column = getColumnName(key);
 				values.put(column,value);
-								Log.d("nils","Adding column "+column+"(key):"+key+" with value "+value);
+				Log.d("nils","Adding column "+column+"(key):"+key+" with value "+value);
 			}
 		} else
 			Log.d("nils","Inserting global variable "+var.getId()+" value: "+newValue);
@@ -1273,7 +1272,7 @@ public class DbHelper extends SQLiteOpenHelper {
 					}
 					Log.d("sync","Selection ARGS: "+xor);
 				}
-				
+
 				TimeAndId ti = this.getIdAndTimeStamp(name, sel);
 				long rId=-1;
 				if (ti==null || s.isInsertArray()) {// || gs.getVariableConfiguration().getnumType(row).equals(DataType.array)) {
@@ -1385,44 +1384,22 @@ public class DbHelper extends SQLiteOpenHelper {
 				} else
 					Log.e("sync","SelectionArgs null in Delete Sync. S: "+s.getTarget()+" K: "+s.getKeys());
 
-			} else if (s.isDeleteDelytor()) {
-				String ids = s.getChange();
-				if (ids!=null) {
-					String[] idA = ids.split("\\|"); 
-					if (idA!=null && idA.length==2) {
-						Log.d("sync","Got EraseDelytor sync message for ruta "+idA[0]+" and provyta "+idA[1]);					
-						this.eraseDelytor(gs,idA[0], idA[1],false);
-						//Invalidate Cache.
-						vc.invalidateOnKey(Tools.createKeyMap("ruta",idA[0],"provyta",idA[1]));
+			} else if (s.isDeleteMany()) {
+				String keyPairs = s.getChange();
+				if (keyPairs!=null) {
+					Log.d("sync","Got Erase Many sync message with keyPairs: "+keyPairs);					
+						this.erase(keyPairs);
+						//Invalidate Cache...purposeless to invalidate only part.
+						vc.invalidateAll();
 						o.addRow("");
-						o.addGreenText("DB_DELETE All values for Delyta "+idA[0]+" and Provyta "+idA[1]+" was deleted.");
+						o.addGreenText("DB_ERASE message executed in sync");
 
 					} else {
 						o.addRow("");
-						o.addRedText("DB_DELETE Delete Delytor Failed. Message corrupt");
+						o.addRedText("DB_ERASE Failed. Message corrupt");
 						changes.faults++;
 					}
 				}
-			} else if (s.isDeleteProvyta()) {
-				String ids = s.getChange();
-				if (ids!=null) {
-					String[] idA = ids.split("\\|"); 
-					if (idA!=null && idA.length==2) {
-						Log.d("sync","Got EraseProvyta sync message for ruta "+idA[0]+" and provyta "+idA[1]);					
-						this.eraseProvyta(idA[0], idA[1],false);
-						//Invalidate cache.
-						vc.invalidateOnKey(Tools.createKeyMap("ruta",idA[0],"provyta",idA[1]));
-						o.addRow("");
-						o.addGreenText("DB_DELETE All values deleted for Provyta"+idA[1]+" in ruta "+idA[0]);					
-
-					} else {
-						changes.faults++;
-						o.addRow("");
-						o.addRedText("DB_DELETE Delete Provyta Failed. Message corrupted");
-					}
-				}			
-			}
-
 		}
 		//Invalidate all variables touched.
 		for (String varName:touchedVariables) 
@@ -1454,7 +1431,7 @@ public class DbHelper extends SQLiteOpenHelper {
 	public int getNumberOfUnsyncedEntries() {
 		int ret = 0;
 		if (globalPh.get(PersistenceHelper.SYNC_METHOD).equals("Bluetooth")) {
-			
+
 			String timestamp = GlobalState.getInstance().getPreferences().get(PersistenceHelper.TIME_OF_LAST_SYNC);
 			if (timestamp==null||timestamp.equals(PersistenceHelper.UNDEFINED))
 				timestamp = "0";
@@ -1490,56 +1467,78 @@ public class DbHelper extends SQLiteOpenHelper {
 	}
 
 
-
-	public void eraseDelytor(GlobalState gs, String currentRuta, String currentProvyta,boolean synk) {
-		String yCol = keyColM.get("år");
-		String rCol = keyColM.get("ruta");
-		String pyCol = keyColM.get("provyta");
-		String dyCol = keyColM.get("delyta");
-		Log.d("nils","In eraseDelytor with rutaCol = "+rCol+" and pyCol = "+pyCol+" and dyCol "+dyCol);
-		//delete all rows and send sync message.
-		int affRows = db.delete(DbHelper.TABLE_VARIABLES, 
-				yCol+"=? AND "+ rCol+"=? AND "+pyCol+"=? and "+dyCol+" NOT NULL", new String[] {Constants.getYear(), currentRuta,currentProvyta});
-		Log.d("nils","eraseDelytor affected "+affRows+" rows");
-		if (synk&&affRows>0) {
-			Log.d("nils","Adding sync message");
-			insertDeleteDelytorAuditEntry(currentRuta,currentProvyta);
+	public void erase(String keyPairs) {
+		if (keyPairs == null || keyPairs.isEmpty()) {
+			Log.e("vortex","keypairs null or empty in erase! Not allowed!");
+			return;
 		}
-		Map<String, String> baseKey = gs.getVariableConfiguration().createProvytaKeyMap();
-		for (int delyteID=0;delyteID<=DelyteManager.MAX_DELYTEID;delyteID++) {
-			baseKey.put("delyta", delyteID+"");	
-			if (delyteID >0) {
-				Variable tagV = gs.getVariableCache().getVariableUsingKey(baseKey,NamedVariables.DELNINGSTAG);
-				//Hack to prevent synk.
 
-				if (tagV!=null) {
-					if (synk)
-						tagV.deleteValue();
-					else
-						tagV.deleteValueNoSync();
+		Log.d("vortex","In erase with keyPairs: "+keyPairs);
+		
+		//map keypairs. Create delete statement.
+		StringBuilder delStmt = new StringBuilder("");
+
+		String pairs[] = keyPairs.split(",");
+		String column,value;
+		boolean last=false;
+		int i=0;
+		String[] values = new String[pairs.length];
+		
+		for (String pair:pairs) {
+			last = i==(pairs.length-1);
+			String[] keyValue = pair.split("=");
+			if (keyValue!=null && keyValue.length==2) {
+				column = keyColM.get(keyValue[0]);
+				if (Constants.NOT_NULL.equals(keyValue[1])) 
+					delStmt.append(column + "= NOT NULL");
+				else {
+					values[i++] = keyColM.get(keyValue[1]);
+					delStmt.append(column + "= ?");
 				}
-				else
-					break;
-			}
-			gs.getVariableCache().invalidateOnKey(baseKey);															
-
+			} else 
+				Log.e("vortex","failed to split "+pair);
+			if (!last)
+				delStmt.append(" AND ");
+			
 		}
+		Log.d("vortex","Delete statement is now "+delStmt);
+		print(values);
+
+		db.delete(DbHelper.TABLE_VARIABLES, delStmt.toString(), values);
+	}
+
+	public void eraseDelytor(String currentRuta, String currentProvyta) {
+
+		//create WHERE part of delete statement.
+		String deleteStatement = "år="+Constants.getYear()+",ruta="+currentRuta+",provyta="+currentProvyta+",delyta="+Constants.NOT_NULL;
+		Log.d("nils","In EraseDelytor: ["+deleteStatement+"]");
+
+		//Do it!
+		erase(deleteStatement);
+
+		//Create sync entry
+		insertEraseAuditEntry(deleteStatement);
+
+		//Erase cache
+		Map<String, String> baseKey = GlobalState.getInstance().getVariableConfiguration().createProvytaKeyMap();
+		
+		GlobalState.getInstance().getVariableCache().invalidateOnKey(baseKey,false);	
+		
 
 	}
 
-	public void eraseProvyta(String currentRuta, String currentProvyta,boolean synk) {
-		String yCol = keyColM.get("år");
-		String rCol = keyColM.get("ruta");
-		String pyCol = keyColM.get("provyta");
-		Log.d("nils","In eraseProvyta with rutaCol = "+rCol+" and pyCol = "+pyCol);
-		int affRows = db.delete(DbHelper.TABLE_VARIABLES, 
-				yCol+"=? AND "+rCol+"=? AND "+pyCol+"=?", new String[] {Constants.getYear(),currentRuta,currentProvyta});
-		Log.d("nils","eraseProvyta affected "+affRows+" rows");
-		if (synk&&affRows>0) {
-			Log.d("nils","Adding sync message");
-			insertDeleteProvytaAuditEntry(currentRuta,currentProvyta);
-		}
 
+	public void eraseProvyta(String currentRuta, String currentProvyta) {
+		String deleteStatement = "år="+Constants.getYear()+",ruta="+currentRuta+",provyta="+currentProvyta;
+		Log.d("nils","In EraseProvyta: ["+deleteStatement+"]");
+
+		erase(deleteStatement);
+
+		insertEraseAuditEntry(deleteStatement);
+
+		//Erase cache
+		Map<String, String> baseKey = GlobalState.getInstance().getVariableConfiguration().createProvytaKeyMap();
+		GlobalState.getInstance().getVariableCache().invalidateOnKey(baseKey,true);	
 	}
 
 	public void eraseSmaProvyDelytaAssoc(String currentRuta, String currentProvyta) {
@@ -1547,7 +1546,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		String rCol = keyColM.get("ruta");
 		String pyCol = keyColM.get("provyta");
 		int affRows = db.delete(DbHelper.TABLE_VARIABLES, 
-				yCol+"=? AND "+rCol+"=? AND "+pyCol+"=? AND var = 'Delyta'", new String[] {Constants.getYear(),currentRuta,currentProvyta});
+				yCol+"=? AND "+rCol+"=? AND "+pyCol+"=? AND var = '"+NamedVariables.BeraknadInomDelyta+"' OR var = '"+NamedVariables.InomDelyta+"'", new String[] {Constants.getYear(),currentRuta,currentProvyta});
 		Log.d("nils","Affected rows in eraseSmaProvyDelytaAssoc: "+affRows);
 	}
 
@@ -1567,7 +1566,11 @@ public class DbHelper extends SQLiteOpenHelper {
 		}
 		int affRows = db.delete(DbHelper.TABLE_VARIABLES, 
 				queryP, valA);
-		Log.e("vortex","Deleted "+affRows+" entries in deleteAllVariablesUsingKey. Key: "+keyHash.toString());
+		StringBuilder valAs = new StringBuilder();
+		for (String v:valA) {
+			valAs.append(v+",");
+		}
+		Log.e("vortex","Deleted "+affRows+" entries in deleteAllVariablesUsingKey. Query: "+queryP+" vals "+valAs);
 		return affRows;
 	}
 
@@ -1615,7 +1618,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		valuez.put("author", globalPh.get(PersistenceHelper.USER_ID_KEY));
 
 
-		Log.d("nils","inserting:  "+valuez.toString());
+		//Log.d("nils","inserting:  "+valuez.toString());
 		try {
 			db.insert(TABLE_VARIABLES, // table
 
@@ -1748,9 +1751,9 @@ public class DbHelper extends SQLiteOpenHelper {
 			Log.d("vortex","column: "+this.getColumnName(key)+" SelArg: "+keyChain.get(key));
 		}
 		Log.d("vortex","Selarg: "+selArgs.toString());
-		
-		
-		
+
+
+
 		Cursor c = db.rawQuery(query, selArgs);
 		Log.d("nils","Got "+c.getCount()+" results. PrefetchValue."+namePrefix+" with key: "+keyChain.toString());
 		Map<String,String> ret = new HashMap<String,String>();
@@ -1817,13 +1820,13 @@ public class DbHelper extends SQLiteOpenHelper {
 
 	}
 
-	
+
 	//Fetch all instances of Variables matching namePrefix. Map varId to a Map of Variator, Value.
 	public Cursor getAllVariablesForKeyMatchingGroupPrefixAndNamePostfix(Map<String,String> keyChain, String namePrefix, String namePostfix) {		
 
 		String query = "SELECT "+VARID+",value FROM "+TABLE_VARIABLES+
 				" WHERE "+VARID+" LIKE '"+namePrefix+"%' AND "+VARID+" LIKE "+"'%"+namePostfix+"'";
-	
+
 		//Add keychain parts.
 		String[] selArgs = new String[keyChain.size()];
 		int i=0;
@@ -1847,9 +1850,9 @@ public class DbHelper extends SQLiteOpenHelper {
 		db.setTransactionSuccessful();
 		db.endTransaction();
 	}
-	
-	
-	
+
+
+
 	/* Checks if external storage is available for read and write */
 	public boolean isExternalStorageWritable() {
 		String state = Environment.getExternalStorageState();
@@ -1863,7 +1866,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		//check and process sync entries.
 		final String[] dataColumn = new String[]{"id,data"};
 		//get a cursor.
-//		db.beginTransaction();
+		//		db.beginTransaction();
 		Cursor c = db.query(TABLE_SYNC, dataColumn, null, null, null, null, null,null);
 		int lastId=-1;
 		while (c.moveToNext()) {
@@ -1871,7 +1874,7 @@ public class DbHelper extends SQLiteOpenHelper {
 			Log.d("vortex","id: "+id);
 		}
 		c.close();
-//		db.endTransaction();
+		//		db.endTransaction();
 		//String[] lastIdS=new String[]{lastId+""};
 		//db.delete(TABLE_SYNC, "id<?", lastIdS);
 	}
@@ -1892,31 +1895,32 @@ public class DbHelper extends SQLiteOpenHelper {
 		byte[] row;
 		SyncReport syncReport=null;
 		while (c.moveToNext()) {
-			 row = c.getBlob(0);
-			 if (row!=null) {
-				 Object o = Tools.bytesToObject(row);
-					if (o!=null) {
-						SyncEntry[] ses = (SyncEntry[])o;
-						//Log.d("vortex","calling SYNCHRONISE WITH "+ses.length+" entries!");
-							syncReport = this.synchronise(ses, null, GlobalState.getInstance().getLogger(), new SyncStatusListener() {
-								
-								@Override
-								public void send(Object entry) {
-									//Log.d("vortex","Synkstatus: "+((SyncStatus)entry).getStatus());
-								}});
-							if (syncReport!=null && syncReport.hasChanges())
-								retValue = true;
-					} else
-						Log.e("vortex","Object was null!!!");			 }
-			 
-		
+			row = c.getBlob(0);
+			if (row!=null) {
+				Object o = Tools.bytesToObject(row);
+				if (o!=null) {
+					SyncEntry[] ses = (SyncEntry[])o;
+					//Log.d("vortex","calling SYNCHRONISE WITH "+ses.length+" entries!");
+					syncReport = this.synchronise(ses, null, GlobalState.getInstance().getLogger(), new SyncStatusListener() {
+
+						@Override
+						public void send(Object entry) {
+							//Log.d("vortex","Synkstatus: "+((SyncStatus)entry).getStatus());
+						}});
+					if (syncReport!=null && syncReport.hasChanges())
+						retValue = true;
+				} else
+					Log.e("vortex","Object was null!!!");			 }
+
+
 		}
 		c.close();
 		Log.d("vortex","DELETING ALL ENTRIES!!");
 		db.delete(TABLE_SYNC, null, null);
 		return retValue;
 	}
-	
+
+
 
 
 

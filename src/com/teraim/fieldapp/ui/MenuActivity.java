@@ -98,8 +98,22 @@ public class MenuActivity extends Activity   {
 				else if (intent.getAction().equals(INITFAILED)) {
 					initfailed=true;
 				}
-				else if (intent.getAction().equals(SYNC_REQUIRED))
-					toggleSyncOnOff();
+				else if (intent.getAction().equals(SYNC_REQUIRED)) {
+					 new AlertDialog.Builder(MenuActivity.this)
+						.setTitle("Synchronize")
+						.setMessage("The action you just performed mandates a synchronisation. Please synchronise with your partner before continuing.") 
+						.setIcon(android.R.drawable.ic_dialog_alert)
+						.setCancelable(false)
+						.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+								uiLock=null;			
+							}
+						})
+						.show();
+				}
+					
 
 				me.refreshStatusRow();
 			}

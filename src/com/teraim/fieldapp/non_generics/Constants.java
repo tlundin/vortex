@@ -41,7 +41,7 @@ import com.teraim.fieldapp.utils.PersistenceHelper;
 
 public class Constants {
 
-	public final static float VORTEX_VERSION = 3.32f;
+	public final static float VORTEX_VERSION = 3.34f;
 
 	//String constants
 	//The root folder for the SD card is in the global Environment.
@@ -104,6 +104,10 @@ public class Constants {
 	public static final String AVST = "AVST";
 	public static final String SMA = "SMA";
 	public static final String NULL_VALUE = "NULL";
+	public static final String NOT_NULL = "*NN*";
+	
+	//Name of the special variable group used for status variables 
+	public static final String STATUS_VARIABLES_GROUP_NAME = "STATUS";
 
 	public static final String NO_DEFAULT_VALUE = "*NULL*";
 
@@ -230,6 +234,8 @@ public class Constants {
 	public static final String SynkServerURI = "http://130.211.51.77:8080/synkserv/SynkServ";
 	
 	public static final Object TRANS_ACK = "TRANSACK";
+
+	
 
 
 

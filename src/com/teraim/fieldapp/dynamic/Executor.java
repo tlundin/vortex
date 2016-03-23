@@ -221,7 +221,20 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 			String name = b.getString("workflow_name");
 
 			myContext.setStatusVariable(b.getString("status_variable"));
-
+			//Add onSaveListener for the statusvariable. Change to "1" when first value saved.
+			myContext.addEventListener(new EventListener() {
+				@Override
+				public void onEvent(Event e) {
+					Log.d("vortex","Received onSave in statusvariable change when first save event!");
+					String statusVar = myContext.getStatusVariable();
+					Variable statusVariable =null;
+					if (statusVar!=null)
+						statusVariable = varCache.getVariableUsingKey(gs.getCurrentKeyMap(),statusVar);
+					if (statusVariable!=null && statusVariable.getValue()==null)
+						statusVariable.setValue(Constants.STATUS_STARTAD_MEN_INTE_KLAR);
+					myContext.removeEventListener(this);
+				}}, EventType.onSave);
+			
 			if (name!=null && name.length()>0) 
 				wf = gs.getWorkflow(name);
 

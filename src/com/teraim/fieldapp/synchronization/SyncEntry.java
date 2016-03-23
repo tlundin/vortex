@@ -4,8 +4,7 @@ public class SyncEntry extends SyncMessage {
 	enum Type {
 		insert,
 		delete,
-		deleteDelytor,
-		deleteProvyta,
+		deleteMany,
 		unknown, insertArray
 	}
 	private static final long serialVersionUID = 862826293136691824L;
@@ -17,23 +16,21 @@ public class SyncEntry extends SyncMessage {
 	private String target;
 	private boolean invalid = false;
 	public SyncEntry() {};
-	public SyncEntry(String a,String changes,String timeStamp,String target) {
+	public SyncEntry(String type,String changes,String timeStamp,String target) {
 		this.changes=changes;
-		if (a.equals("I"))
+		if (type.equals("I"))
 			mType = Type.insert;
-		else if (a.equals("D"))
+		else if (type.equals("D"))
 			mType = Type.delete;
-		else if (a.equals("E"))
-			mType = Type.deleteDelytor;
-		else if (a.equals("P"))
-			mType = Type.deleteProvyta;
-		else if (a.equals("A"))
+		else if (type.equals("M"))
+			mType = Type.deleteMany;
+		else if (type.equals("A"))
 			mType = Type.insertArray;
 		else {
-			System.err.println("Unknown type of Sync action!: "+a);
+			System.err.println("Unknown type of Sync action!: "+type);
 			mType = Type.unknown;
 		}
-		if(!isDeleteDelytor() && !isDeleteProvyta()&&!isDelete()) {	
+		if(!isDeleteMany()&&!isDelete()) {	
 			String[] tmp = changes.split("_\\$_");
 			if (tmp==null||tmp.length!=2) 
 				System.err.println("something wrong with syncentry with changes: ["+changes+"]");
@@ -74,12 +71,8 @@ public class SyncEntry extends SyncMessage {
 		return (mType==Type.delete);
 	}
 	
-	public boolean isDeleteDelytor() {
-		return (mType==Type.deleteDelytor);
-	}
-
-	public boolean isDeleteProvyta() {
-		return (mType==Type.deleteProvyta);
+	public boolean isDeleteMany() {
+		return (mType==Type.deleteMany);
 	}
 	
 	public String getTimeStamp() {

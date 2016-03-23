@@ -79,6 +79,7 @@ public class Expressor {
 		getCurrentSecond(valueFunction,0),
 		getCurrentWeekNumber(valueFunction,0),
 		getSweDate(valueFunction,0),
+		getStatusVariableValues(valueFunction,1),
 		sum(valueFunction,-1),
 		concatenate(valueFunction,-1),
 		getDelytaArea(valueFunction,1),
@@ -317,7 +318,7 @@ public class Expressor {
 				System.err.println("Got null back when evaluating "+expr.toString()+" . will not be included in endresult.");
 
 		}
-		
+
 		//	System.out.println(expressions.toString()+" -->  "+endResult.toString());       
 		return endResult.toString();
 	}
@@ -337,7 +338,7 @@ public class Expressor {
 		Object eval = expr.eval();
 		Log.d("Vortex","BoolExpr: "+expr.toString()+" evaluated to "+eval);
 		o.addRow("Expression "+expr.toString()+" evaluated to "+eval);
-		
+
 		if (eval instanceof String) {
 			Log.e("vortex","String back in analyzeBoolean...likely missing [..]");
 			o.addRow("");
@@ -693,6 +694,8 @@ public class Expressor {
 		}
 		//Check for unbalanced paranthesis
 		if (lparC!=rparC) {
+			o.addRow("");
+			o.addRedText("Unequal number of left and right parenthesis. Left: "+lparC+" right: "+rparC);
 			System.err.println("Rule 2. Equal number of left and right parenthesis. Left: "+lparC+" right: "+rparC);
 			return false;
 		}
@@ -804,7 +807,7 @@ public class Expressor {
 			String value;
 			switch(type) {
 			case variable:
-				
+
 				Variable v = gs.getVariableCache().getVariableUsingKey(currentKeyChain, myToken.str);
 				if (v!=null && v.getValue() == null || v==null) {
 					System.out.println("Variable '"+this.toString()+"' does not have a value or Variable is missing.");
@@ -812,7 +815,7 @@ public class Expressor {
 				}
 				Log.d("vortex","Atom variable ["+v.getId()+"] Type "+v.getType());
 				value = v.getValue();
-				
+
 				if (Tools.isNumeric(value)) {
 					if (v.getType()== Variable.DataType.decimal || value.contains("."))
 						return Double.parseDouble(value);
@@ -937,10 +940,11 @@ public class Expressor {
 			//functions require both arguments be of same kind.
 
 			boolean isIntegerOperator = arg1v instanceof Integer && arg2v instanceof Integer;
+			boolean isDoubleOperator = arg1v instanceof Double && arg2v instanceof Double;
 			boolean isBooleanOperator = arg1v instanceof Boolean && arg2v instanceof Boolean;
 			//if any of the arguments are string, then treat both as literal.
 			boolean isLiteralOperator = arg1v instanceof String || arg2v instanceof String;
-
+			
 
 
 			if (!isIntegerOperator && !isBooleanOperator && !isLiteralOperator) {
@@ -950,15 +954,15 @@ public class Expressor {
 				return null;
 			}
 			if (isLiteralOperator) {
-				if ((arg1v instanceof Double || Tools.isNumeric((String)arg1v)) && (arg2v instanceof Double || Tools.isNumeric((String)arg2v))) {
+				if ((arg1v instanceof Double || arg1v instanceof Integer || Tools.isNumeric((String)arg1v)) && (arg2v instanceof Double || arg2v instanceof Integer || Tools.isNumeric((String)arg2v))) {
 					Log.d("vortex","turning literal into numeric...both numbers");
-					arg1v = arg1v instanceof Double ? arg1v : Integer.parseInt((String)arg1v);
-					arg2v = arg2v instanceof Double ? arg2v : Integer.parseInt((String)arg2v);
+					arg1v = (arg1v instanceof Double || arg1v instanceof Integer) ? arg1v : Integer.parseInt((String)arg1v);
+					arg2v = (arg2v instanceof Double || arg2v instanceof Integer) ? arg2v : Integer.parseInt((String)arg2v);
 					isIntegerOperator = true;
 				}
 			}
 			//Requires Double arguments.
-			if (isIntegerOperator) {
+			if (isIntegerOperator||isDoubleOperator) {
 				Integer arg1F,arg2F;
 				Object res=null;
 
@@ -1309,7 +1313,7 @@ public class Expressor {
 			case not:
 				//Log.d("vortex","in function not");
 				if (checkPreconditions(evalArgs,1,No_Null_Boolean)) {
-//					Log.d("vortex","evalArgs.get0 is "+evalArgs.get(0)+" type "+evalArgs.get(0).getClass().getSimpleName());
+					//					Log.d("vortex","evalArgs.get0 is "+evalArgs.get(0)+" type "+evalArgs.get(0).getClass().getSimpleName());
 					return !((Boolean)evalArgs.get(0));
 
 				}
@@ -1364,7 +1368,7 @@ public class Expressor {
 									if (!historicalValue.equals(value)) {
 										Log.d("vortex","hasSameValueAsHistorical returns false, since variable "+name+" has a value: "+value+" that is not the same as the historical value: "+historicalValue);
 										o.addRow("hasSameValueAsHistorical returns false, since variable "+name+" has a value: "+value+" that is not the same as the historical value: "+historicalValue);
-										
+
 										return false;
 									}
 								}
@@ -1425,6 +1429,52 @@ public class Expressor {
 						Log.d("votex","value for column is "+currentKeyChain.get(evalArgs.get(0)));
 						return currentKeyChain.get(evalArgs.get(0));
 					}
+				}
+				break;
+			case getStatusVariableValues:
+				if (checkPreconditions(evalArgs,1,No_Null_Literal)) {
+					//Gets the status from all buttons on the page.
+					Cursor c = gs.getDb().getAllVariablesForKeyMatchingGroupPrefixAndNamePostfix(gs.getCurrentKeyMap(), Constants.STATUS_VARIABLES_GROUP_NAME,(String)evalArgs.get(0));
+					String combinedStatus = null;
+					boolean oneInitial = false;
+					if (c!=null) {
+						
+						while (c.moveToNext()) {
+							
+							String varNameS = c.getString(0);
+							String varValue = c.getString(1);
+							Log.d("vortex","VAR: "+varNameS+"\nVALUE: "+varValue);	
+							if(combinedStatus == null && varValue.equals(Constants.STATUS_AVSLUTAD_OK)) {
+								combinedStatus = Constants.STATUS_AVSLUTAD_OK;
+								continue;
+							}
+							else if (varValue.equals(Constants.STATUS_STARTAD_MED_FEL)) {
+								//Here we can exit. We know the value.
+								return Constants.STATUS_STARTAD_MED_FEL;
+							}
+							else if (varValue.equals(Constants.STATUS_STARTAD_MEN_INTE_KLAR)) {
+								//Continue and check that there is no error state down the line.
+								combinedStatus = Constants.STATUS_STARTAD_MEN_INTE_KLAR;
+								continue;
+							}
+							else if(varValue.equals(Constants.STATUS_INITIAL)) {
+								oneInitial = true;
+								continue;
+							}
+						}
+						
+							
+						
+					}
+					if (combinedStatus != null) {
+						if (oneInitial && combinedStatus.equals(Constants.STATUS_AVSLUTAD_OK)) {
+							Log.d("vortex","found one that is not done!");
+							combinedStatus = Constants.STATUS_STARTAD_MEN_INTE_KLAR;
+						}
+						return combinedStatus;
+					}
+					else
+						return Constants.STATUS_INITIAL;
 				}
 				break;
 			case photoExists:

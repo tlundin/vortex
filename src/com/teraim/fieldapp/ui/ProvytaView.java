@@ -49,7 +49,7 @@ public class ProvytaView extends View {
 	private boolean abo=false;
 
 
-	public ProvytaView(Context context, AttributeSet attrs, Marker focusMarker, boolean isNineHoler) {
+	public ProvytaView(Context context, AttributeSet attrs, boolean isNineHoler) {
 		super(context,attrs);
 
 		abo = isNineHoler;

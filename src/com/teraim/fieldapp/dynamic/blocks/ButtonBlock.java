@@ -40,6 +40,9 @@ import com.teraim.fieldapp.dynamic.types.Variable;
 import com.teraim.fieldapp.dynamic.types.Workflow;
 import com.teraim.fieldapp.dynamic.workflow_abstracts.Container;
 import com.teraim.fieldapp.dynamic.workflow_abstracts.Drawable;
+import com.teraim.fieldapp.dynamic.workflow_abstracts.Event;
+import com.teraim.fieldapp.dynamic.workflow_abstracts.Event.EventType;
+import com.teraim.fieldapp.dynamic.workflow_abstracts.EventListener;
 import com.teraim.fieldapp.dynamic.workflow_realizations.WF_Context;
 import com.teraim.fieldapp.dynamic.workflow_realizations.WF_Event_OnSave;
 import com.teraim.fieldapp.dynamic.workflow_realizations.WF_Widget;
@@ -183,8 +186,11 @@ public  class ButtonBlock extends Block {
 						Log.d("nils","STATUSVAR: "+statusVariable.getId()+" key: "+statusVariable.getKeyChain()+ "Value: "+statusVariable.getValue());
 						String valS = statusVariable.getValue();
 						Integer val=null;
-						if (valS == null)
+						if (valS == null) {
+							statusVariable.setValue("0");
 							val = 0;
+						}
+						
 						else 
 							try {val=Integer.parseInt(valS);} 
 						catch (NumberFormatException e){val = 0;};
@@ -289,7 +295,11 @@ public  class ButtonBlock extends Block {
 											Log.d("nils", "Variables To save contains "+variablesToSave==null?"null":variablesToSave.size()+" objects.");
 											for (Variable var:variablesToSave) {
 												Log.d("nils","Saving "+var.getLabel());
-												var.setValue(var.getValue());
+												boolean resultOfSave = var.setValue(var.getValue());
+												if (resultOfSave) {
+													for (int i=0;i<100;i++)
+													Log.e("vortex","KORS I TAKET!!!!!!!!!!!!!!!!!!!!!!!!");
+												}
 											}
 											myContext.registerEvent(new WF_Event_OnSave(ButtonBlock.this.getBlockId()));
 											mpopup.dismiss();
@@ -387,27 +397,27 @@ public  class ButtonBlock extends Block {
 								} else {
 									o.addRow("");
 									o.addRow("Action button pressed. Executing wf: "+target);
+									gs.setKeyHash(buttonContext);
+									Start.singleton.changePage(wf,statusVar);
+									
 									//save all changes
 									if (statusVar!=null) {
 										VariableConfiguration al = gs.getVariableConfiguration();
-										statusVariable = varCache.getVariableUsingKey(buttonContext.getContext(),statusVar);
+										
 										if (statusVariable == null) {
 											o.addRow("");
 											o.addRedText("Statusvariabel "+statusVar+" saknas på knapp "+name);
 										} else {
-											String valS = statusVariable.getValue();
-											if (valS==null || valS.equals("0"))
-												statusVariable.setValue("1");
-											myContext.registerEvent(new WF_Event_OnSave(ButtonBlock.this.getBlockId()));
+											
+											//String valS = statusVariable.getValue();
+											//if (valS==null || valS.equals("0"))
+											//	statusVariable.setValue("1");
+											//myContext.registerEvent(new WF_Event_OnSave(ButtonBlock.this.getBlockId()));
 										}
 									}
-									gs.setKeyHash(buttonContext);
-									Start.singleton.changePage(wf,statusVar);
-									//final FragmentTransaction ft = myContext.getActivity().getFragmentManager().beginTransaction(); 
-									//ft.replace(myContext.getRootContainer(), f);
-									//ft.addToBackStack(null);
-									//ft.commit(); 
-									//Validation?
+									
+									
+
 								}
 
 							} else if (onClick.equals("export")) {
@@ -436,6 +446,7 @@ public  class ButtonBlock extends Block {
 											msg = "Nothing to export! Have you entered any values? Have you marked your export variables as 'global'? (Local variables are not exported)";
 										else
 											msg = "Export failed. Reason: "+jRep.er.name();
+										
 
 									}
 									//Context was broken
