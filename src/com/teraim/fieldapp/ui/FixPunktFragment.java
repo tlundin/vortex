@@ -29,7 +29,7 @@ import com.teraim.fieldapp.GlobalState;
 import com.teraim.fieldapp.R;
 import com.teraim.fieldapp.dynamic.VariableConfiguration;
 import com.teraim.fieldapp.dynamic.types.Marker;
-import com.teraim.fieldapp.dynamic.types.VarCache;
+import com.teraim.fieldapp.dynamic.types.VariableCache;
 import com.teraim.fieldapp.dynamic.types.Variable;
 import com.teraim.fieldapp.non_generics.NamedVariables;
 
@@ -55,7 +55,7 @@ public class FixPunktFragment extends Fragment implements OnGesturePerformedList
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 		gs = GlobalState.getInstance();
-		VarCache varCache = gs.getVariableCache();
+		VariableCache varCache = gs.getVariableCache();
 		VariableConfiguration al = gs.getVariableConfiguration();
 		Log.d("nils","in onCreateView of fixpunkt_fragment");
 		View v = inflater.inflate(R.layout.template_fixpunkt_right, container, false);	

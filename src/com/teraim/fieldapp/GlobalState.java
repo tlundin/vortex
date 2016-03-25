@@ -16,10 +16,10 @@ import android.os.Message;
 import android.util.Log;
 
 import com.teraim.fieldapp.dynamic.VariableConfiguration;
-import com.teraim.fieldapp.dynamic.types.CHash;
+import com.teraim.fieldapp.dynamic.types.DB_Context;
 import com.teraim.fieldapp.dynamic.types.SpinnerDefinition;
 import com.teraim.fieldapp.dynamic.types.Table;
-import com.teraim.fieldapp.dynamic.types.VarCache;
+import com.teraim.fieldapp.dynamic.types.VariableCache;
 import com.teraim.fieldapp.dynamic.types.Workflow;
 import com.teraim.fieldapp.dynamic.workflow_realizations.WF_Context;
 import com.teraim.fieldapp.expr.Aritmetic;
@@ -68,11 +68,14 @@ public class GlobalState  {
 	public String TEXT_LARGE;
 	private WF_Context currentContext;
 	private String myPartner="?";
-	private VarCache myVarCache;
+
 	private PersistenceHelper globalPh=null;
 	private Tracker myTracker;
 	private ConnectionManager myConnectionManager; 
 	private BackupManager myBackupManager;
+
+
+	private VariableCache myVariableCache;
 	private static Account mAccount;
 	
 	public static GlobalState getInstance() {
@@ -102,8 +105,7 @@ public class GlobalState  {
 		this.log = debugConsole;
 		//Parser for rules
 		parser = new Parser(this);
-		//Artlista
-		myVarCache = new VarCache(this);
+		
 		artLista = new VariableConfiguration(this,t);			
 		myWfs = mapWorkflowsToNames(workflows);		
 		//Event Handler on the Bluetooth interface.
@@ -115,6 +117,9 @@ public class GlobalState  {
 
 		singleton =this;
 
+		
+		myVariableCache = new VariableCache(this);
+
 		//GPS listener service
 		myTracker = new Tracker();
 
@@ -125,7 +130,6 @@ public class GlobalState  {
 		myBackupManager = new BackupManager(this);
 		
 		myBackupManager.startBackupIfTimeAndNeed();
-		
 		
 		
 		
@@ -277,52 +281,26 @@ public class GlobalState  {
 		return new Aritmetic(name,label);
 	}
 
-
-
-
-	public VarCache getVariableCache() {
-		return myVarCache;
+	public VariableCache getVariableCache() {
+		return myVariableCache;
 	}
 
 	public LoggerI getLogger() {
 		return log;
 	}
 
-	public void setCurrentContext(WF_Context myContext) {
+	public void setCurrentWorkflowContext(WF_Context myContext) {
 		currentContext = myContext;
 	}
 
-	public WF_Context getCurrentContext() {
+	public WF_Context getCurrentWorkflowContext() {
 		return currentContext;
 	}
-
-	int logID=1;
-
-	private CHash myKeyHash;
-
-	//private RuleExecutor myExecutor;
-
-	public CHash getCurrentKeyHash() {
-		if (myKeyHash == null)
-			return new CHash(null,null);
-		else 
-			return myKeyHash;
+	
+	
+	public void setDBContext(DB_Context context) {
+		myVariableCache.setCurrentContext(context);
 	}
-	public Map<String,String> getCurrentKeyMap() {
-
-		//Log.d("vortex",this.toString()+" getCurrentKeyHash returned "+myKeyHash);
-		if (myKeyHash == null)
-			return null;
-		else
-			return myKeyHash.getContext();
-	}
-
-
-	public void  setKeyHash(CHash context) { 	
-		myKeyHash=context;
-		//Log.d("vortex","SetKeyHash was called with "+context+" on this "+this.toString());
-	}
-
 
 	public boolean isMaster() {
 		String m;
@@ -586,6 +564,7 @@ public class GlobalState  {
 			
 	}
 
+	
 	
 
 

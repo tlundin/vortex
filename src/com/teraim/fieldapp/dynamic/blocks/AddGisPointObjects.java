@@ -21,7 +21,7 @@ import android.util.Log;
 import com.teraim.fieldapp.GlobalState;
 import com.teraim.fieldapp.R;
 import com.teraim.fieldapp.dynamic.VariableConfiguration;
-import com.teraim.fieldapp.dynamic.types.CHash;
+import com.teraim.fieldapp.dynamic.types.DB_Context;
 import com.teraim.fieldapp.dynamic.types.GisLayer;
 import com.teraim.fieldapp.dynamic.types.SweLocation;
 import com.teraim.fieldapp.dynamic.types.Variable;
@@ -63,7 +63,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 	private PolyType polyType;
 	private String onClick;
 	private String statusVariable;
-	private CHash objectKeyHash;
+	private DB_Context objectKeyHash;
 	private boolean isUser;
 	private boolean createAllowed;
 	private GisLayer myLayer;
@@ -186,7 +186,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 
 
 		//Generate the context for these objects.
-		objectKeyHash = CHash.evaluate(objContextE);
+		objectKeyHash = DB_Context.evaluate(objContextE);
 		Log.d("vortex","OBJ KEYHASH "+objectKeyHash.toString());
 		//Use current year for statusvar.
 		Map<String, String> currYearH = Tools.copyKeyHash(objectKeyHash.getContext());
@@ -321,7 +321,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 			//No values! A dynamic variable can create new ones, so create object anyway.
 			if ((!hasValues&&dynamic) || (hasValues&&dynamic&&twoVars&&!pickerLocation2.moveToFirst())) {
 				Log.e("vortex","no X,Y instances found for keychain..creating empty");
-				Variable v1 = GlobalState.getInstance().getVariableCache().getVariableUsingKey(objectKeyHash.getContext(), locationVar1);
+				Variable v1 = GlobalState.getInstance().getVariableCache().getVariable(objectKeyHash.getContext(), locationVar1);
 				if (v1==null){
 					Log.e("vortex", locationVar1+" does not exist. Check your configuration!");
 					o.addRow("");
@@ -329,7 +329,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 					return;
 				}
 				if (twoVars) {
-					Variable v2 = GlobalState.getInstance().getVariableCache().getVariableUsingKey(objectKeyHash.getContext(), locationVar2);
+					Variable v2 = GlobalState.getInstance().getVariableCache().getVariable(objectKeyHash.getContext(), locationVar2);
 					if (v2==null){
 						Log.e("vortex", locationVar2+" does not exist. Check your configuration!");
 						o.addRow("");
@@ -592,7 +592,7 @@ public class AddGisPointObjects extends Block implements FullGisObjectConfigurat
 	}
 
 	@Override
-	public CHash getObjectKeyHash() {
+	public DB_Context getObjectKeyHash() {
 		return objectKeyHash;
 	}
 

@@ -35,7 +35,7 @@ import android.view.View;
 
 import com.teraim.fieldapp.GlobalState;
 import com.teraim.fieldapp.Start;
-import com.teraim.fieldapp.dynamic.types.CHash;
+import com.teraim.fieldapp.dynamic.types.DB_Context;
 import com.teraim.fieldapp.dynamic.types.GisLayer;
 import com.teraim.fieldapp.dynamic.types.Location;
 import com.teraim.fieldapp.dynamic.types.PhotoMeta;
@@ -245,8 +245,8 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 
 		imgHReal = pm.N-pm.S;
 		imgWReal = pm.E-pm.W;
-		myX = GlobalState.getInstance().getVariableCache().getVariableUsingKey(YearKeyHash, NamedVariables.MY_GPS_LAT);
-		myY = GlobalState.getInstance().getVariableCache().getVariableUsingKey(YearKeyHash, NamedVariables.MY_GPS_LONG);
+		myX = GlobalState.getInstance().getVariableCache().getVariable(YearKeyHash, NamedVariables.MY_GPS_LAT);
+		myY = GlobalState.getInstance().getVariableCache().getVariable(YearKeyHash, NamedVariables.MY_GPS_LONG);
 		this.allowZoom = allowZoom;
 
 
@@ -1111,7 +1111,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 		unSelectGop();
 	}
 	public void runSelectedWf(GisObject gop) {
-		GlobalState.getInstance().setKeyHash(new CHash(null,gop.getKeyHash()));
+		GlobalState.getInstance().setDBContext(new DB_Context(null,gop.getKeyHash()));
 
 		Log.d("vortex","Setting current keyhash to "+gop.getKeyHash());
 		String target = gop.getWorkflow();

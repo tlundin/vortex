@@ -1,7 +1,7 @@
 package com.teraim.fieldapp.dynamic.blocks;
 
 import com.teraim.fieldapp.GlobalState;
-import com.teraim.fieldapp.dynamic.types.VarCache;
+import com.teraim.fieldapp.dynamic.types.VariableCache;
 import com.teraim.fieldapp.dynamic.types.Variable;
 import com.teraim.fieldapp.dynamic.workflow_realizations.WF_ClickableField_Selection;
 import com.teraim.fieldapp.dynamic.workflow_realizations.WF_Context;
@@ -40,7 +40,7 @@ public class AddVariableToEntryFieldBlock extends Block {
 			o.addRedText("Couldn't find Entry Field with name "+target+" in AddVariableToEntryBlock" );
 			
 		} else {
-			Variable var =  gs.getVariableCache().getVariable(namn,initialValue);
+			Variable var =  gs.getVariableCache().getVariable(namn,initialValue,-1);
 			if (var!=null) {
 				myField.addVariable(var, displayOut, format,isVisible,showHistorical);
 				return var;

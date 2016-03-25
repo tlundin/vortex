@@ -48,7 +48,7 @@ public class WF_Instance_List extends WF_Static_List implements EventListener,Ev
 		super(id, ctx,rows,isVisible);
 		suffices.clear();
 		namePrefix = al.getFunctionalGroup(rows.get(0));
-		myKeyHash = new HashMap<String,String>(gs.getCurrentKeyMap());
+		myKeyHash = new HashMap<String,String>(gs.getVariableCache().getContext().getContext());
 		myKeyHash.remove(variatorColumn);
 		ctx.addEventListener(this, EventType.onFlowExecuted);
 		ctx.addEventListener(this, EventType.onSave);
@@ -114,7 +114,7 @@ public class WF_Instance_List extends WF_Static_List implements EventListener,Ev
 				
 				if (varName!=null) {
 					myKeyHash.put(variatorColumn, index);	
-					Variable var = varCache.getVariable(myKeyHash, varId, value, true);//(myKeyHash, varId,value);
+					Variable var = varCache.getVariable(myKeyHash,varCache.createOrGetCache(myKeyHash), varId, value, true);//(myKeyHash, varId,value);
 					if (var!=null) {
 						String entryInstanceLabel = al.getEntryLabel(var.getBackingDataSet())+" ["+index+"]";
 						WF_ClickableField_Selection ef = entryFields.get(entryInstanceLabel);
@@ -135,7 +135,7 @@ public class WF_Instance_List extends WF_Static_List implements EventListener,Ev
 								if (efVarName.equals(varId)) 
 									ef.addVariable(var, true, null, true,showHistorical);
 								else {
-									efVar =varCache.getVariable(myKeyHash, efVarName, null, true);
+									efVar =varCache.getVariable(myKeyHash,varCache.createOrGetCache(myKeyHash), efVarName, null, true);
 									ef.addVariable(efVar, true, null, true,showHistorical);
 								}
 							}

@@ -84,7 +84,7 @@ public class StatusHandler {
 		Kvot k1 = getStatusSmaProv();
 		Kvot k2 = getStatusDelytor();
 		boolean done = (k1.allDone() && k2.allDone());
-		gs.getVariableCache().getVariableUsingKey(pyKeyMap, 
+		gs.getVariableCache().getVariable(pyKeyMap, 
 				"status_provyta").setValue(done?Constants.STATUS_AVSLUTAD_OK:Constants.STATUS_INITIAL);
 	}
 
@@ -93,7 +93,7 @@ public class StatusHandler {
 		if (rutaKeyMap == null)
 			return;
 		Kvot k = getStatusProvytor();
-		gs.getVariableCache().getVariableUsingKey(rutaKeyMap, 
+		gs.getVariableCache().getVariable(rutaKeyMap, 
 				"status_ruta").setValue(k.allDone()?Constants.STATUS_AVSLUTAD_OK:Constants.STATUS_INITIAL);
 	}
 
@@ -109,7 +109,7 @@ public class StatusHandler {
 		keySet = gs.getVariableConfiguration().createProvytaKeyMap();
 		int done = getNumberOfElementsDone(keySet,"status_delyta");		
 		int tot = 1;
-		String totS = gs.getVariableCache().getVariableUsingKey(gs.getVariableConfiguration().createProvytaKeyMap(), "noOfDelytor").getValue();
+		String totS = gs.getVariableCache().getVariable(gs.getVariableConfiguration().createProvytaKeyMap(), "noOfDelytor").getValue();
 		if (totS != null)
 			tot = Integer.parseInt(totS);
 		return new Kvot(done,tot);

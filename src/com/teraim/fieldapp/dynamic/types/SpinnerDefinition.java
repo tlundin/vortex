@@ -40,10 +40,10 @@ public class SpinnerDefinition implements Serializable {
 	Map<String,List<SpinnerElement>> myElements = new HashMap<String,List<SpinnerElement>>();
 	
 	public List<SpinnerElement> get(String spinnerId){
-		return myElements.get(spinnerId);
+		return myElements.get(spinnerId.toLowerCase());
 	}
 	public void add(String id,List<SpinnerElement> l) {
-		myElements.put(id, l);
+		myElements.put(id.toLowerCase(), l);
 	}
 	public int size() {
 		return myElements.size();

@@ -41,7 +41,7 @@ public class WF_List_UpdateOnSaveEvent extends WF_Static_List implements EventLi
 		super(id, ctx,rows,isVisible);
 		String namePrefix = al.getFunctionalGroup(rows.get(0));
 		Log.d("nils","SkarmGrupp: "+namePrefix);
-		varValueMap = gs.getDb().preFetchValuesForAllMatchingKey(gs.getCurrentKeyMap(), namePrefix);
+		varValueMap = gs.getDb().preFetchValuesForAllMatchingKey(gs.getVariableCache().getContext().getContext(), namePrefix);
 		ctx.addEventListener(this, EventType.onSave);
 		o = GlobalState.getInstance().getLogger();
 
@@ -94,13 +94,13 @@ public class WF_List_UpdateOnSaveEvent extends WF_Static_List implements EventLi
 			}
 			if (!success) {
 				//This variable is either wrong or global.
-				Variable v= varCache.getVariable(varSuffix,initialValue);
+				Variable v= varCache.getVariable(varSuffix,initialValue,-1);
 				if (v!=null)
 					ef.cfs.addVariable(v, displayOut,format,isVisible,showHistorical);	
 				else {
 					o.addRow("");
 					o.addRedText("Variable with suffix "+varSuffix+" was not found when creating list "+this.getId());
-					o.addRow("context: ["+gs.getCurrentKeyMap().toString()+"]");
+					o.addRow("context: ["+gs.getVariableCache().getContext().toString()+"]");
 					String namePrefix = al.getFunctionalGroup(myRows.get(0));
 					o.addRow("Group: "+namePrefix);
 				}
@@ -176,12 +176,12 @@ public class WF_List_UpdateOnSaveEvent extends WF_Static_List implements EventLi
 		}
 
 		String vName = targetField+Constants.VariableSeparator+varNameSuffix;
-		Variable v = varCache.getVariable(vName,initialValue);
+		Variable v = varCache.getVariable(vName,initialValue,-1);
 
 		if (v==null) {
 			//try with simple name.
 			o.addRow("Will retry with variable name: "+varNameSuffix);
-			v = varCache.getVariable(varNameSuffix,initialValue);
+			v = varCache.getVariable(varNameSuffix,initialValue,-1);
 			if (v==null) {
 				Log.e("nils","Didnt find variable "+vName+" in AddVariableToList");
 				o.addRow("");

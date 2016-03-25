@@ -921,22 +921,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			if (name.equals("block_ID")) {
 				id = readText("block_ID",parser);
 			}
-			/*
-				else if (name.equals("variables")) {
-					varS = readText("variables",parser);
-					o.addRow("VARIABLES: "+varS);	
-					String[] varsA = varS.split(",");
-					if (varsA!=null && varsA.length>0) {
-						varL = new ArrayList<String>();
-						String v;
-						for (int i = 0;i< varsA.length;i++) {
-							v = varsA[i].trim();
-							if (v.length()>0)
-								varL.add(v);						
-						}
-					}
-				}
-			 */
+
 			else if (name.equals("expression")) {
 				expr = readText("expression",parser);
 			}

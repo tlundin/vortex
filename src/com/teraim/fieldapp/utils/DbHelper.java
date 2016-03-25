@@ -16,6 +16,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -32,8 +33,9 @@ import com.teraim.fieldapp.GlobalState;
 import com.teraim.fieldapp.dynamic.VariableConfiguration;
 import com.teraim.fieldapp.dynamic.types.ArrayVariable;
 import com.teraim.fieldapp.dynamic.types.Table;
-import com.teraim.fieldapp.dynamic.types.VarCache;
+import com.teraim.fieldapp.dynamic.types.VariableCache;
 import com.teraim.fieldapp.dynamic.types.Variable;
+import com.teraim.fieldapp.dynamic.types.Variable.DataType;
 import com.teraim.fieldapp.dynamic.workflow_realizations.gis.GisConstants;
 import com.teraim.fieldapp.dynamic.workflow_realizations.gis.GisObject;
 import com.teraim.fieldapp.log.LoggerI;
@@ -790,32 +792,8 @@ public class DbHelper extends SQLiteOpenHelper {
 		return -1;
 	}
 
-	public class TimeAndId {
-		int id;
-		String time;
-
-	}
-
-	public TimeAndId getIdAndTimeStamp(String name, Selection s) {
-		//Log.d("nils","In getId with name "+name+" and selection "+s.selection+" and selectionargs "+print(s.selectionArgs));
-		Cursor c = db.query(TABLE_VARIABLES,new String[]{"id","timestamp"},
-				s.selection,s.selectionArgs,null,null,null,null);
-		if (c != null && c.moveToFirst()) {
-			//Log.d("nils","Cursor count "+c.getCount()+" columns "+c.getColumnCount());
-			TimeAndId ret = new TimeAndId();
-			ret.id = c.getInt(0);
-			ret.time = c.getString(1);
-			//Log.d("nils","Found id in db for "+name+" :"+value);
-			c.close();
-			return ret;
 
 
-		} 
-		//Log.d("nils","Did NOT find value in db for "+name);
-		if (c!=null)
-			c.close();
-		return null;
-	}
 
 
 	private String print(String[] selectionArgs) {
@@ -1176,7 +1154,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		Set<String> touchedVariables = new HashSet<String>();
 		SyncReport changes = new SyncReport();
 		GlobalState gs = GlobalState.getInstance();
-		VarCache vc = gs.getVariableCache();
+		VariableCache vc = gs.getVariableCache();
 
 		int size = ses.length-1;
 
@@ -1273,9 +1251,11 @@ public class DbHelper extends SQLiteOpenHelper {
 					Log.d("sync","Selection ARGS: "+xor);
 				}
 
-				TimeAndId ti = this.getIdAndTimeStamp(name, sel);
+				Cursor c = getExistingVariableCursor(name, sel);
 				long rId=-1;
-				if (ti==null || s.isInsertArray()) {// || gs.getVariableConfiguration().getnumType(row).equals(DataType.array)) {
+				boolean hasValueAlready = c.moveToNext();
+
+				if (!hasValueAlready || s.isInsertArray()) {// || gs.getVariableConfiguration().getnumType(row).equals(DataType.array)) {
 					Log.d("sync","INSERTING NEW (OR ARRAY) "+name);
 					//now there should be ContentValues that can be inserted.
 					rId = db.insert(TABLE_VARIABLES, // table
@@ -1283,26 +1263,44 @@ public class DbHelper extends SQLiteOpenHelper {
 							cv
 							); 	
 					changes.inserts++;
-
 				} else {
-					boolean existingTimestampIsMoreRecent = (Tools.existingTimestampIsMoreRecent(ti.time,s.getTimeStamp()));
-					if (ti.time!=null && s.getTimeStamp()!=null) {
+					long id = c.getLong(0);
+					String time = c.getString(1);
+					String value = c.getString(2);
+					String varName = c.getString(3);
+					String author = c.getString(4);
+					//Is the existing entry done by me?
+					Log.d("vortex","Author is "+author);
+					if (isMe(author)) {
+						Log.e("vortex","found conflict between import value and existing for "+varName);
+						if (varName.startsWith("status")) {
+							Log.d("vortex","This is likely a status variable");
+							List<String> row = GlobalState.getInstance().getVariableConfiguration().getCompleteVariableDefinition(varName);
+							String group = GlobalState.getInstance().getVariableConfiguration().getFunctionalGroup(row);
+							Log.d("vortex","Group is "+group);
+						}
+					}
+
+					//If this is a status variable, and the value is different than existing value, add a conflict.
+
+					boolean existingTimestampIsMoreRecent = (Tools.existingTimestampIsMoreRecent(time,s.getTimeStamp()));
+					if (time!=null && s.getTimeStamp()!=null) {
 						if (!existingTimestampIsMoreRecent) {
 							//Log.d("sync","REPLACING "+name);
-							cv.put("id", ti.id);
+							cv.put("id", id);
 							rId = db.replace(TABLE_VARIABLES, // table
 									null, //nullColumnHack
 									cv
 									); 	
 							changes.updates++;
 
-							if (rId!=ti.id) 
-								Log.e("sync","CRY FOUL!!! New Id not equal to found! "+" ID: "+ti.id+" RID: "+rId);
+							if (rId!=id) 
+								Log.e("sync","CRY FOUL!!! New Id not equal to found! "+" ID: "+id+" RID: "+rId);
 						} else {
 							changes.refused++;
 							o.addRow("");
-							o.addYellowText("DB_INSERT REFUSED: "+name+" Timestamp incoming: "+s.getTimeStamp()+" Time existing: "+ti.time);
-							Log.d("vortex","DB_INSERT REFUSED: "+name+" Timestamp incoming: "+s.getTimeStamp()+" Time existing: "+ti.time);
+							o.addYellowText("DB_INSERT REFUSED: "+name+" Timestamp incoming: "+s.getTimeStamp()+" Time existing: "+time);
+							Log.d("vortex","DB_INSERT REFUSED: "+name+" Timestamp incoming: "+s.getTimeStamp()+" Time existing: "+time);
 						}
 					} else
 						Log.e("sync","A timestamp was null!!");
@@ -1388,18 +1386,18 @@ public class DbHelper extends SQLiteOpenHelper {
 				String keyPairs = s.getChange();
 				if (keyPairs!=null) {
 					Log.d("sync","Got Erase Many sync message with keyPairs: "+keyPairs);					
-						this.erase(keyPairs);
-						//Invalidate Cache...purposeless to invalidate only part.
-						vc.invalidateAll();
-						o.addRow("");
-						o.addGreenText("DB_ERASE message executed in sync");
+					int affectedRows = this.erase(keyPairs);
+					//Invalidate Cache...purposeless to invalidate only part.
+					o.addRow("");
+					o.addGreenText("DB_ERASE message executed in sync");
+					changes.deletes+=affectedRows;
 
-					} else {
-						o.addRow("");
-						o.addRedText("DB_ERASE Failed. Message corrupt");
-						changes.faults++;
-					}
+				} else {
+					o.addRow("");
+					o.addRedText("DB_ERASE Failed. Message corrupt");
+					changes.faults++;
 				}
+			}
 		}
 		//Invalidate all variables touched.
 		for (String varName:touchedVariables) 
@@ -1412,6 +1410,20 @@ public class DbHelper extends SQLiteOpenHelper {
 		return changes;
 	}
 
+	private boolean isMe(String author) {
+		if (globalPh!=null && author!=null)
+			return globalPh.get(PersistenceHelper.USER_ID_KEY).equals(author);
+		else
+			Log.e("vortex","globalPh or author was null in isme");
+		return true;
+	}
+
+	public Cursor getExistingVariableCursor(String name, Selection s) {
+		//Log.d("nils","In getId with name "+name+" and selection "+s.selection+" and selectionargs "+print(s.selectionArgs));
+		Cursor c = db.query(TABLE_VARIABLES,new String[]{"id","timestamp","value","var","author"},
+				s.selection,s.selectionArgs,null,null,null,null);
+		return c;
+	}
 
 	public void syncDone(long timeStamp) {
 		Log.d("vortex","in syncdone with timestamp "+timeStamp);
@@ -1467,44 +1479,59 @@ public class DbHelper extends SQLiteOpenHelper {
 	}
 
 
-	public void erase(String keyPairs) {
+	public int erase(String keyPairs) {
 		if (keyPairs == null || keyPairs.isEmpty()) {
 			Log.e("vortex","keypairs null or empty in erase! Not allowed!");
-			return;
+			return 0;
 		}
 
 		Log.d("vortex","In erase with keyPairs: "+keyPairs);
-		
+
 		//map keypairs. Create delete statement.
 		StringBuilder delStmt = new StringBuilder("");
-
+		Map<String,String> map = new HashMap<String,String>();
 		String pairs[] = keyPairs.split(",");
 		String column,value;
-		boolean last=false;
+		boolean last=false,exact=true;
 		int i=0;
-		String[] values = new String[pairs.length];
-		
+
+		ArrayList<String> values = new ArrayList<String>();
+		String[] valuesA=null;
+
 		for (String pair:pairs) {
 			last = i==(pairs.length-1);
 			String[] keyValue = pair.split("=");
 			if (keyValue!=null && keyValue.length==2) {
 				column = keyColM.get(keyValue[0]);
-				if (Constants.NOT_NULL.equals(keyValue[1])) 
-					delStmt.append(column + "= NOT NULL");
+				if (Constants.NOT_NULL.equals(keyValue[1])) {
+					delStmt.append(column + " IS NOT NULL");
+					//erase in cache will erase all keys containing pairs that have value.
+					exact = false;
+				}
 				else {
-					values[i++] = keyColM.get(keyValue[1]);
+					values.add(keyValue[1]);					
+					map.put(keyValue[0],keyValue[1]);
 					delStmt.append(column + "= ?");
 				}
 			} else 
 				Log.e("vortex","failed to split "+pair);
 			if (!last)
 				delStmt.append(" AND ");
-			
+			i++;
 		}
+		valuesA=values.toArray(new String[values.size()]);
 		Log.d("vortex","Delete statement is now "+delStmt);
-		print(values);
-
-		db.delete(DbHelper.TABLE_VARIABLES, delStmt.toString(), values);
+		Log.d("vortex","VALUES:");
+		Log.d("vortex",print(valuesA));
+		int affected = db.delete(DbHelper.TABLE_VARIABLES, delStmt.toString(), valuesA);
+		Log.d("vortex","Deleted rows count: "+affected);
+		//Invalidate affected cache variables
+		if (affected>0) {
+			Log.d("vortex","cleaning up cache. Exact: "+exact);
+			GlobalState.getInstance().getVariableCache().invalidateOnKey(map, exact);
+		} else
+			Log.d("vortex","No changes to db so no need to touch cache.");
+		return affected;
 	}
 
 	public void eraseDelytor(String currentRuta, String currentProvyta) {
@@ -1519,11 +1546,8 @@ public class DbHelper extends SQLiteOpenHelper {
 		//Create sync entry
 		insertEraseAuditEntry(deleteStatement);
 
-		//Erase cache
-		Map<String, String> baseKey = GlobalState.getInstance().getVariableConfiguration().createProvytaKeyMap();
-		
-		GlobalState.getInstance().getVariableCache().invalidateOnKey(baseKey,false);	
-		
+
+
 
 	}
 
@@ -1536,12 +1560,11 @@ public class DbHelper extends SQLiteOpenHelper {
 
 		insertEraseAuditEntry(deleteStatement);
 
-		//Erase cache
-		Map<String, String> baseKey = GlobalState.getInstance().getVariableConfiguration().createProvytaKeyMap();
-		GlobalState.getInstance().getVariableCache().invalidateOnKey(baseKey,true);	
+
 	}
 
 	public void eraseSmaProvyDelytaAssoc(String currentRuta, String currentProvyta) {
+		Log.d("vortex","Calling erase with r "+currentRuta+", p "+currentProvyta+" db: "+db);
 		String yCol = keyColM.get("år");
 		String rCol = keyColM.get("ruta");
 		String pyCol = keyColM.get("provyta");
@@ -1670,8 +1693,8 @@ public class DbHelper extends SQLiteOpenHelper {
 
 
 	public void insertGisObject(GisObject go) {
-		Variable gpsCoord = GlobalState.getInstance().getVariableCache().getVariableUsingKey(go.getKeyHash(), GisConstants.Location);
-		Variable geoType = GlobalState.getInstance().getVariableCache().getVariableUsingKey(go.getKeyHash(), GisConstants.Geo_Type);
+		Variable gpsCoord = GlobalState.getInstance().getVariableCache().getVariable(go.getKeyHash(), GisConstants.Location);
+		Variable geoType = GlobalState.getInstance().getVariableCache().getVariable(go.getKeyHash(), GisConstants.Geo_Type);
 		if (gpsCoord == null || geoType == null) {
 			LoggerI o = GlobalState.getInstance().getLogger();
 			o.addRow("");
@@ -1736,7 +1759,6 @@ public class DbHelper extends SQLiteOpenHelper {
 	}
 
 
-
 	public Map<String, String> preFetchValuesForAllMatchingKey(Map<String,String> keyChain, String namePrefix) {		
 
 		String query = "SELECT "+VARID+",value FROM "+TABLE_VARIABLES+
@@ -1769,8 +1791,83 @@ public class DbHelper extends SQLiteOpenHelper {
 
 	}
 
+	public class TmpVal {
+		public String hist;
+		public String norm;
+	}
+
+	public Map<String, TmpVal> preFetchValuesForAllMatchingKeyV(Map<String,String> keyChain) {		
+		final List<String> columns = new ArrayList<String>();
+		final List<String> selectionArgs = new ArrayList<String>();
+		final String AR = getColumnName("år");
+		StringBuilder selection = new StringBuilder();
+		
+		Map<String,String> transMap = new HashMap<String,String>();
+		if (keyChain!=null) {
+			for (String key:keyChain.keySet()) {
+				transMap.put(getColumnName(key),keyChain.get(key));
+			}
+		} 
+		
+		
+		boolean last=false;
+		int arIndex = -1;
+		for (int i=1;i<=NO_OF_KEYS;i++) {
+			last = i == NO_OF_KEYS;
+			String key = "L"+i;
+			//forget year.
+				columns.add(key);
+				if(transMap.get(key)!=null) {
+					selection.append(key+"=? ");
+					selectionArgs.add(transMap.get(key));
+					if (arIndex == -1 && key.equals(AR))
+						arIndex=selectionArgs.size()-1;
+				}
+				else
+					selection.append(key+" IS NULL ");
+			if (!last)
+				selection.append("AND ");
+		}
+//		if (!key.equals(AR)) {
+		String[] selArgs = selectionArgs.toArray(new String[selectionArgs.size()]);
+		Log.d("vortex","selection: "+selection);
+		Log.d("vortex","selectionArgs: "+selectionArgs);
+		Cursor c = db.query(true,TABLE_VARIABLES, new String[] {VARID,"value"}, selection.toString(), selArgs, null, null, null,null);
+		Log.d("vortex","Got "+c.getCount()+" results in norm ");
+		//Now also query the historical values. If any.
+		Map<String,TmpVal> tmp = new HashMap<String,TmpVal>();
+
+		if (arIndex!=-1) {
+			selectionArgs.set(arIndex, Constants.HISTORICAL_TOKEN_IN_DATABASE);
+			Log.d("vortex","historical selectionArgs: "+selectionArgs);
+			Cursor d = db.query(true,TABLE_VARIABLES, new String[] {VARID,"value"}, selection.toString(), selArgs, null, null, null,null);
+			Log.d("vortex","Got "+d.getCount()+" results in hist ");
+			while (d.moveToNext()) 
+				getTmpVal(d.getString(0),tmp).hist=d.getString(1);
+			d.close();
+		}
+		while(c.moveToNext()) {
+			getTmpVal(c.getString(0),tmp).norm=c.getString(1);
+		}
+
+		if (tmp.values()!=null)
+			Log.d("vortex", "Tmpval has "+tmp.values().size()+" members");
+		c.close();
+		
+		return tmp;
+
+	
+	}
 
 
+private TmpVal getTmpVal(String id,Map<String, TmpVal> tmp) {
+	TmpVal x = tmp.get(id);
+		if (x==null) {
+			x = new TmpVal();
+			tmp.put(id, x);
+		}
+	return x;			
+}
 
 	//Fetch all instances of Variables matching namePrefix (group id). Map varId to a Map of Variator, Value.
 	public Map<String, Map<String,String>> preFetchValues(Map<String,String> keyChain, String namePrefix, String variatorColumn) {		
@@ -1918,6 +2015,17 @@ public class DbHelper extends SQLiteOpenHelper {
 		Log.d("vortex","DELETING ALL ENTRIES!!");
 		db.delete(TABLE_SYNC, null, null);
 		return retValue;
+	}
+
+	public void persistQueue(Queue<Variable> dbQueue) {
+		beginTransaction();
+		Variable v;
+		while (!dbQueue.isEmpty()) {
+			v = dbQueue.poll();
+			Log.d("vortex","inserting var "+v.getId());
+			this.insertVariable(v,v.getValue(),v.isSyncNext());
+		}
+		this.endTransactionSuccess();
 	}
 
 

@@ -32,7 +32,7 @@ public class DrawerMenu {
 	private int currentIndex=0;
 	private Map<Integer,Integer> index; 
 	private List<Workflow> workflowsL;
-	
+
 	public DrawerMenu(Activity a) {	
 		frameActivity=a;
 		createMenu();
@@ -86,108 +86,77 @@ public class DrawerMenu {
 				Log.e("vortex","Could not find any entry for menu position "+position);
 		}
 	}
-		public void createMenu() {
-			//drawer items
-			//different if already created?
-			items = new ArrayList<DrawerMenuItem>(); 
-			mAdapter = new DrawerMenuAdapter(frameActivity, items);
+	public void createMenu() {
+		//drawer items
+		//different if already created?
+		items = new ArrayList<DrawerMenuItem>(); 
+		mAdapter = new DrawerMenuAdapter(frameActivity, items);
 
-			mDrawerLayout = (DrawerLayout) frameActivity.findViewById(R.id.drawer_layout);
-			mDrawerList = (ListView) frameActivity.findViewById(R.id.left_drawer);
+		mDrawerLayout = (DrawerLayout) frameActivity.findViewById(R.id.drawer_layout);
+		mDrawerList = (ListView) frameActivity.findViewById(R.id.left_drawer);
 
-			// Set the adapter for the list view
-			mDrawerList.setAdapter(mAdapter);
-			// Set the list's click listener
-			mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
+		// Set the adapter for the list view
+		mDrawerList.setAdapter(mAdapter);
+		// Set the list's click listener
+		mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
 
-			mDrawerToggle = new ActionBarDrawerToggle(
-					frameActivity,                  /* host Activity */
-					mDrawerLayout,         /* DrawerLayout object */
-					R.drawable.ic_drawer,  /* nav drawer icon to replace 'Up' caret */
-					R.string.drawer_open,  /* "open drawer" description */
-					R.string.drawer_close  /* "close drawer" description */
-					) {
+		mDrawerToggle = new ActionBarDrawerToggle(
+				frameActivity,                  /* host Activity */
+				mDrawerLayout,         /* DrawerLayout object */
+				R.drawable.ic_drawer,  /* nav drawer icon to replace 'Up' caret */
+				R.string.drawer_open,  /* "open drawer" description */
+				R.string.drawer_close  /* "close drawer" description */
+				) {
 
-				/** Called when a drawer has settled in a completely closed state. */
-				public void onDrawerClosed(View view) {
-					super.onDrawerClosed(view);
+			/** Called when a drawer has settled in a completely closed state. */
+			public void onDrawerClosed(View view) {
+				super.onDrawerClosed(view);
 
-				}
-
-				/** Called when a drawer has settled in a completely open state. */
-				public void onDrawerOpened(View drawerView) {
-					//createDrawerMenu(wfs);
-					//mAdapter.notifyDataSetChanged();				
-					super.onDrawerOpened(drawerView);
-
-				}
-
-			};
-
-			// Set the drawer toggle as the DrawerListener
-			mDrawerLayout.setDrawerListener(mDrawerToggle);
-
-			mAdapter.notifyDataSetChanged();				
-
-			workflowsL = new ArrayList<Workflow>();
-			index = new HashMap<Integer,Integer>();
-			currentIndex=0;
-			
-		}
-
-		public void addHeader(String label, String bgColor,String textColor) {
-			items.add(new DrawerMenuHeader(label,bgColor,textColor));
-		}
-
-		public void addItem(String label, Workflow wf,String bgColor,String textColor) {
-			//add the workflow reference to a list
-			workflowsL.add(wf);
-			//keep track of the location.
-			index.put(items.size(),currentIndex++);
-			items.add(new DrawerMenuSelectable(label,bgColor,textColor));
-
-		}
-
-		public void closeDrawer() {
-			mDrawerLayout.closeDrawers();
-		}
-
-		public void openDrawer() {	
-			mAdapter.notifyDataSetChanged();				
-			mDrawerLayout.openDrawer(Gravity.LEFT);	
-		}
-		/*
-	private void createDrawerMenu(Workflow main) {
-		mapItemsToName.clear();
-		if (myState == State.POST_INIT) {
-			VariableConfiguration al = gs.getArtLista();		
-			items.clear();
-			//The main workflow defines the menuitems.
-			//xx
-			//Add "static" headers to menu.
-			items.add(new DrawerMenuHeader("Huvudmoment"));
-			int c = 1;
-			addItem(c++,"Ruta");
-			String cr = al.getVariableValue(null,"Current_Ruta");
-			if (cr!=null)
-				addItem(c++,"Provyta/Linje");		
-			items.add(new DrawerMenuHeader("Detalj"));
-			c++;
-			String cp = al.getVariableValue(null, "Current_Provyta");
-			String dy = al.getVariableValue(null, "Current_Delyta");
-			if (cp!=null && cr!=null && dy != null) {
-				for (int i=0;i<wfs.length;i++) 
-					addItem(c++,wfs[i]);
 			}
 
-		} else {
-			items.add(new DrawerMenuHeader("Standby.."));
-		}
+			/** Called when a drawer has settled in a completely open state. */
+			public void onDrawerOpened(View drawerView) {
+				//createDrawerMenu(wfs);
+				//mAdapter.notifyDataSetChanged();				
+				super.onDrawerOpened(drawerView);
+
+			}
+
+		};
+
+		// Set the drawer toggle as the DrawerListener
+		mDrawerLayout.setDrawerListener(mDrawerToggle);
+
+		mAdapter.notifyDataSetChanged();				
+
+		workflowsL = new ArrayList<Workflow>();
+		index = new HashMap<Integer,Integer>();
+		currentIndex=0;
 
 	}
-		 */
 
-	
+	public void addHeader(String label, String bgColor,String textColor) {
+		items.add(new DrawerMenuHeader(label,bgColor,textColor));
+	}
+
+	public void addItem(String label, Workflow wf,String bgColor,String textColor) {
+		//add the workflow reference to a list
+		workflowsL.add(wf);
+		//keep track of the location.
+		index.put(items.size(),currentIndex++);
+		items.add(new DrawerMenuSelectable(label,bgColor,textColor));
+
+	}
+
+	public void closeDrawer() {
+		mDrawerLayout.closeDrawers();
+	}
+
+	public void openDrawer() {	
+		mAdapter.notifyDataSetChanged();				
+		mDrawerLayout.openDrawer(Gravity.LEFT);	
+	}
+
 
 	public ActionBarDrawerToggle getDrawerToggle() {
 		// TODO Auto-generated method stub
@@ -199,6 +168,6 @@ public class DrawerMenu {
 		mAdapter.notifyDataSetChanged();				
 	}
 
-	
+
 
 }

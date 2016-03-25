@@ -55,8 +55,7 @@ public class PageWithDelytaTemplate extends Executor {
 		
 		ViewGroup provytaViewPanel = (LinearLayout)v.findViewById(R.id.Description);
 		DelyteManager dym = DelyteManager.getInstance();
-		if (dym==null)
-			dym = DelyteManager.create(gs,Integer.parseInt(al.getCurrentProvyta()));
+
 		//Marker man = new Marker(BitmapFactory.decodeResource(getResources(),R.drawable.icon_man));
 		ProvytaView pyv = new ProvytaView(this.getActivity(), null,Constants.isAbo(dym.getPyID()));		
 		

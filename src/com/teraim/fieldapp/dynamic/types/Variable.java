@@ -6,9 +6,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import android.util.Log;
@@ -36,14 +33,7 @@ public class Variable implements Serializable {
 	
 	private static final long serialVersionUID = 6239650487891494128L;
 	
-    private static int NUMBER_OF_CORES =
-            Runtime.getRuntime().availableProcessors();
-    private static final int KEEP_ALIVE_TIME = 1;
-    // Sets the Time Unit to seconds
-    private static final TimeUnit KEEP_ALIVE_TIME_UNIT = TimeUnit.SECONDS;
-    // A queue of Runnables
-    private static final BlockingQueue<Runnable> mDecodeWorkQueue = new LinkedBlockingQueue<Runnable>();
-	private static final ThreadPoolExecutor threadPool = new ThreadPoolExecutor(NUMBER_OF_CORES,NUMBER_OF_CORES,KEEP_ALIVE_TIME,KEEP_ALIVE_TIME_UNIT,mDecodeWorkQueue);
+   
 	
 	Map<String, String> keyChain = new HashMap <String,String>();
 	Map<String,String> histKeyChain=null;
@@ -207,18 +197,22 @@ public class Variable implements Serializable {
 			Log.d("vortex","chopped of .0 in setvalue: "+value);
 		}
 		if (this.getType()==DataType.bool) {
+			
 			if (value.equals("true"))
 				value = "1";
-			if (value.equals("false"))
+			else if (value.equals("false"))
 				value = "0";
+			else {
+				Log.e("vortex","This is not a boolean value: "+value);
+				return false;
+			}
+				
 		} 
 		//will change keyset as side effect if valueKey variable.
 		//reason for changing indirect is that old variable need to be erased. 
-		insertVariable(value,isSynchronized);
+		insert(value,isSynchronized);
 		//If rules attached, reevaluate.
 
-		//refreshRuleState();
-		timeStamp = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
 		unknown=false;
 		//In the case the variable was previously displaying a default value different from the DB value.
 		usingDefault = false;
@@ -236,11 +230,19 @@ public class Variable implements Serializable {
 		unknown=true;
 		myValue=null;
 	}
-
-	protected void insertVariable(final String value,
+	boolean isSynchronizedNext = false;
+	public boolean isSyncNext() {
+		return isSynchronizedNext;
+	}
+	protected void insert(final String value,
 			final boolean isSynchronized) {
 		long mil = System.currentTimeMillis();
-		myDb.insertVariable(Variable.this,value,isSynchronized);
+		//Insert into database at some point in time.
+		this.isSynchronizedNext= isSynchronized;
+		gs.getVariableCache().save(this);
+		
+		timeStamp = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
+
 		/*threadPool.execute( new Thread(new Runnable() {
 	        public void run() {
 	        	myDb.insertVariable(Variable.this,value,isSynchronized);
@@ -252,8 +254,7 @@ public class Variable implements Serializable {
 
 	public void setValueNoSync(String value) {
 		myValue = value;
-		myDb.insertVariable(this, value, false);
-		timeStamp = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
+		insert(value, false);
 	}
 
 
@@ -295,7 +296,7 @@ public class Variable implements Serializable {
 	}
 
 
-	public Variable(String name,String label,List<String> row,Map<String,String>keyChain, GlobalState gs,String valueColumn, String defaultOrExistingValue, Boolean valueIsPersisted) {
+	public Variable(String name,String label,List<String> row,Map<String,String>keyChain, GlobalState gs,String valueColumn, String defaultOrExistingValue, Boolean valueIsPersisted, String historicalValue) {
 		//Log.d("nils","Creating variable ["+name+"] with keychain "+((keyChain==null)?"null":keyChain.toString())+"\nthis obj: "+this);
 		this.gs=gs;
 		al=gs.getVariableConfiguration();
@@ -320,6 +321,14 @@ public class Variable implements Serializable {
 		myValueColumn[0]=myDb.getColumnName(valueColumn);
 		//Log.d("nils","myValueColumn: "+myValueColumn[0]);
 		myValue = null;
+		
+		if (historicalValue!=null) {
+			historyChecked=true;
+			myHistory = historicalValue;
+			if (historicalValue.equals("*NULL*"))
+				myHistory = null;
+		} else
+			historyChecked = false;
 		//Defaultvalue is either a default or the current value in DB.
 		setDefault(defaultOrExistingValue);
 		//No information if this variable exists or not.
@@ -340,6 +349,8 @@ public class Variable implements Serializable {
 			Log.e("nils","Variable value column in keyset for valcol "+valueColumn+" varid "+name);
 			isKeyVariable=true;
 		}
+		
+		
 	}
 
 	

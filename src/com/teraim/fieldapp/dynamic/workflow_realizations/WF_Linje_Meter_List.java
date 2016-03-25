@@ -10,7 +10,7 @@ import android.util.Log;
 
 import com.teraim.fieldapp.GlobalState;
 import com.teraim.fieldapp.dynamic.VariableConfiguration;
-import com.teraim.fieldapp.dynamic.types.CHash;
+import com.teraim.fieldapp.dynamic.types.DB_Context;
 import com.teraim.fieldapp.dynamic.types.ColumnDescriptor;
 import com.teraim.fieldapp.dynamic.types.Variable;
 import com.teraim.fieldapp.dynamic.types.Variable.DataType;
@@ -104,7 +104,7 @@ public class WF_Linje_Meter_List extends WF_List implements EventListener {
 
 
 						//keys
-						gs.setKeyHash(new CHash(null,v.getKeyChain()));
+						gs.setDBContext(new DB_Context(null,v.getKeyChain()));
 						List<List<String>>rows =gs.getVariableConfiguration().getTable().getRowsStartingWith(VariableConfiguration.Col_Functional_Group, name);
 						if (rows!=null) {
 							Log.d("nils","Got "+rows.size()+" results");
@@ -188,14 +188,14 @@ public class WF_Linje_Meter_List extends WF_List implements EventListener {
 					if (colVals[myHeaderCol]!=null && colVals[myHeaderCol].equals("Avgränsning")) {
 						Log.d("vortex","In refreshlist for avgränsning");						
 						//(String name,String label,List<String> row,Map<String,String>keyChain, GlobalState gs,String valueColumn, String defaultOrExistingValue, Boolean valueIsPersisted)
-						Variable v = new Variable(varId,"Start",al.getCompleteVariableDefinition(varId),bonnlapp,gs,"meter",null,null);
+						Variable v = new Variable(varId,"Start",al.getCompleteVariableDefinition(varId),bonnlapp,gs,"meter",null,null,null);
 						v.setType(DataType.numeric);
 						varCache.put(v);
 						String start = v.getValue();
 						entryF.addVariable(v, true, null, true,false);
 						Map<String,String> slutKey = new HashMap<String,String>(listElemSelector);
 						slutKey.put("meter", start);
-						gs.setKeyHash(new CHash(null,slutKey));
+						gs.setDBContext(new DB_Context(null,slutKey));
 						v = varCache.getVariable(NamedVariables.AVGRANSSLUT);						
 						entryF.addVariable(v, true, null, true,false);
 						String slut = v.getValue();
@@ -206,7 +206,7 @@ public class WF_Linje_Meter_List extends WF_List implements EventListener {
 						else
 							Log.d("vortex","slut null!");
 					} else {
-						Variable v = new Variable(varId,"Avstånd",al.getCompleteVariableDefinition(varId),bonnlapp,gs,"meter",null,null);
+						Variable v = new Variable(varId,"Avstånd",al.getCompleteVariableDefinition(varId),bonnlapp,gs,"meter",null,null,null);
 						varCache.put(v);
 						v.setType(DataType.numeric);						
 						String start = v.getValue();

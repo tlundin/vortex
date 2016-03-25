@@ -567,14 +567,11 @@ public class MenuActivity extends Activity   {
 		case 0:
 			toggleSyncOnOff();
 			break;
-		case 1:
-			Map<String, String> hash = gs.getCurrentKeyMap();
-			String dialogText="";
-			if (hash!=null)
-				dialogText = hash.toString();
+		case 1:			
+			if (gs!=null && gs.getVariableCache()!=null) {
 			new AlertDialog.Builder(this)
 			.setTitle("Context")
-			.setMessage(dialogText) 
+			.setMessage(gs.getVariableCache().getContext().toString()) 
 			.setIcon(android.R.drawable.ic_dialog_alert)
 			.setCancelable(false)
 			.setNeutralButton("Ok",new Dialog.OnClickListener() {				
@@ -584,6 +581,7 @@ public class MenuActivity extends Activity   {
 				}
 			} )
 			.show();
+			}
 			break;
 
 		case 2:

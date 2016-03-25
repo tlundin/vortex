@@ -13,7 +13,7 @@ import com.teraim.fieldapp.log.LoggerI;
 import com.teraim.fieldapp.utils.Expressor;
 import com.teraim.fieldapp.utils.Expressor.EvalExpr;
 
-public class CHash implements Serializable {
+public class DB_Context implements Serializable {
 	
 	/**
 	 * 
@@ -23,23 +23,18 @@ public class CHash implements Serializable {
 	private final Map<String, String> keyHash;
 	private final String contextS;
 	private final String err;
-	
-	
-	public CHash(String err) {
+
+	public DB_Context(String err) {
 		keyHash=null;
 		this.err=err;
 		this.contextS="";
 	}
-	public CHash(String c, Map<String, String> keyHash) {
+	public DB_Context(String c, Map<String, String> keyHash) {
 		this.keyHash = keyHash;
 		this.contextS=c;
 		err = null;
 	}
-	
-	
-	
-	
-	
+		
 	public Map<String, String> getContext() {
 		return keyHash;
 	}
@@ -61,25 +56,22 @@ public class CHash implements Serializable {
 	
 	/**
 	 * 
-	 * @return current context.
+	 * @return a variable cache containing the variables for current context (as given by eContext)
 	 * The context may contain variables, so the evaluation might change over time. 
 	 * 
 	 */
 	
-	public static CHash evaluate(List<EvalExpr> eContext) {
+	public static DB_Context evaluate(List<EvalExpr> eContext) {
 		
-		GlobalState gs = GlobalState.getInstance();
-		if (gs==null)
-			return null;
 		String err = null;
 		Map<String, String> keyHash = null;
 
-		LoggerI o = gs.getLogger();
+		LoggerI o = GlobalState.getInstance().getLogger();
 		Log.d("vortex","In evaluate Context!!");
 
 		if (eContext==null) {
 			Log.d("vortex","No change to context. Return existing");
-			return GlobalState.getInstance().getCurrentKeyHash();
+			return GlobalState.getInstance().getVariableCache().getContext();
 		} else {
 			keyHash = new HashMap<String, String>();
 			//rawHash = new HashMap<String, Variable>();
@@ -131,10 +123,10 @@ public class CHash implements Serializable {
 			if (err!=null) {
 				o.addRow("");
 				o.addRedText(err);
-				return new CHash(err);
+				return new DB_Context(err);
 			} else {
 				
-				return new CHash(cContext,keyHash);
+				return new DB_Context(cContext,keyHash);
 			}
 		}
 	}

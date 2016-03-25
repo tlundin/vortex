@@ -33,9 +33,9 @@ import com.teraim.fieldapp.GlobalState;
 import com.teraim.fieldapp.R;
 import com.teraim.fieldapp.Start;
 import com.teraim.fieldapp.dynamic.VariableConfiguration;
-import com.teraim.fieldapp.dynamic.types.CHash;
+import com.teraim.fieldapp.dynamic.types.DB_Context;
 import com.teraim.fieldapp.dynamic.types.Rule;
-import com.teraim.fieldapp.dynamic.types.VarCache;
+import com.teraim.fieldapp.dynamic.types.VariableCache;
 import com.teraim.fieldapp.dynamic.types.Variable;
 import com.teraim.fieldapp.dynamic.types.Workflow;
 import com.teraim.fieldapp.dynamic.workflow_abstracts.Container;
@@ -89,9 +89,9 @@ public  class ButtonBlock extends Block {
 	private String exportFileName = null;
 	private boolean enabled;
 
-	private CHash buttonContextOld=null,buttonContext=null;
+	private DB_Context buttonContextOld=null,buttonContext=null;
 	private boolean syncRequired;
-	private VarCache varCache;
+	private VariableCache varCache;
 
 
 	enum Type {
@@ -108,7 +108,7 @@ public  class ButtonBlock extends Block {
 	//TODO: REMOVE THIS Constructor!!
 	//Function used with buttons that need to attach customized actions after click
 	public ButtonBlock(String id,String lbl,String action, String name,String container,String target, String type, String statusVariable,boolean isVisible,
-			OnclickExtra onclickExtra,CHash buttonContext, int dummy) {		
+			OnclickExtra onclickExtra,DB_Context buttonContext, int dummy) {		
 		this(id,lbl,action,name,container,target,type,statusVariable,isVisible,null,null,true,null,false);
 		extraActionOnClick = onclickExtra;
 		this.buttonContextOld = buttonContext;
@@ -163,7 +163,7 @@ public  class ButtonBlock extends Block {
 				Log.d("vortex","ButtonContextS: "+buttonContextE);
 				buttonContext = myContext.getHash();
 				if (buttonContextE!=null&&!buttonContextE.isEmpty())
-					buttonContext = CHash.evaluate(buttonContextE);
+					buttonContext = DB_Context.evaluate(buttonContextE);
 			}
 
 			Log.d("nils","Buttoncontext set to: "+buttonContext+" for button: "+getText());
@@ -180,14 +180,15 @@ public  class ButtonBlock extends Block {
 
 				if (statusVar != null) {
 					VariableConfiguration al = gs.getVariableConfiguration();
-					VarCache varCache = gs.getVariableCache();
-					Variable statusVariable = varCache.getVariableUsingKey(buttonContext.getContext(),statusVar);
+					VariableCache varCache = gs.getVariableCache();
+					Variable statusVariable = varCache.getVariable(buttonContext.getContext(),statusVar);
 					if (statusVariable!=null) {
 						Log.d("nils","STATUSVAR: "+statusVariable.getId()+" key: "+statusVariable.getKeyChain()+ "Value: "+statusVariable.getValue());
 						String valS = statusVariable.getValue();
 						Integer val=null;
 						if (valS == null) {
-							statusVariable.setValue("0");
+							//Set to zero but don't sync the change.
+							statusVariable.setValueNoSync("0");
 							val = 0;
 						}
 						
@@ -257,7 +258,7 @@ public  class ButtonBlock extends Block {
 								if (statusVar != null) {
 
 									Log.d("nils","My button context is: "+buttonContext);
-									statusVariable = varCache.getVariableUsingKey(buttonContext.getContext(),statusVar);
+									statusVariable = varCache.getVariable(buttonContext.getContext(),statusVar);
 								} else
 									statusVariable = null;
 								Set<Rule> myRules = myContext.getRulesThatApply();
@@ -397,7 +398,7 @@ public  class ButtonBlock extends Block {
 								} else {
 									o.addRow("");
 									o.addRow("Action button pressed. Executing wf: "+target);
-									gs.setKeyHash(buttonContext);
+									
 									Start.singleton.changePage(wf,statusVar);
 									
 									//save all changes
@@ -422,7 +423,7 @@ public  class ButtonBlock extends Block {
 
 							} else if (onClick.equals("export")) {
 								Log.d("vortex","Export button clicked!");
-								CHash r = CHash.evaluate(exportContextE);
+								DB_Context r = DB_Context.evaluate(exportContextE);
 								//Context ok?
 								String msg;
 								if (r.isOk()) {

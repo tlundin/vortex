@@ -2,7 +2,10 @@ package com.teraim.fieldapp.ui;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -40,6 +43,7 @@ import com.teraim.fieldapp.loadermodule.configurations.VariablesConfiguration;
 import com.teraim.fieldapp.log.Logger;
 import com.teraim.fieldapp.log.LoggerI;
 import com.teraim.fieldapp.non_generics.Constants;
+import com.teraim.fieldapp.non_generics.NamedVariables;
 import com.teraim.fieldapp.utils.DbHelper;
 import com.teraim.fieldapp.utils.PersistenceHelper;
 
@@ -118,19 +122,19 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		if (!new File(Constants.VORTEX_ROOT_DIR+bundleName).isDirectory()) {
 			Log.d("vortex","First time execution!");
 			debugConsole.addPurpleText("First time execution of App "+bundleName);
-		}else 
-			Log.d("vortex","This application has been executed before.");
+		} //else 
+		//	Log.d("vortex","This application has been executed before.");
 
 		//TODO: Move this code into above in next release.
 		File folder = new File(Constants.VORTEX_ROOT_DIR+bundleName);
-		if(!folder.mkdirs())
-			Log.e("NILS","Failed to create App root folder");
+//		if(!folder.mkdirs())
+//			Log.d("NILS","Failed to create App root folder");
 		folder = new File(Constants.VORTEX_ROOT_DIR+bundleName+"/config");
-		if(!folder.mkdirs())
-			Log.e("NILS","Failed to create config folder");
+//		if(!folder.mkdirs())
+//			Log.("NILS","Failed to create config folder");
 		folder = new File(Constants.VORTEX_ROOT_DIR+bundleName+"/cache");
-		if(!folder.mkdirs())
-			Log.e("NILS","Failed to create cache folder");
+//		if(!folder.mkdirs())
+//			Log.e("NILS","Failed to create cache folder");
 
 
 
@@ -138,7 +142,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		globalPh.put(PersistenceHelper.CURRENT_VERSION_OF_PROGRAM, Constants.VORTEX_VERSION);
 
 		//create module descriptors for all known configuration files.
-		Log.d("vortex","Creating Configuration and ModuleLoader");
+		//Log.d("vortex","Creating Configuration and ModuleLoader");
 		myModules = new Configuration(Constants.getCurrentlyKnownModules(globalPh,ph,server(),bundleName,debugConsole));
 		String loaderId = "moduleLoader";
 		boolean allFrozen = ph.getB(PersistenceHelper.ALL_MODULES_FROZEN+loaderId);
@@ -285,7 +289,10 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 			globalPh.put(PersistenceHelper.VERSION_CONTROL, "Major");
 		if (globalPh.get(PersistenceHelper.SYNC_METHOD).equals(PersistenceHelper.UNDEFINED))
 			globalPh.put(PersistenceHelper.SYNC_METHOD, "Bluetooth");
-		
+		if (globalPh.get(PersistenceHelper.USER_ID_KEY).equals(PersistenceHelper.UNDEFINED))
+			globalPh.put(PersistenceHelper.USER_ID_KEY, getRandomName());		
+		if (globalPh.get(PersistenceHelper.LAG_ID_KEY).equals(PersistenceHelper.UNDEFINED))
+			globalPh.put(PersistenceHelper.LAG_ID_KEY, "Anonymous");		
 
 		folder = new File(Constants.VORTEX_ROOT_DIR+globalPh.get(PersistenceHelper.BUNDLE_NAME)+"/"+Constants.CACHE_ROOT_DIR);
 		if(!folder.mkdirs())
@@ -296,6 +303,18 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		//date = Constants.getTimeStamp();
 		globalPh.put(PersistenceHelper.TIME_OF_FIRST_USE,millis);
 	}
+
+
+	private String getRandomName() {
+		List<String> start= Arrays.asList(new String[]{"Anna","Eva","Fiona","Berta"});
+		List<String> end= Arrays.asList(new String[]{"stina","getrud","lena","eulalia"});        
+        Collections.shuffle(start);
+        Collections.shuffle(end);
+        return start.get(0)+end.get(0)+"_"+(new Random()).nextInt(500);
+	}
+
+
+
 
 
 	private void showErrorMsg(String error) {
@@ -391,7 +410,8 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 				//				}
 				//drawermenu
 				gs.setDrawerMenu(Start.singleton.getDrawerMenu());
-
+				
+				
 				//Change to main.
 				//execute main workflow if it exists.
 				Workflow wf = gs.getWorkflow("Main");

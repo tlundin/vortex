@@ -24,7 +24,7 @@ public class Workflow implements Serializable {
 
 	private List<Block> blocks;
 	private String name,label,applicationName,applicationVersion;
-	private CHash mContext=null;
+	private DB_Context mContext=null;
 
 
 

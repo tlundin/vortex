@@ -34,7 +34,7 @@ import com.teraim.fieldapp.Start;
 import com.teraim.fieldapp.dynamic.Executor;
 import com.teraim.fieldapp.dynamic.blocks.ButtonBlock;
 import com.teraim.fieldapp.dynamic.blocks.OnclickExtra;
-import com.teraim.fieldapp.dynamic.types.CHash;
+import com.teraim.fieldapp.dynamic.types.DB_Context;
 import com.teraim.fieldapp.dynamic.types.Delyta;
 import com.teraim.fieldapp.dynamic.types.Marker;
 import com.teraim.fieldapp.dynamic.types.Variable;
@@ -177,13 +177,13 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 			final int I = i;
 			Map<String,String> buttonHash = al.createProvytaKeyMap();
 			buttonHash.put("delyta", I+"");
-			CHash buttonContext = new CHash(null,buttonHash);
+			DB_Context buttonContext = new DB_Context(null,buttonHash);
 			delyteKnappar[i]=new ButtonBlock("DelBl"+i,"Delyta "+i,"Start_Workflow", "Delyta "+i,"Field_List_panel_1",
 					(isAbo?NamedVariables.WF_DELYTE_INMATNING_ABO:NamedVariables.WF_DELYTE_INMATNING),"action","status_delyta",true,
 					new OnclickExtra() {						
 				@Override
 				public void onClick() {
-					varCache.getVariable(NamedVariables.CURRENT_DELYTA).setValue(I+"");
+					varCache.getGlobalVariable(NamedVariables.CURRENT_DELYTA).setValue(I+"");
 					Delyta dy = dym.getDelyta(I);
 					dym.setSelected(I);
 					Log.d("nils","Selected delyta set to "+dy.getId()+"");						
@@ -234,7 +234,7 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 
 
 		//Varna om provytecentrum flyttat eller saknas.
-		Variable pyMarkTypV = varCache.getVariableUsingKey(al.createProvytaKeyMap(),"ProvytacentrumMarkeringstyp");
+		Variable pyMarkTypV = varCache.getVariable(al.createProvytaKeyMap(),"ProvytacentrumMarkeringstyp");
 		String pyMarkTyp = pyMarkTypV.getHistoricalValue();
 		Log.d("nils","ProvytacentrumMarkeringstyp: "+pyMarkTyp);
 		//Log.d("nils","FlyttatCentrumVarning"+currRuta+"_"+currPy+" equals "+gs.getPreferences().get("FlyttatCentrumVarning"+currRuta+"_"+currPy));
@@ -301,8 +301,8 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 		k = statusHandler.getStatusSmaProv();
 		smaOutputValueField.setText(k.toString());
 		partnerOutputValueField.setText(gs.getMyPartner());
-		if (dym.isObsolete())
-			dym.init();
+		//if (dym.isObsolete())
+		dym.init();
 
 		pyv.showDelytor(dym.getDelytor(),false);
 
@@ -326,21 +326,13 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 		for (Integer id:dys) {	
 			map = al.createProvytaKeyMap();
 			map.put("delyta", id+"");
-			gs.setKeyHash(new CHash(null,map));
+			gs.setDBContext(new DB_Context(null,map));
 			delyteKnappar[id].create(myContext);	
 			dys.add(id);			
 		}
 		smayteKnapp.create(myContext);
-		/*
-		for (int i=0;i<(isAbo?9:3);i++) {
-			map = al.createProvytaKeyMap();
-			map.put("smaprovyta", i+"");
-			gs.setKeyHash(new CHash(null,map));
-			smayteKnappar[i].create(myContext);
-		}
-		 */
 		
-		gs.setKeyHash(new CHash(null,al.createProvytaKeyMap()));		
+		gs.setDBContext(new DB_Context(null,al.createProvytaKeyMap()));		
 		
 		myContext.drawRecursively(myC);
 
@@ -375,7 +367,7 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 	@Override
 	public void onEvent(Event e) {
 		if (e.getProvider().equals(Constants.SYNC_ID)) {
-			dym.init();
+			
 			refresh();
 		}
 	}

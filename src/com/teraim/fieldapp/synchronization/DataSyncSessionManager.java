@@ -142,7 +142,8 @@ public class DataSyncSessionManager implements ConnectionListener,SyncStatusList
 	boolean pSyncDone,mSyncDone;
 	SyncReport syncReport = null;
 	private SyncReport partnerSyncReport;
-
+	boolean nameErr=false;
+	
 	private void handle(Object message) {
 		GlobalState gs = GlobalState.getInstance();
 
@@ -188,7 +189,7 @@ public class DataSyncSessionManager implements ConnectionListener,SyncStatusList
 			else if (message instanceof SlavePing && !gs.isMaster()) 
 				ui.alert("Both devices configured as Client. Please change under Configuration.");
 			else {
-				PingMessage sp = (PingMessage)message;
+				final PingMessage sp = (PingMessage)message;
 				String myAppName = gs.getGlobalPreferences().get(PersistenceHelper.BUNDLE_NAME);
 
 				String partnerAppName = sp.getPartnerAppName();
@@ -213,10 +214,18 @@ public class DataSyncSessionManager implements ConnectionListener,SyncStatusList
 							"\nMy App version: "+myAppVersion+
 							"\nOthers App version: "+sp.getAppVersion()+
 							"\nMy Time: "+Constants.getSweDate()+
-							"\nOthers Time: "+sp.getTime());
-					gs.setMyPartner(sp.getPartner());
+							"\nOthers Time: "+sp.getTime()+
+							"\nPerson: "+sp.getPartner());
+							
+					
 					String mYear = Constants.getYear();
 					String pYear = sp.getTime().substring(0,4);
+					String mPartner = gs.getPreferences().get(PersistenceHelper.PARTNER_NAME);
+					if (mPartner.isEmpty()) {
+						Log.d("vortex","no previous value. setting partner");
+						gs.getPreferences().put(PersistenceHelper.PARTNER_NAME, sp.getPartner());
+						mPartner = sp.getPartner();
+					}
 					boolean err=false;
 					if (myAppVersion!=sp.getAppVersion() ||
 							mySoftwareVersion!=sp.getSoftwareVersion()) {
@@ -233,7 +242,16 @@ public class DataSyncSessionManager implements ConnectionListener,SyncStatusList
 						o.addRow(versionText.toString());
 						err=true;
 					
-					} if (!err){
+					} else if (!mPartner.equals(sp.getPartner())) {
+						err=true;
+						nameErr=true;
+						versionText.insert(0,"*WARNING*: Partner name mismatch.\nExisting: "+mPartner+". New: "+sp.getPartner());
+						o.addRow("");
+						o.addRedText("[BT MESSAGE -->PING. NAME MISMATCH!");
+						o.addRow("Existing: "+mPartner+". New: "+sp.getPartner());
+					}
+					
+					if (!err){
 						versionText.append("\n\nAll Ok!\nConfirm to start sync");				
 						o.addRow("");
 						o.addGreenText("[BT MESSAGE -->PING. VERSIONS OK");
@@ -247,6 +265,11 @@ public class DataSyncSessionManager implements ConnectionListener,SyncStatusList
 
 						@Override
 						public void confirm() {
+							if (nameErr) {
+								//Change partner name permanently to avoid repeat error
+								GlobalState.getInstance().getPreferences().put(PersistenceHelper.PARTNER_NAME, sp.getPartner());	
+								nameErr=false;
+							}
 							startDataTransfer();
 						}});
 					

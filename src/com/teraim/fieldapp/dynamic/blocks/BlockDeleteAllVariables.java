@@ -8,7 +8,7 @@ import java.util.Map;
 import android.util.Log;
 
 import com.teraim.fieldapp.GlobalState;
-import com.teraim.fieldapp.dynamic.types.CHash;
+import com.teraim.fieldapp.dynamic.types.DB_Context;
 import com.teraim.fieldapp.dynamic.workflow_realizations.WF_Context;
 import com.teraim.fieldapp.utils.Expressor.EvalExpr;
 
@@ -38,7 +38,7 @@ public class BlockDeleteAllVariables extends Block {
 	public void create(WF_Context ctx) {
 		o = GlobalState.getInstance().getLogger();
 		o.addRow("Now deleting all variables under Context: ["+context+"]");
-		CHash evaluatedContext = CHash.evaluate(contextE);
+		DB_Context evaluatedContext = DB_Context.evaluate(contextE);
 		if (evaluatedContext.isOk()) {
 			Map<String, String> hash = evaluatedContext.getContext();
 			//Delete database entries.
@@ -54,14 +54,10 @@ public class BlockDeleteAllVariables extends Block {
 				i++;
 			}
 			GlobalState.getInstance().getDb().erase(keyBuilder.toString());
-			
 			o.addRow("Deleted all entries under context "+hash);
-			//Erase cache.
-			GlobalState.getInstance().getVariableCache().invalidateOnKey(hash,true);
 			//Create sync entry.
 			Log.d("vortex","Creating Erase sync entry for "+keyBuilder.toString());			
 			GlobalState.getInstance().getDb().insertEraseAuditEntry(keyBuilder.toString());
-			
 			
 		} else {
 			o.addRow("");

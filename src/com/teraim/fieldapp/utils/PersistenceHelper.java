@@ -59,13 +59,8 @@ public class PersistenceHelper {
 	public static final String SYNC_ON_FIRST_TIME_KEY = "sync_first_use";
 	public static final String TIME_OF_LAST_SYNC_TO_TEAM_FROM_ME = "time_last_sync_from_me";
 	public static final String TIME_OF_LAST_SYNC_FROM_TEAM_TO_ME = "time_last_sync_from_team";
+	public static final String PARTNER_NAME = "my_partner";
 	
-	
-
-
-	
-
-
 	SharedPreferences sp;
 
 	ArrayList<String> delta = new ArrayList<String>();

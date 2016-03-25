@@ -35,9 +35,9 @@ import android.widget.TextView;
 
 import com.teraim.fieldapp.R;
 import com.teraim.fieldapp.dynamic.Executor;
-import com.teraim.fieldapp.dynamic.types.CHash;
+import com.teraim.fieldapp.dynamic.types.DB_Context;
 import com.teraim.fieldapp.dynamic.types.SweLocation;
-import com.teraim.fieldapp.dynamic.types.VarCache;
+import com.teraim.fieldapp.dynamic.types.VariableCache;
 import com.teraim.fieldapp.dynamic.types.Variable;
 import com.teraim.fieldapp.dynamic.workflow_realizations.WF_Container;
 import com.teraim.fieldapp.non_generics.Constants;
@@ -155,6 +155,7 @@ public class FotoTemplate extends Executor {
 			Log.e("vortex","No context, exit");
 			return null;
 		}
+		gs.setDBContext(new DB_Context(null,al.createProvytaKeyMap()));
 		myContext.resetState();
 		Log.d("nils","in onCreateView of foto template");
 		
@@ -259,8 +260,8 @@ public class FotoTemplate extends Executor {
 			}
 		});
 		
-		gs.setKeyHash(new CHash(null,al.createProvytaKeyMap()));
-		VarCache varCache = gs.getVariableCache();
+	
+		VariableCache varCache = gs.getVariableCache();
 		n = varCache.getVariable(NamedVariables.CentrumGPSNS);
 		e = varCache.getVariable(NamedVariables.CentrumGPSEW);
 		/*
@@ -283,7 +284,7 @@ public class FotoTemplate extends Executor {
 		
 		
 		
-		myStatusVariable = varCache.getVariableUsingKey(al.createProvytaKeyMap(),NamedVariables.STATUS_FOTO);
+		myStatusVariable = varCache.getVariable(NamedVariables.STATUS_FOTO);
 		
 		return v;
 		

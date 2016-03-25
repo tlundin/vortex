@@ -22,7 +22,7 @@ import android.util.Log;
 
 import com.teraim.fieldapp.dynamic.EventBroker;
 import com.teraim.fieldapp.dynamic.Executor;
-import com.teraim.fieldapp.dynamic.types.CHash;
+import com.teraim.fieldapp.dynamic.types.DB_Context;
 import com.teraim.fieldapp.dynamic.types.GisLayer;
 import com.teraim.fieldapp.dynamic.types.Rule;
 import com.teraim.fieldapp.dynamic.types.Variable;
@@ -52,11 +52,12 @@ public class WF_Context {
 	private WF_Gis_Map currentGis;
 	private List<WF_Gis_Map> gisses;
 	private boolean hasGPSTracker = false;
-	private CHash myHash;
+	private DB_Context myHash;
 	private Workflow myWorkflow;
 	private boolean hasSatNav;
 	public int mapLayer=0;
 	private List<String> contextVariables = null;
+	private boolean myEndIsNear=false;
 
 
 	public WF_Context(Context ctx,Executor e,int rootContainerId) {
@@ -204,6 +205,7 @@ public class WF_Context {
 		gisses.clear();
 		hasGPSTracker=false;
 		contextVariables=null;
+		myEndIsNear=false;
 	}
 
 	public void emptyContainers() {
@@ -229,7 +231,7 @@ public class WF_Context {
 		List<Container> cs = getChildren(c);
 		for(Container child:cs)
 			drawRecursively(child);
-		this.registerEvent(new WF_Event_OnAttach("Context"));
+		
 	}
 
 	private List<Container> getChildren(Container key) {
@@ -323,10 +325,10 @@ public class WF_Context {
 	public void enableGPS() {
 		hasGPSTracker = true;
 	}
-	public void setHash(CHash myHash) {
+	public void setHash(DB_Context myHash) {
 		this.myHash=myHash;
 	}
-	public CHash getHash() {
+	public DB_Context getHash() {
 		return myHash;
 	}
 	public Map<String, String> getKeyHash() {
@@ -361,7 +363,13 @@ public class WF_Context {
 			return false;
 		return (contextVariables.contains(cVar));
 	}
-	
+	public void setMyEndIsNear() {
+		Log.e("Vortex","MY END IS NER IS NOW TRUEEE!!!!");
+		myEndIsNear=true;
+	}
+	public boolean myEndIsNear() {
+		return myEndIsNear;
+	}
 	
 	
 

@@ -194,7 +194,7 @@ public class TagTemplate extends Executor implements EventListener, OnGesturePer
 
 
 						//Mark as nyutlägg.
-						Variable nyUtlagg = varCache.getVariableUsingKey(gs.getVariableConfiguration().createProvytaKeyMap(), NamedVariables.NYUTLAGG);
+						Variable nyUtlagg = varCache.getVariable(gs.getVariableConfiguration().createProvytaKeyMap(), NamedVariables.NYUTLAGG);
 						nyUtlagg.setValue("1");
 						//init.
 						dym.clear();

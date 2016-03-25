@@ -20,7 +20,7 @@ import android.util.Log;
 import com.teraim.fieldapp.GlobalState;
 import com.teraim.fieldapp.dynamic.VariableConfiguration;
 import com.teraim.fieldapp.dynamic.types.Table;
-import com.teraim.fieldapp.dynamic.types.VarCache;
+import com.teraim.fieldapp.dynamic.types.VariableCache;
 import com.teraim.fieldapp.dynamic.types.Variable;
 import com.teraim.fieldapp.dynamic.types.Variable.DataType;
 import com.teraim.fieldapp.loadermodule.configurations.WorkFlowBundleConfiguration;
@@ -290,7 +290,7 @@ public class Expressor {
 	}
 
 	public static String analyze(List<EvalExpr> expressions) {
-		return analyze(expressions,GlobalState.getInstance().getCurrentKeyMap());
+		return analyze(expressions,GlobalState.getInstance().getVariableCache().getContext().getContext());
 	}
 
 	public static String analyze(List<EvalExpr> expressions, Map<String,String> evalContext) {
@@ -324,7 +324,7 @@ public class Expressor {
 	}
 
 	public static Boolean analyzeBooleanExpression(EvalExpr expr) {
-		return analyzeBooleanExpression(expr,GlobalState.getInstance().getCurrentKeyMap());
+		return analyzeBooleanExpression(expr,GlobalState.getInstance().getVariableCache().getContext().getContext());
 	}
 
 	public static Boolean analyzeBooleanExpression(EvalExpr expr, Map<String,String> evalContext) {
@@ -808,7 +808,7 @@ public class Expressor {
 			switch(type) {
 			case variable:
 
-				Variable v = gs.getVariableCache().getVariableUsingKey(currentKeyChain, myToken.str);
+				Variable v = gs.getVariableCache().getVariable(currentKeyChain, myToken.str);
 				if (v!=null && v.getValue() == null || v==null) {
 					System.out.println("Variable '"+this.toString()+"' does not have a value or Variable is missing.");
 					return null;
@@ -1218,7 +1218,7 @@ public class Expressor {
 			Object argEval=null,result=null;
 			List<Object> evalArgs = new ArrayList<Object>();
 			VariableConfiguration al = gs.getVariableConfiguration();
-			VarCache varCache = gs.getVariableCache();
+			VariableCache varCache = gs.getVariableCache();
 			for (EvalExpr arg:args) {
 				argEval= arg.eval();
 				evalArgs.add(argEval);
@@ -1342,13 +1342,13 @@ public class Expressor {
 				Log.d("vortex","in samevalueas historical with group ["+groupName+"] and variable ["+varName+"]");
 
 				if (checkPreconditions(evalArgs,2,No_Null_Literal)) {
-					Cursor c = gs.getDb().getAllVariablesForKeyMatchingGroupPrefixAndNamePostfix(gs.getCurrentKeyMap(),groupName,varName);
+					Cursor c = gs.getDb().getAllVariablesForKeyMatchingGroupPrefixAndNamePostfix(gs.getVariableCache().getContext().getContext(),groupName,varName);
 					Map<String,String> vars = new HashMap<String,String>();
 					Map<String,String> histVars = new HashMap<String,String>();
 					while (c.moveToNext())
 						vars.put (c.getString(0),c.getString(1));
 					c.close();
-					Map<String, String> histKeyMap = Tools.copyKeyHash(gs.getCurrentKeyMap());
+					Map<String, String> histKeyMap = Tools.copyKeyHash(gs.getVariableCache().getContext().getContext());
 					histKeyMap.put("år",Constants.HISTORICAL_TOKEN_IN_DATABASE);
 					c = gs.getDb().getAllVariablesForKeyMatchingGroupPrefixAndNamePostfix(histKeyMap,groupName,varName);
 					while (c.moveToNext())
@@ -1434,7 +1434,7 @@ public class Expressor {
 			case getStatusVariableValues:
 				if (checkPreconditions(evalArgs,1,No_Null_Literal)) {
 					//Gets the status from all buttons on the page.
-					Cursor c = gs.getDb().getAllVariablesForKeyMatchingGroupPrefixAndNamePostfix(gs.getCurrentKeyMap(), Constants.STATUS_VARIABLES_GROUP_NAME,(String)evalArgs.get(0));
+					Cursor c = gs.getDb().getAllVariablesForKeyMatchingGroupPrefixAndNamePostfix(gs.getVariableCache().getContext().getContext(), Constants.STATUS_VARIABLES_GROUP_NAME,(String)evalArgs.get(0));
 					String combinedStatus = null;
 					boolean oneInitial = false;
 					if (c!=null) {

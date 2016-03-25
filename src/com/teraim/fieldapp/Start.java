@@ -33,7 +33,7 @@ import android.view.ViewConfiguration;
 
 import com.teraim.fieldapp.dynamic.Executor;
 import com.teraim.fieldapp.dynamic.templates.LinjePortalTemplate;
-import com.teraim.fieldapp.dynamic.types.CHash;
+import com.teraim.fieldapp.dynamic.types.DB_Context;
 import com.teraim.fieldapp.dynamic.types.Workflow;
 import com.teraim.fieldapp.dynamic.workflow_abstracts.Event.EventType;
 import com.teraim.fieldapp.dynamic.workflow_realizations.WF_Context;
@@ -233,9 +233,13 @@ public class Start extends MenuActivity {
 		
 		//Set context.
 		Log.e("vortex","change page called with wf "+wf.getName());
-		CHash cHash = CHash.evaluate(wf.getContext());
+		DB_Context cHash = DB_Context.evaluate(wf.getContext());
+		
 		//if Ok err is null.
 		if (cHash.isOk()) {
+			
+			gs.setDBContext(cHash);
+			
 			debugLogger.addRow("Context now [");
 			debugLogger.addGreenText(cHash.toString());
 			debugLogger.addText("]");
@@ -304,7 +308,7 @@ public class Start extends MenuActivity {
 	 */
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		GlobalState.getInstance().getCurrentContext().registerEvent(new WF_Event_OnActivityResult("Start",EventType.onActivityResult));
+		GlobalState.getInstance().getCurrentWorkflowContext().registerEvent(new WF_Event_OnActivityResult("Start",EventType.onActivityResult));
 		// TODO Auto-generated method stub
 		super.onActivityResult(requestCode, resultCode, data);
 	}
@@ -336,7 +340,7 @@ public class Start extends MenuActivity {
 
 			GlobalState gs = GlobalState.getInstance();
 			if (gs!=null) {
-			final WF_Context wfCtx = gs.getCurrentContext();
+			final WF_Context wfCtx = gs.getCurrentWorkflowContext();
 			boolean map=false;
 			if (wfCtx!=null) {
 				if (wfCtx.getCurrentGis()!=null) {
@@ -354,7 +358,7 @@ public class Start extends MenuActivity {
 								wfCtx.mapLayer--;
 								Log.d("vortex","mapLayer is now "+wfCtx.mapLayer);
 								getFragmentManager().popBackStackImmediate();
-								GlobalState.getInstance().setCurrentContext(null);
+								GlobalState.getInstance().setCurrentWorkflowContext(null);
 							}})
 							.setNegativeButton(R.string.cancel,new DialogInterface.OnClickListener() {
 								public void onClick(DialogInterface dialog, int which) { 
@@ -396,7 +400,7 @@ public class Start extends MenuActivity {
 		return super.onKeyDown(keyCode, event);
 	}
 
-	private void showErrorMsg(CHash context) {
+	private void showErrorMsg(DB_Context context) {
 
 			String dialogText = "Faulty or incomplete context\nError: "+context.toString();
 			new AlertDialog.Builder(this)

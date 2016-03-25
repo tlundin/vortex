@@ -47,7 +47,7 @@ import android.util.Log;
 import com.teraim.fieldapp.GlobalState;
 import com.teraim.fieldapp.Start;
 import com.teraim.fieldapp.dynamic.VariableConfiguration;
-import com.teraim.fieldapp.dynamic.types.VarCache;
+import com.teraim.fieldapp.dynamic.types.VariableCache;
 import com.teraim.fieldapp.dynamic.types.Variable;
 import com.teraim.fieldapp.dynamic.types.Numerable.Type;
 import com.teraim.fieldapp.log.LoggerI;
@@ -339,6 +339,25 @@ public class Tools {
 	}
 
 
+	public static Map<String,String> cutKeyMap(String columns, Map<String,String> fullHash) {
+		if (columns.isEmpty())
+			return null;
+		Map<String,String> ret = new HashMap<String,String>();
+		if (fullHash == null) {
+			Log.e("vortex","COLUMN NOT EMPTY: "+columns);
+
+		} else {
+			String[] keys = columns.split("\\|");
+			for (String key:keys) {
+				String value = fullHash.get(key);
+				if(value!=null)
+					ret.put(key, value);
+			}
+		}
+		return ret;
+	}
+
+
 	public static Map<String,String> createKeyMap(String ...parameters) {
 
 		if ((parameters.length & 1) != 0 ) {
@@ -431,8 +450,8 @@ public class Tools {
 		String[] opt=null;
 		GlobalState gs = GlobalState.getInstance();
 		VariableConfiguration al = gs.getVariableConfiguration();
-		VarCache vc = gs.getVariableCache();
-		
+		VariableCache vc = gs.getVariableCache();
+
 		LoggerI o = gs.getLogger();
 		List<String>listValues = al.getListElements(variable.getBackingDataSet());
 		Log.d("nils","Found dynamic list definition for variable "+variable.getId());
@@ -668,7 +687,7 @@ public class Tools {
 	public static String parseString(String varString) {
 		return parseString(varString, GlobalState.getInstance().getCurrentKeyHash());
 	}
-	*/
+	 */
 
 	/*
 	public static String parseString(String varString, Map<String,String> keyHash) {
@@ -703,7 +722,7 @@ public class Tools {
 		Log.d("vortex","Parse String returns "+res+postS);
 		return res+postS;
 	}
-	*/
+	 */
 	/*
 	private static String interpret(String varString, Map<String,String> keyHash) {
 		final RuleExecutor re = GlobalState.getInstance().getRuleExecutor();
@@ -718,7 +737,7 @@ public class Tools {
 		else
 			return varString;
 	}
-	*/
+	 */
 
 	public static void onLoadCacheImage(String serverFileRootDir, final String fileName, final String cacheFolder, WebLoaderCb cb) {
 		final String fullPicURL = serverFileRootDir+fileName;
@@ -820,7 +839,7 @@ public class Tools {
 				e.printStackTrace();
 				return false;
 			} finally {
-				
+
 				if (in != null && fout != null) {
 					try {
 						in.close();
@@ -832,7 +851,7 @@ public class Tools {
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
-					
+
 				}
 			}
 			return true;
@@ -904,7 +923,7 @@ public class Tools {
 		long newTimeStamp = Long.parseLong(newTime);
 		return (existingTimeStamp>=newTimeStamp);
 	}
-	
+
 	public static Object bytesToObject(byte[] inB) {
 		ByteArrayInputStream bis = new ByteArrayInputStream(inB);
 		ObjectInput in = null;

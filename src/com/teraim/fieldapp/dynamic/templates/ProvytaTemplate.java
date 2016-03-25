@@ -40,7 +40,7 @@ import android.widget.Toast;
 import com.teraim.fieldapp.R;
 import com.teraim.fieldapp.Start;
 import com.teraim.fieldapp.dynamic.Executor;
-import com.teraim.fieldapp.dynamic.types.CHash;
+import com.teraim.fieldapp.dynamic.types.DB_Context;
 import com.teraim.fieldapp.dynamic.types.Variable;
 import com.teraim.fieldapp.dynamic.workflow_abstracts.Event;
 import com.teraim.fieldapp.dynamic.workflow_abstracts.Event.EventType;
@@ -196,8 +196,8 @@ public class ProvytaTemplate extends Executor implements EventListener,OnGesture
 				//Get Lat Long.
 				if (pyv.getValue()!=null) {
 					Map<String, String> pk = al.createProvytaKeyMap();
-					String lat = varCache.getVariableUsingKey(pk, "CentrumGPSLat").getHistoricalValue();
-					String lon = varCache.getVariableUsingKey(pk, "CentrumGPSLong").getHistoricalValue();
+					String lat = varCache.getVariable(pk, "CentrumGPSLat").getHistoricalValue();
+					String lon = varCache.getVariable(pk, "CentrumGPSLong").getHistoricalValue();
 					if (lat!=null && lon != null) {
 						lat = lat.replace(",",".");
 						lon = lon.replace(",",".");
@@ -230,8 +230,7 @@ public class ProvytaTemplate extends Executor implements EventListener,OnGesture
 			@Override
 			public void onClick(View v) {
 				if (Start.singleton!=null && liv.getValue()!=null && !liv.equals(NONE_SELECTED)) {
-					gs.setKeyHash(new CHash(null,al.createLinjeKeyMap()));
-					gs.sendEvent(MenuActivity.REDRAW);
+					gs.setDBContext(new DB_Context(null,al.createLinjeKeyMap()));
 					Start.singleton.changePage(new LinjePortalTemplate(), "LinjePortal");
 				}
 				else {
@@ -257,12 +256,8 @@ public class ProvytaTemplate extends Executor implements EventListener,OnGesture
 					String pi=pySpinner.getSelectedItem().toString();
 					if (pi!=null && !pi.equals(NONE_SELECTED)) {
 						clicked = true;
-						Log.d("nils","Creating delyteManager");
-						DelyteManager dym = DelyteManager.create(gs,Integer.parseInt(al.getCurrentProvyta()));
-						dym.init();
 						//refresh keyhash and status
-						gs.setKeyHash(new CHash(null,al.createProvytaKeyMap()));
-						gs.sendEvent(MenuActivity.REDRAW);
+						gs.setDBContext(new DB_Context(null,al.createProvytaKeyMap()));
 						Start.singleton.changePage(new ProvytaNivaTemplate(), "ProvytaNivå");
 						clicked = false;
 					}
@@ -279,10 +274,7 @@ public class ProvytaTemplate extends Executor implements EventListener,OnGesture
 					String pi=aboSpinner.getSelectedItem().toString();
 					if (pi!=null && !pi.equals(NONE_SELECTED)) {
 						clicked = true;
-						Log.d("nils","Creating delyteManager");
-						DelyteManager dym = DelyteManager.create(gs,Integer.parseInt(al.getCurrentProvyta()));
-						dym.init();
-						gs.setKeyHash(new CHash(null,al.createProvytaKeyMap()));
+						gs.setDBContext(new DB_Context(null,al.createProvytaKeyMap()));
 						gs.sendEvent(MenuActivity.REDRAW);
 						Start.singleton.changePage(new ProvytaNivaTemplate(), "ProvytaNivå");
 						clicked = false;

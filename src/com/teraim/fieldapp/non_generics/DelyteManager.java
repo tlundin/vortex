@@ -15,11 +15,12 @@ import android.widget.Toast;
 
 import com.teraim.fieldapp.GlobalState;
 import com.teraim.fieldapp.dynamic.VariableConfiguration;
-import com.teraim.fieldapp.dynamic.types.CHash;
+import com.teraim.fieldapp.dynamic.types.DB_Context;
 import com.teraim.fieldapp.dynamic.types.Delyta;
 import com.teraim.fieldapp.dynamic.types.Segment;
-import com.teraim.fieldapp.dynamic.types.VarCache;
+import com.teraim.fieldapp.dynamic.types.VariableCache;
 import com.teraim.fieldapp.dynamic.types.Variable;
+import com.teraim.fieldapp.log.LoggerI;
 import com.teraim.fieldapp.utils.DbHelper;
 import com.teraim.fieldapp.utils.Tools;
 
@@ -34,9 +35,9 @@ public class DelyteManager {
 	boolean hasUnsaved = false;
 	GlobalState gs;
 	VariableConfiguration al;
-	VarCache varCache;
+	VariableCache varCache;
 	private List<Delyta> myDelytor = new ArrayList<Delyta>();
-	private int myPyID;
+	private static int myPyID;
 	private List<Segment> answer;
 	private final static float r = 100;
 
@@ -113,11 +114,11 @@ public class DelyteManager {
 
 	private void saveNoOfDelytor() {
 		int size = this.getDelytor()==null?0:this.getDelytor().size();
-		varCache.getVariableUsingKey(al.createProvytaKeyMap(), "noOfDelytor").setValue(size+"");
+		varCache.getVariable(al.createProvytaKeyMap(), "noOfDelytor").setValue(size+"");
 	}
 
 	private boolean updateSmaProvToDelytaAssociations() {
-		Variable nyUtlagg = varCache.getVariableUsingKey(gs.getVariableConfiguration().createProvytaKeyMap(), NamedVariables.NYUTLAGG);
+		Variable nyUtlagg = varCache.getVariable(gs.getVariableConfiguration().createProvytaKeyMap(), NamedVariables.NYUTLAGG);
 		//Only do the association if nyutlägg.
 		Map<String, String> key;
 		DbHelper db = gs.getDb();
@@ -150,12 +151,12 @@ public class DelyteManager {
 					Log.d("nils","adding Delyta ID "+d.getId()+" to småprovyta "+(i+1));
 					key = al.createProvytaKeyMap();
 					key.put("smaprovyta", (i+1)+"");
-					Variable tmp = varCache.getVariableUsingKey(key, NamedVariables.BeraknadInomDelyta);
+					Variable tmp = varCache.getVariable(key, NamedVariables.BeraknadInomDelyta);
 					if (tmp!=null)
 						tmp.setValue(d.getId()+"");				
 					//db.fastInsert(key, NamedVariables.BeraknadInomDelyta, d.getId()+"");					
 					if (nyUtlagg.getValue()!=null) {
-						tmp = varCache.getVariableUsingKey(key, NamedVariables.InomDelyta);
+						tmp = varCache.getVariable(key, NamedVariables.InomDelyta);
 						if (tmp!=null)
 							tmp.setValue(d.getId()+"");
 					}
@@ -715,51 +716,47 @@ public class DelyteManager {
 	}
 
 	private DelyteManager(GlobalState gs,int pyId) {
+		long t0 = System.currentTimeMillis();
 		this.gs = gs;
 		myPyID=pyId;
 		al = gs.getVariableConfiguration();
 		varCache = gs.getVariableCache();
-	}
-
-	public static DelyteManager create(GlobalState gs, int pyId) {
-		instance = new DelyteManager(gs,pyId);
-		return instance;
+		init();
+		Log.d("vortex","dymtime: "+(System.currentTimeMillis()-t0));
 	}
 
 	public static DelyteManager getInstance() {
-		if (instance == null) {
-			GlobalState gs = GlobalState.getInstance();
-			String py = gs.getVariableConfiguration().getCurrentProvyta();
-			if (py!=null) {
-				instance = new DelyteManager(gs,Integer.parseInt(py));
-				instance.init();
-			}
+		GlobalState gs = GlobalState.getInstance();
+		String py = gs.getVariableConfiguration().getCurrentProvyta();
+		if (py == null) {
+			Log.e("vortex","Failed to create delytemanager. No current provyta.");
+			return null;
+		}
+		int currentProvyteId = Integer.parseInt(py);
+		if (instance == null || myPyID != currentProvyteId) {
+				instance = new DelyteManager(gs,currentProvyteId);
 		}
 		return instance;
 	}
 
 
-	private void generateFromCurrentContext() {
-
-		loadKnownDelytor(varCache.getVariableValue(null,"Current_Ruta"),varCache.getVariableValue(null,"Current_Provyta"));
-	}
+	
 
 
 
-	public void loadKnownDelytor(String ruta,String provyta) {
+	private void loadKnownDelytor() {
 
-		if (ruta==null||provyta==null) {
+		Variable v;Map<String,String> keys;
+		Set<String>rawTags = new HashSet<String>();
+		Map<String, String> baseKey = al.createProvytaKeyMap();
+		if (baseKey==null) {
 			Log.e("nils","provyta or ruta null in loadKnownDelytor, DelyteManager");
 			return;
 		}
 
-		Log.d("nils","loadKnownDelytor with RutaID "+ruta+" and provytaID "+provyta);
-		Variable v;Map<String,String> keys;
-		Set<String>rawTags = new HashSet<String>();
 		for (int delyteID=1;delyteID<=MAX_DELYTEID;delyteID++) {
-			keys= Tools.createKeyMap(VariableConfiguration.KEY_YEAR,Constants.getYear()+"","ruta",ruta,"provyta",provyta,"delyta",delyteID+"");
-			gs.setKeyHash(new CHash(null,keys));
-			v = varCache.getVariable(NamedVariables.DELNINGSTAG);
+			baseKey.put("delyta", delyteID+"");
+			v = varCache.getVariable(baseKey,NamedVariables.DELNINGSTAG);
 			Log.d("nils","Found tåg under delyteID "+delyteID+" :"+v.getValue());
 			if (v.getValue()!=null&&v.getValue().length()>0)
 				rawTags.add(v.getValue());			
@@ -769,9 +766,8 @@ public class DelyteManager {
 			hasUnsaved = true;
 			Log.d("nils","No current values får tåg. Trying historical");
 			for (int delyteID=1;delyteID<=MAX_DELYTEID;delyteID++) {
-				keys= Tools.createKeyMap(VariableConfiguration.KEY_YEAR,Constants.getYear()+"","ruta",ruta,"provyta",provyta,"delyta",delyteID+"");
-				gs.setKeyHash(new CHash(null,keys));
-				v = varCache.getVariable(NamedVariables.DELNINGSTAG);
+				baseKey.put("delyta", delyteID+"");
+				v = varCache.getVariable(baseKey,NamedVariables.DELNINGSTAG);
 				String rawTag = v.getHistoricalValue();
 				if (rawTag!=null && rawTag.length()>0) {
 					Log.d("nils","Found historical tåg under delyteID "+delyteID+" :"+rawTag);
@@ -853,7 +849,7 @@ public class DelyteManager {
 	public void init() {
 		myDelytor.clear();
 		//gs.setKeyHash(al.createDelytaKeyMap());
-		generateFromCurrentContext();
+		loadKnownDelytor();
 		analyze();
 	}
 
@@ -872,7 +868,7 @@ public class DelyteManager {
 				baseKey.put("delyta", id+"");
 				if (id!=0) {					
 					String tag = d.getTag();
-					tempVar = varCache.getVariableUsingKey(baseKey, "Delningstag");
+					tempVar = varCache.getVariable(baseKey, "Delningstag");
 					tempVar.setValue(tag);
 					//Contains smaprovyta? In that case, set delytaId in variable
 					//tillhorDelytaMedID
@@ -931,7 +927,7 @@ public class DelyteManager {
 				Log.d("nils","added delyta = "+id+" to base key");				
 				baseKey.put("delyta", id+"");
 				if (id!=0) {					
-					tempVar = varCache.getVariableUsingKey(baseKey, "Delningstag");
+					tempVar = varCache.getVariable(baseKey, "Delningstag");
 					if (tempVar.isInvalidated()) {
 						Log.d("nils","I think my DYM IS OBSOLETE!!!!");
 						return true;

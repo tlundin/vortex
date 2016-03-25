@@ -15,7 +15,7 @@ import com.teraim.fieldapp.GlobalState;
 import com.teraim.fieldapp.GlobalState.ErrorCode;
 import com.teraim.fieldapp.dynamic.types.FixedVariable;
 import com.teraim.fieldapp.dynamic.types.Table;
-import com.teraim.fieldapp.dynamic.types.VarCache;
+import com.teraim.fieldapp.dynamic.types.VariableCache;
 import com.teraim.fieldapp.dynamic.types.Variable;
 import com.teraim.fieldapp.non_generics.NamedVariables;
 import com.teraim.fieldapp.utils.Tools;
@@ -336,12 +336,6 @@ public class VariableConfiguration implements Serializable {
 		return vMap;
 	}
 
-	private String getGlobalVariable(String varId) {
-	
-		return gs.getVariableCache().getVariableValue(null, varId);
-	}
-
-
 	public Map<String, String> createRutaKeyMap() {
 		String currentYear = getGlobalVariable(NamedVariables.CURRENT_YEAR);
 		String currentRuta = getGlobalVariable(NamedVariables.CURRENT_RUTA);
@@ -405,6 +399,9 @@ public class VariableConfiguration implements Serializable {
 	}
 
 
+	private String getGlobalVariable(String varId) {
+		return gs.getVariableCache().getVariable(null, varId).getValue();
+	}
 /*
 	public void invalidateCacheKeys(String key) {
 		gs.refreshKeyHash();

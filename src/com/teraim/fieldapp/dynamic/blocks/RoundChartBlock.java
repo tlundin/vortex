@@ -93,7 +93,7 @@ public class RoundChartBlock extends Block implements EventListener {
 			});
 			myContainer.add(new WF_Widget("tst",b,isVisible,myContext));
 			Log.d("nils","Added pie chart "+myWidget.getId()+" to container "+myContainer.getId());
-			myContext.addEventListener(this, EventType.onAttach);
+			myContext.addEventListener(this, EventType.onFlowExecuted);
 
 		}  else {
 			o.addRow("");
@@ -166,7 +166,7 @@ public class RoundChartBlock extends Block implements EventListener {
 	private final String[] cat = new String[] {"ab","ra","ka","da","bra","la"};
 	@Override
 	public void onEvent(Event e) {
-		if (e.getType()==Event.EventType.onAttach) {
+		if (e.getType()==Event.EventType.onFlowExecuted) {
 			Log.d("vortex","got onAttach event in pieblock. h w "+height+","+width);
 			LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) pie.getLayoutParams();
 			layoutParams.height=(height!=-1?height:300);

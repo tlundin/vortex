@@ -80,7 +80,7 @@ public class OldPhotosFragment extends Fragment implements OnGesturePerformedLis
 			
 			@Override
 			public void onClick(View v) {
-				final Variable fotoKommentar = gs.getVariableCache().getVariableUsingKey(gs.getVariableConfiguration().createProvytaKeyMap(), NamedVariables.FOTO_KOMMENTAR);				
+				final Variable fotoKommentar = gs.getVariableCache().getVariable(gs.getVariableConfiguration().createProvytaKeyMap(), NamedVariables.FOTO_KOMMENTAR);				
 				final Context ctx = OldPhotosFragment.this.getActivity();
 				// get prompts.xml view
 				LayoutInflater li = LayoutInflater.from(ctx);

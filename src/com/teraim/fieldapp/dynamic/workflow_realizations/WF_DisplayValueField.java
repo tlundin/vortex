@@ -25,6 +25,7 @@ public class WF_DisplayValueField extends WF_Widget implements EventListener {
 	protected Unit unit;
 	private String format;
 	private List<EvalExpr> formulaE;
+	private WF_Context myContext;
 
 	public WF_DisplayValueField(String id, String formula,WF_Context ctx, Unit unit, 
 			String label, boolean isVisible,String format,String bgColor, String textColor) {
@@ -50,6 +51,8 @@ public class WF_DisplayValueField extends WF_Widget implements EventListener {
 			o.addRedText("Parsing of formula for DisplayValueBlock failed. Formula: "+formula);
 		}
 		this.format = format;
+		this.myContext=ctx;
+		
 		
 		//this.onEvent(new WF_Event_OnSave("display_value_field"));
 	}
@@ -58,6 +61,10 @@ public class WF_DisplayValueField extends WF_Widget implements EventListener {
 	@Override
 	public void onEvent(Event e) {
 		Log.d("vortex","In onEvent for create_display_value_field. Caller: "+e.getProvider());
+		if (myContext.myEndIsNear()) {
+			Log.e("vortex","END IS NEAAARRR");
+			return;
+		}
 		String result = Expressor.analyze(formulaE);
 		//Do not evaluate if the expression is evaluated to be a literal or defined as literal.
 		if (result==null) {

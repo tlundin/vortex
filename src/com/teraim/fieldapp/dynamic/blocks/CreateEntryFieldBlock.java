@@ -68,14 +68,14 @@ public class CreateEntryFieldBlock extends Block {
 		o = gs.getLogger();
 		if(myContainer !=null) {
 			VariableConfiguration al = gs.getVariableConfiguration();
-			Log.d("nils","NAME: "+name);
-			Variable v = gs.getVariableCache().getVariable(name,initialValue);
+			Log.d("vortex","current hash: "+gs.getVariableCache().getContext());
+			Variable v = gs.getVariableCache().getVariable(name,initialValue,-1);
 			if (v == null) {
 				o.addRow("");
 				o.addRedText("Failed to create entryfield for block "+blockId);
 				Log.d("nils","Variable "+name+" referenced in block_create_entry_field not found.");
 
-				o.addRedText("Current keyChain: ["+gs.getCurrentKeyMap()+"]");
+				o.addRedText("Current DB Context: ["+gs.getVariableCache().getContext()+"]");
 			} else	{	
 				myField = new WF_ClickableField_Selection_OnSave(label==null||label.equals("")?v.getLabel():label,
 						al.getDescription(v.getBackingDataSet()),myContext,name,isVisible,autoOpenSpinner);

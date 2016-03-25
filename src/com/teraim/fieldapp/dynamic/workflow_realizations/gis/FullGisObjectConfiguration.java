@@ -3,7 +3,7 @@ package com.teraim.fieldapp.dynamic.workflow_realizations.gis;
 import android.graphics.Bitmap;
 import android.graphics.Paint;
 
-import com.teraim.fieldapp.dynamic.types.CHash;
+import com.teraim.fieldapp.dynamic.types.DB_Context;
 
 
 //Subclass with interfaces that restricts access to all.
@@ -29,7 +29,7 @@ public interface FullGisObjectConfiguration extends GisObjectBaseAttributes {
 	public Paint.Style getStyle();
 	public PolyType getShape();
 	public String getClickFlow();
-	public CHash getObjectKeyHash();
+	public DB_Context getObjectKeyHash();
 	public String getStatusVariable();
 	public boolean isUser();
 	public String getName();

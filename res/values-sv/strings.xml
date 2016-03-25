@@ -29,4 +29,9 @@
 	<string name="save">Spara</string>
 	<string name="cancel">Avbryt</string>
 		
+	<string name="DeviceType">Dosans typ</string>
+	<string name="Team">Lag</string>
+	<string name="UserName">Användare</string>
+	<string name="DevOp">Utvecklarfunktioner</string>
+	
 </resources>

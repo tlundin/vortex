@@ -14,7 +14,7 @@ import android.widget.TableLayout.LayoutParams;
 
 import com.teraim.fieldapp.GlobalState;
 import com.teraim.fieldapp.R;
-import com.teraim.fieldapp.dynamic.types.VarCache;
+import com.teraim.fieldapp.dynamic.types.VariableCache;
 import com.teraim.fieldapp.dynamic.workflow_abstracts.Filter;
 import com.teraim.fieldapp.dynamic.workflow_abstracts.Filterable;
 import com.teraim.fieldapp.dynamic.workflow_abstracts.Listable;
@@ -30,7 +30,7 @@ public abstract class WF_List extends WF_Widget implements Sortable,Filterable {
 
 	protected WF_Context myContext;
 	protected GlobalState gs;
-	protected VarCache varCache;
+	protected VariableCache varCache;
 	
 	private ViewGroup myW = null; 
 	

@@ -44,7 +44,7 @@ import com.teraim.fieldapp.dynamic.Executor;
 import com.teraim.fieldapp.dynamic.VariableConfiguration;
 import com.teraim.fieldapp.dynamic.types.ColumnDescriptor;
 import com.teraim.fieldapp.dynamic.types.SweLocation;
-import com.teraim.fieldapp.dynamic.types.VarCache;
+import com.teraim.fieldapp.dynamic.types.VariableCache;
 import com.teraim.fieldapp.dynamic.types.Variable;
 import com.teraim.fieldapp.dynamic.types.Workflow;
 import com.teraim.fieldapp.dynamic.workflow_abstracts.Event;
@@ -69,7 +69,7 @@ import com.teraim.fieldapp.utils.Tools;
 
 public class LinjePortalTemplate extends Executor implements LocationListener, EventListener {
 	List<WF_Container> myLayouts;
-	VarCache varCache;
+	VariableCache varCache;
 	DbHelper db;
 
 	private SweLocation myL=null;
@@ -156,9 +156,9 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 			Log.e("nils","eastW: "+eastW+" westW: "+westW+" southW:"+southW+" northW: "+northW);
 			Map<String,String>pyKeyMap = al.createLinjeKeyMap();
 			linjeKey = Tools.createKeyMap(VariableConfiguration.KEY_YEAR,currentYear,"ruta",varCache.getVariableValue(null,"Current_Ruta"),"linje",currentLinje);
-			linjeStatus = varCache.getVariableUsingKey(linjeKey, NamedVariables.STATUS_LINJE);
-			Variable pyCentrumNorr = varCache.getVariableUsingKey(pyKeyMap, "CentrumGPSNS");
-			Variable pyCentrumOst = varCache.getVariableUsingKey(pyKeyMap, "CentrumGPSEW");
+			linjeStatus = varCache.getVariable(linjeKey, NamedVariables.STATUS_LINJE);
+			Variable pyCentrumNorr = varCache.getVariable(pyKeyMap, "CentrumGPSNS");
+			Variable pyCentrumOst = varCache.getVariable(pyKeyMap, "CentrumGPSEW");
 			histNorr = pyCentrumNorr.getHistoricalValue();
 			histOst = pyCentrumOst.getHistoricalValue();
 			Log.d("nils","pyKEyMap: "+pyKeyMap.toString());
@@ -174,8 +174,8 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 
 			startB.setText("STARTA");
 			fieldListB.setVisibility(View.INVISIBLE);
-			linjeStartEast = varCache.getVariableUsingKey(linjeKey, "!linjestartEast");
-			linjeStartNorth = varCache.getVariableUsingKey(linjeKey, "!linjestartNorth");
+			linjeStartEast = varCache.getVariable(linjeKey, "!linjestartEast");
+			linjeStartNorth = varCache.getVariable(linjeKey, "!linjestartNorth");
 
 			if (linjeStatus.getValue()!=null) {
 				if (linjeStatus.getValue().equals(Constants.STATUS_STARTAD_MEN_INTE_KLAR)) {
@@ -800,14 +800,14 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 			keyI.remove("value");
 			if (typ==Linjetyp.INTERVALL) {							
 				Log.d("nils","Sätter intervall variabler");
-				Variable v = varCache.getVariableUsingKey(keyI,NamedVariables.AVGRANSSLUT);
+				Variable v = varCache.getVariable(keyI,NamedVariables.AVGRANSSLUT);
 				v.setValue(end);
-				v= varCache.getVariableUsingKey(keyI,NamedVariables.AVGRTYP);
+				v= varCache.getVariable(keyI,NamedVariables.AVGRTYP);
 				Log.d("nils","Setting avgrtyp to "+((String)avgrSp.getSelectedItem()));
 				v.setValue(avgrValueA[avgrSp.getSelectedItemPosition()]);
 			}
 
-			Variable v = varCache.getVariableUsingKey(key, NamedVariables.LINJEOBJEKT);
+			Variable v = varCache.getVariable(key, NamedVariables.LINJEOBJEKT);
 			//Variable v = al.getVariableInstance();
 
 			if (v.setValue(linjeObjLabel)) {
@@ -818,7 +818,7 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 
 			if (typ == Linjetyp.PUNKT) {
 				if (linjeObjLabel.equals(NamedVariables.RENSTIG)) {								
-					varCache.getVariableUsingKey(keyI, NamedVariables.TransportledTyp).setValue("2");
+					varCache.getVariable(keyI, NamedVariables.TransportledTyp).setValue("2");
 				} else {
 					//Start workflow here.
 					Log.d("nils","Trying to start workflow "+"wf_"+linjeObjLabel);

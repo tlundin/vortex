@@ -30,7 +30,7 @@ public class FixedVariable extends Variable implements Serializable {
 
 	//use a private copy of the key chain.
 	public FixedVariable(String name,String label,List<String> row,final Map<String,String>keyChain, GlobalState gs,String defaultValue,boolean isPreChecked) {
-		super (name,label,row,keyChainCopy(keyChain),gs,"value",defaultValue,isPreChecked);
+		super (name,label,row,keyChainCopy(keyChain),gs,"value",defaultValue,isPreChecked,null);
 	}
 
 

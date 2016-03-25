@@ -58,9 +58,9 @@ import com.teraim.fieldapp.dynamic.blocks.SetValueBlock;
 import com.teraim.fieldapp.dynamic.blocks.SetValueBlock.ExecutionBehavior;
 import com.teraim.fieldapp.dynamic.blocks.TextFieldBlock;
 import com.teraim.fieldapp.dynamic.blocks.VarValueSourceBlock;
-import com.teraim.fieldapp.dynamic.types.CHash;
+import com.teraim.fieldapp.dynamic.types.DB_Context;
 import com.teraim.fieldapp.dynamic.types.Rule;
-import com.teraim.fieldapp.dynamic.types.VarCache;
+import com.teraim.fieldapp.dynamic.types.VariableCache;
 import com.teraim.fieldapp.dynamic.types.Variable;
 import com.teraim.fieldapp.dynamic.types.Workflow;
 import com.teraim.fieldapp.dynamic.workflow_abstracts.Container;
@@ -122,7 +122,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 
 	protected VariableConfiguration al;
 
-	protected VarCache varCache;
+	protected VariableCache varCache;
 
 	private int savedBlockPointer=-1;
 
@@ -229,7 +229,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 					String statusVar = myContext.getStatusVariable();
 					Variable statusVariable =null;
 					if (statusVar!=null)
-						statusVariable = varCache.getVariableUsingKey(gs.getCurrentKeyMap(),statusVar);
+						statusVariable = varCache.getVariable(statusVar);
 					if (statusVariable!=null && statusVariable.getValue()==null)
 						statusVariable.setValue(Constants.STATUS_STARTAD_MEN_INTE_KLAR);
 					myContext.removeEventListener(this);
@@ -256,9 +256,14 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 		o.addRow("");
 		o.addRow("");
 		o.addRow("*******EXECUTING: "+wf.getLabel());			
-		CHash wfHash = CHash.evaluate(wf.getContext());
-		myContext.setHash(wfHash);
-		gs.setKeyHash(wfHash);
+		DB_Context wfHash = DB_Context.evaluate(wf.getContext());
+		//TODO: Erase below if.
+		if (!wfHash.equals(gs.getVariableCache().getContext())) {
+			Log.e("vortex","MYSTICAL MISMATCH: "+wfHash.toString()+" and "+gs.getVariableCache().getContext().toString());
+			gs.setDBContext(wfHash);	
+		}
+			
+		myContext.setHash(wfHash);		
 		//Need to write down all variables in wf context keyhash.
 		List<String> contextVars=null;
 		if (wf.getContext()!=null) {
@@ -274,7 +279,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 			}
 		}
 		myContext.setContextVariables(contextVars);
-		gs.setCurrentContext(myContext);		
+		gs.setCurrentWorkflowContext(myContext);		
 		gs.sendEvent(MenuActivity.REDRAW);
 		visiVars = new HashSet<Variable>();
 		//LinearLayout my_root = (LinearLayout) findViewById(R.id.myRoot);		
@@ -295,10 +300,12 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 
 				if (blockP>=blocks.size()) {
 					notDone=false;
+					Log.e("vortex","EXECUTION STOPPED ON BLOCK "+(blockP-1));
 					break;
 				}
-				Log.d("vortex","In execute with block "+blocks.get(blockP).getClass().getSimpleName());
 				Block b = blocks.get(blockP);
+				Log.d("vortex","In execute with block "+b.getClass().getSimpleName()+" ID: "+b.getBlockId());
+				
 				//Add block to list of executed blocks.
 				try { myContext.addExecutedBlock(Integer.parseInt(b.getBlockId())); } catch (NumberFormatException e) {Log.e("vortex","blockId was not Integer");}
 
@@ -470,6 +477,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 										String eval = bl.getEvaluation();
 										
 										o.addRow("Variable: "+v.getId()+" Current val: "+val+" New val: "+eval);
+										Log.d("vortex","Variable: "+v.getId()+" Current val: "+val+" New val: "+eval);
 										if (!(eval == null && val == null)) {
 											if (eval == null && val != null || val == null && eval != null || !val.equals(eval)) {
 												//Remove .0 
@@ -477,10 +485,17 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 												v.setValue(eval);
 												o.addRow("");
 												o.addYellowText("Value has changed to or from null in setvalueblock OnSave for block "+bl.getBlockId());
+												Log.d("Vortex","Value has changed to or from null in setvalueblock OnSave for block "+bl.getBlockId());
+
 												o.addRow("");
 												o.addYellowText("BEHAVIOR: "+bl.getBehavior());
 												if (bl.getBehavior()==ExecutionBehavior.update_flow) {
+													if (myContext.myEndIsNear()) {
+														Log.e("vortex","Exiting run...end is near");
+														return;
+													}
 													Log.d("nils","Variable has sideEffects...re-executing flow");
+													myContext.setMyEndIsNear();
 													new Handler().postDelayed(new Runnable() {
 														public void run() {
 															myContext.resetState();
@@ -567,8 +582,15 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 						EventListener tiva = new EventListener() {
 							@Override
 							public void onEvent(Event e) {
+								//discard if redraw is coming..
+								if (myContext.myEndIsNear()) {
+									Log.e("vortex","END IS NEAR!!!");
+									return;
+								}
 								//If evaluation different than earlier, re-render workflow.
 								if(bl.evaluate()) {
+									//redraw! We block all other conditional blocks from triggering.
+									myContext.setMyEndIsNear();
 									//myContext.onResume();
 									new Handler().postDelayed(new Runnable() {
 										public void run() {
@@ -687,8 +709,10 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 				} else
 					blockP++;
 
-
+				if (!notDone)
+					Log.e("vortex","EXECUTION STOPPED ON BLOCK "+b.getBlockId());
 			}
+			
 			//Remove loading popup if displayed.
 			removeLoadDialog();
 			Container root = myContext.getContainer("root");
@@ -805,6 +829,11 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 	}
 
 	public void restart() {
+		if (myContext.myEndIsNear()) {
+			Log.d("vortex","skipping restart in restart!");
+			return;
+		}
+		myContext.setMyEndIsNear();
 		new Handler().postDelayed(new Runnable() {
 			public void run() {
 				myContext.resetState();

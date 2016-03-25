@@ -29,5 +29,8 @@
 	<string name="save">Save</string>
 	<string name="cancel">Cancel</string>
 	
-		
+	<string name="DeviceType">Device Type</string>
+	<string name="Team">Team</string>
+	<string name="UserName">Username</string>
+	<string name="DevOp">Developer Options</string>
 </resources>

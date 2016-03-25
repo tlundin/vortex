@@ -547,8 +547,12 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 						View selectedItemView, int position, long id) {
 					// Check if this spinner has side effects.
 					if (sd != null) {
-						List<SpinnerElement> ems = sd.get((String) spinner
-								.getTag(R.string.u1));
+						String emsS = (String) spinner
+								.getTag(R.string.u1);
+						List<SpinnerElement> ems=null;
+						if (emsS!=null)
+							ems = sd.get(emsS);
+						@SuppressWarnings("unchecked")
 						List<String> curMapping = (List<String>) spinner
 								.getTag(R.string.u2);
 						if (ems != null) {
@@ -565,7 +569,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 								sDescr.setText(e.descr);
 								Log.d("nils", "DESCR TEXT SET TO " + e.descr);
 							}
-						}
+						} 
 					}
 				}
 
