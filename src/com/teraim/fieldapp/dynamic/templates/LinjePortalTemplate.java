@@ -107,10 +107,10 @@ public class LinjePortalTemplate extends Executor implements LocationListener, E
 			Bundle savedInstanceState) {
 		Log.d("nils","in onCreateView of LinjePortalTemplate");
 		if (myContext == null) {
-			Log.e("vortex","No context, exit");
+			Log.d("vortex","hasnt survived create...exiting.");
 			return null;
 		}
-		myContext.resetState();
+		//myContext.resetState();
 		//Listen to LinjeStarted and LinjeDone events.
 		myContext.addEventListener(this, EventType.onBluetoothMessageReceived);
 		View v = inflater.inflate(R.layout.template_linje_portal_wf, container, false);	

@@ -293,7 +293,7 @@ public  class ButtonBlock extends Block {
 												Log.d("nils","Found no status variable");
 
 											Set<Variable> variablesToSave = myContext.getTemplate().getVariables();
-											Log.d("nils", "Variables To save contains "+variablesToSave==null?"null":variablesToSave.size()+" objects.");
+											Log.d("nils", "Variables To save contains "+(variablesToSave==null?"null":variablesToSave.size()+" objects."));
 											for (Variable var:variablesToSave) {
 												Log.d("nils","Saving "+var.getLabel());
 												boolean resultOfSave = var.setValue(var.getValue());
@@ -391,19 +391,22 @@ public  class ButtonBlock extends Block {
 							else if (onClick.equals("Start_Workflow")) {
 								String target = getTarget();
 								Workflow wf = gs.getWorkflow(target);
+								if (buttonContext!=null) {
+									Log.d("vortex","Will use buttoncontext: "+buttonContext);
+									gs.setDBContext(buttonContext);
+								}
 								if (wf == null) {
 									Log.e("NILS","Cannot find workflow ["+target+"] referenced by button "+getName());
 									o.addRow("");
 									o.addRow("Cannot find workflow ["+target+"] referenced by button "+getName());
 								} else {
 									o.addRow("");
-									o.addRow("Action button pressed. Executing wf: "+target);
-									
+									o.addRow("Action button pressed. Executing wf: "+target+" with statusvar "+statusVar);
+									Log.d("Vortex","Action button pressed. Executing wf: "+target+" with statusvar "+statusVar);
 									Start.singleton.changePage(wf,statusVar);
 									
 									//save all changes
 									if (statusVar!=null) {
-										VariableConfiguration al = gs.getVariableConfiguration();
 										
 										if (statusVariable == null) {
 											o.addRow("");

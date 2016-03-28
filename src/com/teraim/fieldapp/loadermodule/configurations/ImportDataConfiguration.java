@@ -162,6 +162,7 @@ public class ImportDataConfiguration extends JSONConfigurationModule {
 			if (name.equals("value")) {
 				value = getAttribute(reader);
 				//Log.d("vortex","value: "+value);
+
 				vars.add(new ValuePair(varName,value));
 
 			}

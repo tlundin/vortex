@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -17,6 +18,7 @@ import android.util.Log;
 import com.teraim.fieldapp.GlobalState;
 import com.teraim.fieldapp.dynamic.types.Variable.DataType;
 import com.teraim.fieldapp.log.LoggerI;
+import com.teraim.fieldapp.non_generics.Constants;
 import com.teraim.fieldapp.utils.DbHelper.TmpVal;
 import com.teraim.fieldapp.utils.Tools;
 
@@ -87,15 +89,22 @@ public class VariableCache {
 			
 			Map<String, String> copy = myKeyHash==null?null:Tools.copyKeyHash(myKeyHash);
 			newcache.put(copy, ret);
-		} else
-			Log.d("vortex","Cache already exists");
+		} else {
+			//Log.d("vortex","Returning existing cache");
+			//for (String r: ret.keySet()) {
+			//	Log.d("vortex", "NAME:" +r+" HISTVAL: "+ret.get(r).getHistoricalValue());
+			//}
+		}
 		return ret;
 	}
 
 	public void refreshCache(Map<String,String> myKeyHash) {
-		Map<String, Variable> ret = newcache.remove(myKeyHash);
-		if (ret!=null)
-			createOrGetCache(myKeyHash);
+		//Map<String, Variable> ret = newcache.remove(myKeyHash);
+		Map<String, Variable> ret = newcache.get(myKeyHash);
+		if (ret!=null) {
+			for (Variable v:ret.values()) 
+				v.invalidate();
+		}
 		else
 			Log.e("vortex","key hash does not exist in refreshcache");
 	}
@@ -115,13 +124,17 @@ public class VariableCache {
 
 					TmpVal vals = map.get(varName);
 					List<String> row = gs.getVariableConfiguration().getCompleteVariableDefinition(varName);
+					if (row==null)
+						Log.e("vortex","ROW IS NULL FOR "+varName);
+					else {
 					String header = gs.getVariableConfiguration().getVarLabel(row);
 					DataType type = gs.getVariableConfiguration().getnumType(row);
 					if (type == DataType.array)
 						v= new ArrayVariable(varName,header,row,myKeyHash,gs,vCol,vals.norm,true,vals.hist);
 					else
 						v = new Variable(varName,header,row,myKeyHash,gs,vCol,vals.norm,true,vals.hist);
-					ret.put(varName, v);
+					ret.put(varName.toLowerCase(), v);
+					}
 				}
 			} else
 				Log.d("vortex","Map empty in CreateAllVariablesForKey");
@@ -137,7 +150,7 @@ public class VariableCache {
 
 
 	public void put(Variable v) {
-		currentCache.put(v.getId().toLowerCase(),v);
+		currentCache.put(v.getId(),v);
 	}
 
 	public Variable getGlobalVariable(String varId) {
@@ -190,14 +203,18 @@ public class VariableCache {
 	public Variable getVariable(Map<String,String> hash, Map <String,Variable> cache, String varId,String defaultValue, Boolean hasValueInDB) {
 		//Log.d("nils","in CACHE GetVariable for "+varId);
 		long t0=System.currentTimeMillis();
-		varId = varId.toLowerCase();
-		Variable variable = cache.get(varId);
+
+		Variable variable = cache.get(varId.toLowerCase());
 		if (variable==null) {
 			//check if variable has subset of keypairs
 			List<String> row = gs.getVariableConfiguration().getCompleteVariableDefinition(varId);
 			if (row == null) {
 				Log.e("vortex","variable "+varId+" not found");
+				Log.e("nils","Variable definition missing for "+varId);
+				o.addRow("");
+				o.addYellowText("Variable definition missing for "+varId);
 				return null;
+				
 			}
 				
 			String mColumns = gs.getVariableConfiguration().getKeyChain(row);
@@ -207,30 +224,31 @@ public class VariableCache {
 				return null;
 			}
 			cache = createOrGetCache(tryThis);
-			variable = cache.get(varId);
+			variable = cache.get(varId.toLowerCase());
 			if (variable == null) {
 				Log.d("nils","Creating new CacheList entry for "+varId);
 				
-				if (row==null) {
-					Log.e("nils","Variable definition missing for "+varId);
-					o.addRow("");
-					o.addYellowText("Variable definition missing for "+varId);
-					return null;
-				}
+
 				String header = gs.getVariableConfiguration().getVarLabel(row);
 				DataType type = gs.getVariableConfiguration().getnumType(row);
 				Log.d("vortex","T1:"+(System.currentTimeMillis()-t0));
 				if (type == DataType.array)
-					variable= new ArrayVariable(varId,header,row,hash,gs,vCol,defaultValue,true,null);
+					variable= new ArrayVariable(varId,header,row,hash,gs,vCol,defaultValue,true,"*NULL*");
 				else
-					variable = new Variable(varId,header,row,hash,gs,vCol,defaultValue,true,null);
-				cache.put(varId, variable);
+					variable = new Variable(varId,header,row,hash,gs,vCol,defaultValue,true,"*NULL*");
+				cache.put(varId.toLowerCase(), variable);
 			} else
-				Log.d("vortex","Found "+variable.getId()+" in global cache with value "+variable.getValue());
+				Log.d("vortex","Found "+variable.getId()+" in global cache with value "+variable.getValue()+" varobj: "+variable.toString());
 
-		} else
-			Log.d("vortex","Found "+variable.getId()+" in cache with value "+variable.getValue());
-		Log.d("vortex","Te:"+(System.currentTimeMillis()-t0));
+		} else {
+			Log.d("vortex","Found "+variable.getId()+" in cache with value "+variable.getValue()+" varobj: "+variable.toString());
+			if (variable.getValue()==null && defaultValue!=null && !defaultValue.equals(Constants.NO_DEFAULT_VALUE)) {
+				Log.d("vortex","defTrigger on "+defaultValue);
+				variable.setDefaultValue(defaultValue);
+			}
+			//Log.d("vortex","default value: "+defaultValue);
+		}
+		//Log.d("vortex","Te:"+(System.currentTimeMillis()-t0));
 		return variable;
 	}
 

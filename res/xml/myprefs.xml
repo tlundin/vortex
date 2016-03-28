@@ -1,97 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen
-xmlns:android="http://schemas.android.com/apk/res/android" >
-<PreferenceCategory android:title="General">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <PreferenceCategory android:title="General" >
     android:title="General" 
- <ListPreference 
-     android:key="device_type"
-     android:entryValues="@array/deviceTypes" 
-     android:title="@string/DeviceType" 
-     android:defaultValue="Master"
-     android:entries="@array/deviceTypes" />
+        <ListPreference
+            android:defaultValue="Master"
+            android:entries="@array/deviceTypesA"
+            android:entryValues="@array/deviceTypes_values"
+            android:key="device_type"
+            android:title="@string/DeviceType" />
 
-<EditTextPreference
+        <EditTextPreference
+            android:dialogMessage="@string/Team_s"
+            android:dialogTitle="@string/Team"
+            android:inputType="textCapSentences"
             android:key="lag_id"
-            android:title="@string/Team" 
-            android:summary="Name of team. Also defines the Sync Group if 4G sync is selected below!"
-            android:dialogTitle="@string/Team" 
-            android:inputType="textCapSentences"  
-            android:dialogMessage="Name of team"    
-    />
-<EditTextPreference 
-    android:dialogTitle="@string/UserName" 
-    android:title="@string/UserName" 
-    android:dialogMessage="Write your name here!" 
-    android:negativeButtonText="Cancel" 
-    android:positiveButtonText="Ok" 
-    android:inputType="textCapSentences"  
-    android:key="user_id" 
-    /> 
- </PreferenceCategory>
-
-<PreferenceCategory android:title="@string/DevOp" >    
-
-<EditTextPreference
-            android:key="server_location"
-            android:title="Server URL" 
-            android:summary="The client will download workflows and other configuration from this server"
+            android:summary="@string/Team_s"
+            android:title="@string/Team" />
+        <EditTextPreference
+            android:dialogMessage="@string/UserName_dm"
+            android:dialogTitle="@string/UserName"
+            android:inputType="textCapSentences"
+            android:key="user_id"
+            android:title="@string/UserName" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/DevOp" >
+        <EditTextPreference
+            android:defaultValue="http://www.teraim.com/"
+            android:dialogMessage="App server URL"
             android:dialogTitle="URL"
-            android:dialogMessage="Application server URL"    
-            android:defaultValue="http://www.teraim.com/" />
-    
-<EditTextPreference
+            android:key="server_location"
+            android:summary="@string/s_summary"
+            android:title="Server URL" />
+        <EditTextPreference
+            android:defaultValue="Vortex.xml"
+            android:dialogMessage="@string/appDialMsg"
+            android:dialogTitle="App"
+            android:inputType="textCapSentences"
             android:key="bundle_name"
-            android:title="Name of Application Bundle (change forces restart)" 
-            android:dialogTitle="Application"
-            android:dialogMessage="Enter the application name. No '.xml', only the name!\n NOTE: CHANGING THIS VALUE WILL RESTART THE PROGRAM!!"  
-            android:inputType="textCapSentences"  
-            android:defaultValue="Vortex.xml" />
-<CheckBoxPreference
-    		android:key="dev_switch"
-    		android:title="Developer functions"
-    		android:summary="Advanced logging etc"
-    		android:defaultValue="false" />
-<ListPreference
-    		android:key="version_control"
-    		android:title="Version Control"
-    		android:defaultValue="Major"
+            android:title="@string/app_name" />
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="dev_switch"
+            android:summary="Turns on debugging"
+            android:title="@string/developer_functions" />
+
+        <ListPreference
+            android:defaultValue="Major"
             android:entries="@array/versionArray"
-            android:entryValues="@array/versionValues" />
-<ListPreference
-    		android:key="sync_method"
-    		android:title="Sync method"
-    		android:defaultValue="Bluetooth"
-    		android:entries="@array/syncMethodArray"
-            android:entryValues="@array/syncMethodValues" />
-<CheckBoxPreference
-    		android:key="show_context"
-    		android:title="Context"
-    		android:summary="Show Context"
-    		android:dialogTitle=""
-    		android:dialogMessage=""
-    		android:defaultValue="true" />
+            android:entryValues="@array/versionValues"
+            android:key="version_control"
+            android:title="@string/Version_control" />
+        <ListPreference
+            android:defaultValue="Bluetooth"
+            android:entries="@array/syncMethodArray"
+            android:entryValues="@array/syncMethodValues"
+            android:key="sync_method"
+            android:title="@string/Sync_method" />
 
-<EditTextPreference
-            android:key="backup_location"
-            android:title="Backup folder" 
-            android:summary="Leave empty to use folder named 'backup' under project folder"
+        <EditTextPreference
+            android:defaultValue=""
+            android:dialogMessage="@string/Backup_dm"
             android:dialogTitle="Backup folder"
-            android:dialogMessage="Export and backup files are saved to this folder. If you leave the field empty, the files will be stored under 'backup' in your project folder." 
-            android:defaultValue="" />
+            android:key="backup_location"
+            android:summary="@string/Backup_folder_s"
+            android:title="@string/Backup_folder" />
 
-<CheckBoxPreference
-    		android:key="auto_backup"
-    		android:title="Automatic backup"
-    		android:summary="Automatically backup database at regular intervals"
-    		android:dialogTitle=""
-    		android:dialogMessage=""
-    		android:defaultValue="true" />
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:dialogMessage=""
+            android:dialogTitle=""
+            android:key="auto_backup"
+            android:summary="@string/Automatic_backup_s"
+            android:title="@string/Automatic_backup" />
 
-<Preference android:title="Reset sync"
-                android:key="@string/resetSyncButton"
-                android:summary="Testfunction. Do not use."/>
-</PreferenceCategory>
-
-
+        <ListPreference
+            android:defaultValue="off"
+            android:entries="@array/log_levels"
+            android:entryValues="@array/log_level_values"
+            android:key="log_levels"
+            android:title="@string/LogLevels" />
+          <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="show_author"
+            android:summary="@string/show_author_s"
+            android:title="@string/show_author_t" />
+        
+    </PreferenceCategory>
 
 </PreferenceScreen>

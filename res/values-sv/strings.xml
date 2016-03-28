@@ -33,5 +33,24 @@
 	<string name="Team">Lag</string>
 	<string name="UserName">Användare</string>
 	<string name="DevOp">Utvecklarfunktioner</string>
+	<string name="LogLevels">Logg-nivåer</string>
+	<string name="UserName_dm">Skriv ditt namn här!</string>
+	<string name="Team_s">Name på ditt lag och synkgrupp</string>
 	
+	<string name="restart">Omstart</string>
+	<string name="restartMessage">Du måste starta om för att ändringen ska gälla. Starta om?</string>
+	<string name="app_bundle_name">Appens Name (ändring kräver omstart)</string>
+	<string name="developer_functions">Avlusningsfunktioner</string>
+	<string name="Sync_method">Synkningsmetod</string>
+	<string name="Version_control">Versionskontroll</string>
+	<string name="Automatic_backup">Säkerhetskopiering</string>
+	<string name="Backup_folder">Plats för säkerhetskopia</string>
+	
+	<string name="s_summary">Enheten laddar sin konfiguration härifrån</string>
+	<string name="appDialMsg">Appens namn utan \'.xml\'\n (ändring kräver omstart)</string>
+	<string name="Backup_folder_s">Om inget värde anges så används foldern \'backup\' under Appens hem</string>
+	<string name="Backup_dm">Export och säkerhetskopior hamnar här. Om du inte anger något värde så hamnar dessa filer under folder \'backup\' i Appens hemfolder</string>
+	<string name="Automatic_backup_s">Slå på eller av säkerthetskopiering</string>
+	<string name="show_author_s">Visa vem som gjort en inmatning</string>
+	<string name="show_author_t">Visa inmatare</string>
 </resources>

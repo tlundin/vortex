@@ -573,7 +573,7 @@ public class DbHelper extends SQLiteOpenHelper {
 				Entry<String, String> entry = it.next();			 
 				String value = entry.getValue();
 				String column = getColumnName(entry.getKey());
-				Log.d("vortex","FIZ column: "+column+" maps to: "+entry.getKey());
+				//Log.d("vortex","FIZ column: "+column+" maps to: "+entry.getKey());
 				//changes+=entry.getKey()+"="+value+"|";
 				changes+=column+"="+value+"|";
 			}
@@ -726,7 +726,7 @@ public class DbHelper extends SQLiteOpenHelper {
 			Log.d("nils","In getvalue with name "+name+" and selection "+s.selection+" and selectionargs "+print(s.selectionArgs));
 			db = this.getWritableDatabase();
 		}
-		//		Log.d("nils","In getvalue with name "+name+" and selection "+s.selection+" and selectionargs "+print(s.selectionArgs));
+		Log.d("nils","In getvalue with name "+name+" and selection "+s.selection+" and selectionargs "+print(s.selectionArgs));
 		Cursor c =null;
 		if (checkForNulls(s.selectionArgs)) {
 			c= db.query(TABLE_VARIABLES,valueCol,
@@ -734,14 +734,14 @@ public class DbHelper extends SQLiteOpenHelper {
 			if (c != null && c.moveToFirst()) {
 				//Log.d("nils","Cursor count "+c.getCount()+" columns "+c.getColumnCount());
 				String value = c.getString(0);
-				//			Log.d("nils","GETVALUE ["+name+" :"+value+"] Value = null? "+(value==null));
+				Log.d("nils","GETVALUE ["+name+" :"+value+"] Value = null? "+(value==null));
 				c.close();		
 				return value;
 			} 
 		}
 
-		//		Log.d("nils","Did NOT find value in db for "+name+". Key arguments:");
-
+		//Log.d("nils","Did NOT find value in db for "+name+". Key arguments:");
+		/*
 		String sel = s.selection;
 		int cc=0;
 		String k[]= new String[100];
@@ -752,6 +752,7 @@ public class DbHelper extends SQLiteOpenHelper {
 			}
 		}
 		Set<Entry<String, String>> x = colKeyM.entrySet();
+		*/
 		//		for(Entry e:x) 
 		//			Log.d("nils","kolkey KEY:"+e.getKey()+" "+e.getValue());
 		//		for (int i=0;i<cc;i++) {
@@ -874,22 +875,22 @@ public class DbHelper extends SQLiteOpenHelper {
 
 	private void createValueMap(Variable var,String newValue,ContentValues values, String timeStamp) {
 		//Add column,value mapping.
-		Log.d("vortex","in createvaluemap");
+		//Log.d("vortex","in createvaluemap");
 		Map<String,String> keyChain=var.getKeyChain();
 		//If no key column mappings, skip. Variable is global with Id as key.
 		if (keyChain!=null) {
-			Log.d("nils","keychain for "+var.getLabel()+" has "+keyChain.size()+" elements");
+			//Log.d("nils","keychain for "+var.getLabel()+" has "+keyChain.size()+" elements");
 			for(String key:keyChain.keySet()) { 
 				String value = keyChain.get(key);
 				String column = getColumnName(key);
 				values.put(column,value);
-				Log.d("nils","Adding column "+column+"(key):"+key+" with value "+value);
+				//Log.d("nils","Adding column "+column+"(key):"+key+" with value "+value);
 			}
 		} else
 			Log.d("nils","Inserting global variable "+var.getId()+" value: "+newValue);
 		values.put("var", var.getId());
 		//if (!var.isKeyVariable()) {
-		Log.d("nils","Inserting new value into column "+var.getValueColumnName()+" ("+getColumnName(var.getValueColumnName())+")");
+		//Log.d("nils","Inserting new value into column "+var.getValueColumnName()+" ("+getColumnName(var.getValueColumnName())+")");
 		values.put(getColumnName(var.getValueColumnName()), newValue);
 		//}
 		values.put("lag",globalPh.get(PersistenceHelper.LAG_ID_KEY));
@@ -1272,9 +1273,11 @@ public class DbHelper extends SQLiteOpenHelper {
 					//Is the existing entry done by me?
 					Log.d("vortex","Author is "+author);
 					if (isMe(author)) {
-						Log.e("vortex","found conflict between import value and existing for "+varName);
+						Log.e("vortex","found pot conflict between import value and existing for "+varName);
+						if (value != s.getValues())
 						if (varName.startsWith("status")) {
 							Log.d("vortex","This is likely a status variable");
+							
 							List<String> row = GlobalState.getInstance().getVariableConfiguration().getCompleteVariableDefinition(varName);
 							String group = GlobalState.getInstance().getVariableConfiguration().getFunctionalGroup(row);
 							Log.d("vortex","Group is "+group);
@@ -1568,9 +1571,9 @@ public class DbHelper extends SQLiteOpenHelper {
 		String yCol = keyColM.get("år");
 		String rCol = keyColM.get("ruta");
 		String pyCol = keyColM.get("provyta");
-		int affRows = db.delete(DbHelper.TABLE_VARIABLES, 
-				yCol+"=? AND "+rCol+"=? AND "+pyCol+"=? AND var = '"+NamedVariables.BeraknadInomDelyta+"' OR var = '"+NamedVariables.InomDelyta+"'", new String[] {Constants.getYear(),currentRuta,currentProvyta});
-		Log.d("nils","Affected rows in eraseSmaProvyDelytaAssoc: "+affRows);
+		//		int affRows = db.delete(DbHelper.TABLE_VARIABLES, 
+		//				yCol+"=? AND "+rCol+"=? AND "+pyCol+"=? AND (var = '"+NamedVariables.BeraknadInomDelyta+"' OR var = '"+NamedVariables.InomDelyta+"')", new String[] {Constants.getYear(),currentRuta,currentProvyta});
+		//		Log.d("nils","Affected rows in eraseSmaProvyDelytaAssoc: "+affRows);
 	}
 
 	public int deleteAllVariablesUsingKey(Map<String,String> keyHash) {
@@ -1801,34 +1804,35 @@ public class DbHelper extends SQLiteOpenHelper {
 		final List<String> selectionArgs = new ArrayList<String>();
 		final String AR = getColumnName("år");
 		StringBuilder selection = new StringBuilder();
-		
+
 		Map<String,String> transMap = new HashMap<String,String>();
 		if (keyChain!=null) {
 			for (String key:keyChain.keySet()) {
 				transMap.put(getColumnName(key),keyChain.get(key));
 			}
 		} 
-		
-		
+
+
 		boolean last=false;
 		int arIndex = -1;
 		for (int i=1;i<=NO_OF_KEYS;i++) {
 			last = i == NO_OF_KEYS;
 			String key = "L"+i;
 			//forget year.
-				columns.add(key);
-				if(transMap.get(key)!=null) {
-					selection.append(key+"=? ");
-					selectionArgs.add(transMap.get(key));
-					if (arIndex == -1 && key.equals(AR))
-						arIndex=selectionArgs.size()-1;
-				}
-				else
-					selection.append(key+" IS NULL ");
+			columns.add(key);
+			if(transMap.get(key)!=null) {
+				selection.append(key+"=? ");
+				selectionArgs.add(transMap.get(key));
+				if (arIndex == -1 && key.equals(AR))
+					arIndex=selectionArgs.size()-1;
+			}
+			else
+				selection.append(key+" IS NULL ");
 			if (!last)
 				selection.append("AND ");
 		}
-//		if (!key.equals(AR)) {
+		int histC=0;
+		//		if (!key.equals(AR)) {
 		String[] selArgs = selectionArgs.toArray(new String[selectionArgs.size()]);
 		Log.d("vortex","selection: "+selection);
 		Log.d("vortex","selectionArgs: "+selectionArgs);
@@ -1836,38 +1840,48 @@ public class DbHelper extends SQLiteOpenHelper {
 		Log.d("vortex","Got "+c.getCount()+" results in norm ");
 		//Now also query the historical values. If any.
 		Map<String,TmpVal> tmp = new HashMap<String,TmpVal>();
-
+		while(c.moveToNext()) {
+			getTmpVal(c.getString(0),tmp).norm=c.getString(1);
+		}
+		c.close();
 		if (arIndex!=-1) {
 			selectionArgs.set(arIndex, Constants.HISTORICAL_TOKEN_IN_DATABASE);
-			Log.d("vortex","historical selectionArgs: "+selectionArgs);
+			Log.d("vortex","historical selloArgs: "+selectionArgs);
+			selArgs = selectionArgs.toArray(new String[selectionArgs.size()]);
 			Cursor d = db.query(true,TABLE_VARIABLES, new String[] {VARID,"value"}, selection.toString(), selArgs, null, null, null,null);
-			Log.d("vortex","Got "+d.getCount()+" results in hist ");
+			histC=d.getCount();
+			Log.d("vortex","Got "+histC+" results in hist ");
 			while (d.moveToNext()) 
 				getTmpVal(d.getString(0),tmp).hist=d.getString(1);
 			d.close();
 		}
-		while(c.moveToNext()) {
-			getTmpVal(c.getString(0),tmp).norm=c.getString(1);
+
+
+		if (tmp.values()!=null) {
+			Log.d("vortex", "Tmpval has "+tmp.values().size()+" members");
+			if (histC>0) {
+				for (String v:tmp.keySet()) {
+					TmpVal tv = tmp.get(v);
+					Log.e("vortex","VAR: "+v+" NORM: "+tv.norm+" HIST: "+tv.hist);
+				}
+			}
 		}
 
-		if (tmp.values()!=null)
-			Log.d("vortex", "Tmpval has "+tmp.values().size()+" members");
-		c.close();
-		
+
 		return tmp;
 
-	
+
 	}
 
 
-private TmpVal getTmpVal(String id,Map<String, TmpVal> tmp) {
-	TmpVal x = tmp.get(id);
+	private TmpVal getTmpVal(String id,Map<String, TmpVal> tmp) {
+		TmpVal x = tmp.get(id);
 		if (x==null) {
 			x = new TmpVal();
 			tmp.put(id, x);
 		}
-	return x;			
-}
+		return x;			
+	}
 
 	//Fetch all instances of Variables matching namePrefix (group id). Map varId to a Map of Variator, Value.
 	public Map<String, Map<String,String>> preFetchValues(Map<String,String> keyChain, String namePrefix, String variatorColumn) {		

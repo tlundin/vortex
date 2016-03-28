@@ -54,7 +54,7 @@ public class GlobalState  {
 
 
 	private static Context myC=null;
-	private LoggerI log;
+	private LoggerI logger;
 	private PersistenceHelper ph = null;	
 	private DbHelper db = null;
 	private Parser parser=null;
@@ -102,7 +102,7 @@ public class GlobalState  {
 		this.globalPh=globalPh;		
 		this.ph=ph;		
 		this.db=myDb;		
-		this.log = debugConsole;
+		this.logger = debugConsole;
 		//Parser for rules
 		parser = new Parser(this);
 		
@@ -130,8 +130,6 @@ public class GlobalState  {
 		myBackupManager = new BackupManager(this);
 		
 		myBackupManager.startBackupIfTimeAndNeed();
-		
-		
 		
 		sendEvent(MenuActivity.REDRAW);
 	}
@@ -286,7 +284,7 @@ public class GlobalState  {
 	}
 
 	public LoggerI getLogger() {
-		return log;
+		return logger;
 	}
 
 	public void setCurrentWorkflowContext(WF_Context myContext) {
@@ -304,8 +302,8 @@ public class GlobalState  {
 
 	public boolean isMaster() {
 		String m;
-		if ((m = globalPh.get(PersistenceHelper.DEVICE_COLOR_KEY)).equals(PersistenceHelper.UNDEFINED)) {
-			globalPh.put(PersistenceHelper.DEVICE_COLOR_KEY, "Master");
+		if ((m = globalPh.get(PersistenceHelper.DEVICE_COLOR_KEY_NEW)).equals(PersistenceHelper.UNDEFINED)) {
+			globalPh.put(PersistenceHelper.DEVICE_COLOR_KEY_NEW, "Master");
 			return true;
 		}
 		else
@@ -314,11 +312,11 @@ public class GlobalState  {
 	}
 
 	public boolean isSolo() {
-		return globalPh.get(PersistenceHelper.DEVICE_COLOR_KEY).equals("Solo");
+		return globalPh.get(PersistenceHelper.DEVICE_COLOR_KEY_NEW).equals("Solo");
 	}
 
 	public boolean isSlave() {
-		return globalPh.get(PersistenceHelper.DEVICE_COLOR_KEY).equals("Client");
+		return globalPh.get(PersistenceHelper.DEVICE_COLOR_KEY_NEW).equals("Client");
 	}
 	/*
 	public MessageHandler getHandler() {

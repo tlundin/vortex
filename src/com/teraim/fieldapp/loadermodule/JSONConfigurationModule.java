@@ -22,8 +22,11 @@ public abstract class JSONConfigurationModule extends ConfigurationModule {
 	
 	protected String getAttribute(JsonReader reader) throws IOException {
 		String ret;
-		if (reader.peek() != JsonToken.NULL)
+		if (reader.peek() != JsonToken.NULL) {
 			ret =  reader.nextString();
+			if (ret.isEmpty())
+				ret=null;
+		}
 		else { 
 			ret = null;
 			reader.nextNull();

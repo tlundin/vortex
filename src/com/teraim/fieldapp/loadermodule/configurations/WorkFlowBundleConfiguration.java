@@ -301,7 +301,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 					blocks.add(readBlockAddGisPointObjects(parser,GisObjectType.Linestring));
 				else if (name.equals("block_add_gis_filter"))
 					blocks.add(readBlockAddGisFilter(parser));
-				else if (name.equals("block_delete_all_variables"))
+				else if (name.equals("block_delete_matching_variables"))
 					blocks.add(readBlockDeleteAllVariables(parser));
 				else if (name.equals("block_no_op"))
 					blocks.add(readBlockNoOp(parser));
@@ -365,7 +365,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			String id=null,label=null,target=null,pattern=null;
 			
 
-			parser.require(XmlPullParser.START_TAG, null,"block_delete_all_variables");
+			parser.require(XmlPullParser.START_TAG, null,"block_delete_matching_variables");
 			Log.d("vortex","In create_list_filter!!");
 			while (parser.next() != XmlPullParser.END_TAG) {
 				if (parser.getEventType() != XmlPullParser.START_TAG) {

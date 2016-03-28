@@ -75,14 +75,14 @@ public class SimpleRutaTemplate extends Executor implements OnGesturePerformedLi
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-		if (myContext == null) {
-			Log.e("vortex","No context, exit");
+		if (myContext==null) {
+			Log.d("vortex","hasnt survived create...exiting.");
 			return null;
 		}
 		//create keyhash for current ruta. 
 		al = gs.getVariableConfiguration();
 		gs.setDBContext(new DB_Context(null,al.createRutaKeyMap()));
-		myContext.resetState();
+		//myContext.resetState();
 		myLayouts = new ArrayList<WF_Container>();
 		Log.d("nils","in onCreateView of ruta_template");
 		myContainer = container;

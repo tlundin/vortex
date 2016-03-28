@@ -143,12 +143,12 @@ public class ProvytaTemplate extends Executor implements EventListener,OnGesture
 	public View onCreateView(final LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 		if (myContext == null) {
-			Log.e("vortex","No context, exit");
+			Log.d("vortex","hasnt survived create...exiting.");
 			return null;
 		}
 		liv = varCache.getVariable(NamedVariables.CURRENT_LINJE);
 		pyv = varCache.getVariable(NamedVariables.CURRENT_PROVYTA);
-		myContext.resetState();
+		//myContext.resetState();
 		myLayouts = new ArrayList<WF_Container>();
 		Log.d("nils","in onCreateView of provyta_template");
 		myContainer = container;

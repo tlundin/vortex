@@ -20,11 +20,11 @@ public class PersistenceHelper {
 	public static final String USER_ID_KEY = "user_id";
 	public static final String LAG_ID_KEY = "lag_id";
 	public static final String MITTPUNKT_KEY = "mittpunkt";
-	public static final String DEVICE_COLOR_KEY = "device_type";
+	public static final String DEVICE_COLOR_KEY_NEW = "device_type";
+	public static final String SHOW_AUTHOR_KEY = "show_author";
 	public static final String CONFIG_LOCATION = "config_name";
 	public static final String BUNDLE_NAME = "bundle_name";
 	public static final String BACKUP_LOCATION = "backup_location";	
-	public static final String SHOW_CONTEXT = "show_context";	
 	public static final String SERVER_URL = "server_location";
 	public static final String CURRENT_VERSION_OF_APP = "current_version_of_app_f";
 	public static final String CURRENT_VERSION_OF_WF_BUNDLE = "current_version_wf_f";
@@ -60,6 +60,7 @@ public class PersistenceHelper {
 	public static final String TIME_OF_LAST_SYNC_TO_TEAM_FROM_ME = "time_last_sync_from_me";
 	public static final String TIME_OF_LAST_SYNC_FROM_TEAM_TO_ME = "time_last_sync_from_team";
 	public static final String PARTNER_NAME = "my_partner";
+	public static final String LOG_LEVEL = "log_levels";
 	
 	SharedPreferences sp;
 

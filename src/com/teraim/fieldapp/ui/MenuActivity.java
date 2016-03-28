@@ -57,7 +57,8 @@ public class MenuActivity extends Activity   {
 
 	private BroadcastReceiver brr;
 	private GlobalState gs;
-	private PersistenceHelper globalPh;
+	protected PersistenceHelper globalPh;
+	protected LoggerI debugLogger;
 	private boolean initdone=false,initfailed=false;
 	private MenuActivity me;
 	private Account mAccount;
@@ -352,83 +353,7 @@ public class MenuActivity extends Activity   {
 
 
 
-	/*
-	Log.d("vortex","got sync data");
-				syncError=false;
-				if (GlobalState.getInstance()!=null) {
-					syncActive = true;
-					//me.refreshStatusRow();
-					//insert into database.
-					//If succesful, move pointer.
-					Bundle b = msg.getData();
-					int i=0;
-					if (b!=null) {
-						//Get timestamp.
-						String teamName = globalPh.get(PersistenceHelper.LAG_ID_KEY);
 
-						while(true) {               			
-
-							if (byteArray!=null) {
-								if (timeStamp==-1)
-									Log.e("vortex","Can timestamp be -1 when data is coming? Doubtfully!!!!");
-								Object o = Tools.bytesToObject(byteArray);
-								if (o!=null) {
-									SyncEntry[] ses = (SyncEntry[])o;
-									//insert into database!
-									DbHelper dbHandler = GlobalState.getInstance().getDb();
-									if (dbHandler!=null) {
-										Log.d("vortex","Dbhandler aquired");
-										SyncReport syncReport = dbHandler.synchronise(ses, null,GlobalState.getInstance().getLogger(), new SyncStatusListener() {
-
-											@Override
-											public void send(Object entry) {
-												Log.d("vortex","Synkstatus: "+((SyncStatus)entry).getStatus());
-											}});
-										Log.d("vortex","sync done, calling redraw page");
-										if (syncReport.hasChanges())
-											gs.sendEvent(Executor.REDRAW_PAGE);
-										else
-											Log.d("vortex","Will not call redraw...no changes");
-									} else
-										Log.e("vortex","DB hanlder was null in handleMessage(synx)!!");
-								}
-								else
-									Log.e("vortex","Courrupted object in sync message pos "+i);
-
-							}
-							else {
-								if (i==0) {
-									Log.e("vortex","no sync messages.");
-
-								}
-								else
-									Log.d("vortex","done, no more sync messages to insert: "+i);
-								syncActive = false;
-								break;
-							}
-
-							i++;	
-						}
-
-					}
-					me.refreshStatusRow();
-
-				}
-				break;
-			case SyncService.MSG_SYNC_FAIL:
-				Log.d("vortex","sync failed");
-				if (GlobalState.getInstance()!=null) {
-					syncError=true;
-					me.refreshStatusRow();
-				}
-				break;
-
-			default:
-				super.handleMessage(msg);
-			}
-		}
-	}
-	 */
 	public static final String MESSAGE_ACTION = "Massage_Massage";
 
 
@@ -471,8 +396,8 @@ public class MenuActivity extends Activity   {
 		mnu[0].setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS|MenuItem.SHOW_AS_ACTION_WITH_TEXT);
 		mnu[1].setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 		mnu[2].setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+		mnu[2].setIcon(null);
 		mnu[mnu.length-1].setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
-
 		mnu[1].setTitle(R.string.context);
 		mnu[2].setTitle(R.string.log);
 		mnu[mnu.length-1].setTitle(R.string.settings);
@@ -494,8 +419,12 @@ public class MenuActivity extends Activity   {
 			else 
 				setSyncState(mnu[0]);
 
-			mnu[1].setVisible(globalPh.getB(PersistenceHelper.SHOW_CONTEXT));		
-			mnu[2].setVisible(globalPh.getB(PersistenceHelper.DEVELOPER_SWITCH));		
+			mnu[1].setVisible(true);		
+			mnu[2].setVisible(!globalPh.get(PersistenceHelper.LOG_LEVEL).equals("off"));
+			if (debugLogger.hasRed()) {
+				mnu[2].setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+				mnu[2].setIcon(R.drawable.warning);
+			}
 			mnu[mnu.length-1].setVisible(true);
 		}
 	}
@@ -503,7 +432,7 @@ public class MenuActivity extends Activity   {
 	boolean animationRunning = false;
 
 	private void setSyncState(final MenuItem menuItem) {
-		Log.d("vortex","Entering setsyncstate");
+		//Log.d("vortex","Entering setsyncstate");
 		menuItem.setTitle(gs.getDb().getNumberOfUnsyncedEntries()+"");
 		boolean internetSync = globalPh.get(PersistenceHelper.SYNC_METHOD).equals("Internet");
 		Integer ret = R.drawable.syncoff;
@@ -585,6 +514,7 @@ public class MenuActivity extends Activity   {
 			break;
 
 		case 2:
+			mnu[2].setIcon(null);
 			final Dialog dialog = new Dialog(this);
 			dialog.setContentView(R.layout.log_dialog_popup);
 			dialog.setTitle("Session Log");
@@ -603,6 +533,7 @@ public class MenuActivity extends Activity   {
 				@Override
 				public void onClick(View v) {
 					dialog.dismiss();
+					log.setOutputView(null);
 				}
 			});
 			Button clear = (Button)dialog.findViewById(R.id.log_clear);

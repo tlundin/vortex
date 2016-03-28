@@ -78,12 +78,12 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 	public View onCreateView(final LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 		Log.d("nils","in onCreateView of ProvytaNivåTemplate");
-		if (myContext == null) {
-			Log.e("vortex","No context, exit");
+		if (myContext==null) {
+			Log.d("vortex","hasnt survived create...exiting.");
 			return null;
 		}
 		v = inflater.inflate(R.layout.template_provyta_niva_wf, container, false);	
-		myContext.resetState();
+		//myContext.resetState();
 		myContext.addContainers(getContainers());
 		ViewGroup aggregatePanel = (LinearLayout)v.findViewById(R.id.aggregates);
 		ViewGroup provytaViewPanel = (FrameLayout)v.findViewById(R.id.Description);
@@ -167,9 +167,9 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 			}
 		});
 		String xContext = "år = getCurrentYear(), ruta = getColumnValue(ruta), provyta = getColumnValue(provyta)";
-		taBild = new ButtonBlock("_tabild","Foto","Start_Workflow", "fotobutton","Field_List_panel_1",NamedVariables.WF_FOTO,"action", "status_foto",true,null,null,true,xContext,false);
+		taBild = new ButtonBlock("_tabild","Foto","Start_Workflow", "fotobutton","Field_List_panel_1",NamedVariables.WF_FOTO,"action", "STATUS:status_foto",true,null,null,true,xContext,false);
 		
-		fixPunkter = new ButtonBlock("_","Fixpunkter","Start_Workflow", "fixpunktbutton","Field_List_panel_1",NamedVariables.WF_FIXPUNKTER,"action", "status_fixpunkter",true,null,null,true,xContext,false);
+		fixPunkter = new ButtonBlock("_","Fixpunkter","Start_Workflow", "fixpunktbutton","Field_List_panel_1",NamedVariables.WF_FIXPUNKTER,"action", "STATUS:status_fixpunkter",true,null,null,true,xContext,false);
 
 		//spillning = new ButtonBlock("_s","Spillning","Start_Workflow", "spillningbutton","Field_List_panel_1",NamedVariables.WF_SPILLNING,"action","status_spillning",true,null,null,true);
 
@@ -179,7 +179,7 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 			buttonHash.put("delyta", I+"");
 			DB_Context buttonContext = new DB_Context(null,buttonHash);
 			delyteKnappar[i]=new ButtonBlock("DelBl"+i,"Delyta "+i,"Start_Workflow", "Delyta "+i,"Field_List_panel_1",
-					(isAbo?NamedVariables.WF_DELYTE_INMATNING_ABO:NamedVariables.WF_DELYTE_INMATNING),"action","status_delyta",true,
+					(isAbo?NamedVariables.WF_DELYTE_INMATNING_ABO:NamedVariables.WF_DELYTE_INMATNING),"action","STATUS:status_delyta",true,
 					new OnclickExtra() {						
 				@Override
 				public void onClick() {
@@ -195,7 +195,7 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 		Map<String,String> buttonHash = al.createProvytaKeyMap();
 		//CHash buttonContext = new CHash(null,buttonHash);
 		Log.d("vortex","context for status_smaprovytor: "+buttonHash.toString());
-		smayteKnapp = new ButtonBlock("_smaprov","Småprovytor","Start_Workflow", "Småprovytor","Field_List_panel_1",(isAbo?WF_ABO_SMA:WF_NILS_SMA),"action", (isAbo?"status_abo":"status_smaprovytor"),true,null,null,true,"["+buttonHash.toString()+"]",false);
+		smayteKnapp = new ButtonBlock("_smaprov","Småprovytor","Start_Workflow", "Småprovytor","Field_List_panel_1",(isAbo?WF_ABO_SMA:WF_NILS_SMA),"action", (isAbo?"STATUS:status_abo":"STATUS:status_smaprovytor"),true,null,null,true,"["+buttonHash.toString()+"]",false);
 		
 		//new ButtonBlock("_tabild","Foto","Start_Workflow", "fotobutton","Field_List_panel_1",NamedVariables.WF_FOTO,"action", "status_foto",true,null,null,true,xContext,false);
 		/*

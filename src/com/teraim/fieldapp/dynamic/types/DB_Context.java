@@ -98,7 +98,7 @@ public class DB_Context implements Serializable {
 							} else {
 								String arg = kv[0].trim();
 								String val = kv[1].trim();
-								Log.d("nils","Keypair: "+arg+","+val);
+								//Log.d("nils","Keypair: "+arg+","+val);
 								
 								if (val.isEmpty()||arg.isEmpty()) {
 									err = "Empty key or value in context keypair for context "+cContext;

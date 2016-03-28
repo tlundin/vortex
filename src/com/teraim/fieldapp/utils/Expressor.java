@@ -851,7 +851,7 @@ public class Expressor {
 					return null;
 				}
 			case literal:
-				Log.d("vortex","this is a literal atom");
+				//Log.d("vortex","this is a literal atom");
 				if (myToken.str.equalsIgnoreCase("false"))
 					return false;
 				else if (myToken.str.equalsIgnoreCase("true"))
@@ -905,7 +905,7 @@ public class Expressor {
 		}
 
 		public Object eval() {
-			Log.d("vortex","In eval for convo");
+			//Log.d("vortex","In eval for convo");
 			Object arg1v = arg1.eval();
 			//			Log.e("vortex","I am literal? "+isLiteralOperator);
 			//			Log.e("vortex","arg1v: "+((arg1v==null)?"null":arg1v.toString()));
@@ -1125,6 +1125,7 @@ public class Expressor {
 		private static final int Null_Numeric = 5;
 		private static final int Null_Literal = 6;
 		private static final int No_Null_Boolean = 7;
+		private static final int Null_Boolean = 8;
 
 		private List<EvalExpr> args = new ArrayList<EvalExpr>();
 
@@ -1312,9 +1313,9 @@ public class Expressor {
 				break;
 			case not:
 				//Log.d("vortex","in function not");
-				if (checkPreconditions(evalArgs,1,No_Null_Boolean)) {
+				if (checkPreconditions(evalArgs,1,Null_Boolean)) {
 					//					Log.d("vortex","evalArgs.get0 is "+evalArgs.get(0)+" type "+evalArgs.get(0).getClass().getSimpleName());
-					return !((Boolean)evalArgs.get(0));
+					return evalArgs.get(0)==null?null:!((Boolean)evalArgs.get(0));
 
 				}
 				break;
@@ -1573,25 +1574,28 @@ public class Expressor {
 						if (type == TokenType.hasValue ||
 								type == TokenType.allHaveValue) {
 
-
+							fifo = null;
 							String formula = "[$" + al.getVarName(row) + op + constant+"]";
 							Variable myVar = varCache.getVariable(al.getVarName(row));
 							Boolean res=null;
 							if (myVar != null && myVar.getValue() != null) {
 								allNull = false;
-								if (!prep) {
+								//if (!prep) {
 									try {
+										//Log.d("vortex","formula: "+formula);
 										List<Token> resulto = Expressor.tokenize(formula);
 										Expressor.testTokens(resulto);
 										fifo = Expressor.analyzeExpression(resulto);
+										//Log.d("vortex","tokenized: "+resulto);
 									} catch (ExprEvaluationException e) {
 										System.err.println("failed to analyze formula " + formula + " in hasValue/allHaveValue");
-									}
-									prep=true;
+								//	}
+								//	prep=true;
 								}
 								if (fifo!=null)
 									res = Expressor.analyzeBooleanExpression(fifo);
-
+								else
+									Log.e("vortex","Could not analyse "+formula+" since analyzeexpr returned null!");
 								if (res == null) {
 									Log.e("vortex", formula + " evaluates to null..something wrong");
 								} else {
@@ -1701,7 +1705,7 @@ public class Expressor {
 				Variable var = gs.getVariableCache().getVariable(evalArgs.get(0).toString());
 				if (var != null) {
 					String value = var.getValue();
-					Log.d("nils","Found value "+value+" for variable "+var.getLabel()+" in has!");
+					//Log.d("nils","Found value "+value+" for variable "+var.getLabel()+" in has!");
 					if (value== null)
 						return false;
 					else
@@ -1805,7 +1809,7 @@ public class Expressor {
 			if ((flags==No_Null || flags== No_Null_Numeric || flags == No_Null_Literal || flags == No_Null_Boolean)
 					&& evaluatedArgumentsList.contains(null)) {
 				o.addRow("");
-				o.addRedText("Argument in function '"+type.toString()+"' is null");
+				o.addRedText("Argument in function '"+type.toString()+"' is null, but function does not allow NULL arguments.");
 				Log.e("Vortex","Argument in function '"+type.toString()+"' is null");
 
 				return false;
@@ -1866,6 +1870,16 @@ public class Expressor {
 						Log.e("Vortex","Type error. Non boolean argument for function '"+type.toString()+"'.  Argument: "+obj.toString());
 						o.addRow("");
 						o.addRedText("Type error. Non boolean argument for function '" + type.toString() + "'. Argument: "+obj.toString());
+						return false;
+					}
+				}
+			}
+			if (flags == Null_Boolean) {
+				for (Object obj:evaluatedArgumentsList) {
+					if (obj !=null && !(obj instanceof String || !obj.equals("true") || !obj.equals("false") ) ) {
+						o.addRow("");
+						o.addRedText("Type error. Non boolean argument for function '" + type.toString() + "'.");
+						Log.e("Vortex","Type error. Not null & Non boolean argument for function '"+type.toString()+"'.");
 						return false;
 					}
 				}
@@ -1953,8 +1967,10 @@ public class Expressor {
 		else {
 			if (!s.isEmpty()&&s.peek() instanceof EvalExpr)
 				return (EvalExpr)s.pop();
-			else
+			else {
+				Log.e("vortex","returning null  in analyzeExpr."+s.peek().getClass().getSimpleName());
 				return null;
+			}
 		}
 
 	}

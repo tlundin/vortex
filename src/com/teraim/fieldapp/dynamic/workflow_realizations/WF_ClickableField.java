@@ -58,10 +58,11 @@ import com.teraim.fieldapp.expr.SyntaxException;
 import com.teraim.fieldapp.non_generics.Constants;
 import com.teraim.fieldapp.ui.MenuActivity;
 import com.teraim.fieldapp.utils.CombinedRangeAndListFilter;
+import com.teraim.fieldapp.utils.PersistenceHelper;
 import com.teraim.fieldapp.utils.Tools;
 
 public abstract class WF_ClickableField extends WF_Not_ClickableField implements
-		EventGenerator {
+EventGenerator {
 
 	final LinearLayout inputContainer;
 
@@ -85,6 +86,8 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 	protected boolean iAmOpen = false;
 	private Spinner firstSpinner = null;
 	protected List<Rule> myRules;
+	
+	
 
 	@Override
 	public Set<Variable> getAssociatedVariables() {
@@ -157,7 +160,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 				return true;
 			case R.id.menu_delete:
 				Iterator<Map.Entry<Variable, View>> its = myVars.entrySet()
-						.iterator();
+				.iterator();
 				while (its.hasNext()) {
 					Map.Entry<Variable, View> pairs = (Map.Entry<Variable, View>) its
 							.next();
@@ -197,17 +200,17 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 			case R.id.menu_info:
 				if (row != null) {
 					new AlertDialog.Builder(myContext.getContext())
-							.setTitle(gs.getString(R.string.description))
-							.setMessage(al.getVariableDescription(row))
-							.setPositiveButton(android.R.string.yes,
-									new DialogInterface.OnClickListener() {
-										public void onClick(
-												DialogInterface dialog,
-												int which) {
-											mode.finish();
-										}
-									})
-							.setIcon(android.R.drawable.ic_dialog_info).show();
+					.setTitle(gs.getString(R.string.description))
+					.setMessage(al.getVariableDescription(row))
+					.setPositiveButton(android.R.string.yes,
+							new DialogInterface.OnClickListener() {
+						public void onClick(
+								DialogInterface dialog,
+								int which) {
+							mode.finish();
+						}
+					})
+					.setIcon(android.R.drawable.ic_dialog_info).show();
 				}
 				return true;
 			default:
@@ -236,6 +239,9 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 		sd = gs.getSpinnerDefinitions();
 		al = gs.getVariableConfiguration();
 		o = gs.getLogger();
+
+
+
 		// SpannableString content = new SpannableString(headerT);
 		// content.setSpan(new UnderlineSpan(), 0, content.length(), 0);
 		inputContainer = new LinearLayout(context.getContext());
@@ -299,33 +305,33 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 
 					alert.setPositiveButton(R.string.save,
 							new DialogInterface.OnClickListener() {
-								public void onClick(DialogInterface dialog,
-										int whichButton) {
-									iAmOpen = false;
-									save();
-									refresh();
-									ViewGroup x = ((ViewGroup) inputContainer
-											.getParent());
-									if (x != null)
-										x.removeView(inputContainer);
-									v.setBackgroundDrawable(originalBackground);
-								}
-							});
+						public void onClick(DialogInterface dialog,
+								int whichButton) {
+							iAmOpen = false;
+							save();
+							refresh();
+							ViewGroup x = ((ViewGroup) inputContainer
+									.getParent());
+							if (x != null)
+								x.removeView(inputContainer);
+							v.setBackgroundDrawable(originalBackground);
+						}
+					});
 					alert.setNegativeButton(R.string.cancel,
 							new DialogInterface.OnClickListener() {
-								public void onClick(DialogInterface dialog,
-										int whichButton) {
-									iAmOpen = false;
-									ViewGroup x = ((ViewGroup) inputContainer
-											.getParent());
-									if (x != null)
-										x.removeView(inputContainer);
-									v.setBackgroundDrawable(originalBackground);
-								}
-							});
+						public void onClick(DialogInterface dialog,
+								int whichButton) {
+							iAmOpen = false;
+							ViewGroup x = ((ViewGroup) inputContainer
+									.getParent());
+							if (x != null)
+								x.removeView(inputContainer);
+							v.setBackgroundDrawable(originalBackground);
+						}
+					});
 					if (inputContainer.getParent() != null)
 						((ViewGroup) inputContainer.getParent())
-								.removeView(inputContainer);
+						.removeView(inputContainer);
 					Dialog d = alert.setView(inputContainer).create();
 					d.setCancelable(false);
 					// WindowManager.LayoutParams lp = new
@@ -344,7 +350,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 		});
 
 	}
-
+	
 	// @Override
 	public void addVariable(final Variable var, boolean displayOut,
 			String format, boolean isVisible, boolean showHistorical) {
@@ -361,11 +367,16 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 				singleBoolean = true;
 			myDescription = al.getDescription(var.getBackingDataSet());
 		} else
-		// cancel singleboolean if it was set.
-		if (singleBoolean)
-			singleBoolean = false;
+			// cancel singleboolean if it was set.
+			if (singleBoolean)
+				singleBoolean = false;
 		if (showHistorical)
 			hist = var.getHistoricalValue();
+		
+
+
+
+
 		// Set an EditText view to get user input
 		if (displayOut && super.getKey() == null) {
 			Log.d("nils", "Setting key variable to " + varId);
@@ -411,7 +422,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 			// o.addRow("Adding spinner field for dy-variable with label "+label+", name "+varId+", type "+var.getType().name()+" and unit "+unit.name());
 			LinearLayout sl = (LinearLayout) LayoutInflater.from(
 					myContext.getContext()).inflate(
-					R.layout.edit_field_spinner, null);
+							R.layout.edit_field_spinner, null);
 			final TextView sHeader = (TextView) sl.findViewById(R.id.header);
 			final TextView sDescr = (TextView) sl
 					.findViewById(R.id.extendedDescr);
@@ -438,7 +449,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 					o.addRow("");
 					o.addRedText("Spinner definition file has not loaded. Spinners cannot be created!");
 				} else {
-					List<SpinnerElement> elems = sd.get(var.getId());
+					List<SpinnerElement> elems = sd.get(var.getId().toLowerCase());
 					if (elems == null) {
 						Log.e("nils",
 								"No spinner elements for variable "
@@ -554,7 +565,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 							ems = sd.get(emsS);
 						@SuppressWarnings("unchecked")
 						List<String> curMapping = (List<String>) spinner
-								.getTag(R.string.u2);
+						.getTag(R.string.u2);
 						if (ems != null) {
 							SpinnerElement e = ems.get(position);
 							Log.d("nils",
@@ -801,14 +812,14 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 								.getSystemService(Context.VIBRATOR_SERVICE);
 						myVibrator.vibrate(250);
 						new AlertDialog.Builder(ctx)
-								.setTitle("Incorrect value")
-								.setMessage(
-										"The value you entered is outside the allowed range. Earlier value will be used: ["
-												+ earlierValue + "]")
-								.setIcon(android.R.drawable.ic_dialog_alert)
-								.setCancelable(false)
-								.setNeutralButton("Ok",
-										new Dialog.OnClickListener() {
+						.setTitle("Incorrect value")
+						.setMessage(
+								"The value you entered is outside the allowed range. Earlier value will be used: ["
+										+ earlierValue + "]")
+										.setIcon(android.R.drawable.ic_dialog_alert)
+										.setCancelable(false)
+										.setNeutralButton("Ok",
+												new Dialog.OnClickListener() {
 											@Override
 											public void onClick(
 													DialogInterface dialog,
@@ -837,16 +848,16 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 					.getSystemService(Context.VIBRATOR_SERVICE);
 			myVibrator.vibrate(250);
 			new AlertDialog.Builder(ctx).setTitle(r.getRuleHeader())
-					.setMessage(r.getRuleText())
-					.setIcon(android.R.drawable.ic_dialog_alert)
-					.setCancelable(false)
-					.setNeutralButton("Ok", new Dialog.OnClickListener() {
-						@Override
-						public void onClick(DialogInterface dialog, int which) {
-							// TODO Auto-generated method stub
+			.setMessage(r.getRuleText())
+			.setIcon(android.R.drawable.ic_dialog_alert)
+			.setCancelable(false)
+			.setNeutralButton("Ok", new Dialog.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					// TODO Auto-generated method stub
 
-						}
-					}).show();
+				}
+			}).show();
 		}
 		if (saveEvent) {
 
@@ -875,7 +886,7 @@ public abstract class WF_ClickableField extends WF_Not_ClickableField implements
 			Log.d("nils", "IN SAVE() SENDING EVENT");
 			gs.sendEvent(MenuActivity.REDRAW);
 			myContext
-					.registerEvent(new WF_Event_OnSave(this.getId(), oldValue));
+			.registerEvent(new WF_Event_OnSave(this.getId(), oldValue));
 
 			// myContext.registerEvent(new WF_Event_OnContextChange());
 			// if (contextChanged)

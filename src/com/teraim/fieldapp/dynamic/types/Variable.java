@@ -231,6 +231,10 @@ public class Variable implements Serializable {
 		myValue=null;
 	}
 	boolean isSynchronizedNext = false;
+
+
+
+	private String who;
 	public boolean isSyncNext() {
 		return isSynchronizedNext;
 	}
@@ -323,10 +327,15 @@ public class Variable implements Serializable {
 		myValue = null;
 		
 		if (historicalValue!=null) {
+			
 			historyChecked=true;
 			myHistory = historicalValue;
-			if (historicalValue.equals("*NULL*"))
+			if (historicalValue.equals("*NULL*")) {
+				Log.e("vortex","Historicalvaluefor "+this.getId()+" is "+historicalValue+" varObj: "+this.toString());
 				myHistory = null;
+			}
+			else
+				Log.e("vortex","Historicalvaluefor "+this.getId()+" is "+historicalValue+" varObj: "+this.toString());
 		} else
 			historyChecked = false;
 		//Defaultvalue is either a default or the current value in DB.
@@ -340,6 +349,7 @@ public class Variable implements Serializable {
 			unknown = false;
 			myValue = myDefaultValue;
 			if (!valueIsPersisted) {
+				setValue(myDefaultValue);
 				//Log.d("nils","Creating variable "+this.getId()+". Variable is not persisted: "+myValue);
 				usingDefault = true;
 			}
@@ -370,8 +380,11 @@ public class Variable implements Serializable {
 	private void setDefault(String defaultValue) {
 		if (defaultValue == null)
 			myDefaultValue = null;
-		else if (defaultValue.equals(Constants.HISTORICAL_TOKEN_IN_XML))
+		else if (defaultValue.equals(Constants.HISTORICAL_TOKEN_IN_XML)) {
+			
 			myDefaultValue = this.getHistoricalValue();
+			Log.d("vortex","Setting default from historical: "+myDefaultValue+" for "+this.getId());
+		}
 		else {
 			myDefaultValue = defaultValue.equals(Constants.NO_DEFAULT_VALUE)?null:defaultValue;
 		}
@@ -400,6 +413,7 @@ public class Variable implements Serializable {
 		Log.d("vortex","Invalidating variable: "+this.getId());
 		unknown=true;
 		usingDefault = false;
+		timeStamp=null;
 		//Log.d("vortex","Test - getValue returns: "+this.getValue());
 		//Log.d("vortex","My keychain is: "+this.getKeyChain().toString());
 
@@ -487,10 +501,11 @@ public class Variable implements Serializable {
 	}
 
 	final static String[] timeStampS = new String[] {"timestamp"};
+	final static String[] authorS = new String[] {"author"};
 
 	public Long getTimeOfInsert() {
 		if (timeStamp!=null) {
-			Log.d("vortex","cached Timestamp for "+this.getId()+" is "+timeStamp);
+			//Log.d("vortex","cached Timestamp for "+this.getId()+" is "+timeStamp);
 			return timeStamp;
 		}
 			String tmp = myDb.getValue(name, mySelection,Variable.timeStampS);
@@ -503,6 +518,23 @@ public class Variable implements Serializable {
 			return null;
 		
 	}
+	
+	public String getWhoGaveThisValue() {
+		if (who!=null) {
+			Log.d("vortex","cached who for "+this.getId()+" is "+who);
+			return who;
+		}
+			String who = myDb.getValue(name, mySelection,Variable.authorS);
+			if (who!=null) {
+				Log.d("vortex","Who for "+this.getId()+" is "+who);
+				return who;
+			}
+			Log.e("vortex","returning null in whogavethisvalue");
+			return null;
+		
+	}
+	
+	
 /*
 	public void setKeyChainVariable(String key) {
 		Log.d("nils","SetKeyChain called for "+this.getId());
@@ -551,6 +583,13 @@ public class Variable implements Serializable {
 			Log.d("vortex","getVarSuffix returns null for "+varId);
 			return null;
 		}
+	}
+
+	public void setDefaultValue(String defaultValue) {
+
+		this.setDefault(defaultValue);
+		setValue(myDefaultValue);
+		usingDefault=true;
 	}
 
 

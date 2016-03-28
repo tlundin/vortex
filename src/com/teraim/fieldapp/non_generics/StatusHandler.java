@@ -9,9 +9,10 @@ import java.util.Set;
 import android.util.Log;
 
 import com.teraim.fieldapp.GlobalState;
+import com.teraim.fieldapp.dynamic.types.Variable;
 import com.teraim.fieldapp.utils.DbHelper;
-import com.teraim.fieldapp.utils.PersistenceHelper;
 import com.teraim.fieldapp.utils.DbHelper.Selection;
+import com.teraim.fieldapp.utils.PersistenceHelper;
 
 public class StatusHandler {
 
@@ -84,8 +85,11 @@ public class StatusHandler {
 		Kvot k1 = getStatusSmaProv();
 		Kvot k2 = getStatusDelytor();
 		boolean done = (k1.allDone() && k2.allDone());
-		gs.getVariableCache().getVariable(pyKeyMap, 
-				"status_provyta").setValue(done?Constants.STATUS_AVSLUTAD_OK:Constants.STATUS_INITIAL);
+		Variable provytaS = gs.getVariableCache().getVariable(pyKeyMap, 
+				"STATUS:status_provyta");
+		if (provytaS!=null)
+			provytaS.setValue(done?Constants.STATUS_AVSLUTAD_OK:Constants.STATUS_INITIAL);
+
 	}
 
 	public void setStatusRuta() {
@@ -93,13 +97,16 @@ public class StatusHandler {
 		if (rutaKeyMap == null)
 			return;
 		Kvot k = getStatusProvytor();
-		gs.getVariableCache().getVariable(rutaKeyMap, 
-				"status_ruta").setValue(k.allDone()?Constants.STATUS_AVSLUTAD_OK:Constants.STATUS_INITIAL);
+		
+		Variable rutaS = gs.getVariableCache().getVariable(rutaKeyMap, 
+				"STATUS:status_ruta");
+		if (rutaS!=null)
+		rutaS.setValue(k.allDone()?Constants.STATUS_AVSLUTAD_OK:Constants.STATUS_INITIAL);
 	}
 
 	public Kvot getStatusSmaProv() {	
 		keySet = gs.getVariableConfiguration().createProvytaKeyMap();
-		int done = getNumberOfElementsDone(keySet,"status_smaprovyta");
+		int done = getNumberOfElementsDone(keySet,"STATUS:status_smaprovyta");
 		int tot = Constants.isAbo(DelyteManager.getInstance().getPyID())?9:3;
 		//int tot = getCount(keySet,"smaprovyta");
 		return new Kvot(done,tot);
@@ -107,7 +114,7 @@ public class StatusHandler {
 
 	public Kvot getStatusDelytor() {
 		keySet = gs.getVariableConfiguration().createProvytaKeyMap();
-		int done = getNumberOfElementsDone(keySet,"status_delyta");		
+		int done = getNumberOfElementsDone(keySet,"STATUS:status_delyta");		
 		int tot = 1;
 		String totS = gs.getVariableCache().getVariable(gs.getVariableConfiguration().createProvytaKeyMap(), "noOfDelytor").getValue();
 		if (totS != null)
@@ -117,7 +124,7 @@ public class StatusHandler {
 	
 	public Kvot getStatusLinjer() {
 		keySet = gs.getVariableConfiguration().createRutaKeyMap();
-		int done = getNumberOfElementsDone(keySet,"status_linje");		
+		int done = getNumberOfElementsDone(keySet,"STATUS:status_linje");		
 		int tot = Constants.MAX_NILS_LINJER;
 		return new Kvot(done,tot);
 	}
@@ -126,7 +133,7 @@ public class StatusHandler {
 		Log.d("nils","GetStatus: Provytor");
 		keySet = gs.getVariableConfiguration().createRutaKeyMap();
 		Log.d("nils","Keyset: "+keySet.toString());
-		int done = getNumberOfElementsDone(keySet,"status_provyta");
+		int done = getNumberOfElementsDone(keySet,"STATUS:status_provyta");
 		//set?
 		if (noOfProvytor==-1) {
 			//persisted?
@@ -143,7 +150,7 @@ public class StatusHandler {
 
 	public Kvot getStatusRutor() {
 		Log.d("nils","GetStatus: Rutor");
-		int done = getNumberOfElementsDone(null,"status_ruta");
+		int done = getNumberOfElementsDone(null,"STATUS:status_ruta");
 		if (noOfRutor==-1) {
 			noOfRutor = ph.getI(PersistenceHelper.NO_OF_RUTOR);
 			if (noOfRutor==-1)

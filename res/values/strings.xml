@@ -33,4 +33,27 @@
 	<string name="Team">Team</string>
 	<string name="UserName">Username</string>
 	<string name="DevOp">Developer Options</string>
+	<string name="LogLevels">Log Levels</string>
+	<string name="UserName_dm">Write your name here!</string>
+	<string name="Team_s">Name of team and sync group</string>
+			
+	<string name="restart">Restart</string>
+	<string name="restartMessage">You need to restart for this change to take effect. Restart now?</string>	
+	<string name="app_bundle_name">Name of Application Bundle (change requires restart)</string>
+	<string name="developer_functions">Developerfunctions</string>
+	<string name="Sync_method">Sync Method</string>
+	<string name="Version_control">Version Control</string>
+	<string name="Automatic_backup">Backup</string>	
+	<string name="Backup_folder">Backup Folder</string>
+	
+	<string name="s_summary">Location of all configuration files</string>
+	<string name="appDialMsg">Enter the application name. No \'.xml\', only the name!\n (Change requires restart)</string>
+	<string name="Backup_folder_s">Leave empty to use folder named \'backup\' under project folder</string>
+	<string name="Backup_dm">Export and backup files are saved to this folder. If you leave the field empty, the files will be stored under \'backup\' in your project folder.</string>
+	<string name="Automatic_backup_s">Automatically backup database at regular intervals</string>	
+	<string name="show_author_s">Show in entryfields who made last update</string>
+	<string name="show_author_t">Show Author</string>
+	
+	
+	
 </resources>

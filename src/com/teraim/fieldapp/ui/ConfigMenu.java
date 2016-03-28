@@ -89,12 +89,12 @@ public class ConfigMenu extends PreferenceActivity {
 			EditTextPreference epref = (EditTextPreference) findPreference(PersistenceHelper.LAG_ID_KEY);
 			epref.setSummary(epref.getText());
 
-			ListPreference color = (ListPreference)findPreference(PersistenceHelper.DEVICE_COLOR_KEY);
+			ListPreference color = (ListPreference)findPreference(PersistenceHelper.DEVICE_COLOR_KEY_NEW);
 			color.setSummary(color.getValue());
-			
+
 			ListPreference versionControl = (ListPreference)findPreference(PersistenceHelper.VERSION_CONTROL);
 			versionControl.setSummary(versionControl.getValue());
-			
+
 			ListPreference sync = (ListPreference)findPreference(PersistenceHelper.SYNC_METHOD);
 			sync.setSummary(sync.getValue());
 
@@ -109,13 +109,17 @@ public class ConfigMenu extends PreferenceActivity {
 			epref = (EditTextPreference) findPreference(PersistenceHelper.BUNDLE_NAME);
 			epref.setSummary(epref.getText());
 			epref.getEditText().setFilters(new InputFilter[] {filter});
-			
+
 			epref = (EditTextPreference) findPreference(PersistenceHelper.BACKUP_LOCATION);
 			if (epref.getText()==null) {
 				epref.setText(Constants.DEFAULT_EXT_BACKUP_DIR);
 			}
 			epref.setSummary(epref.getText());
-
+			
+			ListPreference logLevels = (ListPreference)findPreference(PersistenceHelper.LOG_LEVEL);
+			logLevels.setSummary(logLevels.getEntry());
+			
+			/*
 			final Preference button = (Preference)findPreference(getString(R.string.resetSyncButton));
 			String bName = getActivity().getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_MULTI_PROCESS).getString(PersistenceHelper.BUNDLE_NAME,null);
 			String syncPValue = getActivity().getSharedPreferences(bName,Context.MODE_MULTI_PROCESS).getString(PersistenceHelper.TIME_OF_LAST_SYNC,null);
@@ -158,9 +162,9 @@ public class ConfigMenu extends PreferenceActivity {
 			} else
 				button.setEnabled(false);
 
+
+			 */
 		}
-
-
 
 
 		/* (non-Javadoc)
@@ -209,25 +213,8 @@ public class ConfigMenu extends PreferenceActivity {
 						etp.setText(new String(strA));
 
 						if (gs != null)  {
-							new AlertDialog.Builder(getActivity())
-							.setTitle("Restart")
-							.setMessage("You need to restart for this change to take effect. Restart now?") 
-							.setIcon(android.R.drawable.ic_dialog_alert)
-							.setCancelable(false)
-							.setPositiveButton(R.string.ok,new Dialog.OnClickListener() {				
-								@Override
-								public void onClick(DialogInterface dialog, int which) {
-									Tools.restart(getActivity());
-								}
-								
-							})
-							.setNegativeButton(R.string.cancel, new Dialog.OnClickListener() {				
-								@Override
-								public void onClick(DialogInterface dialog, int which) {
-								}
-							})
-							.show();
-							
+							askForRestart();
+
 						}
 					}
 				} 
@@ -236,8 +223,8 @@ public class ConfigMenu extends PreferenceActivity {
 			}
 			else if (pref instanceof ListPreference) {
 				ListPreference letp = (ListPreference) pref;
-				pref.setSummary(letp.getValue());
-				if (letp.getKey().equals(PersistenceHelper.DEVICE_COLOR_KEY)) {
+				pref.setSummary(letp.getEntry());
+				if (letp.getKey().equals(PersistenceHelper.DEVICE_COLOR_KEY_NEW)) {
 					if (letp.getValue().equals("Master")) 
 						Log.d("nils","Changed to MASTER");
 
@@ -250,16 +237,27 @@ public class ConfigMenu extends PreferenceActivity {
 						Log.d("vortex","sync stopped");
 						ContentResolver.setSyncAutomatically(mAccount, Start.AUTHORITY, false);
 					}
-					Tools.restart(this.getActivity());
+					if (gs != null)  {
+						askForRestart();
+
+					}
+
 
 				} //change the sync state if user swapped method.
 				else if (letp.getKey().equals(PersistenceHelper.SYNC_METHOD)) {
-					
-						if (!letp.getValue().equals("Internet")) {
-							Log.d("vortex","sync stopped");
-							ContentResolver.setSyncAutomatically(mAccount, Start.AUTHORITY, false);
 
-						} 
+					if (!letp.getValue().equals("Internet")) {
+						Log.d("vortex","sync stopped");
+						ContentResolver.setSyncAutomatically(mAccount, Start.AUTHORITY, false);
+
+					} 
+				}
+				
+				else if (letp.getKey().equals(PersistenceHelper.LOG_LEVEL)) {
+					if (gs != null)  {
+						askForRestart();
+
+					}
 				}
 
 			}
@@ -268,6 +266,28 @@ public class ConfigMenu extends PreferenceActivity {
 			Intent intent = new Intent();
 			intent.setAction(MenuActivity.REDRAW);
 			getActivity().sendBroadcast(intent);
+		}
+
+
+		private void askForRestart() {
+			new AlertDialog.Builder(getActivity())
+			.setTitle(R.string.restart)
+			.setMessage(R.string.restartMessage) 
+			.setIcon(android.R.drawable.ic_dialog_alert)
+			.setCancelable(false)
+			.setPositiveButton(R.string.ok,new Dialog.OnClickListener() {				
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					Tools.restart(getActivity());
+				}
+
+			})
+			.setNegativeButton(R.string.cancel, new Dialog.OnClickListener() {				
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+				}
+			})
+			.show();
 		}
 
 

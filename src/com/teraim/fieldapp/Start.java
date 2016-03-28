@@ -39,6 +39,8 @@ import com.teraim.fieldapp.dynamic.workflow_abstracts.Event.EventType;
 import com.teraim.fieldapp.dynamic.workflow_realizations.WF_Context;
 import com.teraim.fieldapp.dynamic.workflow_realizations.WF_Event_OnActivityResult;
 import com.teraim.fieldapp.loadermodule.LoadResult;
+import com.teraim.fieldapp.log.CriticalOnlyLogger;
+import com.teraim.fieldapp.log.DummyLogger;
 import com.teraim.fieldapp.log.Logger;
 import com.teraim.fieldapp.log.LoggerI;
 import com.teraim.fieldapp.non_generics.Constants;
@@ -73,7 +75,6 @@ public class Start extends MenuActivity {
 	private DrawerMenu mDrawerMenu;
 
 	private ActionBarDrawerToggle mDrawerToggle;
-	private Logger debugLogger;
 	private boolean loading = false;
 
 	// Constants
@@ -430,8 +431,19 @@ public class Start extends MenuActivity {
 
 
 	public LoggerI getLogger() {
-		if (debugLogger==null)
-			debugLogger = new Logger(this,"DEBUG");
+		if (debugLogger==null) {
+			String logLevel =globalPh.get(PersistenceHelper.LOG_LEVEL);
+			if (logLevel == null || logLevel.equals(PersistenceHelper.UNDEFINED) ||
+					logLevel.equals("normal"))
+				debugLogger = new Logger(this,"DEBUG");
+			else if (logLevel.equals("off"))
+				debugLogger = new DummyLogger();
+			else {
+				debugLogger = new CriticalOnlyLogger(this);
+				Log.d("vortex","critical only");
+			}
+			
+		}
 		return debugLogger;
 	}
 

@@ -156,7 +156,7 @@ public class FotoTemplate extends Executor {
 			return null;
 		}
 		gs.setDBContext(new DB_Context(null,al.createProvytaKeyMap()));
-		myContext.resetState();
+		//myContext.resetState();
 		Log.d("nils","in onCreateView of foto template");
 		
 		v = inflater.inflate(R.layout.template_foto, container, false);	

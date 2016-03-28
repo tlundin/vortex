@@ -44,7 +44,11 @@ public class FixPunktTemplate extends Executor implements OnGesturePerformedList
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 
-		myContext.resetState();
+		if (!survivedCreate) {
+			Log.d("vortex","hasnt survived create...exiting.");
+			return null;
+		}
+		//myContext.resetState();
 		v = inflater.inflate(R.layout.template_fixpunkt_wf, container, false);	
 
 		myContext.addContainers(getContainers());
@@ -71,9 +75,8 @@ public class FixPunktTemplate extends Executor implements OnGesturePerformedList
 			}
 		});
 
-		if (wf!=null) {
-			run();
-		}		
+		run();
+		
 		
 		
 		Toast.makeText(this.getActivity(), "<<<<<< Svep åt vänster för fixpunkt grafik!", Toast.LENGTH_LONG).show();

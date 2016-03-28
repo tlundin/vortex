@@ -43,14 +43,14 @@ public class PageWithDelytaTemplate extends Executor {
 	
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-		if (myContext == null) {
-			Log.e("vortex","No context, exit");
+		if (!survivedCreate) {
+			Log.d("vortex","hasnt survived create...exiting.");
 			return null;
 		}
 		Log.d("nils","in onCreateView of Template PAGE with DELYTA");
 		v = inflater.inflate(R.layout.template_page_with_agg_wf, container, false);	
 		
-		myContext.onCreateView();
+		//myContext.onCreateView();
 		myContext.addContainers(getContainers());
 		
 		ViewGroup provytaViewPanel = (LinearLayout)v.findViewById(R.id.Description);

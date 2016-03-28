@@ -128,31 +128,31 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 
 	private List<Block> blocks;
 
-	private List<Integer> executedBlocks;
 	//Create pop dialog to display status.
 	private ProgressDialog pDialog; 
 
+	protected boolean survivedCreate = false;
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		survivedCreate = false;
 		//If app has been murdered brutally, restart it. 
 		if(!Start.alive) {
 			Intent intent = new Intent(this.getActivity(), Start.class);
 			intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 			startActivity(intent);
 		} else {
-			Log.d("nils","GETS TO ONCREATE EXECUTOR");
+
 
 			gs = GlobalState.getInstance();
 			if (gs == null) {
-				Log.e("vortex","globalstate null, exit");
+				Log.e("vortex","globalstate null in executor, exit");
 				return;
 			}
 
 			myContext = new WF_Context((Context)this.getActivity(),this,R.id.content_frame);
 			o = gs.getLogger();
-			wf = getFlow();
-			myContext.setWorkflow(wf);
+
 			al = gs.getVariableConfiguration();
 			varCache=gs.getVariableCache();
 			ifi = new IntentFilter();
@@ -179,7 +179,17 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 
 				}
 			};
+			wf = getFlow();
+			if (wf == null) {
+				Log.e("Vortex","WF was null in Executor. Exiting...");
+				return;
+			} else {
+				myContext.setWorkflow(wf);
+				Log.d("nils","GETS TO ONCREATE EXECUTOR FOR WF "+wf.getLabel());
+				survivedCreate = true;
+			}
 		}
+
 	}
 
 
@@ -222,19 +232,24 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 
 			myContext.setStatusVariable(b.getString("status_variable"));
 			//Add onSaveListener for the statusvariable. Change to "1" when first value saved.
+			Log.e("vortex","Added onsave listener for "+b.getString("status_variable"));
 			myContext.addEventListener(new EventListener() {
 				@Override
 				public void onEvent(Event e) {
-					Log.d("vortex","Received onSave in statusvariable change when first save event!");
+					Log.e("vortex","Received onSave in statusvariable change when first save event!");
 					String statusVar = myContext.getStatusVariable();
 					Variable statusVariable =null;
 					if (statusVar!=null)
 						statusVariable = varCache.getVariable(statusVar);
-					if (statusVariable!=null && statusVariable.getValue()==null)
+					if (statusVariable!=null && statusVariable.getValue().equals(Constants.STATUS_INITIAL)) {
 						statusVariable.setValue(Constants.STATUS_STARTAD_MEN_INTE_KLAR);
+						Log.e("vortex","GOTZZZ");
+					} else
+						Log.e("vortex","TURKEY");
 					myContext.removeEventListener(this);
-				}}, EventType.onSave);
-			
+				}
+			}, EventType.onSave);
+
 			if (name!=null && name.length()>0) 
 				wf = gs.getWorkflow(name);
 
@@ -244,7 +259,8 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 				return null;
 			} 
 
-		}
+		} else
+			Log.e("vortex","BUNDLE WAS NULL!!!!");
 		return wf;
 	}
 
@@ -262,7 +278,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 			Log.e("vortex","MYSTICAL MISMATCH: "+wfHash.toString()+" and "+gs.getVariableCache().getContext().toString());
 			gs.setDBContext(wfHash);	
 		}
-			
+
 		myContext.setHash(wfHash);		
 		//Need to write down all variables in wf context keyhash.
 		List<String> contextVars=null;
@@ -305,7 +321,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 				}
 				Block b = blocks.get(blockP);
 				Log.d("vortex","In execute with block "+b.getClass().getSimpleName()+" ID: "+b.getBlockId());
-				
+
 				//Add block to list of executed blocks.
 				try { myContext.addExecutedBlock(Integer.parseInt(b.getBlockId())); } catch (NumberFormatException e) {Log.e("vortex","blockId was not Integer");}
 
@@ -475,7 +491,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 										//String	eval = bl.evaluate(gs,bl.getFormula(),tokens,v.getType()== DataType.text);
 										String val = v.getValue();
 										String eval = bl.getEvaluation();
-										
+
 										o.addRow("Variable: "+v.getId()+" Current val: "+val+" New val: "+eval);
 										Log.d("vortex","Variable: "+v.getId()+" Current val: "+val+" New val: "+eval);
 										if (!(eval == null && val == null)) {
@@ -693,7 +709,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 				else if (b instanceof BlockDeleteAllVariables) {
 					((BlockDeleteAllVariables) b).create(myContext);
 				}
-				
+
 
 				else if (b instanceof CreateListFilter) {
 					((CreateListFilter) b).create(myContext);
@@ -712,7 +728,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 				if (!notDone)
 					Log.e("vortex","EXECUTION STOPPED ON BLOCK "+b.getBlockId());
 			}
-			
+
 			//Remove loading popup if displayed.
 			removeLoadDialog();
 			Container root = myContext.getContainer("root");
@@ -733,7 +749,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 				WF_Gis_Map gis = myContext.getCurrentGis();
 				if (gis!=null)
 					gis.initialize();
-					*/
+				 */
 				//Trgger redraw event on lists.
 				//myContext.registerEvent(new WF_Event_OnSave("fackabuudle"));
 				if (root!=null) 
@@ -842,7 +858,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 			}
 		}, 0);
 	}
-	
+
 	//Refresh all the gislayers.
 	public void refreshGisObjects() {
 		for (Block b: wf.getBlocks()) {
@@ -852,6 +868,6 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 				bl.create(myContext, true);
 			}
 		}
-		
+
 	}
 }

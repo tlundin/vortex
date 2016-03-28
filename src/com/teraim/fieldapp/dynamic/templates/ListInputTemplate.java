@@ -40,9 +40,9 @@ public class ListInputTemplate extends Executor {
 			Log.e("vortex","No context, exit");
 			return null;
 		}
-		myContext.resetState();
+		Log.d("nils","in onCreateView of ListInputTemplate");
 		myLayouts = new ArrayList<WF_Container>();
-		Log.d("nils","in onCreateView");
+		
 		myContainer = container;
 		View v = inflater.inflate(R.layout.template_list_input_wf, container, false);	
 		WF_Container root = new WF_Container("root", (LinearLayout)v.findViewById(R.id.root), null);

@@ -2,9 +2,9 @@
 <resources>
 
     <string-array name="deviceTypesA">
-        <item>Master (RED)</item>
-        <item>Client (BLUE)</item>
-        <item>Solo (YELLOW)</item>
+        <item>Master (RÖD)</item>
+        <item>Klient (BLÅ)</item>
+        <item>Solo (GUL)</item>
     </string-array>
     <string-array name="deviceTypes_values">
         <item>Master</item>
@@ -12,9 +12,9 @@
         <item>Solo</item>
     </string-array>
     <string-array name="log_levels">
-        <item>off</item>
-        <item>normal</item>
-        <item>critical</item>
+        <item>Av</item>
+        <item>Normal</item>
+        <item>Kristiska</item>
     </string-array>
     <string-array name="log_level_values">
         <item>off</item>
@@ -22,14 +22,14 @@
         <item>critical</item>
     </string-array>
     <string-array name="menu">
-        <item>Description</item>
-        <item>On the Web</item>
-        <item>Delete</item>
+        <item>Beskrivning</item>
+        <item>På nätet</item>
+        <item>Ta bort</item>
     </string-array>
     <string-array name="versionArray">
-        <item>Update only when the version of your App changes (default)</item>
-        <item>Check version for each configuration file individually</item>
-        <item>Always load (slow!)</item>
+        <item>Uppdatera filer bara när Appens version ändras (default)</item>
+        <item>Kontrollera version för enskilda filer varje uppstart</item>
+        <item>Strunta i versioner. Ladda alltid allt (långsamt)</item>
     </string-array>
     <string-array name="versionValues">
         <item>Major</item>
@@ -37,9 +37,9 @@
         <item>No control</item>
     </string-array>
     <string-array name="syncMethodArray">
-        <item>Sync over bluetooth between 2 devices (default)</item>
-        <item>Sync over Internet in a sync group</item>
-        <item>Turn sync off</item>
+        <item>Synk med blåtand mellan två enheter (default)</item>
+        <item>Synk över internet i en grupp</item>
+        <item>Ingen synk</item>
     </string-array>
     <string-array name="syncMethodValues">
         <item>Bluetooth</item>
