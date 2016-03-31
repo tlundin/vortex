@@ -93,10 +93,10 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		ph	 = new PersistenceHelper(mActivity.getSharedPreferences(globalPh.get(PersistenceHelper.BUNDLE_NAME), Context.MODE_MULTI_PROCESS));
 		oldV= ph.getF(PersistenceHelper.CURRENT_VERSION_OF_APP);
 		//appTxt.setText("Running application "+bundleName+" ["+oldV+"]");
-
-		Log.d("imgul",  server()+bundleName+"logo.png");
+		String logoUrl = server()+bundleName+"/logo.png";
+		Log.d("vortex",  logoUrl);
 		new DownloadImageTask((ImageView) view.findViewById(R.id.logo))
-		.execute(server()+bundleName.toLowerCase()+"/logo.png");
+		.execute(logoUrl.toLowerCase());
 
 
 
@@ -282,7 +282,7 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		if (globalPh.get(PersistenceHelper.SERVER_URL).equals(PersistenceHelper.UNDEFINED))
 			globalPh.put(PersistenceHelper.SERVER_URL, "www.teraim.com");
 		if (globalPh.get(PersistenceHelper.BUNDLE_NAME).equals(PersistenceHelper.UNDEFINED))
-			globalPh.put(PersistenceHelper.BUNDLE_NAME, "Vortex");
+			globalPh.put(PersistenceHelper.BUNDLE_NAME, "Nilstst");
 		if (globalPh.get(PersistenceHelper.DEVELOPER_SWITCH).equals(PersistenceHelper.UNDEFINED))
 			globalPh.put(PersistenceHelper.DEVELOPER_SWITCH, false);
 		if (globalPh.get(PersistenceHelper.VERSION_CONTROL).equals(PersistenceHelper.UNDEFINED))
@@ -292,7 +292,10 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 		if (globalPh.get(PersistenceHelper.USER_ID_KEY).equals(PersistenceHelper.UNDEFINED))
 			globalPh.put(PersistenceHelper.USER_ID_KEY, getRandomName());		
 		if (globalPh.get(PersistenceHelper.LAG_ID_KEY).equals(PersistenceHelper.UNDEFINED))
-			globalPh.put(PersistenceHelper.LAG_ID_KEY, "Anonymous");		
+			globalPh.put(PersistenceHelper.LAG_ID_KEY, "Anonymous");	
+		if (globalPh.get(PersistenceHelper.LOG_LEVEL).equals(PersistenceHelper.UNDEFINED))
+			globalPh.put(PersistenceHelper.LOG_LEVEL, "critical");	
+	
 
 		folder = new File(Constants.VORTEX_ROOT_DIR+globalPh.get(PersistenceHelper.BUNDLE_NAME)+"/"+Constants.CACHE_ROOT_DIR);
 		if(!folder.mkdirs())
@@ -428,12 +431,12 @@ public class LoginConsoleFragment extends Fragment implements ModuleLoaderListen
 					gs.sendEvent(MenuActivity.INITDONE);
 					float newV = ph.getF(PersistenceHelper.CURRENT_VERSION_OF_APP);
 					if (newV==-1)
-						appTxt.setText("Running application "+bundleName+" [no version]"); 
+						appTxt.setText("Running "+bundleName+" [no version]"); 
 					else {
 						if (newV>oldV)
-							appTxt.setText("Running application "+bundleName+" --New Version! ["+newV+"]");
+							appTxt.setText("Running "+bundleName+" --New Version! ["+newV+"]");
 						else
-							appTxt.setText("Running application "+bundleName+" ["+newV+"]");
+							appTxt.setText("Running "+bundleName+" "+newV);
 					}
 					Start.singleton.changePage(wf,null);
 					Log.d("vortex","executing workflow main!");

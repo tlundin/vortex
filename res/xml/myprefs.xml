@@ -33,12 +33,12 @@
             android:summary="@string/s_summary"
             android:title="Server URL" />
         <EditTextPreference
-            android:defaultValue="Vortex.xml"
+            android:defaultValue="Nilstst.xml"
             android:dialogMessage="@string/appDialMsg"
             android:dialogTitle="App"
             android:inputType="textCapSentences"
             android:key="bundle_name"
-            android:title="@string/app_name" />
+            android:title="@string/app_name_t" />
 
         <CheckBoxPreference
             android:defaultValue="false"
@@ -76,7 +76,7 @@
             android:title="@string/Automatic_backup" />
 
         <ListPreference
-            android:defaultValue="off"
+            android:defaultValue="critical"
             android:entries="@array/log_levels"
             android:entryValues="@array/log_level_values"
             android:key="log_levels"

@@ -13,6 +13,7 @@ public class SyncReport implements Serializable {
 	public int faults = 0;
 	public int refused = 0;
 	public int updates=0;
+	public int conflicts=0;
 	public boolean hasChanges() {
 		return (deletes+inserts+updates) > 0 ;
 	}

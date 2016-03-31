@@ -28,7 +28,7 @@ import com.teraim.fieldapp.dynamic.blocks.AddEntryToFieldListBlock;
 import com.teraim.fieldapp.dynamic.blocks.AddGisFilter;
 import com.teraim.fieldapp.dynamic.blocks.AddGisLayerBlock;
 import com.teraim.fieldapp.dynamic.blocks.AddGisPointObjects;
-import com.teraim.fieldapp.dynamic.blocks.AddRuleBlock;
+import com.teraim.fieldapp.dynamic.blocks.RuleBlock;
 import com.teraim.fieldapp.dynamic.blocks.AddSumOrCountBlock;
 import com.teraim.fieldapp.dynamic.blocks.AddVariableToEntryFieldBlock;
 import com.teraim.fieldapp.dynamic.blocks.AddVariableToEveryListEntryBlock;
@@ -38,7 +38,7 @@ import com.teraim.fieldapp.dynamic.blocks.BlockAddColumnsToTable;
 import com.teraim.fieldapp.dynamic.blocks.BlockAddVariableToTable;
 import com.teraim.fieldapp.dynamic.blocks.BlockCreateListEntriesFromFieldList;
 import com.teraim.fieldapp.dynamic.blocks.BlockCreateTableEntriesFromFieldList;
-import com.teraim.fieldapp.dynamic.blocks.BlockDeleteAllVariables;
+import com.teraim.fieldapp.dynamic.blocks.BlockDeleteMatchingVariables;
 import com.teraim.fieldapp.dynamic.blocks.ButtonBlock;
 import com.teraim.fieldapp.dynamic.blocks.ConditionalContinuationBlock;
 import com.teraim.fieldapp.dynamic.blocks.ContainerDefineBlock;
@@ -229,27 +229,29 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 		Bundle b = this.getArguments();
 		if (b!=null) {
 			String name = b.getString("workflow_name");
+			String statusVariable = b.getString("status_variable");
 
-			myContext.setStatusVariable(b.getString("status_variable"));
-			//Add onSaveListener for the statusvariable. Change to "1" when first value saved.
-			Log.e("vortex","Added onsave listener for "+b.getString("status_variable"));
-			myContext.addEventListener(new EventListener() {
-				@Override
-				public void onEvent(Event e) {
-					Log.e("vortex","Received onSave in statusvariable change when first save event!");
-					String statusVar = myContext.getStatusVariable();
-					Variable statusVariable =null;
-					if (statusVar!=null)
-						statusVariable = varCache.getVariable(statusVar);
-					if (statusVariable!=null && statusVariable.getValue().equals(Constants.STATUS_INITIAL)) {
-						statusVariable.setValue(Constants.STATUS_STARTAD_MEN_INTE_KLAR);
-						Log.e("vortex","GOTZZZ");
-					} else
-						Log.e("vortex","TURKEY");
-					myContext.removeEventListener(this);
-				}
-			}, EventType.onSave);
-
+			if (statusVariable !=null) {
+				myContext.setStatusVariable(b.getString("status_variable"));
+				//Add onSaveListener for the statusvariable. Change to "1" when first value saved.
+				//Log.e("vortex","Added onsave listener for "+b.getString("status_variable"));
+				myContext.addEventListener(new EventListener() {
+					@Override
+					public void onEvent(Event e) {
+						Log.e("vortex","Received onSave in statusvariable change when first save event!");
+						String statusVar = myContext.getStatusVariable();
+						Variable statusVariable =null;
+						if (statusVar!=null)
+							statusVariable = varCache.getVariable(statusVar);
+						if (statusVariable!=null && statusVariable.getValue()!=null && statusVariable.getValue().equals(Constants.STATUS_INITIAL)) {
+							statusVariable.setValue(Constants.STATUS_STARTAD_MEN_INTE_KLAR);
+							Log.e("vortex","GOTZZZ");
+						} else
+							Log.e("vortex","TURKEY");
+						myContext.removeEventListener(this);
+					}
+				}, EventType.onSave);
+			}
 			if (name!=null && name.length()>0) 
 				wf = gs.getWorkflow(name);
 
@@ -316,7 +318,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 
 				if (blockP>=blocks.size()) {
 					notDone=false;
-					Log.e("vortex","EXECUTION STOPPED ON BLOCK "+(blockP-1));
+					Log.d("vortex","EXECUTION STOPPED ON BLOCK "+(blockP-1));
 					break;
 				}
 				Block b = blocks.get(blockP);
@@ -336,8 +338,8 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 						Tracker.ErrorCode code = gs.getTracker().startScan(gs.getContext());
 						o.addRow("GPS SCANNER RETURNS: "+code.name());
 						Log.d("vortex","got "+code.name());
-					} else
-						Log.e("vortex","This has no GPS");
+					} //else
+					//	Log.e("vortex","This has no GPS");
 
 
 				}
@@ -507,7 +509,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 												o.addYellowText("BEHAVIOR: "+bl.getBehavior());
 												if (bl.getBehavior()==ExecutionBehavior.update_flow) {
 													if (myContext.myEndIsNear()) {
-														Log.e("vortex","Exiting run...end is near");
+														Log.d("vortex","Disregarding event since flow reexecute already in progress.");
 														return;
 													}
 													Log.d("nils","Variable has sideEffects...re-executing flow");
@@ -600,7 +602,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 							public void onEvent(Event e) {
 								//discard if redraw is coming..
 								if (myContext.myEndIsNear()) {
-									Log.e("vortex","END IS NEAR!!!");
+									Log.d("vortex","Disregarding onsave due to ongoing reexecute.");
 									return;
 								}
 								//If evaluation different than earlier, re-render workflow.
@@ -658,9 +660,9 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 						Log.d("nils","Parsing of formula failed - no variables: ["+formula+"]");
 					}
 				}
-				else if (b instanceof AddRuleBlock) {
+				else if (b instanceof RuleBlock) {
 
-					((AddRuleBlock) b).create(myContext,blocks);
+					((RuleBlock) b).create(myContext,blocks);
 
 				}
 				else if (b instanceof MenuHeaderBlock) {
@@ -706,8 +708,8 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 				else if (b instanceof AddGisFilter) {
 					((AddGisFilter) b).create(myContext);
 				}
-				else if (b instanceof BlockDeleteAllVariables) {
-					((BlockDeleteAllVariables) b).create(myContext);
+				else if (b instanceof BlockDeleteMatchingVariables) {
+					((BlockDeleteMatchingVariables) b).create(myContext);
 				}
 
 
@@ -726,7 +728,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 					blockP++;
 
 				if (!notDone)
-					Log.e("vortex","EXECUTION STOPPED ON BLOCK "+b.getBlockId());
+					Log.d("vortex","EXECUTION STOPPED ON BLOCK "+b.getBlockId());
 			}
 
 			//Remove loading popup if displayed.

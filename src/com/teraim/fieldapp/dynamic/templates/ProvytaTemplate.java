@@ -126,19 +126,6 @@ public class ProvytaTemplate extends Executor implements EventListener,OnGesture
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 	@Override
 	public View onCreateView(final LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
@@ -148,6 +135,7 @@ public class ProvytaTemplate extends Executor implements EventListener,OnGesture
 		}
 		liv = varCache.getVariable(NamedVariables.CURRENT_LINJE);
 		pyv = varCache.getVariable(NamedVariables.CURRENT_PROVYTA);
+		
 		//myContext.resetState();
 		myLayouts = new ArrayList<WF_Container>();
 		Log.d("nils","in onCreateView of provyta_template");
@@ -426,8 +414,16 @@ public class ProvytaTemplate extends Executor implements EventListener,OnGesture
 			public void onItemSelected(AdapterView<?> arg0, View arg1,
 					int arg2, long arg3) {
 				String pi=linjeSpinner.getSelectedItem().toString();
-				if (pi.equals(NONE_SELECTED) ||pi.equals(liv.getValue()))
+				if (pi.equals(NONE_SELECTED) ||pi.equals(liv.getValue())) {
 					Log.d("nils","Samma linje vald - ingen ändring");
+					if (liv.getValue()==null && !pi.equals(NONE_SELECTED)) {
+						liv.setValue(pi);
+						Log.d("vortex","Setting ANYWAYS!!!");
+					} else {
+						Log.d("vortex","Caesars underpantzzzz on fire. "+liv.getValue());
+						
+					}
+				}
 				else {
 					liv.setValue(pi);
 					gs.sendEvent(MenuActivity.REDRAW); 

@@ -66,7 +66,7 @@
         android:layout_above="@+id/vortexlogo"
         android:layout_alignParentRight="true"
         android:layout_marginBottom="16dp"
-        android:src="@drawable/teraim_small" />
+        android:src="@drawable/teraim_small_w" />
     <TextView
         android:id="@+id/licenseTxt"
         android:layout_width="match_parent"

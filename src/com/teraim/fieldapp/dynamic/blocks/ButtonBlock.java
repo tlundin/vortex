@@ -35,14 +35,11 @@ import com.teraim.fieldapp.Start;
 import com.teraim.fieldapp.dynamic.VariableConfiguration;
 import com.teraim.fieldapp.dynamic.types.DB_Context;
 import com.teraim.fieldapp.dynamic.types.Rule;
-import com.teraim.fieldapp.dynamic.types.VariableCache;
 import com.teraim.fieldapp.dynamic.types.Variable;
+import com.teraim.fieldapp.dynamic.types.VariableCache;
 import com.teraim.fieldapp.dynamic.types.Workflow;
 import com.teraim.fieldapp.dynamic.workflow_abstracts.Container;
 import com.teraim.fieldapp.dynamic.workflow_abstracts.Drawable;
-import com.teraim.fieldapp.dynamic.workflow_abstracts.Event;
-import com.teraim.fieldapp.dynamic.workflow_abstracts.Event.EventType;
-import com.teraim.fieldapp.dynamic.workflow_abstracts.EventListener;
 import com.teraim.fieldapp.dynamic.workflow_realizations.WF_Context;
 import com.teraim.fieldapp.dynamic.workflow_realizations.WF_Event_OnSave;
 import com.teraim.fieldapp.dynamic.workflow_realizations.WF_Widget;
@@ -69,11 +66,10 @@ public  class ButtonBlock extends Block {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 6454431627090793559L;
+	private static final long serialVersionUID = 6454431627090793561L;
 	String onClick,name,containerId;
 	private Boolean validationResult = true;
 	Type type;
-	Variable statusVariable=null;
 	private android.graphics.drawable.Drawable originalBackground;
 	private Button button;
 	private List<EvalExpr>textE,targetE,buttonContextE,exportContextE;
@@ -107,14 +103,14 @@ public  class ButtonBlock extends Block {
 	}
 	//TODO: REMOVE THIS Constructor!!
 	//Function used with buttons that need to attach customized actions after click
-	public ButtonBlock(String id,String lbl,String action, String name,String container,String target, String type, String statusVariable,boolean isVisible,
+	public ButtonBlock(String id,String lbl,String action, String name,String container,String target, String type, String statusVariableS,boolean isVisible,
 			OnclickExtra onclickExtra,DB_Context buttonContext, int dummy) {		
-		this(id,lbl,action,name,container,target,type,statusVariable,isVisible,null,null,true,null,false);
+		this(id,lbl,action,name,container,target,type,statusVariableS,isVisible,null,null,true,null,false);
 		extraActionOnClick = onclickExtra;
 		this.buttonContextOld = buttonContext;
 	}
 
-	public ButtonBlock(String id,String lbl,String action, String name,String container,String target, String type, String statusVariable,boolean isVisible,String exportContextS, String exportFormat,boolean enabled, String buttonContextS, boolean requestSync) {
+	public ButtonBlock(String id,String lbl,String action, String name,String container,String target, String type, String statusVariableS,boolean isVisible,String exportContextS, String exportFormat,boolean enabled, String buttonContextS, boolean requestSync) {
 		Log.d("NILS","In NEW for Button "+name+" with context: "+buttonContextS);
 		this.blockId=id;
 		this.textE = Expressor.preCompileExpression(lbl);
@@ -124,11 +120,11 @@ public  class ButtonBlock extends Block {
 		this.targetE=Expressor.preCompileExpression(target);
 		this.type=type.equals("toggle")?Type.toggle:Type.action;
 		this.isVisible = isVisible;
-		this.statusVar = statusVariable;		
-		this.enabled=enabled;
-		//Set null
+		this.statusVar = statusVariableS;	
 		if (statusVar!=null&&statusVar.length()==0)
-			this.statusVar=null;
+			statusVar=null;
+		this.enabled=enabled;
+
 		this.exportContextE = Expressor.preCompileExpression(exportContextS);
 		this.exportFormat = exportFormat;
 		this.buttonContextE=Expressor.preCompileExpression(buttonContextS);
@@ -151,19 +147,25 @@ public  class ButtonBlock extends Block {
 
 
 	public WF_Widget create(final WF_Context myContext) {
+		
 		gs = GlobalState.getInstance();
 		varCache = gs.getVariableCache();
 		o=gs.getLogger();
 		Log.d("nils","In CREATE for BUTTON "+getText());
 		Container myContainer = myContext.getContainer(containerId);
 		if (myContainer!=null) {
+			//Is the context provided already?
 			if (buttonContextOld!=null)
 				buttonContext=buttonContextOld;
 			else {
 				Log.d("vortex","ButtonContextS: "+buttonContextE);
-				buttonContext = myContext.getHash();
+				
+				//If not, parse the buttoncontext if provided in the button.
+				//Else, use context in flow
 				if (buttonContextE!=null&&!buttonContextE.isEmpty())
 					buttonContext = DB_Context.evaluate(buttonContextE);
+				else
+					buttonContext = myContext.getHash();
 			}
 
 			Log.d("nils","Buttoncontext set to: "+buttonContext+" for button: "+getText());
@@ -178,7 +180,7 @@ public  class ButtonBlock extends Block {
 				o.addRow("Creating Action Button.");
 				int layoutId = R.layout.button_normal;
 
-				if (statusVar != null) {
+				if (statusVar != null && buttonContext !=null) {
 					VariableConfiguration al = gs.getVariableConfiguration();
 					VariableCache varCache = gs.getVariableCache();
 					Variable statusVariable = varCache.getVariable(buttonContext.getContext(),statusVar);
@@ -217,8 +219,12 @@ public  class ButtonBlock extends Block {
 						}
 					} else {
 						o.addRow("");
+						if (buttonContext == null)
+							o.addRedText("Statusvariable ["+statusVar+"], has something wrong with its context. Check precompile log.");
+						else
 						o.addRedText("Statusvariable ["+statusVar+"], buttonblock "+blockId+" does not exist. Will use normal button");
 						Log.e("vortex","Statusvariable ["+statusVar+"], buttonblock "+blockId+" does not exist. Will use normal button");
+						statusVar=null;
 					}
 				}
 
@@ -253,13 +259,12 @@ public  class ButtonBlock extends Block {
 
 
 							if (onClick.equals("Go_Back")) {
-
+								final Variable statusVariable;
 								String statusVar = myContext.getStatusVariable();
-								if (statusVar != null) {
-
-									Log.d("nils","My button context is: "+buttonContext);
+								
+								if (statusVar != null) 
 									statusVariable = varCache.getVariable(buttonContext.getContext(),statusVar);
-								} else
+								 else
 									statusVariable = null;
 								Set<Rule> myRules = myContext.getRulesThatApply();
 								boolean showPop=false;
@@ -268,7 +273,7 @@ public  class ButtonBlock extends Block {
 								View popUpView = null; // inflating popup layout
 
 								if (myRules != null && myRules.size()>0) {
-									Log.d("nils","I have "+myRules.size()+" rules!: "+myRules.toString());
+									Log.d("nils","I have "+myRules.size()+" rules!");
 									validationResult  = null;
 									//We have rules. Each rule adds a line in the popup.
 									popUpView = inflater.inflate(R.layout.rules_popup, null);
@@ -404,23 +409,6 @@ public  class ButtonBlock extends Block {
 									o.addRow("Action button pressed. Executing wf: "+target+" with statusvar "+statusVar);
 									Log.d("Vortex","Action button pressed. Executing wf: "+target+" with statusvar "+statusVar);
 									Start.singleton.changePage(wf,statusVar);
-									
-									//save all changes
-									if (statusVar!=null) {
-										
-										if (statusVariable == null) {
-											o.addRow("");
-											o.addRedText("Statusvariabel "+statusVar+" saknas på knapp "+name);
-										} else {
-											
-											//String valS = statusVariable.getValue();
-											//if (valS==null || valS.equals("0"))
-											//	statusVariable.setValue("1");
-											//myContext.registerEvent(new WF_Event_OnSave(ButtonBlock.this.getBlockId()));
-										}
-									}
-									
-									
 
 								}
 
@@ -617,5 +605,13 @@ public  class ButtonBlock extends Block {
 			o.addRedText("Failed to add text field block with id "+blockId+" - missing container "+myContainer);
 			return null;
 		}
+	}
+
+	public String getStatusVariable() {
+		return statusVar;
+	}
+
+	public List<EvalExpr> getPrecompiledButtonContext() {
+		return buttonContextE;
 	}
 }

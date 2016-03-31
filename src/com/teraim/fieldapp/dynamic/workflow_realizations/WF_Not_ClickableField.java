@@ -69,7 +69,7 @@ public abstract class WF_Not_ClickableField extends WF_ListEntry {
 	public WF_Not_ClickableField(String id,final String label,final String descriptionT, WF_Context myContext, 
 			View view,boolean isVisible) {
 		super(id,view,myContext,isVisible);
-		
+
 
 		this.myContext = myContext;
 		myHeader = (TextView)getWidget().findViewById(R.id.editfieldtext);
@@ -114,8 +114,8 @@ public abstract class WF_Not_ClickableField extends WF_ListEntry {
 
 
 	public void refreshOutputField(Variable variable,OutC outC) {
-		
-		
+
+
 		LinearLayout ll = outC.view;
 		TextView o = (TextView)ll.findViewById(R.id.outputValueField);
 		TextView u = (TextView)ll.findViewById(R.id.outputUnitField);			
@@ -174,43 +174,36 @@ public abstract class WF_Not_ClickableField extends WF_ListEntry {
 			o.setText("");
 			u.setText("");
 		}	
-		
+
 		if (showAuthor)
 			setBackgroundColor(variable);
 	}
-	
+
 	private enum Role {None,Mix,Master,Slave};
 
 
 	private void setBackgroundColor(Variable var) {
 		GlobalState gs = GlobalState.getInstance();
-		
-		
-			String author = var.getWhoGaveThisValue();
-			Role role = Role.None;			
-			Log.d("vortex","author var: "+author+" entryfield owner: "+entryFieldAuthor);
-
-			if (author!=null) {
-				boolean IdidIt = author.equals(gs.getGlobalPreferences().get(PersistenceHelper.USER_ID_KEY));
-				if (IdidIt && gs.isMaster() || !IdidIt && gs.isSlave())
-					role = Role.Master;
-				else
-					role = Role.Slave;
 
 
-				if (entryFieldAuthor != null && !author.equals(entryFieldAuthor))
-					role = Role.Mix;
-				else
-					entryFieldAuthor = author;
+		String author = var.getWhoGaveThisValue();
+		Role role = Role.None;			
+		Log.d("vortex","author var: "+author+" entryfield owner: "+entryFieldAuthor);
 
-			}
-			else {
-				Log.e("vortex","Author missing for var: "+var.getId());
-				o.addRow("");
-				o.addRedText("Variable lacks author but show_author is on: "+var.getId());
+		if (author!=null) {
+			boolean IdidIt = author.equals(gs.getGlobalPreferences().get(PersistenceHelper.USER_ID_KEY));
+			if (IdidIt && gs.isMaster() || !IdidIt && gs.isSlave())
+				role = Role.Master;
+			else
+				role = Role.Slave;
 
-				//role = Role.Mix;
-			}
+
+			if (entryFieldAuthor != null && !author.equals(entryFieldAuthor))
+				role = Role.Mix;
+			else
+				entryFieldAuthor = author;
+
+
 
 			int color=0;
 			switch (role) {
@@ -224,14 +217,14 @@ public abstract class WF_Not_ClickableField extends WF_ListEntry {
 				color = R.color.client_owner_bg;
 				break;
 			case None:
-				Log.e("vortex","no color assigned");
+				//Log.e("vortex","no color assigned");
 				break;
 
 			}
-			Log.e("vortex","Color of entryfield now "+role.name());
+			//Log.e("vortex","Color of entryfield now "+role.name());
 			if (color!=0)
 				getWidget().setBackgroundColor(GlobalState.getInstance().getContext().getResources().getColor(color));
-		
+		}
 
 	}
 
@@ -267,7 +260,7 @@ public abstract class WF_Not_ClickableField extends WF_ListEntry {
 			}
 
 			if (hasFormat) {
-				
+
 				if (hasDot) {
 					if (!value.contains(".")) {
 						value += ".0";

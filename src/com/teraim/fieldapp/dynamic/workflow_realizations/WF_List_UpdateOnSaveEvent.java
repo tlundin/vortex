@@ -67,6 +67,7 @@ public class WF_List_UpdateOnSaveEvent extends WF_Static_List implements EventLi
 			ef.cfs = entryF;
 		}		
 		ef.varIDs.add(al.getVarName(r));
+		Log.d("vortex","added "+al.getVarName(r)+" to varIDs");
 	}
 
 
@@ -76,24 +77,28 @@ public class WF_List_UpdateOnSaveEvent extends WF_Static_List implements EventLi
 		//		List<String>cRow;
 		Set<Variable> retVar=null;
 
-		Log.d("nils","in AddVariableToEveryListEntry for "+varSuffix);
+		Log.e("nils","in AddVariableToEveryListEntry for "+varSuffix);
 		EntryField ef;
 		Map<String,EntryField> mapmap = new HashMap<String,EntryField>();
 		for (String key:entryFields.keySet()) {
 			ef = entryFields.get(key);
 
 			boolean success=false;
+			Log.d("vortex","varIDs contain: "+ef.varIDs);
 			for (String varID:ef.varIDs) {
 				//Log.d("vortex",varID);
 				if (varID.endsWith(varSuffix)) {
 					mapmap.put(varID,ef);
 					success=true;
+					Log.e("nils","Found Match for suffix: "+varSuffix+" Match: "+varID);
 					break;
 				}
 
-			}
+			} 
+
 			if (!success) {
 				//This variable is either wrong or global.
+				Log.e("nils","DID NOT FIND MATCH for suffix: "+varSuffix);
 				Variable v= varCache.getVariable(varSuffix,initialValue,-1);
 				if (v!=null)
 					ef.cfs.addVariable(v, displayOut,format,isVisible,showHistorical);	

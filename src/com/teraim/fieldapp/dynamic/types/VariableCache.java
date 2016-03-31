@@ -83,7 +83,7 @@ public class VariableCache {
 			}
 			ret = createAllVariablesForKey(myKeyHash);
 			if (ret==null) {
-				Log.e("vortex","No variables found in db for "+myKeyHash+". Creating empty hash");
+				//Log.e("vortex","No variables found in db for "+myKeyHash+". Creating empty hash");
 				ret = new HashMap<String,Variable>();
 			}
 			
@@ -111,21 +111,25 @@ public class VariableCache {
 
 
 	Map<String, Variable> createAllVariablesForKey(Map<String,String> myKeyHash) {
+		GlobalState gs = GlobalState.getInstance();
 		long time = System.currentTimeMillis();
 		Map<String, Variable> ret=null;
-		Map<String, TmpVal> map = GlobalState.getInstance().getDb().preFetchValuesForAllMatchingKeyV(myKeyHash);
+		Map<String, TmpVal> map = gs.getDb().preFetchValuesForAllMatchingKeyV(myKeyHash);
 		if (map!=null) {
 			//Create variables.
 			Variable v;
-			GlobalState gs = GlobalState.getInstance();
+			
 			if (!map.isEmpty()) {
 				ret = new HashMap<String, Variable>();
 				for (String varName:map.keySet()) {
 
 					TmpVal vals = map.get(varName);
 					List<String> row = gs.getVariableConfiguration().getCompleteVariableDefinition(varName);
-					if (row==null)
-						Log.e("vortex","ROW IS NULL FOR "+varName);
+					if (row==null) {
+						Log.e("vortex","Variable "+varName+" does not exist in variables but exists in Database");
+						gs.getDb().deleteVariable(varName,gs.getDb().createSelection(myKeyHash,varName), true);
+						Log.e("vortex","Deleted "+varName);
+					}
 					else {
 					String header = gs.getVariableConfiguration().getVarLabel(row);
 					DataType type = gs.getVariableConfiguration().getnumType(row);
@@ -209,7 +213,6 @@ public class VariableCache {
 			//check if variable has subset of keypairs
 			List<String> row = gs.getVariableConfiguration().getCompleteVariableDefinition(varId);
 			if (row == null) {
-				Log.e("vortex","variable "+varId+" not found");
 				Log.e("nils","Variable definition missing for "+varId);
 				o.addRow("");
 				o.addYellowText("Variable definition missing for "+varId);
@@ -227,8 +230,6 @@ public class VariableCache {
 			variable = cache.get(varId.toLowerCase());
 			if (variable == null) {
 				Log.d("nils","Creating new CacheList entry for "+varId);
-				
-
 				String header = gs.getVariableConfiguration().getVarLabel(row);
 				DataType type = gs.getVariableConfiguration().getnumType(row);
 				Log.d("vortex","T1:"+(System.currentTimeMillis()-t0));
@@ -238,7 +239,7 @@ public class VariableCache {
 					variable = new Variable(varId,header,row,hash,gs,vCol,defaultValue,true,"*NULL*");
 				cache.put(varId.toLowerCase(), variable);
 			} else
-				Log.d("vortex","Found "+variable.getId()+" in global cache with value "+variable.getValue()+" varobj: "+variable.toString());
+				Log.d("vortex","Found "+variable.getId()+" in global cache with value "+variable.getValue()+" varhash:"+tryThis);
 
 		} else {
 			Log.d("vortex","Found "+variable.getId()+" in cache with value "+variable.getValue()+" varobj: "+variable.toString());

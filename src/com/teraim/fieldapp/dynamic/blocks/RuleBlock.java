@@ -8,7 +8,7 @@ import com.teraim.fieldapp.GlobalState;
 import com.teraim.fieldapp.dynamic.types.Rule;
 import com.teraim.fieldapp.dynamic.workflow_realizations.WF_Context;
 
-public  class AddRuleBlock extends Block {
+public  class RuleBlock extends Block {
 
 	/**
 	 * 
@@ -22,7 +22,7 @@ public  class AddRuleBlock extends Block {
 	}
 	private Scope myScope = Scope.flow;
 
-	public AddRuleBlock(String id,String ruleName,String target, String condition, String action, String errorMsg, String myScope) {
+	public RuleBlock(String id,String ruleName,String target, String condition, String action, String errorMsg, String myScope) {
 		this.r = new Rule(id,ruleName,target,condition,action,errorMsg);
 		this.blockId=id;
 		if (myScope!=null && myScope.length()>0)

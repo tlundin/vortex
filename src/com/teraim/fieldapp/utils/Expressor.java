@@ -813,16 +813,18 @@ public class Expressor {
 					System.out.println("Variable '"+this.toString()+"' does not have a value or Variable is missing.");
 					return null;
 				}
-				Log.d("vortex","Atom variable ["+v.getId()+"] Type "+v.getType());
+				
 				value = v.getValue();
-
+				Log.d("vortex","Atom variable ["+v.getId()+"] Type "+v.getType()+" Value: "+value);
 				if (Tools.isNumeric(value)) {
+					Log.d("vortex","numeric");
 					if (v.getType()== Variable.DataType.decimal || value.contains("."))
 						return Double.parseDouble(value);
 					else
 						return Integer.parseInt(value);
 				}
 				if (v.getType()==Variable.DataType.bool) {
+					Log.d("vortex","bool");
 					if (value.equalsIgnoreCase("false")) {
 						//Log.d("vortex","Returning false");
 						return false;
@@ -835,6 +837,11 @@ public class Expressor {
 						Log.e("vortex","Not a bool value: "+value);
 						return null;
 					}
+				}
+				Log.d("vortex","literal");
+				if (value.isEmpty()) {
+					Log.e("vortex","empty literal...returning null");
+					return null;
 				}
 				return value;
 			case number:
@@ -943,14 +950,17 @@ public class Expressor {
 			boolean isDoubleOperator = arg1v instanceof Double && arg2v instanceof Double;
 			boolean isBooleanOperator = arg1v instanceof Boolean && arg2v instanceof Boolean;
 			//if any of the arguments are string, then treat both as literal.
-			boolean isLiteralOperator = arg1v instanceof String || arg2v instanceof String;
+			boolean isLiteralOperator = arg1v instanceof String && arg2v instanceof String;
 			
+			//System.err.println("arg1: "+arg1v+" arg2: "+arg2v+ "arg1vClass: "+arg1v.getClass()+" arg2vClass: "+arg2v.getClass());
 
 
-			if (!isIntegerOperator && !isBooleanOperator && !isLiteralOperator) {
-				System.err.println("Argument types are wrong in operand: "+arg1v.getClass().getSimpleName()+","+arg2v.getClass().getSimpleName());
+			if (!isIntegerOperator && !isBooleanOperator && !isLiteralOperator && !isDoubleOperator) {
 				o.addRow("");
-				o.addRedText("Argument types are wrong in operand: "+arg1v.getClass().getSimpleName()+","+arg2v.getClass().getSimpleName());
+				o.addRedText("Argument types are not same for "+arg1v+operator+arg2v);
+				o.addRedText("Type(arg1): " +arg1v.getClass().getSimpleName()+", Type(arg2): "+arg2v.getClass().getSimpleName());
+				
+				Log.e("Vortex","Argument types are wrong in operand: "+arg1v.getClass().getSimpleName()+","+arg2v.getClass().getSimpleName());
 				return null;
 			}
 			if (isLiteralOperator) {
@@ -987,11 +997,11 @@ public class Expressor {
 						break;
 					case eq:
 						res = arg1F.compareTo(arg2F)==0;
-						Log.e("vortex","arg1F eq arg2F? "+arg1F+" eq "+arg2F+": "+res);
+						//Log.e("vortex","arg1F eq arg2F? "+arg1F+" eq "+arg2F+": "+res);
 						break;
 					case neq:
 						res = arg1F.compareTo(arg2F)!=0;
-						Log.e("vortex","arg1F neq arg2F? "+arg1F+" neq "+arg2F+": "+res);
+						//Log.e("vortex","arg1F neq arg2F? "+arg1F+" neq "+arg2F+": "+res);
 						break;
 					case gt:
 						res = arg1F > arg2F;
@@ -1499,7 +1509,7 @@ public class Expressor {
 				if (!checkPreconditions(evalArgs,-1,Null_Numeric))
 					return 0;
 				else {
-					double sum = 0;
+					Integer sum = 0;
 					for (Object arg : evalArgs) {
 						if (arg!=null)
 							sum += (Integer) arg;

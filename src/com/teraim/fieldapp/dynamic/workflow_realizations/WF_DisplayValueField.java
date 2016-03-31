@@ -47,8 +47,10 @@ public class WF_DisplayValueField extends WF_Widget implements EventListener {
 		formulaE = Expressor.preCompileExpression(formula);
 		if (formulaE==null)
 		{
+			
 			o.addRow("");
 			o.addRedText("Parsing of formula for DisplayValueBlock failed. Formula: "+formula);
+			Log.e("vortex","Parsing of formula for DisplayValueBlock failed. Formula: "+formula);
 		}
 		this.format = format;
 		this.myContext=ctx;

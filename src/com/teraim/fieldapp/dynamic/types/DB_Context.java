@@ -67,10 +67,10 @@ public class DB_Context implements Serializable {
 		Map<String, String> keyHash = null;
 
 		LoggerI o = GlobalState.getInstance().getLogger();
-		Log.d("vortex","In evaluate Context!!");
+		//Log.d("vortex","In evaluate Context!!");
 
 		if (eContext==null) {
-			Log.d("vortex","No change to context. Return existing");
+			Log.d("vortex","No change to context: "+GlobalState.getInstance().getVariableCache().getContext());
 			return GlobalState.getInstance().getVariableCache().getContext();
 		} else {
 			keyHash = new HashMap<String, String>();
@@ -125,7 +125,7 @@ public class DB_Context implements Serializable {
 				o.addRedText(err);
 				return new DB_Context(err);
 			} else {
-				
+				Log.d("vortex","CONTEXT CHANGE: "+keyHash);
 				return new DB_Context(cContext,keyHash);
 			}
 		}

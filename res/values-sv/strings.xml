@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Field Pad</string>
+    <string name="app_name_t">Appens namn</string>
     <string name="avbrytsynk">Avbryt Synkning</string>
     <string name="iunderstand">Jag förstår!</string>   
     <string name="menu_settings">Inställningar</string>

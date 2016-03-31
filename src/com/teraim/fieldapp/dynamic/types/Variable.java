@@ -301,7 +301,7 @@ public class Variable implements Serializable {
 
 
 	public Variable(String name,String label,List<String> row,Map<String,String>keyChain, GlobalState gs,String valueColumn, String defaultOrExistingValue, Boolean valueIsPersisted, String historicalValue) {
-		//Log.d("nils","Creating variable ["+name+"] with keychain "+((keyChain==null)?"null":keyChain.toString())+"\nthis obj: "+this);
+		Log.d("nils","Creating variable ["+name+"] with keychain "+((keyChain==null)?"null":keyChain.toString())+"\nthis obj: "+this);
 		this.gs=gs;
 		al=gs.getVariableConfiguration();
 		this.name = name;
@@ -330,12 +330,11 @@ public class Variable implements Serializable {
 			
 			historyChecked=true;
 			myHistory = historicalValue;
+			
 			if (historicalValue.equals("*NULL*")) {
-				Log.e("vortex","Historicalvaluefor "+this.getId()+" is "+historicalValue+" varObj: "+this.toString());
+				//Log.e("vortex","Historicalvaluefor "+this.getId()+" is "+historicalValue+" varObj: "+this.toString());
 				myHistory = null;
 			}
-			else
-				Log.e("vortex","Historicalvaluefor "+this.getId()+" is "+historicalValue+" varObj: "+this.toString());
 		} else
 			historyChecked = false;
 		//Defaultvalue is either a default or the current value in DB.
@@ -524,12 +523,12 @@ public class Variable implements Serializable {
 			Log.d("vortex","cached who for "+this.getId()+" is "+who);
 			return who;
 		}
-			String who = myDb.getValue(name, mySelection,Variable.authorS);
+			who = myDb.getValue(name, mySelection,Variable.authorS);
 			if (who!=null) {
-				Log.d("vortex","Who for "+this.getId()+" is "+who);
+				//Log.d("vortex","Who for "+this.getId()+" is "+who);
 				return who;
 			}
-			Log.e("vortex","returning null in whogavethisvalue");
+			//Log.e("vortex","returning null in whogavethisvalue");
 			return null;
 		
 	}

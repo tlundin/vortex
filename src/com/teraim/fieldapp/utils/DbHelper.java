@@ -180,14 +180,14 @@ public class DbHelper extends SQLiteOpenHelper {
 		if (keyParts == null) {
 			Log.e("nils","Keyparts were null in DBHelper");
 		} else {
-			Log.e("nils","Keyparts has"+keyParts.size()+" elements");
+			//Log.e("nils","Keyparts has"+keyParts.size()+" elements");
 			for(int i=0;i<keyParts.size();i++) {
-				Log.d("nils","checking keypart "+keyParts.get(i));
+				//Log.d("nils","checking keypart "+keyParts.get(i));
 				if (keyColM.containsKey(keyParts.get(i))) {
 					Log.d("nils","Key "+keyParts.get(i)+" already exists..skipping");
 					continue;
 				} else if (staticColumn(keyParts.get(i))) {
-					Log.e("nils","Key "+keyParts.get(i)+" is a static key. Sure this ok??");
+					Log.d("nils","Key "+keyParts.get(i)+" is a static key. Sure this ok??");
 
 				}				
 				else {
@@ -529,7 +529,7 @@ public class DbHelper extends SQLiteOpenHelper {
 						int li = z.lastIndexOf(" ");
 						String last = z.substring(li+1, z.length());
 						if (li!=-1) {
-							Log.e("vortex","var is "+last);
+							//Log.e("vortex","var is "+last);
 							realColNames[ii]=last;
 						}
 					}
@@ -551,7 +551,7 @@ public class DbHelper extends SQLiteOpenHelper {
 			dd=null;
 		//store
 		storeAuditEntry("D",dd,varName);
-		//Log.d("nils","INSERT Delete audit entry. Args:  "+dd);
+		Log.e("nils","INSERT Delete audit entry. Args:  "+dd);
 	}
 
 	public void insertEraseAuditEntry(String keyPairs) {		
@@ -726,7 +726,7 @@ public class DbHelper extends SQLiteOpenHelper {
 			Log.d("nils","In getvalue with name "+name+" and selection "+s.selection+" and selectionargs "+print(s.selectionArgs));
 			db = this.getWritableDatabase();
 		}
-		Log.d("nils","In getvalue with name "+name+" and selection "+s.selection+" and selectionargs "+print(s.selectionArgs));
+		//Log.d("nils","In getvalue with name "+name+" and selection "+s.selection+" and selectionargs "+print(s.selectionArgs));
 		Cursor c =null;
 		if (checkForNulls(s.selectionArgs)) {
 			c= db.query(TABLE_VARIABLES,valueCol,
@@ -1273,14 +1273,22 @@ public class DbHelper extends SQLiteOpenHelper {
 					//Is the existing entry done by me?
 					Log.d("vortex","Author is "+author);
 					if (isMe(author)) {
-						Log.e("vortex","found pot conflict between import value and existing for "+varName);
+						Log.e("vortex","found potential conflict between import value and existing for "+varName);
 						if (value != s.getValues())
-						if (varName.startsWith("status")) {
-							Log.d("vortex","This is likely a status variable");
+						if (varName.startsWith("STATUS")) {
+							Log.d("vortex","This is a status variable");
 							
 							List<String> row = GlobalState.getInstance().getVariableConfiguration().getCompleteVariableDefinition(varName);
-							String group = GlobalState.getInstance().getVariableConfiguration().getFunctionalGroup(row);
-							Log.d("vortex","Group is "+group);
+							String assocWorkflow = GlobalState.getInstance().getVariableConfiguration().getAssociatedWorkflow(row);
+							
+							Log.d("vortex","Assoc workflow is "+assocWorkflow);
+							if (assocWorkflow != null && !assocWorkflow.isEmpty()) {
+								Log.d("vortex","conflict!");
+								o.addRow("");
+								o.addRedText("Sync conflict in workflow ["+assocWorkflow+"]\nKey:\n"+cv.toString());
+								changes.conflicts++;
+							}
+							
 						}
 					}
 
@@ -1410,6 +1418,12 @@ public class DbHelper extends SQLiteOpenHelper {
 			ui.setInfo(synC+"/"+size);
 		//Log.d("sync","UNLOCK!");
 		endTransactionSuccess();
+		
+		//Add instructions in log if conflicts.
+		if (changes.conflicts>0) {
+			o.addRow("");
+			o.addRedText("Correct the sync conflicts in one of your devices not both! \nThen, please resynchronize!");
+		}
 		return changes;
 	}
 
@@ -1846,7 +1860,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		c.close();
 		if (arIndex!=-1) {
 			selectionArgs.set(arIndex, Constants.HISTORICAL_TOKEN_IN_DATABASE);
-			Log.d("vortex","historical selloArgs: "+selectionArgs);
+			//Log.d("vortex","historical selloArgs: "+selectionArgs);
 			selArgs = selectionArgs.toArray(new String[selectionArgs.size()]);
 			Cursor d = db.query(true,TABLE_VARIABLES, new String[] {VARID,"value"}, selection.toString(), selArgs, null, null, null,null);
 			histC=d.getCount();
@@ -1857,16 +1871,17 @@ public class DbHelper extends SQLiteOpenHelper {
 		}
 
 
-		if (tmp.values()!=null) {
+		if (tmp.values()!=null) 
 			Log.d("vortex", "Tmpval has "+tmp.values().size()+" members");
-			if (histC>0) {
+/*
+		if (histC>0) {
 				for (String v:tmp.keySet()) {
 					TmpVal tv = tmp.get(v);
 					Log.e("vortex","VAR: "+v+" NORM: "+tv.norm+" HIST: "+tv.hist);
 				}
 			}
 		}
-
+*/
 
 		return tmp;
 

@@ -166,10 +166,10 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 				Start.singleton.changePage(new TagTemplate(), "Delningsskärm");
 			}
 		});
-		String xContext = "år = getCurrentYear(), ruta = getColumnValue(ruta), provyta = getColumnValue(provyta)";
-		taBild = new ButtonBlock("_tabild","Foto","Start_Workflow", "fotobutton","Field_List_panel_1",NamedVariables.WF_FOTO,"action", "STATUS:status_foto",true,null,null,true,xContext,false);
+		String xContext = "år = [getCurrentYear()], ruta = [getColumnValue(ruta)], provyta = [getColumnValue(provyta)]";
+		taBild = new ButtonBlock("_tabild","Foto","Start_Workflow", "fotobutton","Field_List_panel_1",NamedVariables.WF_FOTO,"action", NamedVariables.STATUS_FOTO,true,null,null,true,xContext,false);
 		
-		fixPunkter = new ButtonBlock("_","Fixpunkter","Start_Workflow", "fixpunktbutton","Field_List_panel_1",NamedVariables.WF_FIXPUNKTER,"action", "STATUS:status_fixpunkter",true,null,null,true,xContext,false);
+		fixPunkter = new ButtonBlock("_","Fixpunkter","Start_Workflow", "fixpunktbutton","Field_List_panel_1",NamedVariables.WF_FIXPUNKTER,"action",NamedVariables.STATUS_FIXPUNKTER,true,null,null,true,xContext,false);
 
 		//spillning = new ButtonBlock("_s","Spillning","Start_Workflow", "spillningbutton","Field_List_panel_1",NamedVariables.WF_SPILLNING,"action","status_spillning",true,null,null,true);
 
@@ -178,6 +178,7 @@ public class ProvytaNivaTemplate extends Executor implements EventListener, OnGe
 			Map<String,String> buttonHash = al.createProvytaKeyMap();
 			buttonHash.put("delyta", I+"");
 			DB_Context buttonContext = new DB_Context(null,buttonHash);
+			//Log.e("vortex","Creating knapp får delyta "+i);
 			delyteKnappar[i]=new ButtonBlock("DelBl"+i,"Delyta "+i,"Start_Workflow", "Delyta "+i,"Field_List_panel_1",
 					(isAbo?NamedVariables.WF_DELYTE_INMATNING_ABO:NamedVariables.WF_DELYTE_INMATNING),"action","STATUS:status_delyta",true,
 					new OnclickExtra() {						

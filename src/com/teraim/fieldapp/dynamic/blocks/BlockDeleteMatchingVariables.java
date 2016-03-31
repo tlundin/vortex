@@ -12,7 +12,7 @@ import com.teraim.fieldapp.dynamic.types.DB_Context;
 import com.teraim.fieldapp.dynamic.workflow_realizations.WF_Context;
 import com.teraim.fieldapp.utils.Expressor.EvalExpr;
 
-public class BlockDeleteAllVariables extends Block {
+public class BlockDeleteMatchingVariables extends Block {
 
 	/**
 	 * 
@@ -21,7 +21,7 @@ public class BlockDeleteAllVariables extends Block {
 	String label,context,pattern;
 	private List<EvalExpr> contextE;
 	
-	public BlockDeleteAllVariables(String id, String label, String target, String pattern) {
+	public BlockDeleteMatchingVariables(String id, String label, String target, String pattern) {
 		this.blockId=id;
 		this.label=label;
 		this.context=target;
@@ -51,6 +51,11 @@ public class BlockDeleteAllVariables extends Block {
 				keyBuilder.append(key+"="+hash.get(key));
 				if (!last)
 					keyBuilder.append(",");
+				else
+					if (pattern!=null) {
+						keyBuilder.append(", var ="+pattern);
+						Log.e("vortex","added pattern to key select: "+keyBuilder.toString());
+					}
 				i++;
 			}
 			GlobalState.getInstance().getDb().erase(keyBuilder.toString());

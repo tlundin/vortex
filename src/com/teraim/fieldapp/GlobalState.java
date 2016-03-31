@@ -70,7 +70,7 @@ public class GlobalState  {
 	private String myPartner="?";
 
 	private PersistenceHelper globalPh=null;
-	private Tracker myTracker;
+	private Tracker myTracker=null;
 	private ConnectionManager myConnectionManager; 
 	private BackupManager myBackupManager;
 
@@ -121,7 +121,7 @@ public class GlobalState  {
 		myVariableCache = new VariableCache(this);
 
 		//GPS listener service
-		myTracker = new Tracker();
+		
 
 		//myExecutor = new RuleExecutor(this);
 
@@ -370,7 +370,7 @@ public class GlobalState  {
         	Intent intent =null;
 
         	if(msg.obj instanceof String) {
-        	Log.d("vortex","IN HANDLE MESSAGE WITH MSG: "+msg.toString());
+        	//Log.d("vortex","IN HANDLE MESSAGE WITH MSG: "+msg.toString());
         	String s = (String)msg.obj;
         	intent = new Intent();
     		intent.setAction(s);
@@ -490,6 +490,8 @@ public class GlobalState  {
 	}
 
 	public Tracker getTracker() {
+		if (myTracker == null) 
+			myTracker = new Tracker();
 		return myTracker;
 	}
 

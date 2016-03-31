@@ -15,7 +15,7 @@ import com.teraim.fieldapp.dynamic.blocks.AddEntryToFieldListBlock;
 import com.teraim.fieldapp.dynamic.blocks.AddGisFilter;
 import com.teraim.fieldapp.dynamic.blocks.AddGisLayerBlock;
 import com.teraim.fieldapp.dynamic.blocks.AddGisPointObjects;
-import com.teraim.fieldapp.dynamic.blocks.AddRuleBlock;
+import com.teraim.fieldapp.dynamic.blocks.RuleBlock;
 import com.teraim.fieldapp.dynamic.blocks.AddSumOrCountBlock;
 import com.teraim.fieldapp.dynamic.blocks.AddVariableToEntryFieldBlock;
 import com.teraim.fieldapp.dynamic.blocks.AddVariableToEveryListEntryBlock;
@@ -25,7 +25,7 @@ import com.teraim.fieldapp.dynamic.blocks.BlockAddColumnsToTable;
 import com.teraim.fieldapp.dynamic.blocks.BlockAddVariableToTable;
 import com.teraim.fieldapp.dynamic.blocks.BlockCreateListEntriesFromFieldList;
 import com.teraim.fieldapp.dynamic.blocks.BlockCreateTableEntriesFromFieldList;
-import com.teraim.fieldapp.dynamic.blocks.BlockDeleteAllVariables;
+import com.teraim.fieldapp.dynamic.blocks.BlockDeleteMatchingVariables;
 import com.teraim.fieldapp.dynamic.blocks.ButtonBlock;
 import com.teraim.fieldapp.dynamic.blocks.ConditionalContinuationBlock;
 import com.teraim.fieldapp.dynamic.blocks.ContainerDefineBlock;
@@ -302,7 +302,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 				else if (name.equals("block_add_gis_filter"))
 					blocks.add(readBlockAddGisFilter(parser));
 				else if (name.equals("block_delete_matching_variables"))
-					blocks.add(readBlockDeleteAllVariables(parser));
+					blocks.add(readBlockDeleteMatchingVariables(parser));
 				else if (name.equals("block_no_op"))
 					blocks.add(readBlockNoOp(parser));
 				else {			
@@ -360,8 +360,8 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 
 	}
 
-	private Block readBlockDeleteAllVariables(XmlPullParser parser) throws IOException, XmlPullParserException {
-			o.addRow("Parsing block: block_delete_all_variables...");
+	private Block readBlockDeleteMatchingVariables(XmlPullParser parser) throws IOException, XmlPullParserException {
+			o.addRow("Parsing block: block_delete_matching_variables...");
 			String id=null,label=null,target=null,pattern=null;
 			
 
@@ -389,7 +389,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 			}
 
 			checkForNull("block_ID",id,"target",target);
-			return new BlockDeleteAllVariables(id, label, target, pattern);
+			return new BlockDeleteMatchingVariables(id, label, target, pattern);
 
 		}
 
@@ -1783,7 +1783,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 	 * @throws IOException
 	 * @throws XmlPullParserException
 	 */
-	private AddRuleBlock readBlockAddRule(XmlPullParser parser) throws IOException, XmlPullParserException {
+	private RuleBlock readBlockAddRule(XmlPullParser parser) throws IOException, XmlPullParserException {
 		//o.addRow("Parsing block: block_add_rule...");
 		String target=null, condition=null, myScope = null,action=null, errorMsg=null,myname=null,id=null;
 		parser.require(XmlPullParser.START_TAG, null,"block_add_rule");
@@ -1811,7 +1811,7 @@ public class WorkFlowBundleConfiguration extends XMLConfigurationModule {
 
 		}
 		checkForNull("block_ID",id,"name",myname,"target",target,"condition",condition,"action",action,"errorMsg",errorMsg);
-		return new AddRuleBlock(id,myname,target,condition,action,errorMsg,myScope);
+		return new RuleBlock(id,myname,target,condition,action,errorMsg,myScope);
 	}
 
 	private void checkForNull(String...pars) {

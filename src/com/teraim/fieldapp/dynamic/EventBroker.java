@@ -50,7 +50,7 @@ public class EventBroker {
 			Log.d("nils","sending event to "+els.size()+" listeners:");
 
 			for(EventListener el:els) {
-				Log.d("nils","LIST "+el.getClass().getSimpleName());
+				//Log.d("nils","LIST "+el.getClass().getSimpleName());
 				el.onEvent(e);
 			}
 		}

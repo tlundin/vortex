@@ -1049,9 +1049,11 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 			myMap.setRiktTxt(timeDiff+" s");
 			
 		}
-		
-		double mX = Double.parseDouble(myX.getValue());
-		double mY = Double.parseDouble(myY.getValue());
+		String mXs = myX.getValue();
+		String mYs = myY.getValue();
+		if (mXs!=null && mYs!=null) {
+		double mX = Double.parseDouble(mXs);
+		double mY = Double.parseDouble(mYs);
 		double gX = touchedGop.getLocation().getX();
 		double gY = touchedGop.getLocation().getY();
 		currentDistance = (int)Geomatte.sweDist(mY,mX,gY,gX);
@@ -1060,7 +1062,7 @@ public class GisImageView extends GestureImageView implements TrackerListener {
 		myMap.setRiktTxt(rikt+Deg);
 
 
-
+		}
 
 	}
 	

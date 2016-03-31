@@ -21,8 +21,9 @@ public class NamedVariables {
 	public  static final String ProfilAvst = "FlyttadProfil_ProfilAvstand";
 	public static final String ProfilRikt = "FlyttadProfil_ProfilRiktning";
 	public static final String NYUTLAGG = "Nyutlagg";
-	public static final String STATUS_LINJE = "status_linje";
-	public static final String STATUS_FOTO = "status_foto";
+	public static final String STATUS_LINJE = "STATUS:status_linje";
+	public static final String STATUS_FOTO = "STATUS:status_foto";
+	public static final String STATUS_FIXPUNKTER = "STATUS:status_fixpunkter";
 	public static final String TransportledTyp = "Väg:TransportLedTyp";
 	public static final String BeraknadInomDelyta = "inomDelytaBeraknad";
 
@@ -64,6 +65,7 @@ public class NamedVariables {
 	public static final String InomDelyta = "inomDelyta";
 
 	public static final String FINNS_I_SPY = "FinnsiSPY";
+
 
 	public static String number_of_selections = "number_of_selections";
 

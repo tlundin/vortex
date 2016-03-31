@@ -445,7 +445,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
 		}
 		busy = false;
-		Log.e("vortex","BUSY NOW FALSE E");
+		//Log.e("vortex","BUSY NOW FALSE E");
 		Message msg = Message.obtain(null, SyncService.MSG_SYNC_ERROR_STATE);
 		msg.arg1=SyncService.ERR_UNKNOWN;
 		return msg;
@@ -454,7 +454,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
 	public void releaseLock() {
 		busy=false;
-		Log.e("vortex","BUSY NOW FALSE T");
+		//Log.e("vortex","BUSY NOW FALSE T");
 	}
 
 

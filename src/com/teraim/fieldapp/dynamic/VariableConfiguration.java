@@ -89,7 +89,9 @@ public class VariableConfiguration implements Serializable {
 		return row.get(fromNameToColumn.get(requiredColumns.get(LIST_ENTRY)));
 	}
 	 */
-
+	public String getAssociatedWorkflow(List<String> row) {
+		return row.get(fromNameToColumn.get(requiredColumns.get(LIST_VALUES)));
+	}
 	public List<String> getListElements(List<String> row) {
 		List<String> el = null;
 		String listS = row.get(fromNameToColumn.get(requiredColumns.get(LIST_VALUES)));
@@ -383,7 +385,7 @@ public class VariableConfiguration implements Serializable {
 		String currentRuta = getGlobalVariable(NamedVariables.CURRENT_RUTA);		
 		String currentLinje = getGlobalVariable(NamedVariables.CURRENT_LINJE);		
 		if (currentYear == null || currentRuta == null||currentLinje==null) {
-			Log.e("nils","CreateLinjeKeyMap failed. Missing value");
+			Log.e("nils","CreateLinjeKeyMap failed. Missing value: CR: "+currentRuta+ "YR: "+currentYear+" CL: "+currentLinje);
 			return null;
 		}
 
@@ -401,6 +403,7 @@ public class VariableConfiguration implements Serializable {
 
 	private String getGlobalVariable(String varId) {
 		return gs.getVariableCache().getVariable(null, varId).getValue();
+		
 	}
 /*
 	public void invalidateCacheKeys(String key) {

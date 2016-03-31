@@ -180,8 +180,8 @@ public class SimpleRutaTemplate extends Executor implements OnGesturePerformedLi
 		});
 
 		aggregatePanel.addView(exportB);
-		CreateEntryFieldBlock x = new CreateEntryFieldBlock("typSpinner","RutaSorteringsTyp", "Aggregation_panel_3",true,"DDD",false,Constants.NO_DEFAULT_VALUE,null,true);
-		x.create(myContext);
+		//CreateEntryFieldBlock x = new CreateEntryFieldBlock("typSpinner","RutaSorteringsTyp", "Aggregation_panel_3",true,"DDD",false,Constants.NO_DEFAULT_VALUE,null,true);
+		//x.create(myContext);
 
 		GestureOverlayView gestureOverlayView = (GestureOverlayView)v.findViewById(R.id.gesture_overlay);
 

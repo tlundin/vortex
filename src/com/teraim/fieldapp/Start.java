@@ -233,7 +233,7 @@ public class Start extends MenuActivity {
 		String template = wf.getTemplate();
 		
 		//Set context.
-		Log.e("vortex","change page called with wf "+wf.getName());
+		Log.d("vortex","CHANGING PAGE TO: xxxxxxxx ["+wf.getName()+"]");
 		DB_Context cHash = DB_Context.evaluate(wf.getContext());
 		
 		//if Ok err is null.

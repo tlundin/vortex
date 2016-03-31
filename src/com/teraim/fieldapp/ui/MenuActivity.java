@@ -79,7 +79,7 @@ public class MenuActivity extends Activity   {
 		brr = new BroadcastReceiver() {
 			@Override
 			public void onReceive(Context ctx, Intent intent) {
-				Log.d("nils", "received "+intent.getAction()+" in MenuActivity BroadcastReceiver");
+				Log.d("nils", "Broadcast: "+intent.getAction());
 
 				if (intent.getAction().equals(INITDONE)) {
 					initdone=true;
@@ -481,7 +481,7 @@ public class MenuActivity extends Activity   {
 		animView.setOnClickListener(null);
 		menuItem.setIcon(ret);
 		menuItem.setVisible(true);
-		Log.d("vortex","Exiting setsyncstate");
+		//Log.d("vortex","Exiting setsyncstate");
 	}
 
 
