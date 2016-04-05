@@ -149,12 +149,11 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 				Log.e("vortex","globalstate null in executor, exit");
 				return;
 			}
-
-			myContext = new WF_Context((Context)this.getActivity(),this,R.id.content_frame);
-			o = gs.getLogger();
-
 			al = gs.getVariableConfiguration();
 			varCache=gs.getVariableCache();
+			o = gs.getLogger();
+			
+
 			ifi = new IntentFilter();
 			ifi.addAction(REDRAW_PAGE);
 			//ifi.addAction(BluetoothConnectionService.BLUETOOTH_MESSAGE_RECEIVED);
@@ -179,6 +178,8 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 
 				}
 			};
+			
+			myContext = new WF_Context((Context)this.getActivity(),this,R.id.content_frame);
 			wf = getFlow();
 			if (wf == null) {
 				Log.e("Vortex","WF was null in Executor. Exiting...");
@@ -188,6 +189,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 				Log.d("nils","GETS TO ONCREATE EXECUTOR FOR WF "+wf.getLabel());
 				survivedCreate = true;
 			}
+
 		}
 
 	}
@@ -218,6 +220,9 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 			gs.getContext().unregisterReceiver(brr);
 		if (gs!=null&&myContext!=null&&myContext.hasGPSTracker())
 			gs.getTracker().stopUsingGPS();
+		
+		
+		
 		super.onPause();
 
 	}
@@ -273,7 +278,11 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 	protected void run() {
 		o.addRow("");
 		o.addRow("");
-		o.addRow("*******EXECUTING: "+wf.getLabel());			
+		o.addRow("*******EXECUTING: "+wf.getLabel());	
+		Log.d("vortex","in Executor run()");
+		
+		myContext.resetState();
+		
 		DB_Context wfHash = DB_Context.evaluate(wf.getContext());
 		//TODO: Erase below if.
 		if (!wfHash.equals(gs.getVariableCache().getContext())) {
@@ -516,7 +525,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 													myContext.setMyEndIsNear();
 													new Handler().postDelayed(new Runnable() {
 														public void run() {
-															myContext.resetState();
+															//myContext.resetState();
 
 															Set<Variable> previouslyVisibleVars = visiVars;
 															Executor.this.run();
@@ -612,7 +621,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 									//myContext.onResume();
 									new Handler().postDelayed(new Runnable() {
 										public void run() {
-											myContext.resetState();
+											//myContext.resetState();
 											Set<Variable> previouslyVisibleVars = visiVars;
 											Executor.this.run();
 											for (Variable v:previouslyVisibleVars) {
@@ -742,6 +751,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 				//Draw the UI.
 				o.addRow("");
 				o.addYellowText("Now Drawing components recursively");
+				Log.d("vortex","Now Drawing components recursively");
 				//Draw all lists first.
 				for (WF_Static_List l:myContext.getLists()) 			
 					l.draw();
@@ -854,7 +864,7 @@ public abstract class Executor extends Fragment implements AsyncResumeExecutorI 
 		myContext.setMyEndIsNear();
 		new Handler().postDelayed(new Runnable() {
 			public void run() {
-				myContext.resetState();
+				//myContext.resetState();
 				Executor.this.run();
 				Log.d("vortex","workflow restarted");
 			}

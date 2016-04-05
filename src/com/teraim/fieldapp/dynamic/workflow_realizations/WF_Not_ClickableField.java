@@ -188,7 +188,7 @@ public abstract class WF_Not_ClickableField extends WF_ListEntry {
 
 		String author = var.getWhoGaveThisValue();
 		Role role = Role.None;			
-		Log.d("vortex","author var: "+author+" entryfield owner: "+entryFieldAuthor);
+		//Log.d("vortex","author var: "+author+" entryfield owner: "+entryFieldAuthor);
 
 		if (author!=null) {
 			boolean IdidIt = author.equals(gs.getGlobalPreferences().get(PersistenceHelper.USER_ID_KEY));

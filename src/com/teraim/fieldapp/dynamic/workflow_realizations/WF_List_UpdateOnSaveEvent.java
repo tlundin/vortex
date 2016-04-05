@@ -84,6 +84,7 @@ public class WF_List_UpdateOnSaveEvent extends WF_Static_List implements EventLi
 			ef = entryFields.get(key);
 
 			boolean success=false;
+
 			Log.d("vortex","varIDs contain: "+ef.varIDs);
 			for (String varID:ef.varIDs) {
 				//Log.d("vortex",varID);
@@ -98,7 +99,7 @@ public class WF_List_UpdateOnSaveEvent extends WF_Static_List implements EventLi
 
 			if (!success) {
 				//This variable is either wrong or global.
-				Log.e("nils","DID NOT FIND MATCH for suffix: "+varSuffix);
+				Log.d("nils","DID NOT FIND MATCH for suffix: "+varSuffix);
 				Variable v= varCache.getVariable(varSuffix,initialValue,-1);
 				if (v!=null)
 					ef.cfs.addVariable(v, displayOut,format,isVisible,showHistorical);	
@@ -166,6 +167,7 @@ public class WF_List_UpdateOnSaveEvent extends WF_Static_List implements EventLi
 		list.add(entryF);	
 		EntryField ef = new EntryField();
 		entryFields.put(this.getId()+listEntryID, ef);
+		Log.d("vortex","I am now adding listentry "+this.getId()+listEntryID);
 		ef.cfs = entryF;
 	}
 

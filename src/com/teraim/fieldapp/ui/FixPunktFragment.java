@@ -67,6 +67,7 @@ public class FixPunktFragment extends Fragment implements OnGesturePerformedList
 		backB.setOnClickListener(new OnClickListener() {			
 			@Override
 			public void onClick(View v) {
+				//GlobalState.getInstance().getCurrentWorkflowContext().resetState();
 				getFragmentManager().popBackStackImmediate();
 			}
 		});
@@ -158,6 +159,7 @@ public class FixPunktFragment extends Fragment implements OnGesturePerformedList
 	    for (Prediction prediction : predictions) {
 	      if (prediction.score > .5) {
 	  		if (prediction.name.equals("right")) {
+	  			//GlobalState.getInstance().getCurrentWorkflowContext().resetState();
 	  			getFragmentManager().popBackStackImmediate();
 
 	  		} else 

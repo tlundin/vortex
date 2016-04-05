@@ -554,9 +554,9 @@ public class DbHelper extends SQLiteOpenHelper {
 		Log.e("nils","INSERT Delete audit entry. Args:  "+dd);
 	}
 
-	public void insertEraseAuditEntry(String keyPairs) {		
-		storeAuditEntry("M",keyPairs,null);
-		Log.d("nils","inserted Erase Many with: "+keyPairs);
+	public void insertEraseAuditEntry(String keyPairs, String pattern) {		
+		storeAuditEntry("M",keyPairs,pattern);
+		Log.d("nils","inserted Erase Many with: "+keyPairs+" and pattern "+pattern);
 
 	}
 
@@ -1156,6 +1156,7 @@ public class DbHelper extends SQLiteOpenHelper {
 		SyncReport changes = new SyncReport();
 		GlobalState gs = GlobalState.getInstance();
 		VariableCache vc = gs.getVariableCache();
+		Set<String>conflictFlows = new HashSet<String>();
 
 		int size = ses.length-1;
 
@@ -1270,6 +1271,7 @@ public class DbHelper extends SQLiteOpenHelper {
 					String value = c.getString(2);
 					String varName = c.getString(3);
 					String author = c.getString(4);
+					
 					//Is the existing entry done by me?
 					Log.d("vortex","Author is "+author);
 					if (isMe(author)) {
@@ -1284,8 +1286,7 @@ public class DbHelper extends SQLiteOpenHelper {
 							Log.d("vortex","Assoc workflow is "+assocWorkflow);
 							if (assocWorkflow != null && !assocWorkflow.isEmpty()) {
 								Log.d("vortex","conflict!");
-								o.addRow("");
-								o.addRedText("Sync conflict in workflow ["+assocWorkflow+"]\nKey:\n"+cv.toString());
+								conflictFlows.add(assocWorkflow);
 								changes.conflicts++;
 							}
 							
@@ -1395,9 +1396,10 @@ public class DbHelper extends SQLiteOpenHelper {
 
 			} else if (s.isDeleteMany()) {
 				String keyPairs = s.getChange();
+				String pattern = s.getTarget();
 				if (keyPairs!=null) {
 					Log.d("sync","Got Erase Many sync message with keyPairs: "+keyPairs);					
-					int affectedRows = this.erase(keyPairs);
+					int affectedRows = this.erase(keyPairs,pattern);
 					//Invalidate Cache...purposeless to invalidate only part.
 					o.addRow("");
 					o.addGreenText("DB_ERASE message executed in sync");
@@ -1422,7 +1424,15 @@ public class DbHelper extends SQLiteOpenHelper {
 		//Add instructions in log if conflicts.
 		if (changes.conflicts>0) {
 			o.addRow("");
-			o.addRedText("Correct the sync conflicts in one of your devices not both! \nThen, please resynchronize!");
+			o.addRedText("You have sync conflicts in the following workflows: ");
+			int i = 1;
+			for (String flow:conflictFlows) {
+				o.addRow("");
+				o.addRedText(i+".: "+flow);
+				i++;
+			}
+			
+			o.addRedText("Please check in one of your devices and correct. Then, resynchronise!");
 		}
 		return changes;
 	}
@@ -1496,7 +1506,7 @@ public class DbHelper extends SQLiteOpenHelper {
 	}
 
 
-	public int erase(String keyPairs) {
+	public int erase(String keyPairs, String pattern) {
 		if (keyPairs == null || keyPairs.isEmpty()) {
 			Log.e("vortex","keypairs null or empty in erase! Not allowed!");
 			return 0;
@@ -1536,10 +1546,15 @@ public class DbHelper extends SQLiteOpenHelper {
 				delStmt.append(" AND ");
 			i++;
 		}
+		//Add pattern if there.
+		if (pattern!=null)
+			delStmt.append(" AND var LIKE '"+pattern+"'");
+		
 		valuesA=values.toArray(new String[values.size()]);
 		Log.d("vortex","Delete statement is now "+delStmt);
 		Log.d("vortex","VALUES:");
 		Log.d("vortex",print(valuesA));
+		
 		int affected = db.delete(DbHelper.TABLE_VARIABLES, delStmt.toString(), valuesA);
 		Log.d("vortex","Deleted rows count: "+affected);
 		//Invalidate affected cache variables
@@ -1558,10 +1573,10 @@ public class DbHelper extends SQLiteOpenHelper {
 		Log.d("nils","In EraseDelytor: ["+deleteStatement+"]");
 
 		//Do it!
-		erase(deleteStatement);
+		erase(deleteStatement,null);
 
 		//Create sync entry
-		insertEraseAuditEntry(deleteStatement);
+		insertEraseAuditEntry(deleteStatement,null);
 
 
 
@@ -1573,9 +1588,9 @@ public class DbHelper extends SQLiteOpenHelper {
 		String deleteStatement = "år="+Constants.getYear()+",ruta="+currentRuta+",provyta="+currentProvyta;
 		Log.d("nils","In EraseProvyta: ["+deleteStatement+"]");
 
-		erase(deleteStatement);
+		erase(deleteStatement,null);
 
-		insertEraseAuditEntry(deleteStatement);
+		insertEraseAuditEntry(deleteStatement,null);
 
 
 	}

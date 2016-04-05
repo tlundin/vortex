@@ -274,6 +274,8 @@ public class WF_Context {
 	public int getRootContainer() {
 		return rootContainerId;
 	}
+	
+	/*
 	public void onCreateView() {
 
 		if (containers!=null) {
@@ -281,6 +283,7 @@ public class WF_Context {
 			containers.clear();
 		}
 	}
+	*/
 
 	public void addRule(Rule r) {
 		rules.add(r);

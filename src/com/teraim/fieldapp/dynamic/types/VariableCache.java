@@ -133,6 +133,18 @@ public class VariableCache {
 					else {
 					String header = gs.getVariableConfiguration().getVarLabel(row);
 					DataType type = gs.getVariableConfiguration().getnumType(row);
+					String rowKH = gs.getVariableConfiguration().getKeyChain(row);
+					int rowKHL = 0;
+					int myKeyhashSize=0;
+					if (myKeyHash !=null)
+						myKeyhashSize = myKeyHash.keySet().size();
+					if (rowKH!=null)
+						rowKHL = rowKH.split("\\|").length;
+					if (myKeyhashSize != rowKHL) {
+						Log.e("vortex","KEY MISSMATCH: IN ROW: "+rowKH+" IN DB: "+(myKeyHash==null?"null":myKeyHash.toString()));
+						gs.getDb().deleteVariable(varName,gs.getDb().createSelection(myKeyHash,varName), true);
+						Log.e("vortex","Deleted "+varName);						
+					}
 					if (type == DataType.array)
 						v= new ArrayVariable(varName,header,row,myKeyHash,gs,vCol,vals.norm,true,vals.hist);
 					else
@@ -205,7 +217,7 @@ public class VariableCache {
 
 
 	public Variable getVariable(Map<String,String> hash, Map <String,Variable> cache, String varId,String defaultValue, Boolean hasValueInDB) {
-		//Log.d("nils","in CACHE GetVariable for "+varId);
+		Log.d("nils","in CACHE GetVariable for "+varId);
 		long t0=System.currentTimeMillis();
 
 		Variable variable = cache.get(varId.toLowerCase());
@@ -228,7 +240,11 @@ public class VariableCache {
 			}
 			cache = createOrGetCache(tryThis);
 			variable = cache.get(varId.toLowerCase());
+			hash = tryThis;
+			
 			if (variable == null) {
+				for (String s:cache.keySet())
+					Log.d("vortex","In cache: "+s);
 				Log.d("nils","Creating new CacheList entry for "+varId);
 				String header = gs.getVariableConfiguration().getVarLabel(row);
 				DataType type = gs.getVariableConfiguration().getnumType(row);

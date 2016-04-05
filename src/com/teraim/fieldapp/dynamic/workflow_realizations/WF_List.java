@@ -82,7 +82,7 @@ public abstract class WF_List extends WF_Widget implements Sortable,Filterable {
 	int intC=0;
 	boolean drawActive = false;
 	public void draw() {
-		Log.d("draw","DRAW CALLED "+ (++intC)+" times from list"+this.getId());
+		Log.d("draw","DRAW CALLED "+ (++intC)+" times in list"+this.getId());
 		//Log.d("nils","DrawActive "+drawActive);
 		if (!drawActive) {
 			//Log.d("nils","Settingdrawactive to true from list"+this.getId());
@@ -116,6 +116,7 @@ public abstract class WF_List extends WF_Widget implements Sortable,Filterable {
 						l.refresh();						
 						//Everything is WF_Widgets, so this is safe!					
 						myW.addView(((WF_Widget)l).getWidget());
+						Log.d("vortex","Drawing: "+l.getLabel());
 					} 
 					//Log.d("nils","Settingdrawactive to false");
 					drawActive = false;
